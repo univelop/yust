@@ -17,6 +17,9 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
     return StreamBuilder<T>(
       stream: Yust.service.getDoc(modelSetup, id),
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          throw snapshot.error;
+        }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return CircularProgressIndicator();
         }

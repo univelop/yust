@@ -43,7 +43,7 @@ class YustService {
     await fireAuth.signOut();
   }
 
-  void initDoc<T extends YustDoc>(YustDocSetup modelSetup, T doc) {
+  T initDoc<T extends YustDoc>(YustDocSetup modelSetup, T doc) {
     doc.createdAt = DateTime.now().toIso8601String();
     if (modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
@@ -54,6 +54,7 @@ class YustService {
     if (modelSetup.onInit != null) {
       modelSetup.onInit(doc);
     }
+    return doc;
   }
 
   Stream<List<T>> getDocs<T extends YustDoc>(YustDocSetup modelSetup, {List<List<dynamic>> filterList}) {

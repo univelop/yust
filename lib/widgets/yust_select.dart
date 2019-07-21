@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class YustSelect<T> extends StatelessWidget {
-  const YustSelect({Key key, this.label, this.value, this.optionValues, this.optionCaptions, this.onSelected}) : super(key: key);
+  const YustSelect({Key key, this.label, this.value, this.optionValues, this.optionLabels, this.onSelected}) : super(key: key);
 
   final String label;
   final T value;
   final List<T> optionValues;
-  final List<String> optionCaptions;
+  final List<String> optionLabels;
   final void Function(T) onSelected;
 
   @override
@@ -31,7 +31,7 @@ class YustSelect<T> extends StatelessWidget {
     if (index == -1) {
       return '';
     }
-    return optionCaptions[index];
+    return optionLabels[index];
   }
 
   void _selectValue(BuildContext context) async {

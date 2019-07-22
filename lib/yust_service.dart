@@ -191,5 +191,11 @@ class YustService {
     var formatter = DateFormat('dd.MM.yyyy');
     return formatter.format(now);
   }
+
+  String formatTime(String isoDate) {
+    var now = DateTime.parse(isoDate);
+    var formatter = DateFormat('hh:mm');
+    return formatter.format(now);
+  }
   
 }

@@ -1,6 +1,6 @@
 # yust
 
-A new Flutter package project.
+Build awesome apps with Flutter and Firebase.
 
 ## Getting Started
 

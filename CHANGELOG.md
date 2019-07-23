@@ -1,3 +1,6 @@
-## [0.0.1] - TODO: Add release date.
+## 0.1.0 - 2019-07-23
 
-* TODO: Describe initial release.
+* Initial release
+* Firebase Authentication
+* Firestore load and save services
+* Widgets to handle firebase requests

@@ -1,8 +1,8 @@
 name: yust
-description: A new Flutter package project.
-version: 0.0.1
-author:
-homepage:
+description: Build awesome apps with Flutter and Firebase.
+version: 0.1.0
+author: "Jannes Köhler <janneskoehler@gmail.com>"
+homepage: https://janneskoehler.de
 
 environment:
   sdk: ">=2.1.0 <3.0.0"

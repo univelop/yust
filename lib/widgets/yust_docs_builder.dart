@@ -8,9 +8,10 @@ class YustDocsBuilder<T extends YustDoc> extends StatelessWidget {
   
   final YustDocSetup modelSetup;
   final List<List<dynamic>> filter;
+  final bool doNotWait;
   final Widget Function(List<T>) builder;
 
-  YustDocsBuilder({@required this.modelSetup, this.filter, @required this.builder});
+  YustDocsBuilder({@required this.modelSetup, this.filter, this.doNotWait = false, @required this.builder});
   
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,11 @@ class YustDocsBuilder<T extends YustDoc> extends StatelessWidget {
           throw snapshot.error;
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+          if (doNotWait) {
+            return builder([]);
+          } else {
+            return Center(child: CircularProgressIndicator());
+          }
         }
         return builder(snapshot.data);
       },

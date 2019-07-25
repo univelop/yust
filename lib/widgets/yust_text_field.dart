@@ -4,7 +4,7 @@ typedef StringCallback = void Function(String);
 
 class YustTextField extends StatefulWidget {
 
-  YustTextField({Key key, this.label, this.value, this.onChanged, this.minLines}): super(key: key);
+  YustTextField({Key key, this.label, this.value = '', this.onChanged, this.minLines}): super(key: key);
 
   final String label;
   final String value;
@@ -17,35 +17,28 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
 
-  FocusNode focusNode;
-  TextEditingController controller;
+  FocusNode _focusNode;
+  TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
 
-    controller = TextEditingController(text: widget.value);
-    
-    focusNode = FocusNode();
-    focusNode.addListener(() {
-      if (!focusNode.hasFocus) {
-        if (controller.text != widget.value) {
-          widget.onChanged(controller.text);
-        }
-      }
-    });
+    _controller = TextEditingController(text: widget.value);
   }
 
   @override
   void dispose() {
-    controller.dispose();
-    focusNode.dispose();
+    _controller.dispose();
 
     super.dispose();
   }
   
   @override
   Widget build(BuildContext context) {
+    if (_controller.text != widget.value) {
+      _controller.text = widget.value;
+    }
     return TextField(
       decoration: InputDecoration(
         labelText: widget.label,
@@ -53,8 +46,10 @@ class _YustTextFieldState extends State<YustTextField> {
       ),
       maxLines: null,
       minLines: widget.minLines,
-      controller: controller,
-      focusNode: focusNode,
+      controller: _controller,
+      onChanged: (value) {
+        widget.onChanged(value);
+      },
     );
   }
 }

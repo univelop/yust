@@ -35,26 +35,28 @@ class YustSelect<T> extends StatelessWidget {
   }
 
   void _selectValue(BuildContext context) async {
-    var selectedValue = await showDialog<T>(
-      context: context,
-      builder: (BuildContext context) {
-        // subjects.insert(0, 
-        //   Subject()
-        //   ..id = '_null'
-        //   ..shortName = 'Kein Fach');
-        return SimpleDialog(
-          title: Text('$label wählen'),
-          children: optionValues.map((optionValue) {
-            return SimpleDialogOption(
-              onPressed: () { Navigator.pop(context, optionValue); },
-              child: Text(_valueCaption(optionValue)),
-            );
-          }).toList()
-        );
+    if (onSelected != null) {
+      var selectedValue = await showDialog<T>(
+        context: context,
+        builder: (BuildContext context) {
+          // subjects.insert(0, 
+          //   Subject()
+          //   ..id = '_null'
+          //   ..shortName = 'Kein Fach');
+          return SimpleDialog(
+            title: Text('$label wählen'),
+            children: optionValues.map((optionValue) {
+              return SimpleDialogOption(
+                onPressed: () { Navigator.pop(context, optionValue); },
+                child: Text(_valueCaption(optionValue)),
+              );
+            }).toList()
+          );
+        }
+      );
+      if (selectedValue != null) {
+        onSelected(selectedValue);
       }
-    );
-    if (selectedValue != null) {
-      onSelected(selectedValue);
     }
   }
 }

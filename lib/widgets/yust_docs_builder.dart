@@ -16,7 +16,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<T>>(
-      stream: Yust.service.getDocs<T>(modelSetup),
+      stream: Yust.service.getDocs<T>(modelSetup, filterList: filter),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           throw snapshot.error;

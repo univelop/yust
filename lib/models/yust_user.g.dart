@@ -6,7 +6,7 @@ part of 'yust_user.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustUser _$YustUserFromJson(Map<String, dynamic> json) {
+YustUser _$YustUserFromJson(Map json) {
   return YustUser(
       email: json['email'] as String,
       firstName: json['firstName'] as String,
@@ -15,7 +15,9 @@ YustUser _$YustUserFromJson(Map<String, dynamic> json) {
     ..createdAt = json['createdAt'] as String
     ..userId = json['userId'] as String
     ..envId = json['envId'] as String
-    ..envIds = (json['envIds'] as List)?.map((e) => e as String)?.toList()
+    ..envIds = (json['envIds'] as Map)?.map(
+      (k, e) => MapEntry(k as String, e as bool),
+    )
     ..currEnvId = json['currEnvId'] as String;
 }
 

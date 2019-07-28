@@ -65,33 +65,7 @@ class YustService {
     if (modelSetup.forUser) {
       query = query.where('userId', isEqualTo: Yust.store.currUser.id);
     }
-    if (filterList != null) {
-      for (var filter in filterList) {
-        switch (filter[1]) {
-          case '==':
-            query = query.where(filter[0], isEqualTo: filter[2]);
-            break;
-          case '<':
-            query = query.where(filter[0], isLessThan: filter[2]);
-            break;
-          case '<=':
-            query = query.where(filter[0], isLessThanOrEqualTo: filter[2]);
-            break;
-          case '>':
-            query = query.where(filter[0], isGreaterThan: filter[2]);
-            break;
-          case '>=':
-            query = query.where(filter[0], isGreaterThanOrEqualTo: filter[2]);
-            break;
-          case 'arrayContains':
-            query = query.where(filter[0], arrayContains: filter[2]);
-            break;
-          case 'isNull':
-            query = query.where(filter[0], isNull: filter[2]);
-            break;
-        }
-      }
-    }
+    query = _executeFilterList(query, filterList);
     return query.snapshots().map((snapshot) {
       // print('Get docs: ${modelSetup.collectionName}');
       return snapshot.documents.map((docSnapshot) {
@@ -112,6 +86,22 @@ class YustService {
         modelSetup.onMigrate(doc);
       }
       return doc;
+    });
+  }
+
+  Stream<T> getFirstDoc<T extends YustDoc>(YustDocSetup modelSetup, List<List<dynamic>> filterList) {
+    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    query = _executeFilterList(query, filterList);
+    return query.snapshots().map<T>((snapshot) {
+      if (snapshot.documents.length > 0) {
+        final doc = modelSetup.fromJson(snapshot.documents[0].data) as T;
+        if (modelSetup.onMigrate != null) {
+          modelSetup.onMigrate(doc);
+        }
+        return doc;
+      } else {
+        return null;
+      }
     });
   }
 
@@ -186,6 +176,36 @@ class YustService {
     );
   }
 
+  Future<String> showTextFieldDialog(BuildContext context, String title, String placeholder, String action) {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: placeholder),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(action),
+              onPressed: () {
+                Navigator.of(context).pop(controller.text);
+              },
+            ),
+            FlatButton(
+              child: Text("Abbrechen"),
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+            ),
+          ],
+        );
+      }
+    );
+  }
+
   String formatDate(String isoDate) {
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat('dd.MM.yyyy');
@@ -196,6 +216,37 @@ class YustService {
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat('hh:mm');
     return formatter.format(now);
+  }
+
+  Query _executeFilterList(Query query, List<List<dynamic>> filterList) {
+    if (filterList != null) {
+      for (var filter in filterList) {
+        switch (filter[1]) {
+          case '==':
+            query = query.where(filter[0], isEqualTo: filter[2]);
+            break;
+          case '<':
+            query = query.where(filter[0], isLessThan: filter[2]);
+            break;
+          case '<=':
+            query = query.where(filter[0], isLessThanOrEqualTo: filter[2]);
+            break;
+          case '>':
+            query = query.where(filter[0], isGreaterThan: filter[2]);
+            break;
+          case '>=':
+            query = query.where(filter[0], isGreaterThanOrEqualTo: filter[2]);
+            break;
+          case 'arrayContains':
+            query = query.where(filter[0], arrayContains: filter[2]);
+            break;
+          case 'isNull':
+            query = query.where(filter[0], isNull: filter[2]);
+            break;
+        }
+      }
+    }
+    return query;
   }
   
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -216,6 +218,16 @@ class YustService {
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat('hh:mm');
     return formatter.format(now);
+  }
+
+  String randomString({int length = 8}) {
+    final rnd = new Random();
+    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    var result = "";
+    for (var i = 0; i < length; i++) {
+      result += chars[rnd.nextInt(chars.length)];
+    }
+    return result;
   }
 
   Query _executeFilterList(Query query, List<List<dynamic>> filterList) {

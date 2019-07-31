@@ -216,7 +216,7 @@ class YustService {
 
   String formatTime(String isoDate) {
     var now = DateTime.parse(isoDate);
-    var formatter = DateFormat('hh:mm');
+    var formatter = DateFormat('HH:mm');
     return formatter.format(now);
   }
 

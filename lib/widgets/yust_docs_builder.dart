@@ -21,14 +21,10 @@ class YustDocsBuilder<T extends YustDoc> extends StatelessWidget {
         if (snapshot.hasError) {
           throw snapshot.error;
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          if (doNotWait) {
-            return builder([]);
-          } else {
-            return Center(child: CircularProgressIndicator());
-          }
+        if (snapshot.connectionState == ConnectionState.waiting && !doNotWait) {
+          return Center(child: CircularProgressIndicator());
         }
-        return builder(snapshot.data);
+        return builder(snapshot.data ?? []);
       },
     );
   }

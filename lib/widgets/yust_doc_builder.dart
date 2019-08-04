@@ -5,27 +5,42 @@ import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
 class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
-  
   final YustDocSetup modelSetup;
   final String id;
+  final List<List<dynamic>> filter;
+  final bool doNotWait;
+  final bool createIfNull;
   final Widget Function(T) builder;
 
-  YustDocBuilder({@required this.modelSetup, @required this.id, @required this.builder});
-  
+  YustDocBuilder({
+    @required this.modelSetup,
+    this.id,
+    this.filter,
+    this.doNotWait,
+    this.createIfNull,
+    @required this.builder,
+  });
+
   @override
   Widget build(BuildContext context) {
+    final docStream = (id != null)
+        ? Yust.service.getDoc<T>(modelSetup, id)
+        : Yust.service.getFirstDoc<T>(modelSetup, filter);
     return StreamBuilder<T>(
-      stream: Yust.service.getDoc(modelSetup, id),
+      stream: docStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           throw snapshot.error;
         }
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+        if (snapshot.connectionState == ConnectionState.waiting && !doNotWait) {
+          return Center(child: CircularProgressIndicator());
         }
-        return builder(snapshot.data);
+        var doc = snapshot.data;
+        if (doc == null) {
+          doc = Yust.service.initDoc<T>(modelSetup, modelSetup.fromJson({}));
+        }
+        return builder(doc);
       },
     );
   }
-
 }

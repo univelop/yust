@@ -16,8 +16,8 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
     @required this.modelSetup,
     this.id,
     this.filter,
-    this.doNotWait,
-    this.createIfNull,
+    this.doNotWait = false,
+    this.createIfNull = false,
     @required this.builder,
   });
 
@@ -36,7 +36,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
           return Center(child: CircularProgressIndicator());
         }
         var doc = snapshot.data;
-        if (doc == null) {
+        if (doc == null && createIfNull) {
           doc = Yust.service.initDoc<T>(modelSetup, modelSetup.fromJson({}));
         }
         return builder(doc);

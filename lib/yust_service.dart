@@ -93,6 +93,12 @@ class YustService {
 
   Stream<T> getFirstDoc<T extends YustDoc>(YustDocSetup modelSetup, List<List<dynamic>> filterList) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
+    if (modelSetup.forEnvironment) {
+      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+    }
+    if (modelSetup.forUser) {
+      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+    }
     query = _executeFilterList(query, filterList);
     return query.snapshots().map<T>((snapshot) {
       if (snapshot.documents.length > 0) {

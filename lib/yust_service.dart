@@ -12,7 +12,6 @@ import 'models/yust_user.dart';
 import 'yust.dart';
 
 class YustService {
-
   final FirebaseAuth fireAuth = FirebaseAuth.instance;
 
   Future<void> signIn(String email, String password) async {
@@ -25,7 +24,8 @@ class YustService {
     await fireAuth.signInWithEmailAndPassword(email: email, password: password);
   }
 
-  Future<void> signUp(String firstName, String lastName, String email, String password, String passwordConfirmation) async {
+  Future<void> signUp(String firstName, String lastName, String email,
+      String password, String passwordConfirmation) async {
     if (firstName == null || firstName == '') {
       throw YustException('Der Vorname darf nicht leer sein.');
     }
@@ -35,9 +35,11 @@ class YustService {
     if (password != passwordConfirmation) {
       throw YustException('Die Passwörter stimmen nicht überein.');
     }
-    final fireUser = await fireAuth.createUserWithEmailAndPassword(email: email, password: password);
-    final user = YustUser(email: email, firstName: firstName, lastName: lastName)
-    ..id = fireUser.uid;
+    final fireUser = await fireAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
+    final user =
+        YustUser(email: email, firstName: firstName, lastName: lastName)
+          ..id = fireUser.uid;
     await Yust.service.saveDoc<YustUser>(YustUser.setup, user);
   }
 
@@ -59,7 +61,8 @@ class YustService {
     return doc;
   }
 
-  Stream<List<T>> getDocs<T extends YustDoc>(YustDocSetup modelSetup, {List<List<dynamic>> filterList}) {
+  Stream<List<T>> getDocs<T extends YustDoc>(YustDocSetup modelSetup,
+      {List<List<dynamic>> filterList, List<String> orderByList}) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
       query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
@@ -68,6 +71,7 @@ class YustService {
       query = query.where('userId', isEqualTo: Yust.store.currUser.id);
     }
     query = _executeFilterList(query, filterList);
+    query = _executeOrderByList(query, orderByList);
     return query.snapshots().map((snapshot) {
       // print('Get docs: ${modelSetup.collectionName}');
       return snapshot.documents.map((docSnapshot) {
@@ -81,7 +85,11 @@ class YustService {
   }
 
   Stream<T> getDoc<T extends YustDoc>(YustDocSetup modelSetup, String id) {
-    return Firestore.instance.collection(modelSetup.collectionName).document(id).snapshots().map((snapshot) {
+    return Firestore.instance
+        .collection(modelSetup.collectionName)
+        .document(id)
+        .snapshots()
+        .map((snapshot) {
       // print('Get doc: ${modelSetup.collectionName} $id');
       final doc = modelSetup.fromJson(snapshot.data) as T;
       if (modelSetup.onMigrate != null) {
@@ -91,7 +99,8 @@ class YustService {
     });
   }
 
-  Stream<T> getFirstDoc<T extends YustDoc>(YustDocSetup modelSetup, List<List<dynamic>> filterList) {
+  Stream<T> getFirstDoc<T extends YustDoc>(
+      YustDocSetup modelSetup, List<List<dynamic>> filterList) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
       query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
@@ -113,7 +122,8 @@ class YustService {
     });
   }
 
-  Future<void> saveDoc<T extends YustDoc>(YustDocSetup modelSetup, T doc) async {
+  Future<void> saveDoc<T extends YustDoc>(
+      YustDocSetup modelSetup, T doc) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
     if (doc.createdAt == null) {
       doc.createdAt = DateTime.now().toIso8601String();
@@ -124,7 +134,7 @@ class YustService {
     if (doc.envId == null && modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
     }
-    
+
     if (doc.id != null) {
       await collection.document(doc.id).setData(doc.toJson());
     } else {
@@ -134,84 +144,86 @@ class YustService {
     }
   }
 
-  Future<void> deleteDoc<T extends YustDoc>(YustDocSetup modelSetup, T doc) async {
-    var docRef = Firestore.instance.collection(modelSetup.collectionName).document(doc.id);
+  Future<void> deleteDoc<T extends YustDoc>(
+      YustDocSetup modelSetup, T doc) async {
+    var docRef = Firestore.instance
+        .collection(modelSetup.collectionName)
+        .document(doc.id);
     await docRef.delete();
   }
 
   void showAlert(BuildContext context, String title, String message) {
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      }
-    );
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("OK"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        });
   }
 
-  Future<bool> showConfirmation(BuildContext context, String title, String action) {
+  Future<bool> showConfirmation(
+      BuildContext context, String title, String action) {
     return showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(action),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-            FlatButton(
-              child: Text("Abbrechen"),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-          ],
-        );
-      }
-    );
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            actions: <Widget>[
+              FlatButton(
+                child: Text(action),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+              FlatButton(
+                child: Text("Abbrechen"),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+            ],
+          );
+        });
   }
 
-  Future<String> showTextFieldDialog(BuildContext context, String title, String placeholder, String action) {
+  Future<String> showTextFieldDialog(
+      BuildContext context, String title, String placeholder, String action) {
     final controller = TextEditingController();
     return showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(hintText: placeholder),
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(action),
-              onPressed: () {
-                Navigator.of(context).pop(controller.text);
-              },
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: TextField(
+              controller: controller,
+              decoration: InputDecoration(hintText: placeholder),
             ),
-            FlatButton(
-              child: Text("Abbrechen"),
-              onPressed: () {
-                Navigator.of(context).pop(null);
-              },
-            ),
-          ],
-        );
-      }
-    );
+            actions: <Widget>[
+              FlatButton(
+                child: Text(action),
+                onPressed: () {
+                  Navigator.of(context).pop(controller.text);
+                },
+              ),
+              FlatButton(
+                child: Text("Abbrechen"),
+                onPressed: () {
+                  Navigator.of(context).pop(null);
+                },
+              ),
+            ],
+          );
+        });
   }
 
   String formatDate(String isoDate) {
@@ -266,5 +278,17 @@ class YustService {
     }
     return query;
   }
-  
+
+  Query _executeOrderByList(Query query, List<String> orderByList) {
+    if (orderByList != null) {
+      orderByList.asMap().forEach((index, orderBy) {
+        if (orderBy != 'DESC') {
+          final desc = (index + 1 < orderByList.length &&
+              orderByList[index + 1] == 'DESC');
+          query = query.orderBy(orderBy);
+        }
+      });
+    }
+    return query;
+  }
 }

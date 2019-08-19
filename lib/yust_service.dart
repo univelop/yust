@@ -285,7 +285,7 @@ class YustService {
         if (orderBy != 'DESC') {
           final desc = (index + 1 < orderByList.length &&
               orderByList[index + 1] == 'DESC');
-          query = query.orderBy(orderBy);
+          query = query.orderBy(orderBy, descending: desc);
         }
       });
     }

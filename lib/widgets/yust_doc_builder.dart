@@ -37,7 +37,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
         }
         var doc = snapshot.data;
         if (doc == null && createIfNull) {
-          doc = Yust.service.initDoc<T>(modelSetup, modelSetup.fromJson({}));
+          doc = Yust.service.initDoc<T>(modelSetup);
         }
         return builder(doc);
       },

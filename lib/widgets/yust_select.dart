@@ -21,7 +21,7 @@ class YustSelect<T> extends StatelessWidget {
     return Column(
       children: <Widget>[
         ListTile(
-          title: Text(label ?? ''),
+          title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
           trailing: Text(_valueCaption(value)),
           onTap: () => _selectValue(context),
           contentPadding:

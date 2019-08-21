@@ -17,7 +17,6 @@ class YustDatePicker extends StatefulWidget {
 }
 
 class _YustDatePickerState extends State<YustDatePicker> {
-  
   String _date;
 
   @override
@@ -33,7 +32,7 @@ class _YustDatePickerState extends State<YustDatePicker> {
     return Column(
       children: <Widget>[
         ListTile(
-          title: Text(widget.label),
+          title: Text(widget.label, style: TextStyle(color: Colors.grey[600])),
           trailing: Text(dateText),
           onTap: () => _pickDate(context),
           contentPadding:

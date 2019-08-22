@@ -88,6 +88,24 @@ class YustService {
     });
   }
 
+  Future<List<T>> getDocsOnce<T extends YustDoc>(YustDocSetup modelSetup,
+      {List<List<dynamic>> filterList, List<String> orderByList}) {
+    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+    query = _executeOrderByList(query, orderByList);
+    return query.getDocuments(source: Source.server).then((snapshot) {
+      // print('Get docs once: ${modelSetup.collectionName}');
+      return snapshot.documents.map((docSnapshot) {
+        final doc = modelSetup.fromJson(docSnapshot.data) as T;
+        if (modelSetup.onMigrate != null) {
+          modelSetup.onMigrate(doc);
+        }
+        return doc;
+      }).toList();
+    });
+  }
+
   Stream<T> getDoc<T extends YustDoc>(YustDocSetup modelSetup, String id) {
     return Firestore.instance
         .collection(modelSetup.collectionName)
@@ -250,6 +268,16 @@ class YustService {
       result += chars[rnd.nextInt(chars.length)];
     }
     return result;
+  }
+
+  Query _executeStaticFilters(Query query, YustDocSetup modelSetup) {
+    if (modelSetup.forEnvironment) {
+      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+    }
+    if (modelSetup.forUser) {
+      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+    }
+    return query;
   }
 
   Query _executeFilterList(Query query, List<List<dynamic>> filterList) {

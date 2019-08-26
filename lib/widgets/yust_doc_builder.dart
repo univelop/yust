@@ -8,6 +8,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
   final YustDocSetup modelSetup;
   final String id;
   final List<List<dynamic>> filter;
+  final List<String> orderBy;
   final bool doNotWait;
   final bool createIfNull;
   final Widget Function(T) builder;
@@ -16,6 +17,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
     @required this.modelSetup,
     this.id,
     this.filter,
+    this.orderBy,
     this.doNotWait = false,
     this.createIfNull = false,
     @required this.builder,
@@ -25,7 +27,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
   Widget build(BuildContext context) {
     final docStream = (id != null)
         ? Yust.service.getDoc<T>(modelSetup, id)
-        : Yust.service.getFirstDoc<T>(modelSetup, filter);
+        : Yust.service.getFirstDoc<T>(modelSetup, filter, orderByList: orderBy);
     return StreamBuilder<T>(
       stream: docStream,
       builder: (context, snapshot) {

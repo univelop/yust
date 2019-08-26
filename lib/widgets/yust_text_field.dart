@@ -4,12 +4,13 @@ typedef StringCallback = void Function(String);
 
 class YustTextField extends StatefulWidget {
 
-  YustTextField({Key key, this.label, this.value = '', this.onChanged, this.minLines}): super(key: key);
+  YustTextField({Key key, this.label, this.value = '', this.onChanged, this.minLines, this.enabled = true}): super(key: key);
 
   final String label;
   final String value;
   final StringCallback onChanged;
   final int minLines;
+  final bool enabled;
 
   @override
   _YustTextFieldState createState() => _YustTextFieldState();
@@ -17,7 +18,6 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
 
-  FocusNode _focusNode;
   TextEditingController _controller;
 
   @override
@@ -47,9 +47,8 @@ class _YustTextFieldState extends State<YustTextField> {
       maxLines: null,
       minLines: widget.minLines,
       controller: _controller,
-      onChanged: (value) {
-        widget.onChanged(value);
-      },
+      onChanged: widget.onChanged,
+      enabled: widget.enabled,
     );
   }
 }

@@ -17,6 +17,7 @@ class YustUser extends YustDoc {
   String lastName;
   Map<String, bool> envIds = {};
   String currEnvId;
+  List<String> deviceIds = [];
 
   YustUser({this.email, this.firstName, this.lastName});
 

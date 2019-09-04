@@ -18,7 +18,9 @@ YustUser _$YustUserFromJson(Map json) {
     ..envIds = (json['envIds'] as Map)?.map(
       (k, e) => MapEntry(k as String, e as bool),
     )
-    ..currEnvId = json['currEnvId'] as String;
+    ..currEnvId = json['currEnvId'] as String
+    ..deviceIds =
+        (json['deviceIds'] as List)?.map((e) => e as String)?.toList();
 }
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
@@ -30,5 +32,6 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'firstName': instance.firstName,
       'lastName': instance.lastName,
       'envIds': instance.envIds,
-      'currEnvId': instance.currEnvId
+      'currEnvId': instance.currEnvId,
+      'deviceIds': instance.deviceIds
     };

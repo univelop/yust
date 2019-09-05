@@ -9,6 +9,7 @@ class YustNotification extends YustDoc {
 
   static final setup = YustDocSetup(
     collectionName: 'notifications',
+    newDoc: () => YustNotification(),
     fromJson: (json) => YustNotification.fromJson(json),
     forUser: true,
   );

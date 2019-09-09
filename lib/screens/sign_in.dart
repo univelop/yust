@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yust/widgets/yust_progress_button.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
 import 'sign_up.dart';
 
 class SignInScreen extends StatefulWidget {
-  
   static String routeName = 'signIn';
 
   final String logoAssetName;
@@ -18,7 +18,6 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  
   String _email;
   String _password;
 
@@ -33,7 +32,8 @@ class _SignInScreenState extends State<SignInScreen> {
         children: <Widget>[
           _buildLogo(context),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'E-Mail',
@@ -43,7 +43,8 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Passwort',
@@ -54,18 +55,18 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: RaisedButton(
-              padding: const EdgeInsets.symmetric(vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: YustProgressButton(
               color: Theme.of(context).accentColor,
               onPressed: () async {
                 try {
                   await Yust.service.signIn(_email, _password);
-                } on YustException catch(err) {
+                } on YustException catch (err) {
                   Yust.service.showAlert(context, 'Fehler', err.message);
-                } on PlatformException catch(err) {
+                } on PlatformException catch (err) {
                   Yust.service.showAlert(context, 'Fehler', err.message);
-                } catch(err) {
+                } catch (err) {
                   Yust.service.showAlert(context, 'Fehler', err.toString());
                 }
               },
@@ -73,17 +74,22 @@ class _SignInScreenState extends State<SignInScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
-            child: Text('Du hast noch keinen Account?', style: TextStyle(fontSize: 16.0)),
+            padding: const EdgeInsets.only(
+                left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
+            child: Text('Du hast noch keinen Account?',
+                style: TextStyle(fontSize: 16.0)),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: FlatButton(
               padding: const EdgeInsets.symmetric(vertical: 10.0),
               onPressed: () {
                 Navigator.pushNamed(context, SignUpScreen.routeName);
               },
-              child: Text('Hier Registrieren', style: TextStyle(fontSize: 20.0, color: Theme.of(context).primaryColor)),
+              child: Text('Hier Registrieren',
+                  style: TextStyle(
+                      fontSize: 20.0, color: Theme.of(context).primaryColor)),
             ),
           ),
         ],
@@ -100,5 +106,4 @@ class _SignInScreenState extends State<SignInScreen> {
       child: Image.asset(widget.logoAssetName),
     );
   }
-
 }

@@ -1,25 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yust/widgets/yust_progress_button.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
-import 'sign_in.dart';
 
 class SignUpScreen extends StatefulWidget {
-  
   static String routeName = 'signUp';
 
   final String homeRouteName;
   final String logoAssetName;
 
-  SignUpScreen({Key key, this.homeRouteName = '/', this.logoAssetName}) : super(key: key);
+  SignUpScreen({Key key, this.homeRouteName = '/', this.logoAssetName})
+      : super(key: key);
 
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  
   String _firstName;
   String _lastName;
   String _email;
@@ -37,7 +36,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: <Widget>[
           _buildLogo(context),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Vorname',
@@ -47,7 +47,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Nachname',
@@ -57,7 +58,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'E-Mail',
@@ -67,7 +69,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Passwort',
@@ -78,7 +81,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: TextField(
               decoration: InputDecoration(
                 labelText: 'Passwort bestätigen',
@@ -89,13 +93,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: RaisedButton(
-              padding: const EdgeInsets.symmetric(vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: YustProgressButton(
               color: Theme.of(context).accentColor,
               onPressed: () async {
                 try {
-                  await Yust.service.signUp(_firstName, _lastName, _email, _password, _passwordConfirmation);
+                  await Yust.service.signUp(_firstName, _lastName, _email,
+                      _password, _passwordConfirmation);
                   Navigator.pushReplacementNamed(context, widget.homeRouteName);
                 } on YustException catch (err) {
                   Yust.service.showAlert(context, 'Fehler', err.message);
@@ -103,21 +108,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Yust.service.showAlert(context, 'Fehler', err.message);
                 }
               },
-              child: Text('Registrieren', style: TextStyle(fontSize: 20.0, color: Colors.white)),
+              child: Text('Registrieren',
+                  style: TextStyle(fontSize: 20.0, color: Colors.white)),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.only(left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
-            child: Text('Du hast bereits einen Account?', style: TextStyle(fontSize: 16.0)),
+            padding: const EdgeInsets.only(
+                left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
+            child: Text('Du hast bereits einen Account?',
+                style: TextStyle(fontSize: 16.0)),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: FlatButton(
               padding: const EdgeInsets.symmetric(vertical: 10.0),
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Hier Anmelden', style: TextStyle(fontSize: 20.0, color: Theme.of(context).primaryColor)),
+              child: Text('Hier Anmelden',
+                  style: TextStyle(
+                      fontSize: 20.0, color: Theme.of(context).primaryColor)),
             ),
           ),
         ],
@@ -134,5 +145,4 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: Image.asset(widget.logoAssetName),
     );
   }
-
 }

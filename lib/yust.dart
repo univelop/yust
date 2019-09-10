@@ -18,7 +18,7 @@ class Yust {
         if (fireUser == null) {
           return null;
         } else {
-          return await Yust.service.getDoc<YustUser>(YustUser.setup, fireUser.uid).first;
+          return await Yust.service.getDocOnce<YustUser>(YustUser.setup, fireUser.uid);
         }
       });
     }).listen((user) {

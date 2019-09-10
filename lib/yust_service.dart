@@ -121,6 +121,21 @@ class YustService {
     });
   }
 
+  Future<T> getDocOnce<T extends YustDoc>(YustDocSetup modelSetup, String id) {
+    return Firestore.instance
+        .collection(modelSetup.collectionName)
+        .document(id)
+        .get(source: Source.server)
+        .then((snapshot) {
+      // print('Get doc: ${modelSetup.collectionName} $id');
+      final doc = modelSetup.fromJson(snapshot.data) as T;
+      if (modelSetup.onMigrate != null) {
+        modelSetup.onMigrate(doc);
+      }
+      return doc;
+    });
+  }
+
   Stream<T> getFirstDoc<T extends YustDoc>(
       YustDocSetup modelSetup, List<List<dynamic>> filterList, {List<String> orderByList}) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);

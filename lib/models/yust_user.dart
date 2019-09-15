@@ -15,14 +15,21 @@ class YustUser extends YustDoc {
   String email;
   String firstName;
   String lastName;
+  YustGender gender;
+
   Map<String, bool> envIds = {};
   String currEnvId;
   List<String> deviceIds = [];
 
-  YustUser({this.email, this.firstName, this.lastName});
+  YustUser({this.email, this.firstName, this.lastName, this.gender});
 
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);
 
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
+}
+
+enum YustGender {
+  male,
+  female,
 }

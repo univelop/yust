@@ -1,34 +1,55 @@
 import 'package:flutter/material.dart';
 
 class YustSelect<T> extends StatelessWidget {
-  const YustSelect(
-      {Key key,
-      this.label,
-      this.value,
-      this.optionValues,
-      this.optionLabels,
-      this.onSelected})
-      : super(key: key);
-
   final String label;
   final T value;
   final List<T> optionValues;
   final List<String> optionLabels;
   final void Function(T) onSelected;
+  final YustSelectStyle style;
+
+  const YustSelect({
+    Key key,
+    this.label,
+    this.value,
+    this.optionValues,
+    this.optionLabels,
+    this.onSelected,
+    this.style = YustSelectStyle.normal,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: <Widget>[
-        ListTile(
-          title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
-          trailing: Text(_valueCaption(value)),
-          onTap: () => _selectValue(context),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    if (style == YustSelectStyle.normal) {
+      return Column(
+        children: <Widget>[
+          _buildInner(context),
+          Divider(height: 1.0, color: Colors.grey[800]),
+        ],
+      );
+    } else {
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(4.0),
         ),
-        Divider(height: 1.0, color: Colors.grey[800])
-      ],
+        child: _buildInner(context),
+      );
+    }
+  }
+
+  Widget _buildInner(BuildContext context) {
+    var padding;
+    if (style == YustSelectStyle.normal) {
+      padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+    } else {
+      padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 2.0);
+    }
+    return ListTile(
+      title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+      trailing: Text(_valueCaption(value)),
+      onTap: () => _selectValue(context),
+      contentPadding: padding,
     );
   }
 
@@ -62,4 +83,9 @@ class YustSelect<T> extends StatelessWidget {
       }
     }
   }
+}
+
+enum YustSelectStyle {
+  normal,
+  outlineBorder,
 }

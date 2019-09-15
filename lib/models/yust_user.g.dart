@@ -10,7 +10,8 @@ YustUser _$YustUserFromJson(Map json) {
   return YustUser(
       email: json['email'] as String,
       firstName: json['firstName'] as String,
-      lastName: json['lastName'] as String)
+      lastName: json['lastName'] as String,
+      gender: _$enumDecodeNullable(_$YustGenderEnumMap, json['gender']))
     ..id = json['id'] as String
     ..createdAt = json['createdAt'] as String
     ..userId = json['userId'] as String
@@ -31,7 +32,33 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'email': instance.email,
       'firstName': instance.firstName,
       'lastName': instance.lastName,
+      'gender': _$YustGenderEnumMap[instance.gender],
       'envIds': instance.envIds,
       'currEnvId': instance.currEnvId,
       'deviceIds': instance.deviceIds
     };
+
+T _$enumDecode<T>(Map<T, dynamic> enumValues, dynamic source) {
+  if (source == null) {
+    throw ArgumentError('A value must be provided. Supported values: '
+        '${enumValues.values.join(', ')}');
+  }
+  return enumValues.entries
+      .singleWhere((e) => e.value == source,
+          orElse: () => throw ArgumentError(
+              '`$source` is not one of the supported values: '
+              '${enumValues.values.join(', ')}'))
+      .key;
+}
+
+T _$enumDecodeNullable<T>(Map<T, dynamic> enumValues, dynamic source) {
+  if (source == null) {
+    return null;
+  }
+  return _$enumDecode<T>(enumValues, source);
+}
+
+const _$YustGenderEnumMap = <YustGender, dynamic>{
+  YustGender.male: 'male',
+  YustGender.female: 'female'
+};

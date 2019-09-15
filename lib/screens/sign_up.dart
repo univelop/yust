@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yust/models/yust_user.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
+import 'package:yust/widgets/yust_select.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
@@ -10,8 +12,13 @@ class SignUpScreen extends StatefulWidget {
 
   final String homeRouteName;
   final String logoAssetName;
+  final bool askForGender;
 
-  SignUpScreen({Key key, this.homeRouteName = '/', this.logoAssetName})
+  SignUpScreen(
+      {Key key,
+      this.homeRouteName = '/',
+      this.logoAssetName,
+      this.askForGender = false})
       : super(key: key);
 
   @override
@@ -19,6 +26,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  YustGender _gender;
   String _firstName;
   String _lastName;
   String _email;
@@ -35,6 +43,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         padding: const EdgeInsets.only(top: 40.0),
         children: <Widget>[
           _buildLogo(context),
+          _buildGender(context),
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
@@ -100,7 +109,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               onPressed: () async {
                 try {
                   await Yust.service.signUp(_firstName, _lastName, _email,
-                      _password, _passwordConfirmation);
+                      _password, _passwordConfirmation,
+                      gender: _gender);
                   Navigator.pushReplacementNamed(context, widget.homeRouteName);
                 } on YustException catch (err) {
                   Yust.service.showAlert(context, 'Fehler', err.message);
@@ -143,6 +153,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 50.0),
       child: Image.asset(widget.logoAssetName),
+    );
+  }
+
+  Widget _buildGender(BuildContext context) {
+    if (!widget.askForGender) {
+      return SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+      child: YustSelect(
+        label: 'Anrede',
+        value: _gender,
+        optionValues: [YustGender.male, YustGender.female],
+        optionLabels: ['Herr', 'Frau'],
+        onSelected: (value) {
+          setState(() {
+            _gender = value;
+          });
+        },
+        style: YustSelectStyle.outlineBorder,
+      ),
     );
   }
 }

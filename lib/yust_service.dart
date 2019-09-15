@@ -25,7 +25,8 @@ class YustService {
   }
 
   Future<void> signUp(String firstName, String lastName, String email,
-      String password, String passwordConfirmation) async {
+      String password, String passwordConfirmation,
+      {YustGender gender}) async {
     if (firstName == null || firstName == '') {
       throw YustException('Der Vorname darf nicht leer sein.');
     }
@@ -37,9 +38,9 @@ class YustService {
     }
     final fireUser = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final user =
-        YustUser(email: email, firstName: firstName, lastName: lastName)
-          ..id = fireUser.uid;
+    final user = YustUser(
+        email: email, firstName: firstName, lastName: lastName, gender: gender)
+      ..id = fireUser.uid;
     await Yust.service.saveDoc<YustUser>(YustUser.setup, user);
   }
 
@@ -58,7 +59,10 @@ class YustService {
     if (doc == null) {
       doc = modelSetup.newDoc() as T;
     }
-    doc.id = Firestore.instance.collection(modelSetup.collectionName).document().documentID;
+    doc.id = Firestore.instance
+        .collection(modelSetup.collectionName)
+        .document()
+        .documentID;
     doc.createdAt = DateTime.now().toIso8601String();
     if (modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
@@ -144,7 +148,8 @@ class YustService {
   }
 
   Stream<T> getFirstDoc<T extends YustDoc>(
-      YustDocSetup modelSetup, List<List<dynamic>> filterList, {List<String> orderByList}) {
+      YustDocSetup modelSetup, List<List<dynamic>> filterList,
+      {List<String> orderByList}) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
       query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
@@ -189,8 +194,8 @@ class YustService {
     }
   }
 
-  Future<void> deleteDocs<T extends YustDoc>(
-      YustDocSetup modelSetup, {List<List<dynamic>> filterList}) async {
+  Future<void> deleteDocs<T extends YustDoc>(YustDocSetup modelSetup,
+      {List<List<dynamic>> filterList}) async {
     final docs = await getDocsOnce(modelSetup, filterList: filterList);
     for (var doc in docs) {
       await deleteDoc(modelSetup, doc);

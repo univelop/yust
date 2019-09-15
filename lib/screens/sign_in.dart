@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yust/screens/reset_password.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 
 import '../models/yust_exception.dart';
@@ -70,7 +71,8 @@ class _SignInScreenState extends State<SignInScreen> {
                   Yust.service.showAlert(context, 'Fehler', err.toString());
                 }
               },
-              child: Text('Anmelden', style: TextStyle(fontSize: 20.0, color: Colors.white)),
+              child: Text('Anmelden',
+                  style: TextStyle(fontSize: 20.0, color: Colors.white)),
             ),
           ),
           Padding(
@@ -88,6 +90,19 @@ class _SignInScreenState extends State<SignInScreen> {
                 Navigator.pushNamed(context, SignUpScreen.routeName);
               },
               child: Text('Hier Registrieren',
+                  style: TextStyle(
+                      fontSize: 20.0, color: Theme.of(context).primaryColor)),
+            ),
+          ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: FlatButton(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              onPressed: () {
+                Navigator.pushNamed(context, ResetPasswordScreen.routeName);
+              },
+              child: Text('Passwort vergessen',
                   style: TextStyle(
                       fontSize: 20.0, color: Theme.of(context).primaryColor)),
             ),

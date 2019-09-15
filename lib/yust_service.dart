@@ -47,6 +47,13 @@ class YustService {
     await fireAuth.signOut();
   }
 
+  Future<void> sendPasswordResetEmail(String email) async {
+    if (email == null || email == '') {
+      throw YustException('Die E-Mail darf nicht leer sein.');
+    }
+    await fireAuth.sendPasswordResetEmail(email: email);
+  }
+
   T initDoc<T extends YustDoc>(YustDocSetup modelSetup, [T doc = null]) {
     if (doc == null) {
       doc = modelSetup.newDoc() as T;
@@ -182,8 +189,19 @@ class YustService {
     }
   }
 
+  Future<void> deleteDocs<T extends YustDoc>(
+      YustDocSetup modelSetup, {List<List<dynamic>> filterList}) async {
+    final docs = await getDocsOnce(modelSetup, filterList: filterList);
+    for (var doc in docs) {
+      await deleteDoc(modelSetup, doc);
+    }
+  }
+
   Future<void> deleteDoc<T extends YustDoc>(
       YustDocSetup modelSetup, T doc) async {
+    if (modelSetup.onDelete != null) {
+      modelSetup.onDelete(doc);
+    }
     var docRef = Firestore.instance
         .collection(modelSetup.collectionName)
         .document(doc.id);

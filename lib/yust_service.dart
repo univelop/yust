@@ -55,7 +55,21 @@ class YustService {
     await fireAuth.sendPasswordResetEmail(email: email);
   }
 
-  T initDoc<T extends YustDoc>(YustDocSetup modelSetup, [T doc = null]) {
+  Future<void> changeEmail(String email, String password) async {
+    final user = await fireAuth.signInWithEmailAndPassword(email: Yust.store.currUser.email, password: password);
+    await user.updateEmail(email);
+    Yust.store.setState(() {
+      Yust.store.currUser.email = email;
+    });
+    Yust.service.saveDoc<YustUser>(YustUser.setup, Yust.store.currUser);
+  }
+
+  Future<void> changePassword(String newPassword, String oldPassword) async {
+    final user = await fireAuth.signInWithEmailAndPassword(email: Yust.store.currUser.email, password: oldPassword);
+    await user.updatePassword(newPassword);
+  }
+
+  T initDoc<T extends YustDoc>(YustDocSetup modelSetup, [T doc]) {
     if (doc == null) {
       doc = modelSetup.newDoc() as T;
     }

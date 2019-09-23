@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_store_builder.dart';
 
 import '../yust.dart';
+import 'account_edit.dart';
 
 class AccountScreen extends StatelessWidget {
   
@@ -33,6 +34,14 @@ class AccountScreen extends StatelessWidget {
                   ),
                 ]
               ),
+            ),
+            Divider(),
+            ListTile(
+              leading: Icon(Icons.person, color: Theme.of(context).accentColor, size: 40.0),
+              title: Text('Persönliche Daten', style: TextStyle(color: Theme.of(context).accentColor)),
+              onTap: () {
+                Navigator.pushNamed(context, AccountEditScreen.routeName);
+              },
             ),
             Divider(),
             ListTile(

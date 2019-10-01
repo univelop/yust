@@ -138,6 +138,7 @@ class YustService {
         .snapshots()
         .map((snapshot) {
       // print('Get doc: ${modelSetup.collectionName} $id');
+      if (snapshot.data == null) return null;
       final doc = modelSetup.fromJson(snapshot.data) as T;
       if (modelSetup.onMigrate != null) {
         modelSetup.onMigrate(doc);

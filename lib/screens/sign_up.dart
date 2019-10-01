@@ -111,7 +111,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   await Yust.service.signUp(_firstName, _lastName, _email,
                       _password, _passwordConfirmation,
                       gender: _gender);
-                  Navigator.pushReplacementNamed(context, widget.homeRouteName);
+                  Navigator.pop(context);
                 } on YustException catch (err) {
                   Yust.service.showAlert(context, 'Fehler', err.message);
                 } on PlatformException catch (err) {

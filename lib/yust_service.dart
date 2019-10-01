@@ -200,7 +200,7 @@ class YustService {
     }
 
     if (doc.id != null) {
-      await collection.document(doc.id).setData(doc.toJson());
+      await collection.document(doc.id).setData(doc.toJson(), merge: true);
     } else {
       var ref = await collection.add(doc.toJson());
       doc.id = ref.documentID;

@@ -24,43 +24,48 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       appBar: AppBar(
         title: Text('Passwort vergessen'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(top: 40.0),
-        children: <Widget>[
-          _buildLogo(context),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'E-Mail',
-                border: OutlineInputBorder(),
+      body: Center(
+        child: Container(
+          constraints: BoxConstraints(maxWidth: 600),
+          child: ListView(
+            padding: const EdgeInsets.only(top: 40.0),
+            children: <Widget>[
+              _buildLogo(context),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 10.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    labelText: 'E-Mail',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) => _email = value,
+                ),
               ),
-              onChanged: (value) => _email = value,
-            ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0, vertical: 10.0),
+                child: YustProgressButton(
+                  color: Theme.of(context).accentColor,
+                  onPressed: () async {
+                    try {
+                      await Yust.service.sendPasswordResetEmail(_email);
+                    } on YustException catch (err) {
+                      Yust.service.showAlert(context, 'Fehler', err.message);
+                    } on PlatformException catch (err) {
+                      Yust.service.showAlert(context, 'Fehler', err.message);
+                    }
+                    Navigator.pop(context);
+                    Yust.service.showAlert(context, 'E-Mail verschickt',
+                        'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
+                  },
+                  child: Text('Passwort vergessen',
+                      style: TextStyle(fontSize: 20.0, color: Colors.white)),
+                ),
+              ),
+            ],
           ),
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: YustProgressButton(
-              color: Theme.of(context).accentColor,
-              onPressed: () async {
-                try {
-                  await Yust.service.sendPasswordResetEmail(_email);
-                } on YustException catch (err) {
-                  Yust.service.showAlert(context, 'Fehler', err.message);
-                } on PlatformException catch (err) {
-                  Yust.service.showAlert(context, 'Fehler', err.message);
-                }
-                Navigator.pop(context);
-                Yust.service.showAlert(context, 'E-Mail verschickt',
-                    'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
-              },
-              child: Text('Passwort vergessen',
-                  style: TextStyle(fontSize: 20.0, color: Colors.white)),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

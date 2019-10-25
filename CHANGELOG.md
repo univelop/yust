@@ -11,3 +11,15 @@
 * Add random string generator
 * Add account screen
 * Improvements and hotfixes
+
+## 0.3.0 - 2019-10-25
+
+* Improve doc builder
+* Add sorting for queries
+* Add getDocOnce and getDocsOnce queries
+* Add switch tile widget
+* Add notifications and badges
+* Add progress button
+* Add account edit screen
+* Use firebase document merging
+* Improvements and hotfixes

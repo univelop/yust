@@ -4,6 +4,12 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
+class YustBuilderInsights {
+  bool waiting;
+
+  YustBuilderInsights({this.waiting});
+}
+
 class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
   final YustDocSetup modelSetup;
   final String id;
@@ -11,7 +17,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
   final List<String> orderBy;
   final bool doNotWait;
   final bool createIfNull;
-  final Widget Function(T) builder;
+  final Widget Function(T, YustBuilderInsights) builder;
 
   YustDocBuilder({
     @required this.modelSetup,
@@ -41,7 +47,10 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
         if (doc == null && createIfNull) {
           doc = Yust.service.initDoc<T>(modelSetup);
         }
-        return builder(doc);
+        final opts = YustBuilderInsights(
+          waiting: snapshot.connectionState == ConnectionState.waiting,
+        );
+        return builder(doc, opts);
       },
     );
   }

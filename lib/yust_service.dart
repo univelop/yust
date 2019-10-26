@@ -302,15 +302,15 @@ class YustService {
         });
   }
 
-  String formatDate(String isoDate) {
+  String formatDate(String isoDate, {String format}) {
     var now = DateTime.parse(isoDate);
-    var formatter = DateFormat('dd.MM.yyyy');
+    var formatter = DateFormat(format ?? 'dd.MM.yyyy');
     return formatter.format(now);
   }
 
-  String formatTime(String isoDate) {
+  String formatTime(String isoDate, {String format}) {
     var now = DateTime.parse(isoDate);
-    var formatter = DateFormat('HH:mm');
+    var formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(now);
   }
 

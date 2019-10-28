@@ -33,13 +33,34 @@ class _YustDatePickerState extends State<YustDatePicker> {
       children: <Widget>[
         ListTile(
           title: Text(widget.label, style: TextStyle(color: Colors.grey[600])),
-          trailing: Text(dateText),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(dateText),
+              _buildClearDate(context),
+            ],
+          ),
           onTap: () => _pickDate(context),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         ),
         Divider(height: 1.0, color: Colors.grey[800]),
       ],
+    );
+  }
+
+  Widget _buildClearDate(BuildContext context) {
+    if (_date == null) {
+      return SizedBox.shrink();
+    }
+    return IconButton(
+      icon: Icon(Icons.clear),
+      onPressed: () {
+        setState(() {
+          _date = null;
+        });
+        widget.onChanged(_date);
+      },
     );
   }
 

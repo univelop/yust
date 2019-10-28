@@ -4,35 +4,22 @@ import '../yust.dart';
 
 typedef StringCallback = void Function(String);
 
-class YustDatePicker extends StatefulWidget {
-  YustDatePicker({Key key, this.label, this.value = '', this.onChanged})
+class YustDatePicker extends StatelessWidget {
+  YustDatePicker({Key key, this.label, this.value = '', this.onChanged, this.hideClearButton = false})
       : super(key: key);
 
   final String label;
   final String value;
   final StringCallback onChanged;
-
-  @override
-  _YustDatePickerState createState() => _YustDatePickerState();
-}
-
-class _YustDatePickerState extends State<YustDatePicker> {
-  String _date;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _date = widget.value;
-  }
+  bool hideClearButton;
 
   @override
   Widget build(BuildContext context) {
-    final dateText = _date != null ? Yust.service.formatDate(_date) : '';
+    final dateText = value != null ? Yust.service.formatDate(value) : '';
     return Column(
       children: <Widget>[
         ListTile(
-          title: Text(widget.label, style: TextStyle(color: Colors.grey[600])),
+          title: Text(label, style: TextStyle(color: Colors.grey[600])),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
@@ -50,22 +37,19 @@ class _YustDatePickerState extends State<YustDatePicker> {
   }
 
   Widget _buildClearDate(BuildContext context) {
-    if (_date == null) {
+    if (value == null || hideClearButton) {
       return SizedBox.shrink();
     }
     return IconButton(
       icon: Icon(Icons.clear),
       onPressed: () {
-        setState(() {
-          _date = null;
-        });
-        widget.onChanged(_date);
+        onChanged(null);
       },
     );
   }
 
   void _pickDate(BuildContext context) async {
-    final initDate = _date != null ? DateTime.parse(_date) : DateTime.now();
+    final initDate = value != null ? DateTime.parse(value) : DateTime.now();
     final selectedDate = await showDatePicker(
       context: context,
       initialDate: initDate,
@@ -74,10 +58,7 @@ class _YustDatePickerState extends State<YustDatePicker> {
       locale: Locale('de', 'DE'),
     );
     if (selectedDate != null) {
-      setState(() {
-        _date = selectedDate.toIso8601String();
-      });
-      widget.onChanged(_date);
+      onChanged(selectedDate.toIso8601String());
     }
   }
 }

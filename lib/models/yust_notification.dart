@@ -11,7 +11,6 @@ class YustNotification extends YustDoc {
     collectionName: 'notifications',
     newDoc: () => YustNotification(),
     fromJson: (json) => YustNotification.fromJson(json),
-    forUser: true,
   );
 
   String forCollection;

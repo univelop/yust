@@ -1,5 +1,6 @@
 library yust;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'models/yust_user.dart';
@@ -12,6 +13,8 @@ class Yust {
   static final service = YustService();
 
   static void initialize() {
+    Firestore.instance.settings(persistenceEnabled: true);
+    
     Yust.store.authState = AuthState.waiting;
     FirebaseAuth.instance.onAuthStateChanged.listen((fireUser) {
       if (fireUser != null) {

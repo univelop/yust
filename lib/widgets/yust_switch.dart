@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class YustSwitch extends StatelessWidget {
-  const YustSwitch({Key key, this.label, this.value, this.onChanged})
-      : super(key: key);
-
   final String label;
   final bool value;
+  final Color activeColor;
   final void Function(bool) onChanged;
+
+  const YustSwitch(
+      {Key key, this.label, this.value, this.activeColor, this.onChanged})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +18,7 @@ class YustSwitch extends StatelessWidget {
           title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
           trailing: Switch(
             value: value,
+            activeColor: activeColor,
             onChanged: onChanged,
           ),
           contentPadding:

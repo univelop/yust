@@ -21,6 +21,10 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   String _email;
   String _password;
+  bool _waitingForSignIn = false;
+
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +47,14 @@ class _SignInScreenState extends State<SignInScreen> {
                     labelText: 'E-Mail',
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (value) => _email = value,
+                  textInputAction: TextInputAction.next,
+                  keyboardType: TextInputType.emailAddress,
+                  focusNode: _emailFocus,
+                  onChanged: (value) => _email = value.trim(),
+                  onSubmitted: (value) {
+                    _emailFocus.unfocus();
+                    FocusScope.of(context).requestFocus(_passwordFocus);
+                  },
                 ),
               ),
               Padding(
@@ -55,7 +66,19 @@ class _SignInScreenState extends State<SignInScreen> {
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
-                  onChanged: (value) => _password = value,
+                  textInputAction: TextInputAction.send,
+                  focusNode: _passwordFocus,
+                  onChanged: (value) => _password = value.trim(),
+                  onSubmitted: (value) async {
+                    _passwordFocus.unfocus();
+                    setState(() {
+                      _waitingForSignIn = true;
+                    });
+                    await _signIn(context);
+                    setState(() {
+                      _waitingForSignIn = false;
+                    });
+                  },
                 ),
               ),
               Padding(
@@ -63,17 +86,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     horizontal: 20.0, vertical: 10.0),
                 child: YustProgressButton(
                   color: Theme.of(context).accentColor,
-                  onPressed: () async {
-                    try {
-                      await Yust.service.signIn(_email, _password);
-                    } on YustException catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.message);
-                    } on PlatformException catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.message);
-                    } catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.toString());
-                    }
-                  },
+                  inProgress: _waitingForSignIn,
+                  onPressed: () => _signIn(context),
                   child: Text('Anmelden',
                       style: TextStyle(fontSize: 20.0, color: Colors.white)),
                 ),
@@ -127,5 +141,17 @@ class _SignInScreenState extends State<SignInScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 50.0),
       child: Image.asset(widget.logoAssetName),
     );
+  }
+
+  Future<void> _signIn(BuildContext context) async {
+    try {
+      await Yust.service.signIn(_email, _password);
+    } on YustException catch (err) {
+      Yust.service.showAlert(context, 'Fehler', err.message);
+    } on PlatformException catch (err) {
+      Yust.service.showAlert(context, 'Fehler', err.message);
+    } catch (err) {
+      Yust.service.showAlert(context, 'Fehler', err.toString());
+    }
   }
 }

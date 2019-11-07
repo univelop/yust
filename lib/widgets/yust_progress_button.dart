@@ -5,13 +5,15 @@ class YustProgressButton extends StatefulWidget {
   final Future<void> Function() onPressed;
   final Color color;
   final Color spinnerColor;
+  final bool inProgress;
 
   YustProgressButton(
       {Key key,
       this.child,
       this.onPressed,
       this.color,
-      this.spinnerColor = Colors.white})
+      this.spinnerColor = Colors.white,
+      this.inProgress = false})
       : super(key: key);
 
   @override
@@ -19,10 +21,18 @@ class YustProgressButton extends StatefulWidget {
 }
 
 class _YustProgressButtonState extends State<YustProgressButton> {
-  bool _waiting = false;
+  bool _inProgressLocal;
 
   @override
   Widget build(BuildContext context) {
+    bool waiting;
+    if (widget.inProgress != null) {
+      waiting = widget.inProgress;
+    }
+    if (_inProgressLocal != null) {
+      waiting = _inProgressLocal;
+      _inProgressLocal = null;
+    }
     return RaisedButton(
       color: widget.color,
       disabledColor: widget.color,
@@ -30,14 +40,14 @@ class _YustProgressButtonState extends State<YustProgressButton> {
       child: SizedBox(
         width: double.infinity,
         height: 40.0,
-        child: Center(child: _buildInnerButton()),
+        child: Center(child: _buildInnerButton(waiting)),
       ),
-      onPressed: _waiting ? null : onPressed,
+      onPressed: waiting ? null : onPressed,
     );
   }
 
-  Widget _buildInnerButton() {
-    if (_waiting) {
+  Widget _buildInnerButton(bool waiting) {
+    if (waiting) {
       return CircularProgressIndicator(
         valueColor: AlwaysStoppedAnimation<Color>(widget.spinnerColor),
       );
@@ -48,11 +58,11 @@ class _YustProgressButtonState extends State<YustProgressButton> {
 
   void onPressed() async {
     setState(() {
-      _waiting = true;
+      _inProgressLocal = true;
     });
     await widget.onPressed();
     setState(() {
-      _waiting = false;
+      _inProgressLocal = false;
     });
   }
 }

@@ -32,6 +32,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _email;
   String _password;
   String _passwordConfirmation;
+  bool _waitingForSignUp = false;
+
+  final _firstNameFocus = FocusNode();
+  final _lastNameFocus = FocusNode();
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+  final _passwordConfirmationFocus = FocusNode();
+
+  ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           constraints: BoxConstraints(maxWidth: 600),
           child: ListView(
             padding: const EdgeInsets.only(top: 40.0),
+            controller: _scrollController,
             children: <Widget>[
               _buildLogo(context),
               _buildGender(context),
@@ -55,7 +65,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     labelText: 'Vorname',
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (value) => _firstName = value,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _firstNameFocus,
+                  onChanged: (value) => _firstName = value.trim(),
+                  onSubmitted: (value) {
+                    _firstNameFocus.unfocus();
+                    FocusScope.of(context).requestFocus(_lastNameFocus);
+                    _scrollController.animateTo(_scrollController.offset + 80,
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.ease);
+                  },
                 ),
               ),
               Padding(
@@ -66,7 +85,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     labelText: 'Nachname',
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (value) => _lastName = value,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _lastNameFocus,
+                  onChanged: (value) => _lastName = value.trim(),
+                  onSubmitted: (value) {
+                    _firstNameFocus.unfocus();
+                    FocusScope.of(context).requestFocus(_emailFocus);
+                    _scrollController.animateTo(_scrollController.offset + 80,
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.ease);
+                  },
                 ),
               ),
               Padding(
@@ -77,7 +105,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     labelText: 'E-Mail',
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (value) => _email = value,
+                  textInputAction: TextInputAction.next,
+                  keyboardType: TextInputType.emailAddress,
+                  focusNode: _emailFocus,
+                  onChanged: (value) => _email = value.trim(),
+                  onSubmitted: (value) {
+                    _emailFocus.unfocus();
+                    FocusScope.of(context).requestFocus(_passwordFocus);
+                    _scrollController.animateTo(_scrollController.offset + 80,
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.ease);
+                  },
                 ),
               ),
               Padding(
@@ -89,7 +127,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
-                  onChanged: (value) => _password = value,
+                  textInputAction: TextInputAction.next,
+                  focusNode: _passwordFocus,
+                  onChanged: (value) => _password = value.trim(),
+                  onSubmitted: (value) async {
+                    _passwordFocus.unfocus();
+                    FocusScope.of(context)
+                        .requestFocus(_passwordConfirmationFocus);
+                    _scrollController.animateTo(_scrollController.offset + 80,
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.ease);
+                  },
                 ),
               ),
               Padding(
@@ -101,7 +149,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
-                  onChanged: (value) => _passwordConfirmation = value,
+                  textInputAction: TextInputAction.send,
+                  focusNode: _passwordConfirmationFocus,
+                  onChanged: (value) => _passwordConfirmation = value.trim(),
+                  onSubmitted: (value) async {
+                    _passwordConfirmationFocus.unfocus();
+                    setState(() {
+                      _waitingForSignUp = true;
+                    });
+                    await _signUp(context);
+                    setState(() {
+                      _waitingForSignUp = false;
+                    });
+                  },
                 ),
               ),
               Padding(
@@ -109,18 +169,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     horizontal: 20.0, vertical: 10.0),
                 child: YustProgressButton(
                   color: Theme.of(context).accentColor,
-                  onPressed: () async {
-                    try {
-                      await Yust.service.signUp(_firstName, _lastName, _email,
-                          _password, _passwordConfirmation,
-                          gender: _gender);
-                      Navigator.pop(context);
-                    } on YustException catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.message);
-                    } on PlatformException catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.message);
-                    }
-                  },
+                  inProgress: _waitingForSignUp,
+                  onPressed: () => _signUp(context),
                   child: Text('Registrieren',
                       style: TextStyle(fontSize: 20.0, color: Colors.white)),
                 ),
@@ -181,5 +231,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
         style: YustSelectStyle.outlineBorder,
       ),
     );
+  }
+
+  Future<void> _signUp(BuildContext context) async {
+    try {
+      await Yust.service.signUp(
+          _firstName, _lastName, _email, _password, _passwordConfirmation,
+          gender: _gender);
+      Navigator.pop(context);
+    } on YustException catch (err) {
+      Yust.service.showAlert(context, 'Fehler', err.message);
+    } on PlatformException catch (err) {
+      Yust.service.showAlert(context, 'Fehler', err.message);
+    }
   }
 }

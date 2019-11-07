@@ -66,6 +66,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     border: OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
                   focusNode: _firstNameFocus,
                   onChanged: (value) => _firstName = value.trim(),
                   onSubmitted: (value) {
@@ -86,6 +87,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     border: OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
                   focusNode: _lastNameFocus,
                   onChanged: (value) => _lastName = value.trim(),
                   onSubmitted: (value) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/screens/reset_password.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 
@@ -23,8 +24,18 @@ class _SignInScreenState extends State<SignInScreen> {
   String _password;
   bool _waitingForSignIn = false;
 
+  final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
+
+  @override
+  void initState() {
+    SharedPreferences.getInstance().then((prefs) {
+      _email = prefs.getString('email') ?? null;
+      _emailController.text = _email;
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +54,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20.0, vertical: 10.0),
                 child: TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     labelText: 'E-Mail',
                     border: OutlineInputBorder(),
@@ -144,6 +156,8 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _signIn(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('email', _email);
     try {
       await Yust.service.signIn(_email, _password);
     } on YustException catch (err) {

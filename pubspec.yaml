@@ -16,6 +16,7 @@ dependencies:
   firebase_auth: ^0.11.1+7
   scoped_model: ^1.0.1
   intl: ^0.15.8
+  shared_preferences: ^0.5.4+3
 
 dev_dependencies:
   flutter_test:

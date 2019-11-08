@@ -6,6 +6,7 @@ import 'package:yust/widgets/yust_select.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
+import '../yust_store.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const String routeName = 'signUp';
@@ -244,6 +245,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await Yust.service.signUp(
           _firstName, _lastName, _email, _password, _passwordConfirmation,
           gender: _gender);
+      Yust.store.setState(() {
+        Yust.store.authState = AuthState.signedIn;
+      });
       Navigator.pop(context);
       if (this.widget.targetRouteName != null) {
         Navigator.pushReplacementNamed(context, this.widget.targetRouteName,

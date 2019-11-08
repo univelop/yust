@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/screens/reset_password.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
+import 'package:yust/yust_store.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
@@ -167,6 +168,9 @@ class _SignInScreenState extends State<SignInScreen> {
     prefs.setString('email', _email);
     try {
       await Yust.service.signIn(_email, _password);
+      Yust.store.setState(() {
+        Yust.store.authState = AuthState.signedIn;
+      });
       if (this.widget.targetRouteName != null) {
         Navigator.pushReplacementNamed(context, this.widget.targetRouteName,
             arguments: this.widget.targetRouteArguments);

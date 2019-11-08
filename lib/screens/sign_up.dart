@@ -245,9 +245,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await Yust.service.signUp(
           _firstName, _lastName, _email, _password, _passwordConfirmation,
           gender: _gender);
-      Yust.store.setState(() {
-        Yust.store.authState = AuthState.signedIn;
-      });
       Navigator.pop(context);
       if (this.widget.targetRouteName != null) {
         Navigator.pushReplacementNamed(context, this.widget.targetRouteName,

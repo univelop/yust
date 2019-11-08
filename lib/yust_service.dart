@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:yust/yust_store.dart';
 
 import 'models/yust_doc.dart';
 import 'models/yust_doc_setup.dart';
@@ -21,7 +22,12 @@ class YustService {
     if (password == null || password == '') {
       throw YustException('Das Passwort darf nicht leer sein.');
     }
-    await fireAuth.signInWithEmailAndPassword(email: email, password: password);
+    final firUser = await fireAuth.signInWithEmailAndPassword(email: email, password: password);
+    final user = await Yust.service.getDoc(YustUser.setup, firUser.uid).first;
+    Yust.store.setState(() {
+      Yust.store.authState = AuthState.signedIn;
+      Yust.store.currUser = user;
+    });
   }
 
   Future<void> signUp(String firstName, String lastName, String email,
@@ -42,6 +48,10 @@ class YustService {
         email: email, firstName: firstName, lastName: lastName, gender: gender)
       ..id = fireUser.uid;
     await Yust.service.saveDoc<YustUser>(YustUser.setup, user);
+    Yust.store.setState(() {
+      Yust.store.authState = AuthState.signedIn;
+      Yust.store.currUser = user;
+    });
   }
 
   Future<void> signOut() async {

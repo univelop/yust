@@ -168,9 +168,6 @@ class _SignInScreenState extends State<SignInScreen> {
     prefs.setString('email', _email);
     try {
       await Yust.service.signIn(_email, _password);
-      Yust.store.setState(() {
-        Yust.store.authState = AuthState.signedIn;
-      });
       if (this.widget.targetRouteName != null) {
         Navigator.pushReplacementNamed(context, this.widget.targetRouteName,
             arguments: this.widget.targetRouteArguments);

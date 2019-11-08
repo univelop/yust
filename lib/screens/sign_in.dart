@@ -9,7 +9,7 @@ import '../yust.dart';
 import 'sign_up.dart';
 
 class SignInScreen extends StatefulWidget {
-  static String routeName = 'signIn';
+  static const String routeName = 'signIn';
 
   final String logoAssetName;
 

@@ -8,7 +8,7 @@ import '../models/yust_exception.dart';
 import '../yust.dart';
 
 class SignUpScreen extends StatefulWidget {
-  static String routeName = 'signUp';
+  static const String routeName = 'signUp';
 
   final String homeRouteName;
   final String logoAssetName;

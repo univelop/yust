@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as prefix0;
 import 'package:flutter/services.dart';
 import 'package:yust/models/yust_user.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
@@ -6,10 +7,10 @@ import 'package:yust/widgets/yust_select.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
-import '../yust_store.dart';
+import 'sign_in.dart';
 
 class SignUpScreen extends StatefulWidget {
-  static const String routeName = 'signUp';
+  static const String routeName = '/signUp';
 
   final String homeRouteName;
   final String logoAssetName;
@@ -245,10 +246,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
       await Yust.service.signUp(
           _firstName, _lastName, _email, _password, _passwordConfirmation,
           gender: _gender);
-      Navigator.pop(context);
       if (this.widget.targetRouteName != null) {
-        Navigator.pushReplacementNamed(context, this.widget.targetRouteName,
-            arguments: this.widget.targetRouteArguments);
+        Navigator.pushNamedAndRemoveUntil(context, this.widget.targetRouteName, (route) {
+          return route.settings.name != SignInScreen.routeName && route.settings.name != SignUpScreen.routeName;
+        }, arguments: this.widget.targetRouteArguments);
+      } else {
+        Navigator.pop(context);
       }
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);

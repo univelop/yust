@@ -13,12 +13,16 @@ class SignUpScreen extends StatefulWidget {
   final String homeRouteName;
   final String logoAssetName;
   final bool askForGender;
+  final String targetRouteName;
+  final dynamic targetRouteArguments;
 
   SignUpScreen(
       {Key key,
       this.homeRouteName = '/',
       this.logoAssetName,
-      this.askForGender = false})
+      this.askForGender = false,
+      this.targetRouteName,
+      this.targetRouteArguments})
       : super(key: key);
 
   @override
@@ -241,6 +245,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _firstName, _lastName, _email, _password, _passwordConfirmation,
           gender: _gender);
       Navigator.pop(context);
+      if (this.widget.targetRouteName != null) {
+        Navigator.pushReplacementNamed(context, this.widget.targetRouteName,
+            arguments: this.widget.targetRouteArguments);
+      }
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

@@ -12,8 +12,15 @@ class SignInScreen extends StatefulWidget {
   static const String routeName = 'signIn';
 
   final String logoAssetName;
+  final String targetRouteName;
+  final dynamic targetRouteArguments;
 
-  SignInScreen({Key key, this.logoAssetName}) : super(key: key);
+  SignInScreen(
+      {Key key,
+      this.logoAssetName,
+      this.targetRouteName,
+      this.targetRouteArguments})
+      : super(key: key);
 
   @override
   _SignInScreenState createState() => _SignInScreenState();
@@ -160,6 +167,10 @@ class _SignInScreenState extends State<SignInScreen> {
     prefs.setString('email', _email);
     try {
       await Yust.service.signIn(_email, _password);
+      if (this.widget.targetRouteName != null) {
+        Navigator.pushReplacementNamed(context, this.widget.targetRouteName,
+            arguments: this.widget.targetRouteArguments);
+      }
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

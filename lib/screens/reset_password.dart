@@ -6,7 +6,7 @@ import '../models/yust_exception.dart';
 import '../yust.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  static String routeName = 'resetPassword';
+  static const String routeName = '/resetPassword';
   final String logoAssetName;
 
   ResetPasswordScreen({Key key, this.logoAssetName}) : super(key: key);

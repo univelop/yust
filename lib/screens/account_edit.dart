@@ -8,7 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 class AccountEditScreen extends StatelessWidget {
-  static String routeName = '/accountEdit';
+  static const String routeName = '/accountEdit';
 
   final bool askForGender;
 

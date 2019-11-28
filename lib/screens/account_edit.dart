@@ -29,7 +29,7 @@ class AccountEditScreen extends StatelessWidget {
               value: user.firstName,
               onChanged: (value) {
                 user.firstName = value;
-                Yust.service.saveDoc<YustUser>(YustUser.setup, user);
+                Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
               },
             ),
             YustTextField(
@@ -37,7 +37,7 @@ class AccountEditScreen extends StatelessWidget {
               value: user.lastName,
               onChanged: (value) {
                 user.lastName = value;
-                Yust.service.saveDoc<YustUser>(YustUser.setup, user);
+                Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
               },
             ),
             YustTextField(
@@ -79,7 +79,7 @@ class AccountEditScreen extends StatelessWidget {
       optionLabels: ['Herr', 'Frau'],
       onSelected: (value) {
         user.gender = value;
-        Yust.service.saveDoc<YustUser>(YustUser.setup, user);
+        Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
       },
     );
   }

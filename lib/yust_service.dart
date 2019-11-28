@@ -23,7 +23,7 @@ class YustService {
       throw YustException('Das Passwort darf nicht leer sein.');
     }
     final firUser = await fireAuth.signInWithEmailAndPassword(email: email, password: password);
-    final user = await Yust.service.getDoc(YustUser.setup, firUser.uid).first;
+    final user = await Yust.service.getDoc(Yust.userSetup, firUser.uid).first;
     Yust.store.setState(() {
       Yust.store.authState = AuthState.signedIn;
       Yust.store.currUser = user;
@@ -47,7 +47,7 @@ class YustService {
     final user = YustUser(
         email: email, firstName: firstName, lastName: lastName, gender: gender)
       ..id = fireUser.uid;
-    await Yust.service.saveDoc<YustUser>(YustUser.setup, user);
+    await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
     Yust.store.setState(() {
       Yust.store.authState = AuthState.signedIn;
       Yust.store.currUser = user;
@@ -71,7 +71,7 @@ class YustService {
     Yust.store.setState(() {
       Yust.store.currUser.email = email;
     });
-    Yust.service.saveDoc<YustUser>(YustUser.setup, Yust.store.currUser);
+    Yust.service.saveDoc<YustUser>(Yust.userSetup, Yust.store.currUser);
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {

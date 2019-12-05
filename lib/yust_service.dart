@@ -378,9 +378,9 @@ class YustService {
   Query _executeOrderByList(Query query, List<String> orderByList) {
     if (orderByList != null) {
       orderByList.asMap().forEach((index, orderBy) {
-        if (orderBy != 'DESC') {
+        if (orderBy.toUpperCase() != 'DESC') {
           final desc = (index + 1 < orderByList.length &&
-              orderByList[index + 1] == 'DESC');
+              orderByList[index + 1].toUpperCase() == 'DESC');
           query = query.orderBy(orderBy, descending: desc);
         }
       });

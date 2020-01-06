@@ -44,9 +44,12 @@ class YustService {
     }
     final fireUser = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final user = YustUser(
-        email: email, firstName: firstName, lastName: lastName, gender: gender)
-      ..id = fireUser.uid;
+    final user = Yust.userSetup.newDoc() as YustUser
+    ..email = email
+    ..firstName = firstName
+    ..lastName = lastName
+    ..gender = gender
+    ..id = fireUser.uid;
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
     Yust.store.setState(() {
       Yust.store.authState = AuthState.signedIn;

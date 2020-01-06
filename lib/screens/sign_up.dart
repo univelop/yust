@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart' as prefix0;
 import 'package:flutter/services.dart';
 import 'package:yust/models/yust_user.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
@@ -115,6 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   textInputAction: TextInputAction.next,
                   keyboardType: TextInputType.emailAddress,
+                  textCapitalization: TextCapitalization.none,
                   focusNode: _emailFocus,
                   onChanged: (value) => _email = value.trim(),
                   onSubmitted: (value) {

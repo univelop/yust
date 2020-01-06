@@ -1,3 +1,4 @@
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:yust/models/yust_user.dart';
 import 'package:yust/widgets/yust_select.dart';
 import 'package:yust/widgets/yust_store_builder.dart';
@@ -43,24 +44,15 @@ class AccountEditScreen extends StatelessWidget {
             YustTextField(
               label: 'E-Mail',
               value: user.email,
-              enabled: false,
+              readOnly: true,
+              onTab: () => _changeEmail(context),
             ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: RaisedButton(
-                padding: const EdgeInsets.all(20.0),
-                child: Text('E-Mail ändern'),
-                onPressed: () => _changeEmail(context),
-              ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
-              child: RaisedButton(
-                padding: const EdgeInsets.all(20.0),
-                child: Text('Passwort ändern'),
-                onPressed: () => _changePassword(context),
-              ),
+            YustTextField(
+              label: 'Passwort',
+              value: '*****',
+              obscureText: true,
+              readOnly: true,
+              onTab: () => _changePassword(context),
             ),
           ],
         );
@@ -119,7 +111,13 @@ class AccountEditScreen extends StatelessWidget {
                   textColor: Theme.of(context).accentColor,
                   onPressed: () async {
                     try {
+                      final progressDialog = ProgressDialog(context);
+                      progressDialog.style(
+                        message: 'E-Mail wird geändert...',
+                      );
+                      progressDialog.show();
                       await Yust.service.changeEmail(email, password);
+                      progressDialog.hide();
                       Navigator.of(context).pop();
                       Yust.service.showAlert(context, 'E-Mail geändert',
                           'Deine E-Mail wurde erfolgreich geändert.');
@@ -176,8 +174,14 @@ class AccountEditScreen extends StatelessWidget {
                   textColor: Theme.of(context).accentColor,
                   onPressed: () async {
                     try {
+                      final progressDialog = ProgressDialog(context);
+                      progressDialog.style(
+                        message: 'Passwort wird geändert...',
+                      );
+                      progressDialog.show();
                       await Yust.service
                           .changePassword(newPassword, oldPassword);
+                      progressDialog.hide();
                       Navigator.of(context).pop();
                       Yust.service.showAlert(context, 'Passwort geändert',
                           'Dein Passwort wurde erfolgreich geändert.');

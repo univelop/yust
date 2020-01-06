@@ -17,6 +17,7 @@ dependencies:
   scoped_model: ^1.0.1
   intl: ^0.16.0
   shared_preferences: ^0.5.4+3
+  progress_dialog: ^1.2.0
 
 dev_dependencies:
   flutter_test:

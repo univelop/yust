@@ -201,7 +201,7 @@ class YustService {
   }
 
   Future<void> saveDoc<T extends YustDoc>(
-      YustDocSetup modelSetup, T doc) async {
+      YustDocSetup modelSetup, T doc, {bool merge = true}) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
     if (doc.createdAt == null) {
       doc.createdAt = DateTime.now().toIso8601String();
@@ -214,7 +214,7 @@ class YustService {
     }
 
     if (doc.id != null) {
-      await collection.document(doc.id).setData(doc.toJson(), merge: true);
+      await collection.document(doc.id).setData(doc.toJson(), merge: merge);
     } else {
       var ref = await collection.add(doc.toJson());
       doc.id = ref.documentID;

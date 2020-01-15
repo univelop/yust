@@ -61,8 +61,10 @@ class _YustProgressButtonState extends State<YustProgressButton> {
       _inProgressLocal = true;
     });
     await widget.onPressed();
-    setState(() {
-      _inProgressLocal = false;
-    });
+    if (mounted) {
+      setState(() {
+        _inProgressLocal = false;
+      });
+    }
   }
 }

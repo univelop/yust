@@ -1,7 +1,6 @@
 name: yust
 description: Build awesome apps with Flutter and Firebase.
-version: 0.3.1
-author: "Jannes Köhler <janneskoehler@gmail.com>"
+version: 0.4.0
 homepage: https://janneskoehler.de
 
 environment:

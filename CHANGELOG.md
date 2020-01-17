@@ -23,3 +23,15 @@
 * Add account edit screen
 * Use firebase document merging
 * Improvements and hotfixes
+
+## 0.4.0 - 2020-01-17
+
+* Update to Flutter 1.12
+* Add insights to doc builder
+* Improve date picker
+* Improve push notifications
+* Enable offline persistance
+* Improve sign in and sign up
+* Improve routing
+* Make user extendable
+* Improve descanding ordering

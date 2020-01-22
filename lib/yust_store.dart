@@ -7,14 +7,15 @@ enum AuthState {
   signedIn,
   signedOut,
 }
-class YustStore extends Model {
 
+class YustStore extends Model {
   AuthState authState;
+
+  ///Null if the user is signed out.
   YustUser currUser;
-  
+
   void setState(void Function() f) {
     f();
     notifyListeners();
   }
-
 }

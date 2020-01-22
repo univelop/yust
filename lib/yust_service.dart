@@ -59,6 +59,11 @@ class YustService {
 
   Future<void> signOut() async {
     await fireAuth.signOut();
+
+    Yust.store.setState(() {
+      Yust.store.authState = AuthState.signedOut;
+      Yust.store.currUser = null;
+    });
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -103,6 +108,11 @@ class YustService {
     return doc;
   }
 
+  ///[filterList] each entry represents a condition that has to be met.
+  ///All of those conditions must be true for each returned entry.
+  ///
+  ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  ///Multiple of those entries can be repeated.
   Stream<List<T>> getDocs<T extends YustDoc>(YustDocSetup modelSetup,
       {List<List<dynamic>> filterList, List<String> orderByList}) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
@@ -315,13 +325,19 @@ class YustService {
         });
   }
 
+  ///Does not return null.
   String formatDate(String isoDate, {String format}) {
+    if (isoDate == null) return '';
+
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
     return formatter.format(now);
   }
 
+  ///Does not return null.
   String formatTime(String isoDate, {String format}) {
+    if (isoDate == null) return '';
+
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(now);

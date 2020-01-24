@@ -9,7 +9,6 @@ import 'yust_service.dart';
 import 'yust_store.dart';
 
 class Yust {
-
   static final store = YustStore();
   static final service = YustService();
   static YustDocSetup userSetup;
@@ -17,21 +16,25 @@ class Yust {
   static void initialize({YustDocSetup userSetup}) {
     Yust.userSetup = userSetup ?? YustUser.setup;
     Firestore.instance.settings(persistenceEnabled: true);
-    
+
     Yust.store.authState = AuthState.waiting;
-    FirebaseAuth.instance.onAuthStateChanged.listen((fireUser) {
+    FirebaseAuth.instance.onAuthStateChanged.listen((fireUser) async {
       if (fireUser != null) {
-        Yust.service.getDoc<YustUser>(Yust.userSetup, fireUser.uid).listen((user) {
-          Yust.store.setState(() {
-            Yust.store.authState = (user == null) ? AuthState.signedOut : AuthState.signedIn;
-            if (user != null) {
-              Yust.store.currUser = user;
-            }
-          });
+        YustUser user = await Yust.service
+            .getDoc<YustUser>(Yust.userSetup, fireUser.uid)
+            .first;
+
+        Yust.store.setState(() {
+          Yust.store.authState =
+              (user == null) ? AuthState.signedOut : AuthState.signedIn;
+          if (user != null) {
+            Yust.store.currUser = user;
+          }
         });
       } else {
         Yust.store.setState(() {
           Yust.store.authState = AuthState.signedOut;
+          Yust.store.currUser = null;
         });
       }
     });
@@ -52,5 +55,4 @@ class Yust {
     //   });
     // });
   }
-
 }

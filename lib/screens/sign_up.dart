@@ -6,10 +6,10 @@ import 'package:yust/widgets/yust_select.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
-import 'sign_in.dart';
 
 class SignUpScreen extends StatefulWidget {
   static const String routeName = '/signUp';
+  static const bool signInRequired = false;
 
   final String homeRouteName;
   final String logoAssetName;
@@ -17,14 +17,14 @@ class SignUpScreen extends StatefulWidget {
   final String targetRouteName;
   final dynamic targetRouteArguments;
 
-  SignUpScreen(
-      {Key key,
-      this.homeRouteName = '/',
-      this.logoAssetName,
-      this.askForGender = false,
-      this.targetRouteName,
-      this.targetRouteArguments})
-      : super(key: key);
+  SignUpScreen({
+    Key key,
+    this.homeRouteName = '/',
+    this.logoAssetName,
+    this.askForGender = false,
+    this.targetRouteName,
+    this.targetRouteArguments,
+  }) : super(key: key);
 
   @override
   _SignUpScreenState createState() => _SignUpScreenState();
@@ -244,15 +244,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _signUp(BuildContext context) async {
     try {
       await Yust.service.signUp(
-          _firstName, _lastName, _email, _password, _passwordConfirmation,
-          gender: _gender);
-      if (this.widget.targetRouteName != null) {
-        Navigator.pushNamedAndRemoveUntil(context, this.widget.targetRouteName, (route) {
-          return route.settings.name != SignInScreen.routeName && route.settings.name != SignUpScreen.routeName;
-        }, arguments: this.widget.targetRouteArguments);
-      } else {
-        Navigator.pop(context);
-      }
+        context,
+        _firstName,
+        _lastName,
+        _email,
+        _password,
+        _passwordConfirmation,
+        gender: _gender,
+      );
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

@@ -10,6 +10,7 @@ import 'package:flutter/widgets.dart';
 
 class AccountEditScreen extends StatelessWidget {
   static const String routeName = '/accountEdit';
+  static const bool signInRequired = true;
 
   final bool askForGender;
 

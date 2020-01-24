@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/screens/reset_password.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
-import 'package:yust/yust_store.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
@@ -11,17 +12,18 @@ import 'sign_up.dart';
 
 class SignInScreen extends StatefulWidget {
   static const String routeName = '/signIn';
+  static const bool signInRequired = false;
 
   final String logoAssetName;
   final String targetRouteName;
   final dynamic targetRouteArguments;
 
-  SignInScreen(
-      {Key key,
-      this.logoAssetName,
-      this.targetRouteName,
-      this.targetRouteArguments})
-      : super(key: key);
+  SignInScreen({
+    Key key,
+    this.logoAssetName,
+    this.targetRouteName,
+    this.targetRouteArguments,
+  }) : super(key: key);
 
   @override
   _SignInScreenState createState() => _SignInScreenState();
@@ -42,6 +44,9 @@ class _SignInScreenState extends State<SignInScreen> {
       _email = prefs.getString('email') ?? null;
       _emailController.text = _email;
     });
+
+    Yust.service.waitForSignIn(context);
+
     super.initState();
   }
 
@@ -167,11 +172,7 @@ class _SignInScreenState extends State<SignInScreen> {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('email', _email);
     try {
-      await Yust.service.signIn(_email, _password);
-      if (this.widget.targetRouteName != null) {
-        Navigator.pushReplacementNamed(context, this.widget.targetRouteName,
-            arguments: this.widget.targetRouteArguments);
-      }
+      await Yust.service.signIn(context, _email, _password);
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

@@ -45,7 +45,7 @@ class _SignInScreenState extends State<SignInScreen> {
       _emailController.text = _email;
     });
 
-    Yust.service.waitForSignIn(context);
+    Yust.service.waitForSignIn(Navigator.of(context));
 
     super.initState();
   }

@@ -19,8 +19,10 @@ class YustService {
   Future<void> signIn(
     BuildContext context,
     String email,
-    String password,
-  ) async {
+    String password, {
+    String targetRouteName,
+    dynamic targetRouteArguments,
+  }) async {
     if (email == null || email == '') {
       throw YustException('Die E-Mail darf nicht leer sein.');
     }
@@ -32,7 +34,11 @@ class YustService {
       password: password,
     );
 
-    await waitForSignIn(context);
+    await waitForSignIn(
+      Navigator.of(context),
+      targetRouteName: targetRouteName,
+      targetRouteArguments: targetRouteArguments,
+    );
   }
 
   Future<void> signUp(
@@ -43,6 +49,8 @@ class YustService {
     String password,
     String passwordConfirmation, {
     YustGender gender,
+    String targetRouteName,
+    dynamic targetRouteArguments,
   }) async {
     if (firstName == null || firstName == '') {
       throw YustException('Der Vorname darf nicht leer sein.');
@@ -64,7 +72,11 @@ class YustService {
 
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
 
-    await waitForSignIn(context);
+    await waitForSignIn(
+      Navigator.of(context),
+      targetRouteName: targetRouteName,
+      targetRouteArguments: targetRouteArguments,
+    );
   }
 
   Future<void> signOut(BuildContext context) async {
@@ -79,7 +91,11 @@ class YustService {
     );
   }
 
-  Future<void> waitForSignIn(BuildContext context) async {
+  Future<void> waitForSignIn(
+    NavigatorState navigatorState, {
+    String targetRouteName = Navigator.defaultRouteName,
+    dynamic targetRouteArguments,
+  }) async {
     final completer = Completer<bool>();
 
     void Function() listener = () {
@@ -102,9 +118,10 @@ class YustService {
     Yust.store.removeListener(listener);
 
     if (successful) {
-      Navigator.of(context).pushNamedAndRemoveUntil(
-        Navigator.defaultRouteName,
+      navigatorState.pushNamedAndRemoveUntil(
+        targetRouteName,
         (_) => false,
+        arguments: targetRouteArguments,
       );
     }
   }

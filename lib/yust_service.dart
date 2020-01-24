@@ -93,9 +93,11 @@ class YustService {
 
   Future<void> waitForSignIn(
     NavigatorState navigatorState, {
-    String targetRouteName = Navigator.defaultRouteName,
+    String targetRouteName,
     dynamic targetRouteArguments,
   }) async {
+    targetRouteName ??= Navigator.defaultRouteName;
+
     final completer = Completer<bool>();
 
     void Function() listener = () {

@@ -253,6 +253,7 @@ class YustService {
     });
   }
 
+  ///Emits null events if no document was found.
   Stream<T> getFirstDoc<T extends YustDoc>(
       YustDocSetup modelSetup, List<List<dynamic>> filterList,
       {List<String> orderByList}) {

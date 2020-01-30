@@ -7,14 +7,14 @@ class YustProgressButton extends StatefulWidget {
   final Color spinnerColor;
   final bool inProgress;
 
-  YustProgressButton(
-      {Key key,
-      this.child,
-      this.onPressed,
-      this.color,
-      this.spinnerColor = Colors.white,
-      this.inProgress = false})
-      : super(key: key);
+  YustProgressButton({
+    Key key,
+    this.child,
+    this.onPressed,
+    this.color,
+    this.spinnerColor = Colors.white,
+    this.inProgress = false,
+  }) : super(key: key);
 
   @override
   _YustProgressButtonState createState() => _YustProgressButtonState();

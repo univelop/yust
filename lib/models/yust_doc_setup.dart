@@ -12,7 +12,10 @@ class YustDocSetup {
 
   ///If true the [envId] of the [YustDoc] will be automatically set when saving.
   bool forEnvironment;
+
+  ///Should be set to true if this setup is used for an environment.
   bool isEnvironment;
+
   void Function(dynamic doc) onInit;
   void Function(dynamic doc) onMigrate;
   void Function(dynamic doc) onDelete;

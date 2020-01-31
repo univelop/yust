@@ -1,7 +1,6 @@
 import 'yust_doc_setup.dart';
 
 abstract class YustDoc {
-
   static final setup = YustDocSetup(collectionName: 'myCollection');
 
   String id;
@@ -9,7 +8,12 @@ abstract class YustDoc {
   String userId;
   String envId;
 
-  YustDoc();
+  YustDoc({
+    this.id,
+    this.createdAt,
+    this.userId,
+    this.envId,
+  });
 
   YustDoc.fromJson(Map<String, dynamic> json);
 
@@ -18,5 +22,4 @@ abstract class YustDoc {
   static List<dynamic> docListToJson(List<dynamic> list) {
     return list.map((item) => item.toJson()).toList();
   }
-
 }

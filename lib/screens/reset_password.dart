@@ -7,6 +7,8 @@ import '../yust.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   static const String routeName = '/resetPassword';
+  static const bool signInRequired = false;
+
   final String logoAssetName;
 
   ResetPasswordScreen({Key key, this.logoAssetName}) : super(key: key);

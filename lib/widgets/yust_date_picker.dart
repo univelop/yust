@@ -5,13 +5,18 @@ import '../yust.dart';
 typedef StringCallback = void Function(String);
 
 class YustDatePicker extends StatelessWidget {
-  YustDatePicker({Key key, this.label, this.value = '', this.onChanged, this.hideClearButton = false})
-      : super(key: key);
+  YustDatePicker({
+    Key key,
+    this.label,
+    this.value = '',
+    this.onChanged,
+    this.hideClearButton = false,
+  }) : super(key: key);
 
   final String label;
   final String value;
   final StringCallback onChanged;
-  bool hideClearButton;
+  final bool hideClearButton;
 
   @override
   Widget build(BuildContext context) {

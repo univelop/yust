@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,24 +16,42 @@ import 'yust.dart';
 class YustService {
   final FirebaseAuth fireAuth = FirebaseAuth.instance;
 
-  Future<void> signIn(String email, String password) async {
+  Future<void> signIn(
+    BuildContext context,
+    String email,
+    String password, {
+    String targetRouteName,
+    dynamic targetRouteArguments,
+  }) async {
     if (email == null || email == '') {
       throw YustException('Die E-Mail darf nicht leer sein.');
     }
     if (password == null || password == '') {
       throw YustException('Das Passwort darf nicht leer sein.');
     }
-    final firUser = await fireAuth.signInWithEmailAndPassword(email: email, password: password);
-    final user = await Yust.service.getDoc(Yust.userSetup, firUser.uid).first;
-    Yust.store.setState(() {
-      Yust.store.authState = AuthState.signedIn;
-      Yust.store.currUser = user;
-    });
+    await fireAuth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    await waitForSignIn(
+      Navigator.of(context),
+      targetRouteName: targetRouteName,
+      targetRouteArguments: targetRouteArguments,
+    );
   }
 
-  Future<void> signUp(String firstName, String lastName, String email,
-      String password, String passwordConfirmation,
-      {YustGender gender}) async {
+  Future<void> signUp(
+    BuildContext context,
+    String firstName,
+    String lastName,
+    String email,
+    String password,
+    String passwordConfirmation, {
+    YustGender gender,
+    String targetRouteName,
+    dynamic targetRouteArguments,
+  }) async {
     if (firstName == null || firstName == '') {
       throw YustException('Der Vorname darf nicht leer sein.');
     }
@@ -45,20 +64,68 @@ class YustService {
     final fireUser = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     final user = Yust.userSetup.newDoc() as YustUser
-    ..email = email
-    ..firstName = firstName
-    ..lastName = lastName
-    ..gender = gender
-    ..id = fireUser.uid;
+      ..email = email
+      ..firstName = firstName
+      ..lastName = lastName
+      ..gender = gender
+      ..id = fireUser.uid;
+
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
-    Yust.store.setState(() {
-      Yust.store.authState = AuthState.signedIn;
-      Yust.store.currUser = user;
-    });
+
+    await waitForSignIn(
+      Navigator.of(context),
+      targetRouteName: targetRouteName,
+      targetRouteArguments: targetRouteArguments,
+    );
   }
 
-  Future<void> signOut() async {
+  Future<void> signOut(BuildContext context) async {
     await fireAuth.signOut();
+
+    await fireAuth.onAuthStateChanged
+        .firstWhere((FirebaseUser user) => user == null);
+
+    Navigator.of(context).pushNamedAndRemoveUntil(
+      Navigator.defaultRouteName,
+      (_) => false,
+    );
+  }
+
+  Future<void> waitForSignIn(
+    NavigatorState navigatorState, {
+    String targetRouteName,
+    dynamic targetRouteArguments,
+  }) async {
+    targetRouteName ??= Navigator.defaultRouteName;
+
+    final completer = Completer<bool>();
+
+    void Function() listener = () {
+      switch (Yust.store.authState) {
+        case AuthState.signedIn:
+          completer.complete(true);
+          break;
+        case AuthState.signedOut:
+          completer.complete(false);
+          break;
+        case AuthState.waiting:
+          break;
+      }
+    };
+
+    Yust.store.addListener(listener);
+
+    bool successful = await completer.future;
+
+    Yust.store.removeListener(listener);
+
+    if (successful) {
+      navigatorState.pushNamedAndRemoveUntil(
+        targetRouteName,
+        (_) => false,
+        arguments: targetRouteArguments,
+      );
+    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -69,7 +136,10 @@ class YustService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final user = await fireAuth.signInWithEmailAndPassword(email: Yust.store.currUser.email, password: password);
+    final user = await fireAuth.signInWithEmailAndPassword(
+      email: Yust.store.currUser.email,
+      password: password,
+    );
     await user.updateEmail(email);
     Yust.store.setState(() {
       Yust.store.currUser.email = email;
@@ -78,7 +148,10 @@ class YustService {
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
-    final user = await fireAuth.signInWithEmailAndPassword(email: Yust.store.currUser.email, password: oldPassword);
+    final user = await fireAuth.signInWithEmailAndPassword(
+      email: Yust.store.currUser.email,
+      password: oldPassword,
+    );
     await user.updatePassword(newPassword);
   }
 
@@ -103,6 +176,11 @@ class YustService {
     return doc;
   }
 
+  ///[filterList] each entry represents a condition that has to be met.
+  ///All of those conditions must be true for each returned entry.
+  ///
+  ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  ///Multiple of those entries can be repeated.
   Stream<List<T>> getDocs<T extends YustDoc>(YustDocSetup modelSetup,
       {List<List<dynamic>> filterList, List<String> orderByList}) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
@@ -175,6 +253,7 @@ class YustService {
     });
   }
 
+  ///Emits null events if no document was found.
   Stream<T> getFirstDoc<T extends YustDoc>(
       YustDocSetup modelSetup, List<List<dynamic>> filterList,
       {List<String> orderByList}) {
@@ -201,7 +280,10 @@ class YustService {
   }
 
   Future<void> saveDoc<T extends YustDoc>(
-      YustDocSetup modelSetup, T doc, {bool merge = true}) async {
+    YustDocSetup modelSetup,
+    T doc, {
+    bool merge = true,
+  }) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
     if (doc.createdAt == null) {
       doc.createdAt = DateTime.now().toIso8601String();
@@ -315,13 +397,19 @@ class YustService {
         });
   }
 
+  ///Does not return null.
   String formatDate(String isoDate, {String format}) {
+    if (isoDate == null) return '';
+
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
     return formatter.format(now);
   }
 
+  ///Does not return null.
   String formatTime(String isoDate, {String format}) {
+    if (isoDate == null) return '';
+
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(now);
@@ -381,7 +469,7 @@ class YustService {
   Query _executeOrderByList(Query query, List<String> orderByList) {
     if (orderByList != null) {
       orderByList.asMap().forEach((index, orderBy) {
-        if (orderBy.toUpperCase() != 'DESC') {
+        if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {
           final desc = (index + 1 < orderByList.length &&
               orderByList[index + 1].toUpperCase() == 'DESC');
           query = query.orderBy(orderBy, descending: desc);

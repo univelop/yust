@@ -6,24 +6,32 @@ import '../yust.dart';
 import 'yust_doc_builder.dart';
 
 class YustDocsBuilder<T extends YustDoc> extends StatelessWidget {
-  
   final YustDocSetup modelSetup;
   final List<List<dynamic>> filter;
   final List<String> orderBy;
   final bool doNotWait;
   final Widget Function(List<T>, YustBuilderInsights) builder;
 
-  YustDocsBuilder({@required this.modelSetup, this.filter, this.orderBy, this.doNotWait = false, @required this.builder});
-  
+  YustDocsBuilder({
+    Key key,
+    @required this.modelSetup,
+    this.filter,
+    this.orderBy,
+    this.doNotWait = false,
+    @required this.builder,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<T>>(
-      stream: Yust.service.getDocs<T>(modelSetup, filterList: filter, orderByList: orderBy),
+      stream: Yust.service
+          .getDocs<T>(modelSetup, filterList: filter, orderByList: orderBy),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           throw snapshot.error;
         }
-        final opts = YustBuilderInsights(waiting: snapshot.connectionState == ConnectionState.waiting);
+        final opts = YustBuilderInsights(
+            waiting: snapshot.connectionState == ConnectionState.waiting);
         if (opts.waiting && !doNotWait) {
           return Center(child: CircularProgressIndicator());
         }
@@ -31,5 +39,4 @@ class YustDocsBuilder<T extends YustDoc> extends StatelessWidget {
       },
     );
   }
-
 }

@@ -6,9 +6,13 @@ class YustSwitch extends StatelessWidget {
   final Color activeColor;
   final void Function(bool) onChanged;
 
-  const YustSwitch(
-      {Key key, this.label, this.value, this.activeColor, this.onChanged})
-      : super(key: key);
+  const YustSwitch({
+    Key key,
+    this.label,
+    this.value,
+    this.activeColor,
+    this.onChanged,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

@@ -5,11 +5,13 @@ import '../yust.dart';
 import '../yust_store.dart';
 
 class YustStoreBuilder extends StatelessWidget {
-  
   final Widget Function(BuildContext, Widget, YustStore) builder;
 
-  YustStoreBuilder({@required this.builder});
-  
+  YustStoreBuilder({
+    Key key,
+    @required this.builder,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return ScopedModel<YustStore>(
@@ -19,5 +21,4 @@ class YustStoreBuilder extends StatelessWidget {
       ),
     );
   }
-
 }

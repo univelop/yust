@@ -109,10 +109,30 @@ packages:
   cloud_firestore:
     dependency: "direct main"
     description:
-      name: cloud_firestore
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.13.0+1"
+      path: "packages/cloud_firestore/cloud_firestore"
+      ref: HEAD
+      resolved-ref: aca93235ad9df365d87db51a806b4457d0ce8282
+      url: "https://github.com/rodydavis/flutterfire"
+    source: git
+    version: "0.13.1"
+  cloud_firestore_platform_interface:
+    dependency: transitive
+    description:
+      path: "packages/cloud_firestore/cloud_firestore_platform_interface"
+      ref: HEAD
+      resolved-ref: aca93235ad9df365d87db51a806b4457d0ce8282
+      url: "https://github.com/rodydavis/flutterfire"
+    source: git
+    version: "1.0.0"
+  cloud_firestore_web:
+    dependency: "direct main"
+    description:
+      path: "packages/cloud_firestore/cloud_firestore_web"
+      ref: HEAD
+      resolved-ref: aca93235ad9df365d87db51a806b4457d0ce8282
+      url: "https://github.com/rodydavis/flutterfire"
+    source: git
+    version: "0.1.0"
   code_builder:
     dependency: transitive
     description:
@@ -387,6 +407,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.4.0"
+  plugin_platform_interface:
+    dependency: transitive
+    description:
+      name: plugin_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.1"
   pool:
     dependency: transitive
     description:

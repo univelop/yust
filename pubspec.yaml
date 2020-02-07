@@ -10,7 +10,8 @@ dependencies:
   flutter:
     sdk: flutter
   json_annotation: ^3.0.1
-  firebase_core: ^0.4.0+5
+  firebase_core: ^0.4.3+3
+  firebase_auth: ^0.15.2
 
   # cloud_firestore: ^0.13.0+1
   cloud_firestore:
@@ -22,7 +23,6 @@ dependencies:
       url: https://github.com/rodydavis/flutterfire
       path: packages/cloud_firestore/cloud_firestore_web
 
-  firebase_auth: ^0.11.1+7
   scoped_model: ^1.0.1
   intl: ^0.16.0
   shared_preferences: ^0.5.4+3

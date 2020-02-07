@@ -61,14 +61,14 @@ class YustService {
     if (password != passwordConfirmation) {
       throw YustException('Die Passwörter stimmen nicht überein.');
     }
-    final fireUser = await fireAuth.createUserWithEmailAndPassword(
+    final AuthResult authResult = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     final user = Yust.userSetup.newDoc() as YustUser
       ..email = email
       ..firstName = firstName
       ..lastName = lastName
       ..gender = gender
-      ..id = fireUser.uid;
+      ..id = authResult.user.uid;
 
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
 
@@ -136,11 +136,11 @@ class YustService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final user = await fireAuth.signInWithEmailAndPassword(
+    final AuthResult authResult = await fireAuth.signInWithEmailAndPassword(
       email: Yust.store.currUser.email,
       password: password,
     );
-    await user.updateEmail(email);
+    await authResult.user.updateEmail(email);
     Yust.store.setState(() {
       Yust.store.currUser.email = email;
     });
@@ -148,11 +148,11 @@ class YustService {
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
-    final user = await fireAuth.signInWithEmailAndPassword(
+    final AuthResult authResult = await fireAuth.signInWithEmailAndPassword(
       email: Yust.store.currUser.email,
       password: oldPassword,
     );
-    await user.updatePassword(newPassword);
+    await authResult.user.updatePassword(newPassword);
   }
 
   T initDoc<T extends YustDoc>(YustDocSetup modelSetup, [T doc]) {

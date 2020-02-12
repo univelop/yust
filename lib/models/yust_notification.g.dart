@@ -8,10 +8,11 @@ part of 'yust_notification.dart';
 
 YustNotification _$YustNotificationFromJson(Map json) {
   return YustNotification(
-      forCollection: json['forCollection'] as String,
-      forDocId: json['forDocId'] as String,
-      title: json['title'] as String,
-      body: json['body'] as String)
+    forCollection: json['forCollection'] as String,
+    forDocId: json['forDocId'] as String,
+    title: json['title'] as String,
+    body: json['body'] as String,
+  )
     ..id = json['id'] as String
     ..createdAt = json['createdAt'] as String
     ..userId = json['userId'] as String
@@ -31,5 +32,5 @@ Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
       'forDocId': instance.forDocId,
       'title': instance.title,
       'body': instance.body,
-      'data': instance.data
+      'data': instance.data,
     };

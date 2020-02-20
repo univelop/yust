@@ -454,6 +454,9 @@ class YustService {
           case '>=':
             query = query.where(filter[0], isGreaterThanOrEqualTo: filter[2]);
             break;
+          case 'in':
+            query = query.where(filter[0], whereIn: filter[2]);
+            break;
           case 'arrayContains':
             query = query.where(filter[0], arrayContains: filter[2]);
             break;

@@ -82,9 +82,6 @@ class YustService {
   Future<void> signOut(BuildContext context) async {
     await fireAuth.signOut();
 
-    await fireAuth.onAuthStateChanged
-        .firstWhere((FirebaseUser user) => user == null);
-
     Navigator.of(context).pushNamedAndRemoveUntil(
       Navigator.defaultRouteName,
       (_) => false,

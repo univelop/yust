@@ -73,7 +73,7 @@ class YustSelect<T> extends StatelessWidget {
                   onPressed: () {
                     Navigator.pop(context, optionValue);
                   },
-                  child: Text(_valueCaption(optionValue)),
+                  child: Text(_valueCaption(optionValue) ?? ''),
                 );
               }).toList(),
             );

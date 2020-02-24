@@ -18,7 +18,10 @@ class Yust {
     Firestore.instance.settings(persistenceEnabled: true);
 
     Yust.store.authState = AuthState.waiting;
-    FirebaseAuth.instance.onAuthStateChanged.listen((fireUser) async {
+    FirebaseAuth.instance.onAuthStateChanged.listen(
+
+        ///Calls [Yust.store.setState] on each event.
+        (fireUser) async {
       if (fireUser != null) {
         YustUser user = await Yust.service
             .getDoc<YustUser>(Yust.userSetup, fireUser.uid)

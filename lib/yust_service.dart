@@ -82,6 +82,16 @@ class YustService {
   Future<void> signOut(BuildContext context) async {
     await fireAuth.signOut();
 
+    final completer = Completer<void>();
+    void complete() => completer.complete();
+
+    Yust.store.addListener(complete);
+
+    ///Awaits that the listener registered in the [Yust.initialize] method completed its work.
+    ///This also assumes that [fireAuth.signOut] was successfull, of which I do not know how to be certain.
+    await completer.future;
+    Yust.store.removeListener(complete);
+
     Navigator.of(context).pushNamedAndRemoveUntil(
       Navigator.defaultRouteName,
       (_) => false,

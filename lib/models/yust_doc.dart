@@ -2,7 +2,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 import 'yust_doc_setup.dart';
 
-@JsonSerializable()
 abstract class YustDoc {
   static final setup = YustDocSetup(collectionName: 'myCollection');
 

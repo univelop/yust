@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'yust_doc.dart';
 
-class YustDocSetup {
+class YustDocSetup<T extends YustDoc> {
   String collectionName;
-  YustDoc Function(Map<String, dynamic> json) fromJson;
-  YustDoc Function() newDoc;
+  T Function(Map<String, dynamic> json) fromJson;
+  T Function() newDoc;
 
   ///If true the [userId] of the [YustDoc] will be automatically set when saving.
   bool forUser;

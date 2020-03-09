@@ -188,8 +188,13 @@ class YustService {
   ///
   ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
   ///Multiple of those entries can be repeated.
-  Stream<List<T>> getDocs<T extends YustDoc>(YustDocSetup modelSetup,
-      {List<List<dynamic>> filterList, List<String> orderByList}) {
+  ///
+  ///[filterList] may be null.
+  Stream<List<T>> getDocs<T extends YustDoc>(
+    YustDocSetup modelSetup, {
+    List<List<dynamic>> filterList,
+    List<String> orderByList,
+  }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
       query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
@@ -286,6 +291,8 @@ class YustService {
     });
   }
 
+  ///If [merge] is false a document with the same name
+  ///will be overwritten instead of trying to merge the data.
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup modelSetup,
     T doc, {
@@ -442,9 +449,14 @@ class YustService {
     return query;
   }
 
+  ///[filterList] may be null.
+  ///If it is not each contained list may not be null
+  ///and has to have a length of three.
   Query _executeFilterList(Query query, List<List<dynamic>> filterList) {
     if (filterList != null) {
       for (var filter in filterList) {
+        assert(filter != null && filter.length == 3);
+
         switch (filter[1]) {
           case '==':
             query = query.where(filter[0], isEqualTo: filter[2]);
@@ -470,6 +482,8 @@ class YustService {
           case 'isNull':
             query = query.where(filter[0], isNull: filter[2]);
             break;
+          default:
+            throw 'The operator "${filter[1]}" is not supported.';
         }
       }
     }

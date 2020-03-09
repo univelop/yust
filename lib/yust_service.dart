@@ -450,9 +450,13 @@ class YustService {
   }
 
   ///[filterList] may be null.
+  ///If it is not each contained list may not be null
+  ///and has to have a length of three.
   Query _executeFilterList(Query query, List<List<dynamic>> filterList) {
     if (filterList != null) {
       for (var filter in filterList) {
+        assert(filter != null && filter.length == 3);
+
         switch (filter[1]) {
           case '==':
             query = query.where(filter[0], isEqualTo: filter[2]);
@@ -478,6 +482,8 @@ class YustService {
           case 'isNull':
             query = query.where(filter[0], isNull: filter[2]);
             break;
+          default:
+            throw 'The operator "${filter[1]}" is not supported.';
         }
       }
     }

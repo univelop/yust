@@ -487,7 +487,7 @@ class YustService {
 
             // Makes sure that no data is returned.
             if (operand2 == null) {
-              query = query.where(operand1, isNull: true);
+              query = query.where(operand1, isEqualTo: true, isNull: true);
             }
             break;
           case 'arrayContains':

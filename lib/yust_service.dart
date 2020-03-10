@@ -456,34 +456,38 @@ class YustService {
     if (filterList != null) {
       for (var filter in filterList) {
         assert(filter != null && filter.length == 3);
+        final operand1 = filter[0], operator = filter[1], operand2 = filter[2];
 
-        switch (filter[1]) {
+        switch (operator) {
           case '==':
-            query = query.where(filter[0], isEqualTo: filter[2]);
+            query = query.where(operand1, isEqualTo: operand2);
             break;
           case '<':
-            query = query.where(filter[0], isLessThan: filter[2]);
+            query = query.where(operand1, isLessThan: operand2);
             break;
           case '<=':
-            query = query.where(filter[0], isLessThanOrEqualTo: filter[2]);
+            query = query.where(operand1, isLessThanOrEqualTo: operand2);
             break;
           case '>':
-            query = query.where(filter[0], isGreaterThan: filter[2]);
+            query = query.where(operand1, isGreaterThan: operand2);
             break;
           case '>=':
-            query = query.where(filter[0], isGreaterThanOrEqualTo: filter[2]);
+            query = query.where(operand1, isGreaterThanOrEqualTo: operand2);
             break;
           case 'in':
-            query = query.where(filter[0], whereIn: filter[2]);
+            // If null is passed for the filter list, no filter is applied at all.
+            // If an empty list is passed, than no result are returned.
+            // I think that it should behave the same.
+            query = query.where(operand1, whereIn: operand2 ?? []);
             break;
           case 'arrayContains':
-            query = query.where(filter[0], arrayContains: filter[2]);
+            query = query.where(operand1, arrayContains: operand2);
             break;
           case 'isNull':
-            query = query.where(filter[0], isNull: filter[2]);
+            query = query.where(operand1, isNull: operand2);
             break;
           default:
-            throw 'The operator "${filter[1]}" is not supported.';
+            throw 'The operator "$operator" is not supported.';
         }
       }
     }

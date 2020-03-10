@@ -456,7 +456,7 @@ class YustService {
     if (filterList != null) {
       for (var filter in filterList) {
         assert(filter != null && filter.length == 3);
-        final operand1 = filter[0], operator = filter[1], operand2 = filter[2];
+        var operand1 = filter[0], operator = filter[1], operand2 = filter[2];
 
         switch (operator) {
           case '==':
@@ -476,9 +476,19 @@ class YustService {
             break;
           case 'in':
             // If null is passed for the filter list, no filter is applied at all.
-            // If an empty list is passed, than no result are returned.
-            // I think that it should behave the same.
-            query = query.where(operand1, whereIn: operand2 ?? []);
+            // If an empty list is passed, an error is thrown.
+            // I think that it should behave the same and return no data.
+
+            if (operand2 != null && operand2 is List && operand2.isEmpty) {
+              operand2 = null;
+            }
+
+            query = query.where(operand1, whereIn: operand2);
+
+            // Makes sure that no data is returned.
+            if (operand2 == null) {
+              query = query.where(operand1, isNull: true);
+            }
             break;
           case 'arrayContains':
             query = query.where(operand1, arrayContains: operand2);

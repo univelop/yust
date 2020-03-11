@@ -11,7 +11,7 @@ class YustBuilderInsights {
 }
 
 class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
-  final YustDocSetup modelSetup;
+  final YustDocSetup<T> modelSetup;
   final String id;
   final List<List<dynamic>> filter;
   final List<String> orderBy;

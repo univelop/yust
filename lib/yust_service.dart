@@ -343,19 +343,19 @@ class YustService {
 
   /// Initialises a document and saves it.
   ///
-  /// If [onInitialised] is provided, it will be called
-  /// after the document is initialised.
+  /// If [onInitialised] is provided, it will be called and
+  /// waited for after the document is initialised.
   ///
   /// An existing document can be given which will instead be initialised.
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     T doc,
-    void Function(T) onInitialised,
+    Future<void> Function(T) onInitialised,
   }) async {
     doc = initDoc<T>(modelSetup, doc);
 
     if (onInitialised != null) {
-      onInitialised(doc);
+      await onInitialised(doc);
     }
 
     await saveDoc<T>(modelSetup, doc);

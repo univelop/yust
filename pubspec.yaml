@@ -18,6 +18,7 @@ dependencies:
   intl: ^0.16.0
   shared_preferences: ^0.5.4+3
   progress_dialog: ^1.2.0
+  collection: ^1.14.11
 
 dev_dependencies:
   flutter_test:

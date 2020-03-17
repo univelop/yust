@@ -7,6 +7,22 @@ abstract class YustMock {
   static YustService _serviceMock;
   static YustDocSetup _userSetupMock;
 
+  static T returnRealOrMock<T>(
+    T Function() getMock,
+    T real,
+  ) {
+    assert(getMock != null);
+
+    return getMock() ?? real;
+  }
+
+  static YustStore store(YustStore store) =>
+      returnRealOrMock<YustStore>(() => _storeMock, store);
+  static YustService service(YustService service) =>
+      returnRealOrMock<YustService>(() => _serviceMock, service);
+  static YustDocSetup userSetup(YustDocSetup userSetup) =>
+      returnRealOrMock<YustDocSetup>(() => _userSetupMock, userSetup);
+
   /// Only inserts new mocks.
   static void injectMock({
     YustStore storeMock,

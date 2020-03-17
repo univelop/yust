@@ -2,6 +2,7 @@ library yust;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:yust/yust_mock.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -13,9 +14,9 @@ abstract class Yust {
   static final _service = YustService();
   static YustDocSetup _userSetup;
 
-  static YustStore store() => _store;
-  static YustService service() => _service;
-  static YustDocSetup userSetup() => _userSetup;
+  static YustStore store() => YustMock.store(_store);
+  static YustService service() => YustMock.service(_service);
+  static YustDocSetup userSetup() => YustMock.userSetup(_userSetup);
 
   static void initialize({YustDocSetup userSetup}) {
     Yust._userSetup = userSetup ?? YustUser.setup;

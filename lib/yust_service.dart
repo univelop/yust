@@ -63,7 +63,7 @@ class YustService {
     }
     final AuthResult authResult = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final user = Yust.userSetup.newDoc() as YustUser
+    final user = Yust.userSetup.newDoc()
       ..email = email
       ..firstName = firstName
       ..lastName = lastName

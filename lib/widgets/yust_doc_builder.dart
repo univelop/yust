@@ -33,8 +33,9 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final docStream = (id != null)
-        ? Yust.service.getDoc<T>(modelSetup, id)
-        : Yust.service.getFirstDoc<T>(modelSetup, filter, orderByList: orderBy);
+        ? Yust.service().getDoc<T>(modelSetup, id)
+        : Yust.service()
+            .getFirstDoc<T>(modelSetup, filter, orderByList: orderBy);
     return StreamBuilder<T>(
       stream: docStream,
       builder: (context, snapshot) {
@@ -46,7 +47,7 @@ class YustDocBuilder<T extends YustDoc> extends StatelessWidget {
         }
         var doc = snapshot.data;
         if (doc == null && createIfNull) {
-          doc = Yust.service.initDoc<T>(modelSetup);
+          doc = Yust.service().initDoc<T>(modelSetup);
         }
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,

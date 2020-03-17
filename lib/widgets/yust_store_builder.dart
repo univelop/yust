@@ -15,7 +15,7 @@ class YustStoreBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScopedModel<YustStore>(
-      model: Yust.store,
+      model: Yust.store(),
       child: ScopedModelDescendant<YustStore>(
         builder: builder,
       ),

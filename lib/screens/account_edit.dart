@@ -31,7 +31,7 @@ class AccountEditScreen extends StatelessWidget {
               value: user.firstName,
               onChanged: (value) {
                 user.firstName = value;
-                Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+                Yust.service().saveDoc<YustUser>(Yust.userSetup(), user);
               },
             ),
             YustTextField(
@@ -39,7 +39,7 @@ class AccountEditScreen extends StatelessWidget {
               value: user.lastName,
               onChanged: (value) {
                 user.lastName = value;
-                Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+                Yust.service().saveDoc<YustUser>(Yust.userSetup(), user);
               },
             ),
             YustTextField(
@@ -72,7 +72,7 @@ class AccountEditScreen extends StatelessWidget {
       optionLabels: ['Herr', 'Frau'],
       onSelected: (value) {
         user.gender = value;
-        Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+        Yust.service().saveDoc<YustUser>(Yust.userSetup(), user);
       },
     );
   }
@@ -117,17 +117,18 @@ class AccountEditScreen extends StatelessWidget {
                         message: 'E-Mail wird geändert...',
                       );
                       progressDialog.show();
-                      await Yust.service.changeEmail(email, password);
+                      await Yust.service().changeEmail(email, password);
                       progressDialog.hide();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'E-Mail geändert',
+                      Yust.service().showAlert(context, 'E-Mail geändert',
                           'Deine E-Mail wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.message);
+                      Yust.service().showAlert(context, 'Fehler', err.message);
                     } catch (err) {
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.toString());
+                      Yust.service()
+                          .showAlert(context, 'Fehler', err.toString());
                     }
                   },
                 ),
@@ -180,18 +181,19 @@ class AccountEditScreen extends StatelessWidget {
                         message: 'Passwort wird geändert...',
                       );
                       progressDialog.show();
-                      await Yust.service
+                      await Yust.service()
                           .changePassword(newPassword, oldPassword);
                       progressDialog.hide();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Passwort geändert',
+                      Yust.service().showAlert(context, 'Passwort geändert',
                           'Dein Passwort wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.message);
+                      Yust.service().showAlert(context, 'Fehler', err.message);
                     } catch (err) {
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.toString());
+                      Yust.service()
+                          .showAlert(context, 'Fehler', err.toString());
                     }
                   },
                 ),

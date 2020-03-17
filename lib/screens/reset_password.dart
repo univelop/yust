@@ -51,14 +51,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   color: Theme.of(context).accentColor,
                   onPressed: () async {
                     try {
-                      await Yust.service.sendPasswordResetEmail(_email);
+                      await Yust.service().sendPasswordResetEmail(_email);
                     } on YustException catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.message);
+                      Yust.service().showAlert(context, 'Fehler', err.message);
                     } on PlatformException catch (err) {
-                      Yust.service.showAlert(context, 'Fehler', err.message);
+                      Yust.service().showAlert(context, 'Fehler', err.message);
                     }
                     Navigator.pop(context);
-                    Yust.service.showAlert(context, 'E-Mail verschickt',
+                    Yust.service().showAlert(context, 'E-Mail verschickt',
                         'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
                   },
                   child: Text('Passwort vergessen',

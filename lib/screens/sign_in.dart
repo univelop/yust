@@ -45,7 +45,7 @@ class _SignInScreenState extends State<SignInScreen> {
       _emailController.text = _email;
     });
 
-    Yust.service.waitForSignIn(Navigator.of(context));
+    Yust.service().waitForSignIn(Navigator.of(context));
 
     super.initState();
   }
@@ -172,13 +172,13 @@ class _SignInScreenState extends State<SignInScreen> {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('email', _email);
     try {
-      await Yust.service.signIn(context, _email, _password);
+      await Yust.service().signIn(context, _email, _password);
     } on YustException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
+      Yust.service().showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
+      Yust.service().showAlert(context, 'Fehler', err.message);
     } catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.toString());
+      Yust.service().showAlert(context, 'Fehler', err.toString());
     }
   }
 }

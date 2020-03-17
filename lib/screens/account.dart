@@ -28,7 +28,7 @@ class AccountScreen extends StatelessWidget {
                         Text(
                             store.currUser.firstName +
                                 ' ' +
-                                Yust.store.currUser.lastName,
+                                Yust.store().currUser.lastName,
                             style: TextStyle(
                                 color: Theme.of(context).accentColor,
                                 fontSize: 20.0)),
@@ -62,7 +62,7 @@ class AccountScreen extends StatelessWidget {
                       style: TextStyle(color: Theme.of(context).accentColor),
                     ),
                     onTap: () {
-                      Yust.service.signOut(context);
+                      Yust.service().signOut(context);
                       Navigator.pop(context);
                     },
                   ),

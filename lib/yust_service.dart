@@ -63,14 +63,14 @@ class YustService {
     }
     final AuthResult authResult = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final user = Yust.userSetup.newDoc() as YustUser
+    final user = Yust.userSetup().newDoc() as YustUser
       ..email = email
       ..firstName = firstName
       ..lastName = lastName
       ..gender = gender
       ..id = authResult.user.uid;
 
-    await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+    await Yust.service().saveDoc<YustUser>(Yust.userSetup(), user);
 
     await waitForSignIn(
       Navigator.of(context),
@@ -85,12 +85,12 @@ class YustService {
     final completer = Completer<void>();
     void complete() => completer.complete();
 
-    Yust.store.addListener(complete);
+    Yust.store().addListener(complete);
 
     ///Awaits that the listener registered in the [Yust.initialize] method completed its work.
     ///This also assumes that [fireAuth.signOut] was successfull, of which I do not know how to be certain.
     await completer.future;
-    Yust.store.removeListener(complete);
+    Yust.store().removeListener(complete);
 
     Navigator.of(context).pushNamedAndRemoveUntil(
       Navigator.defaultRouteName,
@@ -108,7 +108,7 @@ class YustService {
     final completer = Completer<bool>();
 
     void Function() listener = () {
-      switch (Yust.store.authState) {
+      switch (Yust.store().authState) {
         case AuthState.signedIn:
           completer.complete(true);
           break;
@@ -120,11 +120,11 @@ class YustService {
       }
     };
 
-    Yust.store.addListener(listener);
+    Yust.store().addListener(listener);
 
     bool successful = await completer.future;
 
-    Yust.store.removeListener(listener);
+    Yust.store().removeListener(listener);
 
     if (successful) {
       navigatorState.pushNamedAndRemoveUntil(
@@ -144,19 +144,19 @@ class YustService {
 
   Future<void> changeEmail(String email, String password) async {
     final AuthResult authResult = await fireAuth.signInWithEmailAndPassword(
-      email: Yust.store.currUser.email,
+      email: Yust.store().currUser.email,
       password: password,
     );
     await authResult.user.updateEmail(email);
-    Yust.store.setState(() {
-      Yust.store.currUser.email = email;
+    Yust.store().setState(() {
+      Yust.store().currUser.email = email;
     });
-    Yust.service.saveDoc<YustUser>(Yust.userSetup, Yust.store.currUser);
+    Yust.service().saveDoc<YustUser>(Yust.userSetup(), Yust.store().currUser);
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
     final AuthResult authResult = await fireAuth.signInWithEmailAndPassword(
-      email: Yust.store.currUser.email,
+      email: Yust.store().currUser.email,
       password: oldPassword,
     );
     await authResult.user.updatePassword(newPassword);
@@ -172,10 +172,10 @@ class YustService {
         .documentID;
     doc.createdAt = DateTime.now().toIso8601String();
     if (modelSetup.forEnvironment) {
-      doc.envId = Yust.store.currUser.currEnvId;
+      doc.envId = Yust.store().currUser.currEnvId;
     }
     if (modelSetup.forUser) {
-      doc.userId = Yust.store.currUser.id;
+      doc.userId = Yust.store().currUser.id;
     }
     if (modelSetup.onInit != null) {
       modelSetup.onInit(doc);
@@ -197,10 +197,10 @@ class YustService {
   }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+      query = query.where('envId', isEqualTo: Yust.store().currUser.currEnvId);
     }
     if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+      query = query.where('userId', isEqualTo: Yust.store().currUser.id);
     }
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
@@ -271,10 +271,10 @@ class YustService {
       {List<String> orderByList}) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+      query = query.where('envId', isEqualTo: Yust.store().currUser.currEnvId);
     }
     if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+      query = query.where('userId', isEqualTo: Yust.store().currUser.id);
     }
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
@@ -303,10 +303,10 @@ class YustService {
       doc.createdAt = DateTime.now().toIso8601String();
     }
     if (doc.userId == null && modelSetup.forUser) {
-      doc.userId = Yust.store.currUser.id;
+      doc.userId = Yust.store().currUser.id;
     }
     if (doc.envId == null && modelSetup.forEnvironment) {
-      doc.envId = Yust.store.currUser.currEnvId;
+      doc.envId = Yust.store().currUser.currEnvId;
     }
 
     if (doc.id != null) {
@@ -441,10 +441,10 @@ class YustService {
 
   Query _executeStaticFilters(Query query, YustDocSetup modelSetup) {
     if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+      query = query.where('envId', isEqualTo: Yust.store().currUser.currEnvId);
     }
     if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+      query = query.where('userId', isEqualTo: Yust.store().currUser.id);
     }
     return query;
   }

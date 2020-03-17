@@ -20,7 +20,7 @@ class YustDatePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = value != null ? Yust.service.formatDate(value) : '';
+    final dateText = value != null ? Yust.service().formatDate(value) : '';
     return Column(
       children: <Widget>[
         ListTile(

@@ -243,7 +243,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _signUp(BuildContext context) async {
     try {
-      await Yust.service.signUp(
+      await Yust.service().signUp(
         context,
         _firstName,
         _lastName,
@@ -253,9 +253,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
         gender: _gender,
       );
     } on YustException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
+      Yust.service().showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
+      Yust.service().showAlert(context, 'Fehler', err.message);
     }
   }
 }

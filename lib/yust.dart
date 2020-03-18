@@ -11,7 +11,7 @@ import 'yust_store.dart';
 class Yust {
   static final store = YustStore();
   static final service = YustService();
-  static YustDocSetup userSetup;
+  static YustDocSetup<YustUser> userSetup;
 
   static void initialize({YustDocSetup userSetup}) {
     Yust.userSetup = userSetup ?? YustUser.setup;

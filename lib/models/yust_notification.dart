@@ -6,8 +6,7 @@ part 'yust_notification.g.dart';
 
 @JsonSerializable(anyMap: true)
 class YustNotification extends YustDoc {
-
-  static final setup = YustDocSetup(
+  static final setup = YustDocSetup<YustNotification>(
     collectionName: 'notifications',
     newDoc: () => YustNotification(),
     fromJson: (json) => YustNotification.fromJson(json),
@@ -19,11 +18,15 @@ class YustNotification extends YustDoc {
   String body;
   Map<String, dynamic> data = {};
 
-  YustNotification({this.forCollection, this.forDocId, this.title, this.body});
+  YustNotification({
+    this.forCollection,
+    this.forDocId,
+    this.title,
+    this.body,
+  });
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>
       _$YustNotificationFromJson(json);
 
   Map<String, dynamic> toJson() => _$YustNotificationToJson(this);
-
 }

@@ -63,7 +63,7 @@ class YustService {
     }
     final AuthResult authResult = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final user = Yust.userSetup.newDoc() as YustUser
+    final user = Yust.userSetup.newDoc()
       ..email = email
       ..firstName = firstName
       ..lastName = lastName
@@ -162,9 +162,13 @@ class YustService {
     await authResult.user.updatePassword(newPassword);
   }
 
-  T initDoc<T extends YustDoc>(YustDocSetup modelSetup, [T doc]) {
+  /// Initialises a document with an id and the time it was created.
+  ///
+  /// Optionally an existing document can be given, which will still be
+  /// assigned a new id becoming a new document if it had an id previously.
+  T initDoc<T extends YustDoc>(YustDocSetup<T> modelSetup, [T doc]) {
     if (doc == null) {
-      doc = modelSetup.newDoc() as T;
+      doc = modelSetup.newDoc();
     }
     doc.id = Firestore.instance
         .collection(modelSetup.collectionName)
@@ -191,7 +195,7 @@ class YustService {
   ///
   ///[filterList] may be null.
   Stream<List<T>> getDocs<T extends YustDoc>(
-    YustDocSetup modelSetup, {
+    YustDocSetup<T> modelSetup, {
     List<List<dynamic>> filterList,
     List<String> orderByList,
   }) {
@@ -207,7 +211,7 @@ class YustService {
     return query.snapshots().map((snapshot) {
       // print('Get docs: ${modelSetup.collectionName}');
       return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data) as T;
+        final doc = modelSetup.fromJson(docSnapshot.data);
         if (modelSetup.onMigrate != null) {
           modelSetup.onMigrate(doc);
         }
@@ -216,8 +220,11 @@ class YustService {
     });
   }
 
-  Future<List<T>> getDocsOnce<T extends YustDoc>(YustDocSetup modelSetup,
-      {List<List<dynamic>> filterList, List<String> orderByList}) {
+  Future<List<T>> getDocsOnce<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    List<List<dynamic>> filterList,
+    List<String> orderByList,
+  }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
@@ -225,7 +232,7 @@ class YustService {
     return query.getDocuments(source: Source.server).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
       return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data) as T;
+        final doc = modelSetup.fromJson(docSnapshot.data);
         if (modelSetup.onMigrate != null) {
           modelSetup.onMigrate(doc);
         }
@@ -234,7 +241,10 @@ class YustService {
     });
   }
 
-  Stream<T> getDoc<T extends YustDoc>(YustDocSetup modelSetup, String id) {
+  Stream<T> getDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    String id,
+  ) {
     return Firestore.instance
         .collection(modelSetup.collectionName)
         .document(id)
@@ -242,7 +252,7 @@ class YustService {
         .map((snapshot) {
       // print('Get doc: ${modelSetup.collectionName} $id');
       if (snapshot.data == null) return null;
-      final doc = modelSetup.fromJson(snapshot.data) as T;
+      final doc = modelSetup.fromJson(snapshot.data);
       if (modelSetup.onMigrate != null) {
         modelSetup.onMigrate(doc);
       }
@@ -250,14 +260,17 @@ class YustService {
     });
   }
 
-  Future<T> getDocOnce<T extends YustDoc>(YustDocSetup modelSetup, String id) {
+  Future<T> getDocOnce<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    String id,
+  ) {
     return Firestore.instance
         .collection(modelSetup.collectionName)
         .document(id)
         .get(source: Source.server)
         .then((snapshot) {
       // print('Get doc: ${modelSetup.collectionName} $id');
-      final doc = modelSetup.fromJson(snapshot.data) as T;
+      final doc = modelSetup.fromJson(snapshot.data);
       if (modelSetup.onMigrate != null) {
         modelSetup.onMigrate(doc);
       }
@@ -267,8 +280,10 @@ class YustService {
 
   ///Emits null events if no document was found.
   Stream<T> getFirstDoc<T extends YustDoc>(
-      YustDocSetup modelSetup, List<List<dynamic>> filterList,
-      {List<String> orderByList}) {
+    YustDocSetup<T> modelSetup,
+    List<List<dynamic>> filterList, {
+    List<String> orderByList,
+  }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
     if (modelSetup.forEnvironment) {
       query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
@@ -280,7 +295,7 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map<T>((snapshot) {
       if (snapshot.documents.length > 0) {
-        final doc = modelSetup.fromJson(snapshot.documents[0].data) as T;
+        final doc = modelSetup.fromJson(snapshot.documents[0].data);
         if (modelSetup.onMigrate != null) {
           modelSetup.onMigrate(doc);
         }
@@ -291,10 +306,13 @@ class YustService {
     });
   }
 
-  ///If [merge] is false a document with the same name
-  ///will be overwritten instead of trying to merge the data.
-  Future<void> saveDoc<T extends YustDoc>(
-    YustDocSetup modelSetup,
+  /// If [merge] is false a document with the same name
+  /// will be overwritten instead of trying to merge the data.
+  ///
+  /// Returns the document how it was saved to
+  /// accommodate for a possible merge with the data online.
+  Future<T> saveDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
     T doc, {
     bool merge = true,
   }) async {
@@ -316,10 +334,14 @@ class YustService {
       doc.id = ref.documentID;
       await ref.setData(doc.toJson());
     }
+
+    return getDocOnce<T>(modelSetup, doc.id);
   }
 
-  Future<void> deleteDocs<T extends YustDoc>(YustDocSetup modelSetup,
-      {List<List<dynamic>> filterList}) async {
+  Future<void> deleteDocs<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    List<List<dynamic>> filterList,
+  }) async {
     final docs = await getDocsOnce(modelSetup, filterList: filterList);
     for (var doc in docs) {
       await deleteDoc(modelSetup, doc);
@@ -327,7 +349,9 @@ class YustService {
   }
 
   Future<void> deleteDoc<T extends YustDoc>(
-      YustDocSetup modelSetup, T doc) async {
+    YustDocSetup<T> modelSetup,
+    T doc,
+  ) async {
     if (modelSetup.onDelete != null) {
       modelSetup.onDelete(doc);
     }
@@ -335,6 +359,28 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(doc.id);
     await docRef.delete();
+  }
+
+  /// Initialises a document and saves it.
+  ///
+  /// If [onInitialised] is provided, it will be called and
+  /// waited for after the document is initialised.
+  ///
+  /// An existing document can be given which will instead be initialised.
+  Future<T> saveNewDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    T doc,
+    Future<void> Function(T) onInitialised,
+  }) async {
+    doc = initDoc<T>(modelSetup, doc);
+
+    if (onInitialised != null) {
+      await onInitialised(doc);
+    }
+
+    await saveDoc<T>(modelSetup, doc);
+
+    return doc;
   }
 
   void showAlert(BuildContext context, String title, String message) {
@@ -439,7 +485,10 @@ class YustService {
     return result;
   }
 
-  Query _executeStaticFilters(Query query, YustDocSetup modelSetup) {
+  Query _executeStaticFilters<T extends YustDoc>(
+    Query query,
+    YustDocSetup<T> modelSetup,
+  ) {
     if (modelSetup.forEnvironment) {
       query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
     }
@@ -456,34 +505,48 @@ class YustService {
     if (filterList != null) {
       for (var filter in filterList) {
         assert(filter != null && filter.length == 3);
+        var operand1 = filter[0], operator = filter[1], operand2 = filter[2];
 
-        switch (filter[1]) {
+        switch (operator) {
           case '==':
-            query = query.where(filter[0], isEqualTo: filter[2]);
+            query = query.where(operand1, isEqualTo: operand2);
             break;
           case '<':
-            query = query.where(filter[0], isLessThan: filter[2]);
+            query = query.where(operand1, isLessThan: operand2);
             break;
           case '<=':
-            query = query.where(filter[0], isLessThanOrEqualTo: filter[2]);
+            query = query.where(operand1, isLessThanOrEqualTo: operand2);
             break;
           case '>':
-            query = query.where(filter[0], isGreaterThan: filter[2]);
+            query = query.where(operand1, isGreaterThan: operand2);
             break;
           case '>=':
-            query = query.where(filter[0], isGreaterThanOrEqualTo: filter[2]);
+            query = query.where(operand1, isGreaterThanOrEqualTo: operand2);
             break;
           case 'in':
-            query = query.where(filter[0], whereIn: filter[2]);
+            // If null is passed for the filter list, no filter is applied at all.
+            // If an empty list is passed, an error is thrown.
+            // I think that it should behave the same and return no data.
+
+            if (operand2 != null && operand2 is List && operand2.isEmpty) {
+              operand2 = null;
+            }
+
+            query = query.where(operand1, whereIn: operand2);
+
+            // Makes sure that no data is returned.
+            if (operand2 == null) {
+              query = query.where(operand1, isEqualTo: true, isNull: true);
+            }
             break;
           case 'arrayContains':
-            query = query.where(filter[0], arrayContains: filter[2]);
+            query = query.where(operand1, arrayContains: operand2);
             break;
           case 'isNull':
-            query = query.where(filter[0], isNull: filter[2]);
+            query = query.where(operand1, isNull: operand2);
             break;
           default:
-            throw 'The operator "${filter[1]}" is not supported.';
+            throw 'The operator "$operator" is not supported.';
         }
       }
     }

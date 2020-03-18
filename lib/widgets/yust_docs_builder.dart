@@ -7,7 +7,7 @@ import '../yust.dart';
 import 'yust_doc_builder.dart';
 
 class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
-  final YustDocSetup modelSetup;
+  final YustDocSetup<T> modelSetup;
   final List<List<dynamic>> filter;
   final List<String> orderBy;
   final bool _doNotWait;

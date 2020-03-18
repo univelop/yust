@@ -162,10 +162,11 @@ class YustService {
     await authResult.user.updatePassword(newPassword);
   }
 
-  T initDoc<T extends YustDoc>(
-    YustDocSetup<T> modelSetup, [
-    T doc,
-  ]) {
+  /// Initialises a document with an id and the time it was created.
+  ///
+  /// Optionally an existing document can be given, which will still be
+  /// assigned a new id becoming a new document if it had an id previously.
+  T initDoc<T extends YustDoc>(YustDocSetup<T> modelSetup, [T doc]) {
     if (doc == null) {
       doc = modelSetup.newDoc();
     }
@@ -353,6 +354,28 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(doc.id);
     await docRef.delete();
+  }
+
+  /// Initialises a document and saves it.
+  ///
+  /// If [onInitialised] is provided, it will be called and
+  /// waited for after the document is initialised.
+  ///
+  /// An existing document can be given which will instead be initialised.
+  Future<T> saveNewDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    T doc,
+    Future<void> Function(T) onInitialised,
+  }) async {
+    doc = initDoc<T>(modelSetup, doc);
+
+    if (onInitialised != null) {
+      await onInitialised(doc);
+    }
+
+    await saveDoc<T>(modelSetup, doc);
+
+    return doc;
   }
 
   void showAlert(BuildContext context, String title, String message) {

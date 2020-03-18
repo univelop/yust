@@ -27,12 +27,12 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
     this.filter,
     this.orderBy,
     bool doNotWait,
-    bool createIfNul,
+    bool createIfNull,
     @required this.builder,
   })  : assert(modelSetup != null),
         assert(builder != null),
         _doNotWait = doNotWait ?? false,
-        _createIfNull = createIfNul ?? false,
+        _createIfNull = createIfNull ?? false,
         super(key: key);
 
   @override

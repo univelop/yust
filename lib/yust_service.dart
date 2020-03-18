@@ -306,9 +306,12 @@ class YustService {
     });
   }
 
-  ///If [merge] is false a document with the same name
-  ///will be overwritten instead of trying to merge the data.
-  Future<void> saveDoc<T extends YustDoc>(
+  /// If [merge] is false a document with the same name
+  /// will be overwritten instead of trying to merge the data.
+  ///
+  /// Returns the document how it was saved to
+  /// accommodate for a possible merge with the data online.
+  Future<T> saveDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     T doc, {
     bool merge = true,
@@ -331,6 +334,8 @@ class YustService {
       doc.id = ref.documentID;
       await ref.setData(doc.toJson());
     }
+
+    return getDocOnce<T>(modelSetup, doc.id);
   }
 
   Future<void> deleteDocs<T extends YustDoc>(

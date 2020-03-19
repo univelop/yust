@@ -12,11 +12,11 @@ import 'yust_store.dart';
 abstract class Yust {
   static final _store = YustStore();
   static final _service = YustService();
-  static YustDocSetup _userSetup;
+  static YustDocSetup<YustUser> _userSetup;
 
   static YustStore store() => YustMock.store(_store);
   static YustService service() => YustMock.service(_service);
-  static YustDocSetup userSetup() => YustMock.userSetup(_userSetup);
+  static YustDocSetup<YustUser> userSetup() => YustMock.userSetup(_userSetup);
 
   static void initialize({YustDocSetup userSetup}) {
     Yust._userSetup = userSetup ?? YustUser.setup;

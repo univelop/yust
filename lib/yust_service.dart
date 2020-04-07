@@ -174,7 +174,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document()
         .documentID;
-    doc.createdAt = DateTime.now().toIso8601String();
+    doc.createdAt = toStandardDateTimeString(DateTime.now());
     if (modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
     }
@@ -318,7 +318,7 @@ class YustService {
   }) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
     if (doc.createdAt == null) {
-      doc.createdAt = DateTime.now().toIso8601String();
+      doc.createdAt = toStandardDateTimeString(DateTime.now());
     }
     if (doc.userId == null && modelSetup.forUser) {
       doc.userId = Yust.store.currUser.id;
@@ -460,7 +460,15 @@ class YustService {
         });
   }
 
-  ///Does not return null.
+  /// Creates a string formatted just as the [YustDoc.createdAt] property is.
+  String toStandardDateTimeString(DateTime dateTime) =>
+      dateTime.toIso8601String();
+
+  /// Returns null if the string cannot be parsed.
+  DateTime fromStandardDateTimeString(String dateTimeString) =>
+      DateTime.tryParse(dateTimeString);
+
+  /// Does not return null.
   String formatDate(String isoDate, {String format}) {
     if (isoDate == null) return '';
 

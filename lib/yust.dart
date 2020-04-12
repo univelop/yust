@@ -2,6 +2,8 @@ library yust;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:package_info/package_info.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -57,5 +59,13 @@ class Yust {
     //     }
     //   });
     // });
+
+    if (!kIsWeb) {
+      PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
+        Yust.store.setState(() {
+          Yust.store.packageInfo = packageInfo;
+        });
+      });
+    }
   }
 }

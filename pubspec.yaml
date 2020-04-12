@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^0.5.4+3
   progress_dialog: ^1.2.0
   collection: ^1.14.11
+  package_info: '>=0.4.0+16 <2.0.0'
 
 dev_dependencies:
   flutter_test:

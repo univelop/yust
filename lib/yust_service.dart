@@ -241,6 +241,33 @@ class YustService {
     });
   }
 
+  Stream<int> getNumberMatching<T extends YustDoc>(
+    YustDocSetup modelSetup, {
+    List<List<dynamic>> filterList,
+  }) {
+    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+
+    return query.snapshots().map<int>(
+          (QuerySnapshot querySnapshot) => querySnapshot.documents.length,
+        );
+  }
+
+  Future<int> getNumberMatchingOnce<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    List<List<dynamic>> filterList,
+  }) async {
+    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+
+    final QuerySnapshot querySnapshot =
+        await query.getDocuments(source: Source.server);
+
+    return querySnapshot.documents.length;
+  }
+
   Stream<T> getDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     String id,
@@ -469,7 +496,7 @@ class YustService {
     return formatter.format(now);
   }
 
-  ///Does not return null.
+  /// Does not return null.
   String formatTime(String isoDate, {String format}) {
     if (isoDate == null) return '';
 
@@ -507,7 +534,10 @@ class YustService {
   Query _executeFilterList(Query query, List<List<dynamic>> filterList) {
     if (filterList != null) {
       for (var filter in filterList) {
-        assert(filter != null && filter.length == 3);
+        assert(
+          filter != null && filter.length == 3,
+          'A condition does not have the usual number of three elements: operand operator operand',
+        );
         var operand1 = filter[0], operator = filter[1], operand2 = filter[2];
 
         switch (operator) {
@@ -531,8 +561,21 @@ class YustService {
             // If an empty list is passed, an error is thrown.
             // I think that it should behave the same and return no data.
 
-            if (operand2 != null && operand2 is List && operand2.isEmpty) {
-              operand2 = null;
+            if (operand2 == null) {
+            } else if (operand2 is Iterable) {
+              if ((operand2 as Iterable).isEmpty) {
+                operand2 = null;
+              } else {
+                final List typedOperand2 = operand2.toList();
+                final onlyStringElements = typedOperand2.whereType<String>();
+
+                assert(
+                  typedOperand2.length == onlyStringElements.length,
+                  'One of the operands is not of type string.',
+                );
+
+                operand2 = typedOperand2;
+              }
             }
 
             query = query.where(operand1, whereIn: operand2);

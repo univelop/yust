@@ -29,12 +29,16 @@ class Yust {
             .getDoc<YustUser>(Yust.userSetup, fireUser.uid)
             .first;
 
+        if (user == null) {
+          user = Yust.userSetup.newDoc()
+            ..id = fireUser.uid
+            ..email = fireUser.email;
+          await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+        }
+
         Yust.store.setState(() {
-          Yust.store.authState =
-              (user == null) ? AuthState.signedOut : AuthState.signedIn;
-          if (user != null) {
-            Yust.store.currUser = user;
-          }
+          Yust.store.authState = AuthState.signedIn;
+          Yust.store.currUser = user;
         });
       } else {
         Yust.store.setState(() {
@@ -43,22 +47,6 @@ class Yust {
         });
       }
     });
-    // FirebaseAuth.instance.onAuthStateChanged.asyncMap<YustUser>((fireUser) {
-    //   return Future<YustUser>(() async {
-    //     if (fireUser == null) {
-    //       return null;
-    //     } else {
-    //       return await Yust.service.getDocOnce<YustUser>(Yust.userSetup, fireUser.uid);
-    //     }
-    //   });
-    // }).listen((user) {
-    //   Yust.store.setState(() {
-    //     Yust.store.authState = (user == null) ? AuthState.signedOut : AuthState.signedIn;
-    //     if (user != null) {
-    //       Yust.store.currUser = user;
-    //     }
-    //   });
-    // });
 
     if (!kIsWeb) {
       PackageInfo.fromPlatform().then((PackageInfo packageInfo) {

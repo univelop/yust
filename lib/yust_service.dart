@@ -326,6 +326,9 @@ class YustService {
     if (doc.envId == null && modelSetup.forEnvironment) {
       doc.envId = Yust.store().currUser.currEnvId;
     }
+    if (modelSetup.onSave != null) {
+      modelSetup.onSave(doc);
+    }
 
     if (doc.id != null) {
       await collection.document(doc.id).setData(doc.toJson(), merge: merge);

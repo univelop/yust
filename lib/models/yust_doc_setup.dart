@@ -18,6 +18,7 @@ class YustDocSetup<T extends YustDoc> {
 
   void Function(dynamic doc) onInit;
   void Function(dynamic doc) onMigrate;
+  void Function(dynamic doc) onSave;
   void Function(dynamic doc) onDelete;
 
   YustDocSetup({
@@ -29,6 +30,7 @@ class YustDocSetup<T extends YustDoc> {
     this.isEnvironment = false,
     this.onInit,
     this.onMigrate,
+    this.onSave,
     this.onDelete,
   });
 }

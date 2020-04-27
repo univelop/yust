@@ -209,14 +209,9 @@ class YustService {
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map((snapshot) {
-      // print('Get docs: ${modelSetup.collectionName}');
-      return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
-      }).toList();
+      return snapshot.documents
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .toList();
     });
   }
 
@@ -231,13 +226,9 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
     return query.getDocuments(source: Source.server).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
-      return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
-      }).toList();
+      return snapshot.documents
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .toList();
     });
   }
 
@@ -249,15 +240,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(id)
         .snapshots()
-        .map((snapshot) {
-      // print('Get doc: ${modelSetup.collectionName} $id');
-      if (snapshot.data == null) return null;
-      final doc = modelSetup.fromJson(snapshot.data);
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
-      }
-      return doc;
-    });
+        .map((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
   Future<T> getDocOnce<T extends YustDoc>(
@@ -268,14 +251,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(id)
         .get(source: Source.server)
-        .then((snapshot) {
-      // print('Get doc: ${modelSetup.collectionName} $id');
-      final doc = modelSetup.fromJson(snapshot.data);
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
-      }
-      return doc;
-    });
+        .then((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
   ///Emits null events if no document was found.
@@ -295,11 +271,7 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map<T>((snapshot) {
       if (snapshot.documents.length > 0) {
-        final doc = modelSetup.fromJson(snapshot.documents[0].data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
+        return _getDoc(modelSetup, snapshot.documents[0]);
       } else {
         return null;
       }
@@ -486,6 +458,24 @@ class YustService {
       result += chars[rnd.nextInt(chars.length)];
     }
     return result;
+  }
+
+  /// Returns null if no data exists.
+  T _getDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    DocumentSnapshot snapshot,
+  ) {
+    if (snapshot.data == null) {
+      return null;
+    }
+
+    final T document = modelSetup.fromJson(snapshot.data);
+
+    if (modelSetup.onMigrate != null) {
+      modelSetup.onMigrate(document);
+    }
+
+    return document;
   }
 
   Query _executeStaticFilters<T extends YustDoc>(

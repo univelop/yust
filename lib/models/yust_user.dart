@@ -9,6 +9,7 @@ part 'yust_user.g.dart';
 class YustUser extends YustDoc {
   static final setup = YustDocSetup<YustUser>(
     collectionName: 'users',
+    newDoc: () => YustUser(),
     fromJson: (json) => YustUser.fromJson(json),
   );
 

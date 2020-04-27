@@ -26,9 +26,9 @@ class AccountScreen extends StatelessWidget {
                           size: 100.0,
                         ),
                         Text(
-                            store.currUser.firstName +
+                            (store.currUser.firstName ?? '') +
                                 ' ' +
-                                Yust.store().currUser.lastName,
+                                (Yust.store().currUser.lastName ?? ''),
                             style: TextStyle(
                                 color: Theme.of(context).accentColor,
                                 fontSize: 20.0)),

@@ -327,7 +327,7 @@ class YustService {
       doc.envId = Yust.store().currUser.currEnvId;
     }
     if (modelSetup.onSave != null) {
-      modelSetup.onSave(doc);
+      await modelSetup.onSave(doc);
     }
 
     if (doc.id != null) {
@@ -356,7 +356,7 @@ class YustService {
     T doc,
   ) async {
     if (modelSetup.onDelete != null) {
-      modelSetup.onDelete(doc);
+      await modelSetup.onDelete(doc);
     }
     var docRef = Firestore.instance
         .collection(modelSetup.collectionName)

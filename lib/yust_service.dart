@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:yust/yust_store.dart';
@@ -358,11 +359,14 @@ class YustService {
     return doc;
   }
 
+  /// Currently works only for web caused by a bug in cloud_firestore.
   Future<T> updateWithTransaction<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     String id,
     T Function(T) handler,
   ) async {
+    assert(kIsWeb, 'As of version "0.13.4+1" of "cloud_firestore" the transactional feature does not work for at least android systems...');
+
     assert(modelSetup != null);
     assert(id?.isNotEmpty ?? false);
     assert(handler != null);

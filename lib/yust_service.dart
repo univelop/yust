@@ -358,6 +358,39 @@ class YustService {
     return doc;
   }
 
+  Future<T> updateWithTransaction<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    String id,
+    T Function(T) handler,
+  ) async {
+    assert(modelSetup != null);
+    assert(id?.isNotEmpty ?? false);
+    assert(handler != null);
+
+    T result;
+
+    await Firestore.instance.runTransaction(
+      (Transaction transaction) async {
+        final DocumentReference documentReference = Firestore.instance
+            .collection(modelSetup.collectionName)
+            .document(id);
+
+        final DocumentSnapshot startSnapshot =
+            await transaction.get(documentReference);
+
+        final T startDocument = _getDoc(modelSetup, startSnapshot);
+        final T endDocument = handler(startDocument);
+
+        final Map<String, dynamic> endMap = endDocument.toJson();
+        await transaction.set(documentReference, endMap);
+
+        result = endDocument;
+      },
+    );
+
+    return result;
+  }
+
   void showAlert(BuildContext context, String title, String message) {
     showDialog(
         context: context,

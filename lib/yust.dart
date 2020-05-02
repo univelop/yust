@@ -14,9 +14,11 @@ class Yust {
   static final store = YustStore();
   static final service = YustService();
   static YustDocSetup<YustUser> userSetup;
+  static bool useTimestamps = false;
 
-  static void initialize({YustDocSetup userSetup}) {
+  static void initialize({YustDocSetup userSetup, bool useTimestamps = false}) {
     Yust.userSetup = userSetup ?? YustUser.setup;
+    Yust.useTimestamps = useTimestamps;
     Firestore.instance.settings(persistenceEnabled: true);
 
     Yust.store.authState = AuthState.waiting;

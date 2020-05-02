@@ -174,7 +174,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document()
         .documentID;
-    doc.createdAt = DateTime.now().toIso8601String();
+    doc.createdAt = DateTime.now();
     if (modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
     }
@@ -318,7 +318,7 @@ class YustService {
   }) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
     if (doc.createdAt == null) {
-      doc.createdAt = DateTime.now().toIso8601String();
+      doc.createdAt = DateTime.now();
     }
     if (doc.userId == null && modelSetup.forUser) {
       doc.userId = Yust.store.currUser.id;
@@ -460,8 +460,20 @@ class YustService {
         });
   }
 
-  ///Does not return null.
-  String formatDate(String isoDate, {String format}) {
+  /// Does not return null.
+  ///
+  /// Use formatIsoDate for backwards compatibility.
+  String formatDate(DateTime dateTime, {String format}) {
+    if (dateTime == null) return '';
+
+    var formatter = DateFormat(format ?? 'dd.MM.yyyy');
+    return formatter.format(dateTime);
+  }
+
+  /// Does not return null.
+  ///
+  /// Deprecated, use formatDate instead.
+  String formatIsoDate(String isoDate, {String format}) {
     if (isoDate == null) return '';
 
     var now = DateTime.parse(isoDate);
@@ -469,8 +481,20 @@ class YustService {
     return formatter.format(now);
   }
 
-  ///Does not return null.
-  String formatTime(String isoDate, {String format}) {
+  /// Does not return null.
+  ///
+  /// Use formatIsoDate for backwards compatibility.
+  String formatTime(DateTime dateTime, {String format}) {
+    if (dateTime == null) return '';
+
+    var formatter = DateFormat(format ?? 'HH:mm');
+    return formatter.format(dateTime);
+  }
+
+  /// Does not return null.
+  ///
+  /// Deprecated, use formatTime instead.
+  String formatIsoTime(String isoDate, {String format}) {
     if (isoDate == null) return '';
 
     var now = DateTime.parse(isoDate);

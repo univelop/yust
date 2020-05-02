@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 
 import '../yust.dart';
 
-typedef StringCallback = void Function(String);
+typedef DateTimeCallback = void Function(DateTime);
 
 class YustDatePicker extends StatelessWidget {
+  final String label;
+  final DateTime value;
+  final DateTimeCallback onChanged;
+  final bool hideClearButton;
+
   YustDatePicker({
     Key key,
     this.label,
-    this.value = '',
+    this.value,
     this.onChanged,
     this.hideClearButton = false,
   }) : super(key: key);
 
-  final String label;
-  final String value;
-  final StringCallback onChanged;
-  final bool hideClearButton;
-
   @override
   Widget build(BuildContext context) {
-    final dateText = value != null ? Yust.service.formatDate(value) : '';
+    final dateText = Yust.service.formatDate(value);
     return Column(
       children: <Widget>[
         ListTile(
@@ -54,7 +54,7 @@ class YustDatePicker extends StatelessWidget {
   }
 
   void _pickDate(BuildContext context) async {
-    final initDate = value != null ? DateTime.parse(value) : DateTime.now();
+    final initDate = value ?? DateTime.now();
     final selectedDate = await showDatePicker(
       context: context,
       initialDate: initDate,
@@ -63,7 +63,7 @@ class YustDatePicker extends StatelessWidget {
       locale: Locale('de', 'DE'),
     );
     if (selectedDate != null) {
-      onChanged(selectedDate.toIso8601String());
+      onChanged(selectedDate);
     }
   }
 }

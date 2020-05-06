@@ -162,9 +162,11 @@ class _SignInScreenState extends State<SignInScreen> {
     if (widget.logoAssetName == null) {
       return SizedBox.shrink();
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 50.0, vertical: 50.0),
-      child: Image.asset(widget.logoAssetName),
+    return SizedBox(
+      height: 200,
+      child: Center(
+        child: Image.asset(widget.logoAssetName),
+      ),
     );
   }
 

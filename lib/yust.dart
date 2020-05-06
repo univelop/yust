@@ -10,6 +10,11 @@ import 'models/yust_user.dart';
 import 'yust_service.dart';
 import 'yust_store.dart';
 
+enum YustInputStyle {
+  normal,
+  outlineBorder,
+}
+
 class Yust {
   static final store = YustStore();
   static final service = YustService();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yust/yust.dart';
 
 class YustSelect<T> extends StatelessWidget {
   final String label;
@@ -6,7 +7,7 @@ class YustSelect<T> extends StatelessWidget {
   final List<T> optionValues;
   final List<String> optionLabels;
   final void Function(T) onSelected;
-  final YustSelectStyle style;
+  final YustInputStyle style;
 
   const YustSelect({
     Key key,
@@ -15,12 +16,12 @@ class YustSelect<T> extends StatelessWidget {
     this.optionValues,
     this.optionLabels,
     this.onSelected,
-    this.style = YustSelectStyle.normal,
+    this.style = YustInputStyle.normal,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (style == YustSelectStyle.normal) {
+    if (style == YustInputStyle.normal) {
       return Column(
         children: <Widget>[
           _buildInner(context),
@@ -40,17 +41,25 @@ class YustSelect<T> extends StatelessWidget {
 
   Widget _buildInner(BuildContext context) {
     var padding;
-    if (style == YustSelectStyle.normal) {
+    if (style == YustInputStyle.normal) {
       padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
     } else {
-      padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 2.0);
+      padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0);
     }
-    return ListTile(
-      title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
-      trailing: Text(_valueCaption(value)),
-      onTap: () => _selectValue(context),
-      contentPadding: padding,
-    );
+    if (label == null) {
+      return ListTile(
+        title: Text(_valueCaption(value)),
+        onTap: () => _selectValue(context),
+        contentPadding: padding,
+      );
+    } else {
+      return ListTile(
+        title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+        trailing: Text(_valueCaption(value)),
+        onTap: () => _selectValue(context),
+        contentPadding: padding,
+      );
+    }
   }
 
   String _valueCaption(T value) {
@@ -67,7 +76,7 @@ class YustSelect<T> extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return SimpleDialog(
-              title: Text('$label wählen'),
+              title: (label == null) ? null : Text('$label wählen'),
               children: optionValues.map((optionValue) {
                 return SimpleDialogOption(
                   onPressed: () {
@@ -83,9 +92,4 @@ class YustSelect<T> extends StatelessWidget {
       }
     }
   }
-}
-
-enum YustSelectStyle {
-  normal,
-  outlineBorder,
 }

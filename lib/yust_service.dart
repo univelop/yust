@@ -460,6 +460,12 @@ class YustService {
         });
   }
 
+  void showToast(BuildContext context, String message) {
+    Scaffold.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
+  }
+
   /// Does not return null.
   ///
   /// Use formatIsoDate for backwards compatibility.

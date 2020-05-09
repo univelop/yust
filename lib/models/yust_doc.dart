@@ -31,6 +31,16 @@ abstract class YustDoc {
     return list.map((item) => item.toJson()).toList();
   }
 
+  static Map<String, dynamic> mapToJson(Map<String, dynamic> map) {
+    return map.map((key, value) {
+      if (value == null) {
+        return MapEntry(key, FieldValue.delete());
+      } else {
+        return MapEntry(key, value);
+      }
+    });
+  }
+
   static DateTime dateTimeFromJson(dynamic timestamp) {
     if (timestamp is Timestamp) {
       return timestamp.toDate();

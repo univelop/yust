@@ -33,8 +33,7 @@ class Yust {
         (fireUser) async {
       if (fireUser != null) {
         YustUser user = await Yust.service
-            .getDoc<YustUser>(Yust.userSetup, fireUser.uid)
-            .first;
+            .getDocOnce<YustUser>(Yust.userSetup, fireUser.uid);
 
         if (user == null) {
           user = Yust.userSetup.newDoc()

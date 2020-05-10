@@ -34,7 +34,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'firstName': instance.firstName,
       'lastName': instance.lastName,
       'gender': _$YustGenderEnumMap[instance.gender],
-      'envIds': instance.envIds,
+      'envIds': YustDoc.mapToJson(instance.envIds),
       'currEnvId': instance.currEnvId,
       'deviceIds': instance.deviceIds,
     };

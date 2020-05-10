@@ -32,6 +32,7 @@ abstract class YustDoc {
   }
 
   static Map<String, dynamic> mapToJson(Map<String, dynamic> map) {
+    if (map == null) return null;
     return map.map((key, value) {
       if (value == null) {
         return MapEntry(key, FieldValue.delete());

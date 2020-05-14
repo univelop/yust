@@ -345,9 +345,9 @@ class YustService {
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>> filterList,
   }) async {
-    final docs = await getDocsOnce(modelSetup, filterList: filterList);
+    final docs = await getDocsOnce<T>(modelSetup, filterList: filterList);
     for (var doc in docs) {
-      await deleteDoc(modelSetup, doc);
+      await deleteDoc<T>(modelSetup, doc);
     }
   }
 

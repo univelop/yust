@@ -1,5 +1,7 @@
 library yust;
 
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -21,44 +23,54 @@ class Yust {
   static YustDocSetup<YustUser> userSetup;
   static bool useTimestamps = false;
 
-  static void initialize({YustDocSetup userSetup, bool useTimestamps = false}) {
+  static Future<void> initialize(
+      {YustDocSetup userSetup, bool useTimestamps = false}) async {
     Yust.userSetup = userSetup ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
     Firestore.instance.settings(persistenceEnabled: true);
 
-    Yust.store.authState = AuthState.waiting;
+    Yust.store.setState(() {
+      Yust.store.authState = AuthState.waiting;
+    });
+    final completer = Completer<void>();
+    StreamSubscription<YustUser> userSubscription;
     FirebaseAuth.instance.onAuthStateChanged.listen(
 
         ///Calls [Yust.store.setState] on each event.
         (fireUser) async {
       if (fireUser != null) {
-        YustUser user = await Yust.service
-            .getDocOnce<YustUser>(Yust.userSetup, fireUser.uid);
+        userSubscription = Yust.service
+            .getDoc<YustUser>(Yust.userSetup, fireUser.uid)
+            .listen((user) async {
+          if (user == null) {
+            user = Yust.userSetup.newDoc()
+              ..id = fireUser.uid
+              ..email = fireUser.email;
+            await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+          }
 
-        if (user == null) {
-          user = Yust.userSetup.newDoc()
-            ..id = fireUser.uid
-            ..email = fireUser.email;
-          await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
-        }
-
-        Yust.store.setState(() {
-          Yust.store.authState = AuthState.signedIn;
-          Yust.store.currUser = user;
+          Yust.store.setState(() {
+            Yust.store.authState = AuthState.signedIn;
+            Yust.store.currUser = user;
+          });
+          completer.complete();
         });
       } else {
+        if (userSubscription != null) userSubscription.cancel();
         Yust.store.setState(() {
           Yust.store.authState = AuthState.signedOut;
           Yust.store.currUser = null;
         });
+        completer.complete();
       }
     });
 
+    await completer.future;
+
     if (!kIsWeb) {
-      PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
-        Yust.store.setState(() {
-          Yust.store.packageInfo = packageInfo;
-        });
+      final packageInfo = await PackageInfo.fromPlatform();
+      Yust.store.setState(() {
+        Yust.store.packageInfo = packageInfo;
       });
     }
   }

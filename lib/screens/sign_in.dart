@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/screens/reset_password.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
+import 'package:yust/yust_store.dart';
 
 import '../models/yust_exception.dart';
 import '../yust.dart';
@@ -38,6 +39,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
+  void Function() _storeListener;
+
   @override
   void initState() {
     SharedPreferences.getInstance().then((prefs) {
@@ -45,7 +48,18 @@ class _SignInScreenState extends State<SignInScreen> {
       _emailController.text = _email;
     });
 
-    Yust.service.waitForSignIn(Navigator.of(context));
+    _storeListener = () {
+      if (Yust.store.authState == AuthState.signedIn) {
+        Yust.store.removeListener(_storeListener);
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          widget.targetRouteName,
+          (_) => false,
+          arguments: widget.targetRouteArguments,
+        );
+      }
+    };
+    Yust.store.addListener(_storeListener);
 
     super.initState();
   }

@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:yust/yust_store.dart';
 
 import 'models/yust_doc.dart';
 import 'models/yust_doc_setup.dart';
@@ -32,12 +31,6 @@ class YustService {
     await fireAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
-    );
-
-    await waitForSignIn(
-      Navigator.of(context),
-      targetRouteName: targetRouteName,
-      targetRouteArguments: targetRouteArguments,
     );
   }
 
@@ -71,12 +64,6 @@ class YustService {
       ..id = authResult.user.uid;
 
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
-
-    await waitForSignIn(
-      Navigator.of(context),
-      targetRouteName: targetRouteName,
-      targetRouteArguments: targetRouteArguments,
-    );
   }
 
   Future<void> signOut(BuildContext context) async {
@@ -96,43 +83,6 @@ class YustService {
       Navigator.defaultRouteName,
       (_) => false,
     );
-  }
-
-  Future<void> waitForSignIn(
-    NavigatorState navigatorState, {
-    String targetRouteName,
-    dynamic targetRouteArguments,
-  }) async {
-    targetRouteName ??= Navigator.defaultRouteName;
-
-    final completer = Completer<bool>();
-
-    void Function() listener = () {
-      switch (Yust.store.authState) {
-        case AuthState.signedIn:
-          completer.complete(true);
-          break;
-        case AuthState.signedOut:
-          completer.complete(false);
-          break;
-        case AuthState.waiting:
-          break;
-      }
-    };
-
-    Yust.store.addListener(listener);
-
-    bool successful = await completer.future;
-
-    Yust.store.removeListener(listener);
-
-    if (successful) {
-      navigatorState.pushNamedAndRemoveUntil(
-        targetRouteName,
-        (_) => false,
-        arguments: targetRouteArguments,
-      );
-    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yust/models/yust_user.dart';
+import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 import 'package:yust/widgets/yust_select.dart';
 
@@ -49,161 +50,163 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Registrierung'),
-      ),
-      body: Center(
-        child: Container(
-          constraints: BoxConstraints(maxWidth: 600),
-          child: ListView(
-            padding: const EdgeInsets.only(top: 40.0),
-            controller: _scrollController,
-            children: <Widget>[
-              _buildLogo(context),
-              _buildGender(context),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Vorname',
-                    border: OutlineInputBorder(),
+    return YustFocusHandler(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Registrierung'),
+        ),
+        body: Center(
+          child: Container(
+            constraints: BoxConstraints(maxWidth: 600),
+            child: ListView(
+              padding: const EdgeInsets.only(top: 40.0),
+              controller: _scrollController,
+              children: <Widget>[
+                _buildLogo(context),
+                _buildGender(context),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Vorname',
+                      border: OutlineInputBorder(),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
+                    focusNode: _firstNameFocus,
+                    onChanged: (value) => _firstName = value.trim(),
+                    onSubmitted: (value) {
+                      _firstNameFocus.unfocus();
+                      FocusScope.of(context).requestFocus(_lastNameFocus);
+                      _scrollController.animateTo(_scrollController.offset + 80,
+                          duration: Duration(milliseconds: 500),
+                          curve: Curves.ease);
+                    },
                   ),
-                  textInputAction: TextInputAction.next,
-                  textCapitalization: TextCapitalization.words,
-                  focusNode: _firstNameFocus,
-                  onChanged: (value) => _firstName = value.trim(),
-                  onSubmitted: (value) {
-                    _firstNameFocus.unfocus();
-                    FocusScope.of(context).requestFocus(_lastNameFocus);
-                    _scrollController.animateTo(_scrollController.offset + 80,
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.ease);
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Nachname',
-                    border: OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Nachname',
+                      border: OutlineInputBorder(),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
+                    focusNode: _lastNameFocus,
+                    onChanged: (value) => _lastName = value.trim(),
+                    onSubmitted: (value) {
+                      _firstNameFocus.unfocus();
+                      FocusScope.of(context).requestFocus(_emailFocus);
+                      _scrollController.animateTo(_scrollController.offset + 80,
+                          duration: Duration(milliseconds: 500),
+                          curve: Curves.ease);
+                    },
                   ),
-                  textInputAction: TextInputAction.next,
-                  textCapitalization: TextCapitalization.words,
-                  focusNode: _lastNameFocus,
-                  onChanged: (value) => _lastName = value.trim(),
-                  onSubmitted: (value) {
-                    _firstNameFocus.unfocus();
-                    FocusScope.of(context).requestFocus(_emailFocus);
-                    _scrollController.animateTo(_scrollController.offset + 80,
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.ease);
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'E-Mail',
-                    border: OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'E-Mail',
+                      border: OutlineInputBorder(),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.emailAddress,
+                    textCapitalization: TextCapitalization.none,
+                    focusNode: _emailFocus,
+                    onChanged: (value) => _email = value.trim(),
+                    onSubmitted: (value) {
+                      _emailFocus.unfocus();
+                      FocusScope.of(context).requestFocus(_passwordFocus);
+                      _scrollController.animateTo(_scrollController.offset + 80,
+                          duration: Duration(milliseconds: 500),
+                          curve: Curves.ease);
+                    },
                   ),
-                  textInputAction: TextInputAction.next,
-                  keyboardType: TextInputType.emailAddress,
-                  textCapitalization: TextCapitalization.none,
-                  focusNode: _emailFocus,
-                  onChanged: (value) => _email = value.trim(),
-                  onSubmitted: (value) {
-                    _emailFocus.unfocus();
-                    FocusScope.of(context).requestFocus(_passwordFocus);
-                    _scrollController.animateTo(_scrollController.offset + 80,
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.ease);
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Passwort',
-                    border: OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Passwort',
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.next,
+                    focusNode: _passwordFocus,
+                    onChanged: (value) => _password = value.trim(),
+                    onSubmitted: (value) async {
+                      _passwordFocus.unfocus();
+                      FocusScope.of(context)
+                          .requestFocus(_passwordConfirmationFocus);
+                      _scrollController.animateTo(_scrollController.offset + 80,
+                          duration: Duration(milliseconds: 500),
+                          curve: Curves.ease);
+                    },
                   ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.next,
-                  focusNode: _passwordFocus,
-                  onChanged: (value) => _password = value.trim(),
-                  onSubmitted: (value) async {
-                    _passwordFocus.unfocus();
-                    FocusScope.of(context)
-                        .requestFocus(_passwordConfirmationFocus);
-                    _scrollController.animateTo(_scrollController.offset + 80,
-                        duration: Duration(milliseconds: 500),
-                        curve: Curves.ease);
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Passwort bestätigen',
-                    border: OutlineInputBorder(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Passwort bestätigen',
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                    textInputAction: TextInputAction.send,
+                    focusNode: _passwordConfirmationFocus,
+                    onChanged: (value) => _passwordConfirmation = value.trim(),
+                    onSubmitted: (value) async {
+                      _passwordConfirmationFocus.unfocus();
+                      setState(() {
+                        _waitingForSignUp = true;
+                      });
+                      await _signUp(context);
+                      setState(() {
+                        _waitingForSignUp = false;
+                      });
+                    },
                   ),
-                  obscureText: true,
-                  textInputAction: TextInputAction.send,
-                  focusNode: _passwordConfirmationFocus,
-                  onChanged: (value) => _passwordConfirmation = value.trim(),
-                  onSubmitted: (value) async {
-                    _passwordConfirmationFocus.unfocus();
-                    setState(() {
-                      _waitingForSignUp = true;
-                    });
-                    await _signUp(context);
-                    setState(() {
-                      _waitingForSignUp = false;
-                    });
-                  },
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: YustProgressButton(
-                  color: Theme.of(context).accentColor,
-                  inProgress: _waitingForSignUp,
-                  onPressed: () => _signUp(context),
-                  child: Text('Registrieren',
-                      style: TextStyle(fontSize: 20.0, color: Colors.white)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: YustProgressButton(
+                    color: Theme.of(context).accentColor,
+                    inProgress: _waitingForSignUp,
+                    onPressed: () => _signUp(context),
+                    child: Text('Registrieren',
+                        style: TextStyle(fontSize: 20.0, color: Colors.white)),
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
-                child: Text('Du hast bereits einen Account?',
-                    style: TextStyle(fontSize: 16.0)),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                child: FlatButton(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text('Hier Anmelden',
-                      style: TextStyle(
-                          fontSize: 20.0,
-                          color: Theme.of(context).primaryColor)),
+                Padding(
+                  padding: const EdgeInsets.only(
+                      left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
+                  child: Text('Du hast bereits einen Account?',
+                      style: TextStyle(fontSize: 16.0)),
                 ),
-              ),
-            ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0, vertical: 10.0),
+                  child: FlatButton(
+                    padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Hier Anmelden',
+                        style: TextStyle(
+                            fontSize: 20.0,
+                            color: Theme.of(context).primaryColor)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

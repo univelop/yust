@@ -69,6 +69,7 @@ class _YustTextFieldState extends State<YustTextField> {
       readOnly: widget.readOnly,
       enabled: widget.enabled,
       obscureText: widget.obscureText,
+      textCapitalization: TextCapitalization.sentences,
     );
   }
 }

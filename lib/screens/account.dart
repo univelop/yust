@@ -43,7 +43,7 @@ class AccountScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              Divider(),
+              Divider(thickness: 1.0),
               ListTile(
                 leading: Icon(
                   Icons.person,
@@ -58,7 +58,7 @@ class AccountScreen extends StatelessWidget {
                   Navigator.pushNamed(context, AccountEditScreen.routeName);
                 },
               ),
-              Divider(),
+              Divider(thickness: 1.0),
               ListTile(
                 leading: Icon(
                   Icons.power_settings_new,
@@ -74,7 +74,7 @@ class AccountScreen extends StatelessWidget {
                   Navigator.pop(context);
                 },
               ),
-              Divider(),
+              Divider(thickness: 1.0),
             ],
           ),
         );

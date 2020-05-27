@@ -26,7 +26,7 @@ class YustDatePicker extends StatelessWidget {
       return Column(
         children: <Widget>[
           _buildInner(context),
-          Divider(height: 1.0, color: Colors.grey[800]),
+          Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
         ],
       );
     } else {

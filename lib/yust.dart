@@ -18,13 +18,19 @@ enum YustInputStyle {
 }
 
 class Yust {
-  static final store = YustStore();
-  static final service = YustService();
+  static YustStore store;
+  static YustService service;
   static YustDocSetup<YustUser> userSetup;
   static bool useTimestamps = false;
 
-  static Future<void> initialize(
-      {YustDocSetup userSetup, bool useTimestamps = false}) async {
+  static Future<void> initialize({
+    YustStore store,
+    YustService service,
+    YustDocSetup userSetup,
+    bool useTimestamps = false,
+  }) async {
+    Yust.store = store ?? YustStore();
+    Yust.service = service ?? YustService();
     Yust.userSetup = userSetup ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
     Firestore.instance.settings(persistenceEnabled: true);
@@ -53,7 +59,7 @@ class Yust {
             Yust.store.authState = AuthState.signedIn;
             Yust.store.currUser = user;
           });
-          completer.complete();
+          if (!completer.isCompleted) completer.complete();
         });
       } else {
         if (userSubscription != null) userSubscription.cancel();
@@ -61,7 +67,7 @@ class Yust {
           Yust.store.authState = AuthState.signedOut;
           Yust.store.currUser = null;
         });
-        completer.complete();
+        if (!completer.isCompleted) completer.complete();
       }
     });
 

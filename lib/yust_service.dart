@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -159,14 +160,9 @@ class YustService {
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map((snapshot) {
-      // print('Get docs: ${modelSetup.collectionName}');
-      return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
-      }).toList();
+      return snapshot.documents
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .toList();
     });
   }
 
@@ -181,13 +177,9 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
     return query.getDocuments(source: Source.server).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
-      return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
-      }).toList();
+      return snapshot.documents
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .toList();
     });
   }
 
@@ -199,15 +191,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(id)
         .snapshots()
-        .map((snapshot) {
-      // print('Get doc: ${modelSetup.collectionName} $id');
-      if (snapshot.data == null) return null;
-      final doc = modelSetup.fromJson(snapshot.data);
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
-      }
-      return doc;
-    });
+        .map((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
   Future<T> getDocOnce<T extends YustDoc>(
@@ -218,14 +202,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(id)
         .get(source: Source.server)
-        .then((snapshot) {
-      // print('Get doc: ${modelSetup.collectionName} $id');
-      final doc = modelSetup.fromJson(snapshot.data);
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
-      }
-      return doc;
-    });
+        .then((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
   ///Emits null events if no document was found.
@@ -245,11 +222,7 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map<T>((snapshot) {
       if (snapshot.documents.length > 0) {
-        final doc = modelSetup.fromJson(snapshot.documents[0].data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
+        return _getDoc(modelSetup, snapshot.documents[0]);
       } else {
         return null;
       }
@@ -334,6 +307,43 @@ class YustService {
     await saveDoc<T>(modelSetup, doc);
 
     return doc;
+  }
+
+  /// Currently works only for web caused by a bug in cloud_firestore.
+  Future<T> updateWithTransaction<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    String id,
+    T Function(T) handler,
+  ) async {
+    assert(kIsWeb,
+        'As of version "0.13.4+1" of "cloud_firestore" the transactional feature does not work for at least android systems...');
+
+    assert(modelSetup != null);
+    assert(id?.isNotEmpty ?? false);
+    assert(handler != null);
+
+    T result;
+
+    await Firestore.instance.runTransaction(
+      (Transaction transaction) async {
+        final DocumentReference documentReference = Firestore.instance
+            .collection(modelSetup.collectionName)
+            .document(id);
+
+        final DocumentSnapshot startSnapshot =
+            await transaction.get(documentReference);
+
+        final T startDocument = _getDoc(modelSetup, startSnapshot);
+        final T endDocument = handler(startDocument);
+
+        final Map<String, dynamic> endMap = endDocument.toJson();
+        await transaction.set(documentReference, endMap);
+
+        result = endDocument;
+      },
+    );
+
+    return result;
   }
 
   Future<void> showAlert(
@@ -476,6 +486,24 @@ class YustService {
       result += chars[rnd.nextInt(chars.length)];
     }
     return result;
+  }
+
+  /// Returns null if no data exists.
+  T _getDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    DocumentSnapshot snapshot,
+  ) {
+    if (snapshot.data == null) {
+      return null;
+    }
+
+    final T document = modelSetup.fromJson(snapshot.data);
+
+    if (modelSetup.onMigrate != null) {
+      modelSetup.onMigrate(document);
+    }
+
+    return document;
   }
 
   Query _executeStaticFilters<T extends YustDoc>(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yust/models/yust_user.dart';
@@ -256,19 +258,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _signUp(BuildContext context) async {
     try {
-      await Yust.service.signUp(
-        context,
-        _firstName,
-        _lastName,
-        _email,
-        _password,
-        _passwordConfirmation,
-        gender: _gender,
-      );
+      await Yust.service
+          .signUp(
+            context,
+            _firstName,
+            _lastName,
+            _email,
+            _password,
+            _passwordConfirmation,
+            gender: _gender,
+          )
+          .timeout(Duration(seconds: 10));
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
+    } on TimeoutException catch (_) {
+      Yust.service.showAlert(
+        context,
+        'Fehler',
+        'Zeitüberschreitung der Anfrage',
+      );
+    } catch (err) {
+      Yust.service.showAlert(context, 'Fehler', err.toString());
     }
   }
 }

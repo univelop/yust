@@ -195,11 +195,19 @@ class _SignInScreenState extends State<SignInScreen> {
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('email', _email);
     try {
-      await Yust.service.signIn(context, _email, _password);
+      await Yust.service
+          .signIn(context, _email, _password)
+          .timeout(Duration(seconds: 10));
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
+    } on TimeoutException catch (_) {
+      Yust.service.showAlert(
+        context,
+        'Fehler',
+        'Zeitüberschreitung der Anfrage',
+      );
     } catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.toString());
     }

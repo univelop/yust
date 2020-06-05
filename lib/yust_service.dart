@@ -150,12 +150,7 @@ class YustService {
     List<String> orderByList,
   }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
-    if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
-    }
-    if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
-    }
+    query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map((snapshot) {
@@ -228,21 +223,17 @@ class YustService {
     });
   }
 
-  ///Emits null events if no document was found.
+  /// Emits null events if no document was found.
   Stream<T> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     List<List<dynamic>> filterList, {
     List<String> orderByList,
   }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
-    if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
-    }
-    if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
-    }
+    query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
+
     return query.snapshots().map<T>((snapshot) {
       if (snapshot.documents.length > 0) {
         final doc = modelSetup.fromJson(snapshot.documents[0].data);
@@ -254,6 +245,30 @@ class YustService {
         return null;
       }
     });
+  }
+
+  /// The result is null if no document was found.
+  Future<T> getFirstDocOnce<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    List<List<dynamic>> filterList, {
+    List<String> orderByList,
+  }) async {
+    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+    query = _executeOrderByList(query, orderByList);
+
+    final snapshot = await query.getDocuments(source: Source.server);
+    T doc;
+
+    if (snapshot.documents.length > 0) {
+      doc = modelSetup.fromJson(snapshot.documents[0].data);
+      if (modelSetup.onMigrate != null) {
+        modelSetup.onMigrate(doc);
+      }
+    }
+
+    return doc;
   }
 
   /// If [merge] is false a document with the same name
@@ -478,15 +493,21 @@ class YustService {
     return result;
   }
 
+  Query _filterForEnvironment(Query query) =>
+      query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+
+  Query _filterForUser(Query query) =>
+      query.where('userId', isEqualTo: Yust.store.currUser.id);
+
   Query _executeStaticFilters<T extends YustDoc>(
     Query query,
     YustDocSetup<T> modelSetup,
   ) {
     if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+      query = _filterForEnvironment(query);
     }
     if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+      query = _filterForUser(query);
     }
     return query;
   }

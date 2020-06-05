@@ -460,6 +460,14 @@ class YustService {
     return formatter.format(now);
   }
 
+  /// Creates a string formatted just as the [YustDoc.createdAt] property is.
+  String toStandardDateTimeString(DateTime dateTime) =>
+      dateTime.toIso8601String();
+
+  /// Returns null if the string cannot be parsed.
+  DateTime fromStandardDateTimeString(String dateTimeString) =>
+      DateTime.tryParse(dateTimeString);
+
   String randomString({int length = 8}) {
     final rnd = new Random();
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789";

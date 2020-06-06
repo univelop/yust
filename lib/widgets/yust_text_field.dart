@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:yust/yust.dart';
 
 typedef StringCallback = void Function(String);
 typedef TabCallback = void Function();
 
 class YustTextField extends StatefulWidget {
+  final String label;
+  final String value;
+  final StringCallback onChanged;
+  final TabCallback onTab;
+  final int minLines;
+  final bool readOnly;
+  final bool enabled;
+  final bool obscureText;
+  final YustInputStyle style;
+
   YustTextField({
     Key key,
     this.label,
@@ -14,16 +25,8 @@ class YustTextField extends StatefulWidget {
     this.enabled = true,
     this.readOnly = false,
     this.obscureText = false,
+    this.style,
   }) : super(key: key);
-
-  final String label;
-  final String value;
-  final StringCallback onChanged;
-  final TabCallback onTab;
-  final int minLines;
-  final bool readOnly;
-  final bool enabled;
-  final bool obscureText;
 
   @override
   _YustTextFieldState createState() => _YustTextFieldState();
@@ -53,9 +56,11 @@ class _YustTextFieldState extends State<YustTextField> {
     }
     return TextField(
       decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-      ),
+          labelText: widget.label,
+          contentPadding: const EdgeInsets.all(20.0),
+          border: widget.style == YustInputStyle.outlineBorder
+              ? OutlineInputBorder()
+              : null),
       maxLines: widget.obscureText ? 1 : null,
       minLines: widget.minLines,
       controller: _controller,
@@ -64,6 +69,7 @@ class _YustTextFieldState extends State<YustTextField> {
       readOnly: widget.readOnly,
       enabled: widget.enabled,
       obscureText: widget.obscureText,
+      textCapitalization: TextCapitalization.sentences,
     );
   }
 }

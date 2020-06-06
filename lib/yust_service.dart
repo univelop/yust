@@ -3,9 +3,9 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:yust/yust_store.dart';
 
 import 'models/yust_doc.dart';
 import 'models/yust_doc_setup.dart';
@@ -32,12 +32,6 @@ class YustService {
     await fireAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
-    );
-
-    await waitForSignIn(
-      Navigator.of(context),
-      targetRouteName: targetRouteName,
-      targetRouteArguments: targetRouteArguments,
     );
   }
 
@@ -71,12 +65,6 @@ class YustService {
       ..id = authResult.user.uid;
 
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
-
-    await waitForSignIn(
-      Navigator.of(context),
-      targetRouteName: targetRouteName,
-      targetRouteArguments: targetRouteArguments,
-    );
   }
 
   Future<void> signOut(BuildContext context) async {
@@ -96,43 +84,6 @@ class YustService {
       Navigator.defaultRouteName,
       (_) => false,
     );
-  }
-
-  Future<void> waitForSignIn(
-    NavigatorState navigatorState, {
-    String targetRouteName,
-    dynamic targetRouteArguments,
-  }) async {
-    targetRouteName ??= Navigator.defaultRouteName;
-
-    final completer = Completer<bool>();
-
-    void Function() listener = () {
-      switch (Yust.store.authState) {
-        case AuthState.signedIn:
-          completer.complete(true);
-          break;
-        case AuthState.signedOut:
-          completer.complete(false);
-          break;
-        case AuthState.waiting:
-          break;
-      }
-    };
-
-    Yust.store.addListener(listener);
-
-    bool successful = await completer.future;
-
-    Yust.store.removeListener(listener);
-
-    if (successful) {
-      navigatorState.pushNamedAndRemoveUntil(
-        targetRouteName,
-        (_) => false,
-        arguments: targetRouteArguments,
-      );
-    }
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -174,7 +125,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document()
         .documentID;
-    doc.createdAt = DateTime.now().toIso8601String();
+    doc.createdAt = DateTime.now();
     if (modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
     }
@@ -200,23 +151,13 @@ class YustService {
     List<String> orderByList,
   }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
-    if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
-    }
-    if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
-    }
+    query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map((snapshot) {
-      // print('Get docs: ${modelSetup.collectionName}');
-      return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
-      }).toList();
+      return snapshot.documents
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .toList();
     });
   }
 
@@ -231,13 +172,9 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
     return query.getDocuments(source: Source.server).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
-      return snapshot.documents.map((docSnapshot) {
-        final doc = modelSetup.fromJson(docSnapshot.data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
-      }).toList();
+      return snapshot.documents
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .toList();
     });
   }
 
@@ -276,15 +213,7 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(id)
         .snapshots()
-        .map((snapshot) {
-      // print('Get doc: ${modelSetup.collectionName} $id');
-      if (snapshot.data == null) return null;
-      final doc = modelSetup.fromJson(snapshot.data);
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
-      }
-      return doc;
-    });
+        .map((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
   Future<T> getDocOnce<T extends YustDoc>(
@@ -295,42 +224,51 @@ class YustService {
         .collection(modelSetup.collectionName)
         .document(id)
         .get(source: Source.server)
-        .then((snapshot) {
-      // print('Get doc: ${modelSetup.collectionName} $id');
-      final doc = modelSetup.fromJson(snapshot.data);
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
-      }
-      return doc;
-    });
+        .then((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
-  ///Emits null events if no document was found.
+  /// Emits null events if no document was found.
   Stream<T> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     List<List<dynamic>> filterList, {
     List<String> orderByList,
   }) {
     Query query = Firestore.instance.collection(modelSetup.collectionName);
-    if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
-    }
-    if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
-    }
+    query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
+
     return query.snapshots().map<T>((snapshot) {
       if (snapshot.documents.length > 0) {
-        final doc = modelSetup.fromJson(snapshot.documents[0].data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate(doc);
-        }
-        return doc;
+        return _getDoc(modelSetup, snapshot.documents[0]);
       } else {
         return null;
       }
     });
+  }
+
+  /// The result is null if no document was found.
+  Future<T> getFirstDocOnce<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    List<List<dynamic>> filterList, {
+    List<String> orderByList,
+  }) async {
+    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+    query = _executeOrderByList(query, orderByList);
+
+    final snapshot = await query.getDocuments(source: Source.server);
+    T doc;
+
+    if (snapshot.documents.length > 0) {
+      doc = modelSetup.fromJson(snapshot.documents[0].data);
+      if (modelSetup.onMigrate != null) {
+        modelSetup.onMigrate(doc);
+      }
+    }
+
+    return doc;
   }
 
   /// If [merge] is false a document with the same name
@@ -345,7 +283,7 @@ class YustService {
   }) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
     if (doc.createdAt == null) {
-      doc.createdAt = DateTime.now().toIso8601String();
+      doc.createdAt = DateTime.now();
     }
     if (doc.userId == null && modelSetup.forUser) {
       doc.userId = Yust.store.currUser.id;
@@ -354,7 +292,7 @@ class YustService {
       doc.envId = Yust.store.currUser.currEnvId;
     }
     if (modelSetup.onSave != null) {
-      modelSetup.onSave(doc);
+      await modelSetup.onSave(doc);
     }
 
     if (doc.id != null) {
@@ -372,9 +310,9 @@ class YustService {
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>> filterList,
   }) async {
-    final docs = await getDocsOnce(modelSetup, filterList: filterList);
+    final docs = await getDocsOnce<T>(modelSetup, filterList: filterList);
     for (var doc in docs) {
-      await deleteDoc(modelSetup, doc);
+      await deleteDoc<T>(modelSetup, doc);
     }
   }
 
@@ -383,7 +321,7 @@ class YustService {
     T doc,
   ) async {
     if (modelSetup.onDelete != null) {
-      modelSetup.onDelete(doc);
+      await modelSetup.onDelete(doc);
     }
     var docRef = Firestore.instance
         .collection(modelSetup.collectionName)
@@ -413,23 +351,62 @@ class YustService {
     return doc;
   }
 
-  void showAlert(BuildContext context, String title, String message) {
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("OK"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        });
+  /// Currently works only for web caused by a bug in cloud_firestore.
+  Future<T> updateWithTransaction<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    String id,
+    T Function(T) handler,
+  ) async {
+    assert(kIsWeb,
+        'As of version "0.13.4+1" of "cloud_firestore" the transactional feature does not work for at least android systems...');
+
+    assert(modelSetup != null);
+    assert(id?.isNotEmpty ?? false);
+    assert(handler != null);
+
+    T result;
+
+    await Firestore.instance.runTransaction(
+      (Transaction transaction) async {
+        final DocumentReference documentReference = Firestore.instance
+            .collection(modelSetup.collectionName)
+            .document(id);
+
+        final DocumentSnapshot startSnapshot =
+            await transaction.get(documentReference);
+
+        final T startDocument = _getDoc(modelSetup, startSnapshot);
+        final T endDocument = handler(startDocument);
+
+        final Map<String, dynamic> endMap = endDocument.toJson();
+        await transaction.set(documentReference, endMap);
+
+        result = endDocument;
+      },
+    );
+
+    return result;
+  }
+
+  Future<void> showAlert(
+      BuildContext context, String title, String message) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<bool> showConfirmation(
@@ -487,8 +464,26 @@ class YustService {
         });
   }
 
-  ///Does not return null.
-  String formatDate(String isoDate, {String format}) {
+  void showToast(BuildContext context, String message) {
+    Scaffold.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
+  }
+
+  /// Does not return null.
+  ///
+  /// Use formatIsoDate for backwards compatibility.
+  String formatDate(DateTime dateTime, {String format}) {
+    if (dateTime == null) return '';
+
+    var formatter = DateFormat(format ?? 'dd.MM.yyyy');
+    return formatter.format(dateTime);
+  }
+
+  /// Does not return null.
+  ///
+  /// Deprecated, use formatDate instead.
+  String formatIsoDate(String isoDate, {String format}) {
     if (isoDate == null) return '';
 
     var now = DateTime.parse(isoDate);
@@ -497,13 +492,33 @@ class YustService {
   }
 
   /// Does not return null.
-  String formatTime(String isoDate, {String format}) {
+  ///
+  /// Use formatIsoDate for backwards compatibility.
+  String formatTime(DateTime dateTime, {String format}) {
+    if (dateTime == null) return '';
+
+    var formatter = DateFormat(format ?? 'HH:mm');
+    return formatter.format(dateTime);
+  }
+
+  /// Does not return null.
+  ///
+  /// Deprecated, use formatTime instead.
+  String formatIsoTime(String isoDate, {String format}) {
     if (isoDate == null) return '';
 
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(now);
   }
+
+  /// Creates a string formatted just as the [YustDoc.createdAt] property is.
+  String toStandardDateTimeString(DateTime dateTime) =>
+      dateTime.toIso8601String();
+
+  /// Returns null if the string cannot be parsed.
+  DateTime fromStandardDateTimeString(String dateTimeString) =>
+      DateTime.tryParse(dateTimeString);
 
   String randomString({int length = 8}) {
     final rnd = new Random();
@@ -515,15 +530,39 @@ class YustService {
     return result;
   }
 
+  /// Returns null if no data exists.
+  T _getDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    DocumentSnapshot snapshot,
+  ) {
+    if (snapshot.data == null) {
+      return null;
+    }
+
+    final T document = modelSetup.fromJson(snapshot.data);
+
+    if (modelSetup.onMigrate != null) {
+      modelSetup.onMigrate(document);
+    }
+
+    return document;
+  }
+
+  Query _filterForEnvironment(Query query) =>
+      query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+
+  Query _filterForUser(Query query) =>
+      query.where('userId', isEqualTo: Yust.store.currUser.id);
+
   Query _executeStaticFilters<T extends YustDoc>(
     Query query,
     YustDocSetup<T> modelSetup,
   ) {
     if (modelSetup.forEnvironment) {
-      query = query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+      query = _filterForEnvironment(query);
     }
     if (modelSetup.forUser) {
-      query = query.where('userId', isEqualTo: Yust.store.currUser.id);
+      query = _filterForUser(query);
     }
     return query;
   }

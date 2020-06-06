@@ -14,7 +14,7 @@ YustUser _$YustUserFromJson(Map json) {
     gender: _$enumDecodeNullable(_$YustGenderEnumMap, json['gender']),
   )
     ..id = json['id'] as String
-    ..createdAt = json['createdAt'] as String
+    ..createdAt = YustDoc.dateTimeFromJson(json['createdAt'])
     ..userId = json['userId'] as String
     ..envId = json['envId'] as String
     ..envIds = (json['envIds'] as Map)?.map(
@@ -27,14 +27,14 @@ YustUser _$YustUserFromJson(Map json) {
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'id': instance.id,
-      'createdAt': instance.createdAt,
+      'createdAt': YustDoc.dateTimeToJson(instance.createdAt),
       'userId': instance.userId,
       'envId': instance.envId,
       'email': instance.email,
       'firstName': instance.firstName,
       'lastName': instance.lastName,
       'gender': _$YustGenderEnumMap[instance.gender],
-      'envIds': instance.envIds,
+      'envIds': YustDoc.mapToJson(instance.envIds),
       'currEnvId': instance.currEnvId,
       'deviceIds': instance.deviceIds,
     };

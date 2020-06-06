@@ -29,7 +29,7 @@ class YustSwitch extends StatelessWidget {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         ),
-        Divider(height: 1.0, color: Colors.grey[800])
+        Divider(height: 1.0, thickness: 1.0, color: Colors.grey)
       ],
     );
   }

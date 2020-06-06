@@ -35,3 +35,20 @@
 * Improve routing
 * Make user extendable
 * Improve descanding ordering
+
+## 0.5.0 - 2020-06-05
+
+* Improve authentication
+* Improve filtering
+* Improve user subscriber
+* Support Flutter Web
+* Support Firestore timestamps:
+  Set `useTimestamps` in `Yust.initialize` to `true`
+* Improve JSON Serialization
+* Add useful widgets
+* Add documentation
+* Fix issues
+
+Breaking changes:
+* `createdAt` in YustDoc changed type from String to DateTime.
+* Use `formatDate` and `formatTime` in YustService if you switch to Firebase timestamps. Use `formatIsoDate` and `formatIsoTime` for the old ISO Datetime format.

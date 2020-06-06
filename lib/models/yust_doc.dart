@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../yust.dart';
 import 'yust_doc_setup.dart';
 
 abstract class YustDoc {
@@ -7,8 +9,8 @@ abstract class YustDoc {
 
   @JsonKey()
   String id;
-  @JsonKey()
-  String createdAt;
+  @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
+  DateTime createdAt;
   @JsonKey()
   String userId;
   @JsonKey()
@@ -27,5 +29,36 @@ abstract class YustDoc {
 
   static List<dynamic> docListToJson(List<dynamic> list) {
     return list.map((item) => item.toJson()).toList();
+  }
+
+  static Map<String, dynamic> mapToJson(Map<String, dynamic> map) {
+    if (map == null) return null;
+    return map.map((key, value) {
+      if (value == null) {
+        return MapEntry(key, FieldValue.delete());
+      } else {
+        return MapEntry(key, value);
+      }
+    });
+  }
+
+  static DateTime dateTimeFromJson(dynamic timestamp) {
+    if (timestamp is Timestamp) {
+      return timestamp.toDate();
+    } else if (timestamp is String) {
+      return DateTime.parse(timestamp);
+    } else {
+      return null;
+    }
+  }
+
+  static dynamic dateTimeToJson(DateTime dateTime) {
+    if (dateTime == null) {
+      return null;
+    } else if (Yust.useTimestamps) {
+      return Timestamp.fromDate(dateTime);
+    } else {
+      return dateTime.toIso8601String();
+    }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:progress_dialog/progress_dialog.dart';
 import 'package:yust/models/yust_user.dart';
+import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_select.dart';
 import 'package:yust/widgets/yust_store_builder.dart';
 import 'package:yust/widgets/yust_text_field.dart';
@@ -18,46 +19,48 @@ class AccountEditScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Persönliche Daten')),
-      body: YustStoreBuilder(builder: (context, child, store) {
-        final user = store.currUser;
-        return ListView(
-          padding: const EdgeInsets.only(top: 20.0),
-          children: <Widget>[
-            _buildGender(context, user),
-            YustTextField(
-              label: 'Vorname',
-              value: user.firstName,
-              onChanged: (value) {
-                user.firstName = value;
-                Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
-              },
-            ),
-            YustTextField(
-              label: 'Nachname',
-              value: user.lastName,
-              onChanged: (value) {
-                user.lastName = value;
-                Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
-              },
-            ),
-            YustTextField(
-              label: 'E-Mail',
-              value: user.email,
-              readOnly: true,
-              onTab: () => _changeEmail(context),
-            ),
-            YustTextField(
-              label: 'Passwort',
-              value: '*****',
-              obscureText: true,
-              readOnly: true,
-              onTab: () => _changePassword(context),
-            ),
-          ],
-        );
-      }),
+    return YustFocusHandler(
+      child: Scaffold(
+        appBar: AppBar(title: Text('Persönliche Daten')),
+        body: YustStoreBuilder(builder: (context, child, store) {
+          final user = store.currUser;
+          return ListView(
+            padding: const EdgeInsets.only(top: 20.0),
+            children: <Widget>[
+              _buildGender(context, user),
+              YustTextField(
+                label: 'Vorname',
+                value: user.firstName,
+                onChanged: (value) {
+                  user.firstName = value;
+                  Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+                },
+              ),
+              YustTextField(
+                label: 'Nachname',
+                value: user.lastName,
+                onChanged: (value) {
+                  user.lastName = value;
+                  Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+                },
+              ),
+              YustTextField(
+                label: 'E-Mail',
+                value: user.email,
+                readOnly: true,
+                onTab: () => _changeEmail(context),
+              ),
+              YustTextField(
+                label: 'Passwort',
+                value: '*****',
+                obscureText: true,
+                readOnly: true,
+                onTab: () => _changePassword(context),
+              ),
+            ],
+          );
+        }),
+      ),
     );
   }
 

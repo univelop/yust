@@ -54,7 +54,7 @@ class _SignInScreenState extends State<SignInScreen> {
         Yust.store.removeListener(_storeListener);
         Navigator.pushNamedAndRemoveUntil(
           context,
-          widget.targetRouteName,
+          widget.targetRouteName ?? '/',
           (_) => false,
           arguments: widget.targetRouteArguments,
         );

@@ -52,7 +52,7 @@ class YustDatePicker extends StatelessWidget {
       return ListTile(
         title: Text(dateText),
         trailing: _buildClearDate(context),
-        onTap: () => _pickDate(context),
+        onTap: onChanged == null ? null : () => _pickDate(context),
         contentPadding: padding,
       );
     } else {
@@ -65,7 +65,7 @@ class YustDatePicker extends StatelessWidget {
             _buildClearDate(context),
           ],
         ),
-        onTap: () => _pickDate(context),
+        onTap: onChanged == null ? null : () => _pickDate(context),
         contentPadding: padding,
       );
     }
@@ -77,9 +77,7 @@ class YustDatePicker extends StatelessWidget {
     }
     return IconButton(
       icon: Icon(Icons.clear),
-      onPressed: () {
-        onChanged(null);
-      },
+      onPressed: onChanged == null ? null : () => onChanged(null),
     );
   }
 

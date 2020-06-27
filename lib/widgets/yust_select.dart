@@ -49,14 +49,14 @@ class YustSelect<T> extends StatelessWidget {
     if (label == null) {
       return ListTile(
         title: Text(_valueCaption(value)),
-        onTap: () => _selectValue(context),
+        onTap: onSelected == null ? null : () => _selectValue(context),
         contentPadding: padding,
       );
     } else {
       return ListTile(
         title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
         trailing: Text(_valueCaption(value)),
-        onTap: () => _selectValue(context),
+        onTap: onSelected == null ? null : () => _selectValue(context),
         contentPadding: padding,
       );
     }

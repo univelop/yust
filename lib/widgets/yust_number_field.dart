@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yust/yust.dart';
@@ -74,7 +75,8 @@ class _YustNumberFieldState extends State<YustNumberField> {
           }
         }
       },
-      keyboardType: TextInputType.numberWithOptions(decimal: true),
+      keyboardType:
+          kIsWeb ? null : TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [WhitelistingTextInputFormatter(RegExp("[0-9\,\.]"))],
       onTap: widget.onTab,
       readOnly: widget.readOnly,

@@ -15,6 +15,9 @@ YustNotification _$YustNotificationFromJson(Map json) {
   )
     ..id = json['id'] as String
     ..createdAt = YustDoc.dateTimeFromJson(json['createdAt'])
+    ..createdBy = json['createdBy'] as String
+    ..modifiedAt = YustDoc.dateTimeFromJson(json['modifiedAt'])
+    ..modifiedBy = json['modifiedBy'] as String
     ..userId = json['userId'] as String
     ..envId = json['envId'] as String
     ..data = (json['data'] as Map)?.map(
@@ -26,6 +29,9 @@ Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
     <String, dynamic>{
       'id': instance.id,
       'createdAt': YustDoc.dateTimeToJson(instance.createdAt),
+      'createdBy': instance.createdBy,
+      'modifiedAt': YustDoc.dateTimeToJson(instance.modifiedAt),
+      'modifiedBy': instance.modifiedBy,
       'userId': instance.userId,
       'envId': instance.envId,
       'forCollection': instance.forCollection,

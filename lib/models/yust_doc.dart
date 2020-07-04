@@ -12,6 +12,12 @@ abstract class YustDoc {
   @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
   DateTime createdAt;
   @JsonKey()
+  String createdBy;
+  @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
+  DateTime modifiedAt;
+  @JsonKey()
+  String modifiedBy;
+  @JsonKey()
   String userId;
   @JsonKey()
   String envId;
@@ -19,6 +25,9 @@ abstract class YustDoc {
   YustDoc({
     this.id,
     this.createdAt,
+    this.createdBy,
+    this.modifiedAt,
+    this.modifiedBy,
     this.userId,
     this.envId,
   });

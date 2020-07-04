@@ -126,6 +126,7 @@ class YustService {
         .document()
         .documentID;
     doc.createdAt = DateTime.now();
+    doc.createdBy = Yust.store.currUser?.id;
     if (modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
     }
@@ -255,8 +256,13 @@ class YustService {
     bool merge = true,
   }) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
+    doc.modifiedAt = DateTime.now();
+    doc.modifiedBy = Yust.store.currUser?.id;
     if (doc.createdAt == null) {
-      doc.createdAt = DateTime.now();
+      doc.createdAt = doc.modifiedAt;
+    }
+    if (doc.createdBy == null) {
+      doc.createdBy = doc.modifiedBy;
     }
     if (doc.userId == null && modelSetup.forUser) {
       doc.userId = Yust.store.currUser.id;

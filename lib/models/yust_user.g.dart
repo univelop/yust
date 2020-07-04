@@ -15,6 +15,9 @@ YustUser _$YustUserFromJson(Map json) {
   )
     ..id = json['id'] as String
     ..createdAt = YustDoc.dateTimeFromJson(json['createdAt'])
+    ..createdBy = json['createdBy'] as String
+    ..modifiedAt = YustDoc.dateTimeFromJson(json['modifiedAt'])
+    ..modifiedBy = json['modifiedBy'] as String
     ..userId = json['userId'] as String
     ..envId = json['envId'] as String
     ..envIds = (json['envIds'] as Map)?.map(
@@ -28,6 +31,9 @@ YustUser _$YustUserFromJson(Map json) {
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'id': instance.id,
       'createdAt': YustDoc.dateTimeToJson(instance.createdAt),
+      'createdBy': instance.createdBy,
+      'modifiedAt': YustDoc.dateTimeToJson(instance.modifiedAt),
+      'modifiedBy': instance.modifiedBy,
       'userId': instance.userId,
       'envId': instance.envId,
       'email': instance.email,

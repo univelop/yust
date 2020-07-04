@@ -75,9 +75,10 @@ class _YustNumberFieldState extends State<YustNumberField> {
           }
         }
       },
-      keyboardType:
-          kIsWeb ? null : TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [WhitelistingTextInputFormatter(RegExp("[0-9\,\.]"))],
+      keyboardType: kIsWeb
+          ? null
+          : TextInputType.numberWithOptions(decimal: true, signed: true),
+      inputFormatters: [WhitelistingTextInputFormatter(RegExp("[0-9\,\.\-]"))],
       onTap: widget.onTab,
       readOnly: widget.readOnly,
       enabled: widget.enabled,

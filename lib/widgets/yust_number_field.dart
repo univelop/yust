@@ -38,7 +38,8 @@ class _YustNumberFieldState extends State<YustNumberField> {
   void initState() {
     super.initState();
 
-    _controller = TextEditingController(text: widget.value?.toString());
+    _controller = TextEditingController(
+        text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
   }
 
   @override
@@ -50,9 +51,6 @@ class _YustNumberFieldState extends State<YustNumberField> {
 
   @override
   Widget build(BuildContext context) {
-    if (_controller.text != widget.value?.toString()) {
-      _controller.text = widget.value?.toString();
-    }
     return TextField(
       decoration: InputDecoration(
           labelText: widget.label,
@@ -64,7 +62,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
       onChanged: (value) {
         if (value == '') {
           widget.onChanged(null);
-        } else if (!['.', ','].contains(value.substring(value.length - 1))) {
+        } else {
           value = value.replaceAll(RegExp(r'\,'), '.');
           final numValue = num.tryParse(value);
           if (numValue != null && numValue != oldValue) {

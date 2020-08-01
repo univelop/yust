@@ -254,10 +254,14 @@ class YustService {
     YustDocSetup<T> modelSetup,
     T doc, {
     bool merge = true,
+    bool trackModification = true,
+    bool skipOnSave = false,
   }) async {
     var collection = Firestore.instance.collection(modelSetup.collectionName);
-    doc.modifiedAt = DateTime.now();
-    doc.modifiedBy = Yust.store.currUser?.id;
+    if (trackModification) {
+      doc.modifiedAt = DateTime.now();
+      doc.modifiedBy = Yust.store.currUser?.id;
+    }
     if (doc.createdAt == null) {
       doc.createdAt = doc.modifiedAt;
     }
@@ -270,7 +274,7 @@ class YustService {
     if (doc.envId == null && modelSetup.forEnvironment) {
       doc.envId = Yust.store.currUser.currEnvId;
     }
-    if (modelSetup.onSave != null) {
+    if (modelSetup.onSave != null && !skipOnSave) {
       await modelSetup.onSave(doc);
     }
 

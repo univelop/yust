@@ -52,3 +52,10 @@
 Breaking changes:
 * `createdAt` in YustDoc changed type from String to DateTime.
 * Use `formatDate` and `formatTime` in YustService if you switch to Firebase timestamps. Use `formatIsoDate` and `formatIsoTime` for the old ISO Datetime format.
+
+## 1.0.0 - 2020-08-01
+
+* Add created by, modified at, modified by
+* Improve number field
+* Improve authentication
+* Improve widgets

@@ -4,6 +4,7 @@ class YustSwitch extends StatelessWidget {
   final String label;
   final bool value;
   final Color activeColor;
+  final Widget leading;
   final void Function(bool) onChanged;
 
   const YustSwitch({
@@ -11,6 +12,7 @@ class YustSwitch extends StatelessWidget {
     this.label,
     this.value,
     this.activeColor,
+    this.leading,
     this.onChanged,
   }) : super(key: key);
 
@@ -20,6 +22,7 @@ class YustSwitch extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         ListTile(
+          leading: leading,
           title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
           trailing: Switch(
             value: value,

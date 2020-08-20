@@ -59,3 +59,7 @@ Breaking changes:
 * Improve number field
 * Improve authentication
 * Improve widgets
+
+## 1.0.1 - 2020-08-20
+
+* Improve switch

@@ -63,3 +63,7 @@ Breaking changes:
 ## 1.0.1 - 2020-08-20
 
 * Improve switch
+
+## 1.1.0 - 2020-09-01
+
+* Add prefix icon to widgets

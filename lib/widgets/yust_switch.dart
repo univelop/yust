@@ -4,7 +4,7 @@ class YustSwitch extends StatelessWidget {
   final String label;
   final bool value;
   final Color activeColor;
-  final Widget leading;
+  final Widget prefixIcon;
   final void Function(bool) onChanged;
 
   const YustSwitch({
@@ -12,7 +12,7 @@ class YustSwitch extends StatelessWidget {
     this.label,
     this.value,
     this.activeColor,
-    this.leading,
+    this.prefixIcon,
     this.onChanged,
   }) : super(key: key);
 
@@ -22,15 +22,26 @@ class YustSwitch extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         ListTile(
-          leading: leading,
-          title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (prefixIcon != null)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: prefixIcon,
+                ),
+              Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+            ],
+          ),
           trailing: Switch(
             value: value,
             activeColor: activeColor,
             onChanged: onChanged,
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          contentPadding: prefixIcon != null
+              ? const EdgeInsets.only(
+                  left: 8.0, top: 8.0, right: 16.0, bottom: 8.0)
+              : const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         ),
         Divider(height: 1.0, thickness: 1.0, color: Colors.grey)
       ],

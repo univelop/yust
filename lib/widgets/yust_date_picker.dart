@@ -10,6 +10,7 @@ class YustDatePicker extends StatelessWidget {
   final DateTimeCallback onChanged;
   final bool hideClearButton;
   final YustInputStyle style;
+  final Widget prefixIcon;
 
   YustDatePicker({
     Key key,
@@ -18,6 +19,7 @@ class YustDatePicker extends StatelessWidget {
     this.onChanged,
     this.hideClearButton = false,
     this.style = YustInputStyle.normal,
+    this.prefixIcon,
   }) : super(key: key);
 
   @override
@@ -44,7 +46,19 @@ class YustDatePicker extends StatelessWidget {
     final dateText = Yust.service.formatDate(value);
     var padding;
     if (style == YustInputStyle.normal) {
-      padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+      if (label != null && prefixIcon != null) {
+        padding = EdgeInsets.only(
+            left: 8.0,
+            top: 8.0,
+            right: hideClearButton ? 16.0 : 8.0,
+            bottom: 8.0);
+      } else {
+        padding = EdgeInsets.only(
+            left: 16.0,
+            top: 8.0,
+            right: hideClearButton ? 16.0 : 8.0,
+            bottom: 8.0);
+      }
     } else {
       padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 2.0);
     }
@@ -57,7 +71,17 @@ class YustDatePicker extends StatelessWidget {
       );
     } else {
       return ListTile(
-        title: Text(label, style: TextStyle(color: Colors.grey[600])),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (prefixIcon != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: prefixIcon,
+              ),
+            Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+          ],
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[

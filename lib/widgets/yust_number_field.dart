@@ -14,6 +14,7 @@ class YustNumberField extends StatefulWidget {
   final bool readOnly;
   final bool enabled;
   final YustInputStyle style;
+  final Widget prefixIcon;
 
   YustNumberField({
     Key key,
@@ -24,6 +25,7 @@ class YustNumberField extends StatefulWidget {
     this.enabled = true,
     this.readOnly = false,
     this.style,
+    this.prefixIcon,
   }) : super(key: key);
 
   @override
@@ -53,11 +55,13 @@ class _YustNumberFieldState extends State<YustNumberField> {
   Widget build(BuildContext context) {
     return TextField(
       decoration: InputDecoration(
-          labelText: widget.label,
-          contentPadding: const EdgeInsets.all(20.0),
-          border: widget.style == YustInputStyle.outlineBorder
-              ? OutlineInputBorder()
-              : null),
+        labelText: widget.label,
+        contentPadding: const EdgeInsets.all(20.0),
+        border: widget.style == YustInputStyle.outlineBorder
+            ? OutlineInputBorder()
+            : null,
+        prefixIcon: widget.prefixIcon,
+      ),
       controller: _controller,
       onChanged: (value) {
         if (value == '') {
@@ -76,7 +80,9 @@ class _YustNumberFieldState extends State<YustNumberField> {
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
-      inputFormatters: [WhitelistingTextInputFormatter(RegExp("[0-9\,\.\-]"))],
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp("[0-9\,\.\-]"))
+      ],
       onTap: widget.onTab,
       readOnly: widget.readOnly,
       enabled: widget.enabled,

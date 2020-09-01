@@ -8,6 +8,7 @@ class YustSelect<T> extends StatelessWidget {
   final List<String> optionLabels;
   final void Function(T) onSelected;
   final YustInputStyle style;
+  final Widget prefixIcon;
 
   const YustSelect({
     Key key,
@@ -17,6 +18,7 @@ class YustSelect<T> extends StatelessWidget {
     this.optionLabels,
     this.onSelected,
     this.style = YustInputStyle.normal,
+    this.prefixIcon,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,12 @@ class YustSelect<T> extends StatelessWidget {
   Widget _buildInner(BuildContext context) {
     var padding;
     if (style == YustInputStyle.normal) {
-      padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+      if (label != null && prefixIcon != null) {
+        padding = const EdgeInsets.only(
+            left: 8.0, top: 8.0, right: 16.0, bottom: 8.0);
+      } else {
+        padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+      }
     } else {
       padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0);
     }
@@ -54,7 +61,17 @@ class YustSelect<T> extends StatelessWidget {
       );
     } else {
       return ListTile(
-        title: Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (prefixIcon != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: prefixIcon,
+              ),
+            Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+          ],
+        ),
         trailing: Text(_valueCaption(value)),
         onTap: onSelected == null ? null : () => _selectValue(context),
         contentPadding: padding,

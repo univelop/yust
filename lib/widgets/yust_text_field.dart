@@ -14,6 +14,7 @@ class YustTextField extends StatefulWidget {
   final bool enabled;
   final bool obscureText;
   final YustInputStyle style;
+  final Widget prefixIcon;
 
   YustTextField({
     Key key,
@@ -26,6 +27,7 @@ class YustTextField extends StatefulWidget {
     this.readOnly = false,
     this.obscureText = false,
     this.style,
+    this.prefixIcon,
   }) : super(key: key);
 
   @override
@@ -56,11 +58,13 @@ class _YustTextFieldState extends State<YustTextField> {
     }
     return TextField(
       decoration: InputDecoration(
-          labelText: widget.label,
-          contentPadding: const EdgeInsets.all(20.0),
-          border: widget.style == YustInputStyle.outlineBorder
-              ? OutlineInputBorder()
-              : null),
+        labelText: widget.label,
+        contentPadding: const EdgeInsets.all(20.0),
+        border: widget.style == YustInputStyle.outlineBorder
+            ? OutlineInputBorder()
+            : null,
+        prefixIcon: widget.prefixIcon,
+      ),
       maxLines: widget.obscureText ? 1 : null,
       minLines: widget.minLines,
       controller: _controller,

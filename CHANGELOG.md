@@ -72,3 +72,7 @@ Breaking changes:
 
 * Add onEditingComplete to widgets
 * Improve store builder
+
+## 1.2.1 - 2020-09-08
+
+* Improve serialization

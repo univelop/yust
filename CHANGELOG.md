@@ -67,3 +67,8 @@ Breaking changes:
 ## 1.1.0 - 2020-09-01
 
 * Add prefix icon to widgets
+
+## 1.2.0 - 2020-09-07
+
+* Add onEditingComplete to widgets
+* Improve store builder

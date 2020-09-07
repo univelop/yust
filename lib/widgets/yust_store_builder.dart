@@ -4,8 +4,8 @@ import 'package:scoped_model/scoped_model.dart';
 import '../yust.dart';
 import '../yust_store.dart';
 
-class YustStoreBuilder extends StatelessWidget {
-  final Widget Function(BuildContext, Widget, YustStore) builder;
+class YustStoreBuilder<T extends YustStore> extends StatelessWidget {
+  final Widget Function(BuildContext, Widget, T) builder;
 
   YustStoreBuilder({
     Key key,
@@ -14,9 +14,9 @@ class YustStoreBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScopedModel<YustStore>(
-      model: Yust.store,
-      child: ScopedModelDescendant<YustStore>(
+    return ScopedModel<T>(
+      model: Yust.store as T,
+      child: ScopedModelDescendant<T>(
         builder: builder,
       ),
     );

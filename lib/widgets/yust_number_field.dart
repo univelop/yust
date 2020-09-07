@@ -10,6 +10,7 @@ class YustNumberField extends StatefulWidget {
   final String label;
   final num value;
   final ChangeCallback onChanged;
+  final ChangeCallback onEditingComplete;
   final TabCallback onTab;
   final bool readOnly;
   final bool enabled;
@@ -21,6 +22,7 @@ class YustNumberField extends StatefulWidget {
     this.label,
     this.value,
     this.onChanged,
+    this.onEditingComplete,
     this.onTab,
     this.enabled = true,
     this.readOnly = false,
@@ -34,7 +36,8 @@ class YustNumberField extends StatefulWidget {
 
 class _YustNumberFieldState extends State<YustNumberField> {
   TextEditingController _controller;
-  num oldValue;
+  FocusNode _focusNode = FocusNode();
+  num _oldValue;
 
   @override
   void initState() {
@@ -42,11 +45,17 @@ class _YustNumberFieldState extends State<YustNumberField> {
 
     _controller = TextEditingController(
         text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        widget.onEditingComplete(_valueToNum(_controller.value.text));
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
 
     super.dispose();
   }
@@ -63,18 +72,14 @@ class _YustNumberFieldState extends State<YustNumberField> {
         prefixIcon: widget.prefixIcon,
       ),
       controller: _controller,
+      focusNode: _focusNode,
       onChanged: (value) {
-        if (value == '') {
-          widget.onChanged(null);
-        } else {
-          value = value.replaceAll(RegExp(r'\,'), '.');
-          final numValue = num.tryParse(value);
-          if (numValue != null && numValue != oldValue) {
-            setState(() {
-              oldValue = numValue;
-            });
-            widget.onChanged(numValue);
-          }
+        num numValue = _valueToNum(value);
+        if (numValue != _oldValue) {
+          setState(() {
+            _oldValue = numValue;
+          });
+          widget.onChanged(numValue);
         }
       },
       keyboardType: kIsWeb
@@ -87,5 +92,15 @@ class _YustNumberFieldState extends State<YustNumberField> {
       readOnly: widget.readOnly,
       enabled: widget.enabled,
     );
+  }
+
+  num _valueToNum(String value) {
+    if (value == '') {
+      return null;
+    } else {
+      value = value.replaceAll(RegExp(r'\,'), '.');
+      final numValue = num.tryParse(value);
+      return numValue;
+    }
   }
 }

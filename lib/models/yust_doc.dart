@@ -56,6 +56,9 @@ abstract class YustDoc {
       return timestamp.toDate();
     } else if (timestamp is String) {
       return DateTime.parse(timestamp);
+    } else if (timestamp is Map && timestamp['_seconds'] != null) {
+      return Timestamp(timestamp['_seconds'], timestamp['_nanoseconds'])
+          .toDate();
     } else {
       return null;
     }

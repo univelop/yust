@@ -8,6 +8,7 @@ class YustTextField extends StatefulWidget {
   final String label;
   final String value;
   final StringCallback onChanged;
+  final StringCallback onEditingComplete;
   final TabCallback onTab;
   final int minLines;
   final bool readOnly;
@@ -21,6 +22,7 @@ class YustTextField extends StatefulWidget {
     this.label,
     this.value = '',
     this.onChanged,
+    this.onEditingComplete,
     this.onTab,
     this.minLines,
     this.enabled = true,
@@ -36,26 +38,29 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
   TextEditingController _controller;
+  FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-
     _controller = TextEditingController(text: widget.value);
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
+        widget.onEditingComplete(_controller.value.text);
+      }
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_controller.text != widget.value) {
-      _controller.text = widget.value;
-    }
     return TextField(
       decoration: InputDecoration(
         labelText: widget.label,
@@ -68,6 +73,7 @@ class _YustTextFieldState extends State<YustTextField> {
       maxLines: widget.obscureText ? 1 : null,
       minLines: widget.minLines,
       controller: _controller,
+      focusNode: _focusNode,
       onChanged: widget.onChanged,
       onTap: widget.onTab,
       readOnly: widget.readOnly,

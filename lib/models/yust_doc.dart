@@ -40,6 +40,17 @@ abstract class YustDoc {
     return list.map((item) => item.toJson()).toList();
   }
 
+  static Map<String, T> mapFromJson<T>(Map<String, dynamic> map) {
+    if (map == null) return null;
+    return map.map((key, value) {
+      if (value is FieldValue) {
+        return MapEntry(key, null);
+      } else {
+        return MapEntry(key, value as T);
+      }
+    });
+  }
+
   static Map<String, dynamic> mapToJson(Map<String, dynamic> map) {
     if (map == null) return null;
     return map.map((key, value) {

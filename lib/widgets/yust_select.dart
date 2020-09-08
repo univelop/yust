@@ -69,7 +69,12 @@ class YustSelect<T> extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 8.0),
                 child: prefixIcon,
               ),
-            Text(label ?? '', style: TextStyle(color: Colors.grey[600])),
+            Flexible(
+              child: Text(
+                label ?? '',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
           ],
         ),
         trailing: Text(_valueCaption(value)),

@@ -76,3 +76,7 @@ Breaking changes:
 ## 1.2.1 - 2020-09-08
 
 * Improve serialization
+
+## 1.2.2 - 2020-09-11
+
+* Fix widget overflows

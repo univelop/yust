@@ -55,14 +55,14 @@ class YustService {
     if (password != passwordConfirmation) {
       throw YustException('Die Passwörter stimmen nicht überein.');
     }
-    final AuthResult authResult = await fireAuth.createUserWithEmailAndPassword(
-        email: email, password: password);
+    final UserCredential userCredential = await fireAuth
+        .createUserWithEmailAndPassword(email: email, password: password);
     final user = Yust.userSetup.newDoc()
       ..email = email
       ..firstName = firstName
       ..lastName = lastName
       ..gender = gender
-      ..id = authResult.user.uid;
+      ..id = userCredential.user.uid;
 
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
   }
@@ -94,11 +94,12 @@ class YustService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final AuthResult authResult = await fireAuth.signInWithEmailAndPassword(
+    final UserCredential userCredential =
+        await fireAuth.signInWithEmailAndPassword(
       email: Yust.store.currUser.email,
       password: password,
     );
-    await authResult.user.updateEmail(email);
+    await userCredential.user.updateEmail(email);
     Yust.store.setState(() {
       Yust.store.currUser.email = email;
     });
@@ -106,11 +107,12 @@ class YustService {
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
-    final AuthResult authResult = await fireAuth.signInWithEmailAndPassword(
+    final UserCredential userCredential =
+        await fireAuth.signInWithEmailAndPassword(
       email: Yust.store.currUser.email,
       password: oldPassword,
     );
-    await authResult.user.updatePassword(newPassword);
+    await userCredential.user.updatePassword(newPassword);
   }
 
   /// Initialises a document with an id and the time it was created.
@@ -121,10 +123,10 @@ class YustService {
     if (doc == null) {
       doc = modelSetup.newDoc();
     }
-    doc.id = Firestore.instance
+    doc.id = FirebaseFirestore.instance
         .collection(modelSetup.collectionName)
-        .document()
-        .documentID;
+        .doc()
+        .id;
     doc.createdAt = DateTime.now();
     doc.createdBy = Yust.store.currUser?.id;
     if (modelSetup.forEnvironment) {
@@ -151,12 +153,13 @@ class YustService {
     List<List<dynamic>> filterList,
     List<String> orderByList,
   }) {
-    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    Query query =
+        FirebaseFirestore.instance.collection(modelSetup.collectionName);
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
     return query.snapshots().map((snapshot) {
-      return snapshot.documents
+      return snapshot.docs
           .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
           .toList();
     });
@@ -167,13 +170,14 @@ class YustService {
     List<List<dynamic>> filterList,
     List<String> orderByList,
   }) {
-    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    Query query =
+        FirebaseFirestore.instance.collection(modelSetup.collectionName);
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
-    return query.getDocuments(source: Source.server).then((snapshot) {
+    return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
-      return snapshot.documents
+      return snapshot.docs
           .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
           .toList();
     });
@@ -183,9 +187,9 @@ class YustService {
     YustDocSetup<T> modelSetup,
     String id,
   ) {
-    return Firestore.instance
+    return FirebaseFirestore.instance
         .collection(modelSetup.collectionName)
-        .document(id)
+        .doc(id)
         .snapshots()
         .map((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
@@ -194,10 +198,10 @@ class YustService {
     YustDocSetup<T> modelSetup,
     String id,
   ) {
-    return Firestore.instance
+    return FirebaseFirestore.instance
         .collection(modelSetup.collectionName)
-        .document(id)
-        .get(source: Source.server)
+        .doc(id)
+        .get(GetOptions(source: Source.server))
         .then((docSnapshot) => _getDoc(modelSetup, docSnapshot));
   }
 
@@ -207,14 +211,15 @@ class YustService {
     List<List<dynamic>> filterList, {
     List<String> orderByList,
   }) {
-    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    Query query =
+        FirebaseFirestore.instance.collection(modelSetup.collectionName);
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
 
     return query.snapshots().map<T>((snapshot) {
-      if (snapshot.documents.length > 0) {
-        return _getDoc(modelSetup, snapshot.documents[0]);
+      if (snapshot.docs.length > 0) {
+        return _getDoc(modelSetup, snapshot.docs[0]);
       } else {
         return null;
       }
@@ -227,16 +232,17 @@ class YustService {
     List<List<dynamic>> filterList, {
     List<String> orderByList,
   }) async {
-    Query query = Firestore.instance.collection(modelSetup.collectionName);
+    Query query =
+        FirebaseFirestore.instance.collection(modelSetup.collectionName);
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
 
-    final snapshot = await query.getDocuments(source: Source.server);
+    final snapshot = await query.get(GetOptions(source: Source.server));
     T doc;
 
-    if (snapshot.documents.length > 0) {
-      doc = modelSetup.fromJson(snapshot.documents[0].data);
+    if (snapshot.docs.length > 0) {
+      doc = modelSetup.fromJson(snapshot.docs[0].data());
       if (modelSetup.onMigrate != null) {
         modelSetup.onMigrate(doc);
       }
@@ -257,7 +263,8 @@ class YustService {
     bool trackModification = true,
     bool skipOnSave = false,
   }) async {
-    var collection = Firestore.instance.collection(modelSetup.collectionName);
+    var collection =
+        FirebaseFirestore.instance.collection(modelSetup.collectionName);
     if (trackModification) {
       doc.modifiedAt = DateTime.now();
       doc.modifiedBy = Yust.store.currUser?.id;
@@ -279,11 +286,11 @@ class YustService {
     }
 
     if (doc.id != null) {
-      await collection.document(doc.id).setData(doc.toJson(), merge: merge);
+      await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
     } else {
       var ref = await collection.add(doc.toJson());
-      doc.id = ref.documentID;
-      await ref.setData(doc.toJson());
+      doc.id = ref.id;
+      await ref.set(doc.toJson());
     }
 
     return getDocOnce<T>(modelSetup, doc.id);
@@ -306,9 +313,9 @@ class YustService {
     if (modelSetup.onDelete != null) {
       await modelSetup.onDelete(doc);
     }
-    var docRef = Firestore.instance
+    var docRef = FirebaseFirestore.instance
         .collection(modelSetup.collectionName)
-        .document(doc.id);
+        .doc(doc.id);
     await docRef.delete();
   }
 
@@ -349,11 +356,11 @@ class YustService {
 
     T result;
 
-    await Firestore.instance.runTransaction(
+    await FirebaseFirestore.instance.runTransaction(
       (Transaction transaction) async {
-        final DocumentReference documentReference = Firestore.instance
+        final DocumentReference documentReference = FirebaseFirestore.instance
             .collection(modelSetup.collectionName)
-            .document(id);
+            .doc(id);
 
         final DocumentSnapshot startSnapshot =
             await transaction.get(documentReference);
@@ -362,7 +369,7 @@ class YustService {
         final T endDocument = handler(startDocument);
 
         final Map<String, dynamic> endMap = endDocument.toJson();
-        await transaction.set(documentReference, endMap);
+        transaction.set(documentReference, endMap);
 
         result = endDocument;
       },
@@ -522,7 +529,7 @@ class YustService {
       return null;
     }
 
-    final T document = modelSetup.fromJson(snapshot.data);
+    final T document = modelSetup.fromJson(snapshot.data());
 
     if (modelSetup.onMigrate != null) {
       modelSetup.onMigrate(document);

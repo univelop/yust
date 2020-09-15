@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info/package_info.dart';
 
@@ -29,18 +30,19 @@ class Yust {
     YustDocSetup userSetup,
     bool useTimestamps = false,
   }) async {
+    await Firebase.initializeApp();
     Yust.store = store ?? YustStore();
     Yust.service = service ?? YustService();
     Yust.userSetup = userSetup ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
-    Firestore.instance.settings(persistenceEnabled: true);
+    if (kIsWeb) await FirebaseFirestore.instance.enablePersistence();
 
     Yust.store.setState(() {
       Yust.store.authState = AuthState.waiting;
     });
     final completer = Completer<void>();
     StreamSubscription<YustUser> userSubscription;
-    FirebaseAuth.instance.onAuthStateChanged.listen(
+    FirebaseAuth.instance.authStateChanges().listen(
 
         ///Calls [Yust.store.setState] on each event.
         (fireUser) async {

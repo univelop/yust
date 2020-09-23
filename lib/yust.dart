@@ -23,18 +23,24 @@ class Yust {
   static YustService service;
   static YustDocSetup<YustUser> userSetup;
   static bool useTimestamps = false;
+  static String storageUrl;
+  static String imagePlaceholderPath;
 
   static Future<void> initialize({
     YustStore store,
     YustService service,
     YustDocSetup userSetup,
     bool useTimestamps = false,
+    String storageUrl,
+    String imagePlaceholderPath,
   }) async {
     await Firebase.initializeApp();
     Yust.store = store ?? YustStore();
     Yust.service = service ?? YustService();
     Yust.userSetup = userSetup ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
+    Yust.storageUrl = storageUrl;
+    Yust.imagePlaceholderPath = imagePlaceholderPath;
     if (kIsWeb) await FirebaseFirestore.instance.enablePersistence();
 
     Yust.store.setState(() {

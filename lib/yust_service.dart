@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase/firebase.dart' as fb;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -376,6 +378,22 @@ class YustService {
     );
 
     return result;
+  }
+
+  Future<void> deleteImage(String path, String imageId) async {
+    try {
+      if (!kIsWeb) {
+        await FirebaseStorage().ref().child(path).child(imageId).delete();
+      } else {
+        await fb
+            .app()
+            .storage()
+            .refFromURL(Yust.storageUrl)
+            .child(path)
+            .child(imageId)
+            .delete();
+      }
+    } catch (e) {}
   }
 
   Future<void> showAlert(

@@ -537,7 +537,7 @@ class YustService {
     YustDocSetup<T> modelSetup,
     DocumentSnapshot snapshot,
   ) {
-    if (snapshot.data == null) {
+    if (snapshot.exists == false) {
       return null;
     }
 

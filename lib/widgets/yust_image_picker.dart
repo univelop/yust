@@ -264,7 +264,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
       url = await storageReference.getDownloadURL();
     } else {
-      url = await YustWebHelper.uploadImage(widget.folderPath, imageName);
+      url =
+          await YustWebHelper.uploadImage(widget.folderPath, imageName, bytes);
     }
 
     setState(() {

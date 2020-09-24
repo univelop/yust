@@ -73,15 +73,17 @@ class _YustNumberFieldState extends State<YustNumberField> {
       ),
       controller: _controller,
       focusNode: _focusNode,
-      onChanged: (value) {
-        num numValue = _valueToNum(value);
-        if (numValue != _oldValue) {
-          setState(() {
-            _oldValue = numValue;
-          });
-          widget.onChanged(numValue);
-        }
-      },
+      onChanged: widget.onChanged == null
+          ? null
+          : (value) {
+              num numValue = _valueToNum(value);
+              if (numValue != _oldValue) {
+                setState(() {
+                  _oldValue = numValue;
+                });
+                widget.onChanged(numValue);
+              }
+            },
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),

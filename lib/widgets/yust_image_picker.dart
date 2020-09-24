@@ -2,12 +2,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase/firebase.dart' as fb;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+import 'package:yust/models/yust_exception.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
 
@@ -232,11 +232,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
         await _uploadFile(image.path, File(image.path));
       }
     } else {
-      final result = await FilePicker.platform.pickFiles();
-      if (result != null) {
-        await _uploadFileWeb(
-            result.files.single.name, result.files.single.bytes);
-      }
+      Yust.service.showAlert(context, 'Ups',
+          'Diese Funktion steht im Browser nicht zur Verfügung.');
     }
   }
 
@@ -270,54 +267,20 @@ class _YustImagePickerState extends State<YustImagePicker> {
     widget.onChanged(_imageId, _imageUrl);
   }
 
-  Future<void> _uploadFileWeb(String name, Uint8List bytes) async {
-    final imageId =
-        Yust.service.randomString(length: 16) + '.' + name.split('.').last;
-    setState(() {
-      _imageBytes = bytes;
-      _imageProcessing = true;
-    });
-
-    var metadata = fb.UploadMetadata(
-      contentType: lookupMimeType(name),
-    );
-    fb.StorageReference ref = fb
-        .app()
-        .storage()
-        .refFromURL(Yust.storageUrl)
-        .child(widget.folderPath)
-        .child(imageId);
-    fb.UploadTask uploadTask = ref.put(bytes, metadata);
-    fb.UploadTaskSnapshot taskSnapshot = await uploadTask.future;
-    final url = await taskSnapshot.ref.getDownloadURL();
-
-    setState(() {
-      _imageId = imageId;
-      _imageUrl = url.toString();
-      _imageProcessing = false;
-    });
-    widget.onChanged(_imageId, _imageUrl);
-  }
-
   Future<void> _deleteImage() async {
     if (_imageId != null) {
-      try {
-        if (!kIsWeb) {
+      if (!kIsWeb) {
+        try {
           await FirebaseStorage()
               .ref()
               .child(widget.folderPath)
               .child(_imageId)
               .delete();
-        } else {
-          await fb
-              .app()
-              .storage()
-              .refFromURL(Yust.storageUrl)
-              .child(widget.folderPath)
-              .child(_imageId)
-              .delete();
-        }
-      } catch (e) {}
+        } catch (e) {}
+      } else {
+        Yust.service.showAlert(context, 'Ups',
+            'Diese Funktion steht im Browser nicht zur Verfügung.');
+      }
 
       setState(() {
         _imageId = null;

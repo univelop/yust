@@ -14,7 +14,6 @@ dependencies:
   firebase_auth: ^0.18.0+1
   cloud_firestore: ^0.14.0+2
   firebase_storage: ^4.0.0
-  firebase: ^7.3.0
 
   scoped_model: ^1.0.1
   intl: ^0.16.0

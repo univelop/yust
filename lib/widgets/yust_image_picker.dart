@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
-import 'package:yust/yust_web_helper.dart';
+import 'package:yust/util/yust_web_helper.dart';
 
 /// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {

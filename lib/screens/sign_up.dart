@@ -7,7 +7,7 @@ import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 import 'package:yust/widgets/yust_select.dart';
 
-import '../models/yust_exception.dart';
+import '../util/yust_exception.dart';
 import '../yust.dart';
 
 class SignUpScreen extends StatefulWidget {

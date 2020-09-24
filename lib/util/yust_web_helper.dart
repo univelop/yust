@@ -1,4 +1,4 @@
-import 'package:yust/models/yust_exception.dart';
+import 'package:yust/util/yust_exception.dart';
 
 class YustWebHelper {
   static Future<String> uploadImage(String path, String name) async {

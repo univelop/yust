@@ -7,11 +7,11 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:yust/yust_web_helper.dart';
+import 'package:yust/util/yust_web_helper.dart';
 
 import 'models/yust_doc.dart';
 import 'models/yust_doc_setup.dart';
-import 'models/yust_exception.dart';
+import 'util/yust_exception.dart';
 import 'models/yust_user.dart';
 import 'yust.dart';
 

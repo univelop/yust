@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:yust/yust_web_helper.dart';
 
 import 'models/yust_doc.dart';
 import 'models/yust_doc_setup.dart';
@@ -381,7 +382,11 @@ class YustService {
 
   Future<void> deleteImage(String path, String imageId) async {
     try {
-      await FirebaseStorage().ref().child(path).child(imageId).delete();
+      if (!kIsWeb) {
+        await FirebaseStorage().ref().child(path).child(imageId).delete();
+      } else {
+        await YustWebHelper.deleteImage(path, imageId);
+      }
     } catch (e) {}
   }
 

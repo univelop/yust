@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
+import 'package:yust/yust_web_helper.dart';
 
 /// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {
@@ -226,35 +228,44 @@ class _YustImagePickerState extends State<YustImagePicker> {
     if (!kIsWeb) {
       final image = await ImagePicker().getImage(source: imageSource);
       if (image != null) {
-        await _uploadFile(image.path, File(image.path));
+        await _uploadFile(path: image.path, file: File(image.path));
       }
     } else {
-      Yust.service.showAlert(context, 'Ups',
-          'Diese Funktion steht im Browser nicht zur Verfügung.');
+      final result = await FilePicker.platform.pickFiles();
+      if (result != null) {
+        await _uploadFile(
+            path: result.files.single.name, bytes: result.files.single.bytes);
+      }
     }
   }
 
-  Future<void> _uploadFile(String path, File file) async {
+  Future<void> _uploadFile({String path, File file, Uint8List bytes}) async {
     final imageId =
         Yust.service.randomString(length: 16) + '.' + path.split('.').last;
     setState(() {
       _imageFile = file;
+      _imageBytes = bytes;
       _imageProcessing = true;
     });
 
-    final StorageReference storageReference =
-        FirebaseStorage().ref().child(widget.folderPath).child(imageId);
+    String url;
+    if (!kIsWeb) {
+      final StorageReference storageReference =
+          FirebaseStorage().ref().child(widget.folderPath).child(imageId);
 
-    StorageUploadTask uploadTask;
-    uploadTask = storageReference.putFile(_imageFile);
-    // final StreamSubscription<StorageTaskEvent> streamSubscription =
-    //     uploadTask.events.listen((event) {
-    //   print('EVENT ${event.type}');
-    // });
-    await uploadTask.onComplete;
-    // streamSubscription.cancel();
+      StorageUploadTask uploadTask;
+      uploadTask = storageReference.putFile(_imageFile);
+      // final StreamSubscription<StorageTaskEvent> streamSubscription =
+      //     uploadTask.events.listen((event) {
+      //   print('EVENT ${event.type}');
+      // });
+      await uploadTask.onComplete;
+      // streamSubscription.cancel();
 
-    final url = await storageReference.getDownloadURL();
+      url = await storageReference.getDownloadURL();
+    } else {
+      url = await YustWebHelper.uploadImage(widget.folderPath, imageId);
+    }
 
     setState(() {
       _imageId = imageId;
@@ -275,8 +286,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
               .delete();
         } catch (e) {}
       } else {
-        Yust.service.showAlert(context, 'Ups',
-            'Diese Funktion steht im Browser nicht zur Verfügung.');
+        await YustWebHelper.deleteImage(widget.folderPath, _imageId);
       }
 
       setState(() {

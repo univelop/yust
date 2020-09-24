@@ -80,3 +80,9 @@ Breaking changes:
 ## 1.2.2 - 2020-09-11
 
 * Fix widget overflows
+
+## 1.3.0 - 2020-09-24
+
+* Update firebase
+* Add image picker
+* Improve number field

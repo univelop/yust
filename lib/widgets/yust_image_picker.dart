@@ -14,17 +14,17 @@ import 'package:yust/yust_web_helper.dart';
 class YustImagePicker extends StatefulWidget {
   final String label;
   final String folderPath;
-  final String imageId;
+  final String imageName;
   final String imageUrl;
   final bool zoomable;
-  final void Function(String imageId, String imageUrl) onChanged;
+  final void Function(String imageName, String imageUrl) onChanged;
   final Widget prefixIcon;
 
   YustImagePicker({
     Key key,
     this.label,
     this.folderPath,
-    this.imageId,
+    this.imageName,
     this.imageUrl,
     this.zoomable = false,
     this.onChanged,
@@ -36,7 +36,7 @@ class YustImagePicker extends StatefulWidget {
 }
 
 class _YustImagePickerState extends State<YustImagePicker> {
-  String _imageId;
+  String _imageName;
   String _imageUrl;
   File _imageFile;
   Uint8List _imageBytes;
@@ -45,7 +45,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
   @override
   void initState() {
-    _imageId = widget.imageId;
+    _imageName = widget.imageName;
     _imageUrl = widget.imageUrl;
     _enabled = widget.onChanged != null;
     super.initState();
@@ -116,7 +116,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildImagePreview(BuildContext context) {
-    if (_imageId == null && _imageFile == null && _imageBytes == null) {
+    if (_imageName == null && _imageFile == null && _imageBytes == null) {
       return SizedBox.shrink();
     }
     Widget preview;
@@ -145,7 +145,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildPickButtons(BuildContext context) {
-    if (_imageId != null || _imageFile != null || _imageBytes != null) {
+    if (_imageName != null || _imageFile != null || _imageBytes != null) {
       return SizedBox.shrink();
     }
     if (kIsWeb) {
@@ -206,7 +206,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildRemoveButton(BuildContext context) {
-    if (_imageId == null || !_enabled) {
+    if (_imageName == null || !_enabled) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -240,7 +240,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _uploadFile({String path, File file, Uint8List bytes}) async {
-    final imageId =
+    final imageName =
         Yust.service.randomString(length: 16) + '.' + path.split('.').last;
     setState(() {
       _imageFile = file;
@@ -251,7 +251,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     String url;
     if (!kIsWeb) {
       final StorageReference storageReference =
-          FirebaseStorage().ref().child(widget.folderPath).child(imageId);
+          FirebaseStorage().ref().child(widget.folderPath).child(imageName);
 
       StorageUploadTask uploadTask;
       uploadTask = storageReference.putFile(_imageFile);
@@ -264,33 +264,33 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
       url = await storageReference.getDownloadURL();
     } else {
-      url = await YustWebHelper.uploadImage(widget.folderPath, imageId);
+      url = await YustWebHelper.uploadImage(widget.folderPath, imageName);
     }
 
     setState(() {
-      _imageId = imageId;
+      _imageName = imageName;
       _imageUrl = url;
       _imageProcessing = false;
     });
-    widget.onChanged(_imageId, _imageUrl);
+    widget.onChanged(_imageName, _imageUrl);
   }
 
   Future<void> _deleteImage() async {
-    if (_imageId != null) {
+    if (_imageName != null) {
       if (!kIsWeb) {
         try {
           await FirebaseStorage()
               .ref()
               .child(widget.folderPath)
-              .child(_imageId)
+              .child(_imageName)
               .delete();
         } catch (e) {}
       } else {
-        await YustWebHelper.deleteImage(widget.folderPath, _imageId);
+        await YustWebHelper.deleteImage(widget.folderPath, _imageName);
       }
 
       setState(() {
-        _imageId = null;
+        _imageName = null;
         _imageUrl = null;
         _imageFile = null;
         _imageBytes = null;

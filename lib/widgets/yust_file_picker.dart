@@ -134,8 +134,11 @@ class _YustFilePickerState extends State<YustFilePicker> {
             _processing[fileData['name']] = true;
           });
           File file = File(platformFile.path);
-          fileData['url'] =
-              await _uploadFile(fileName: fileData['name'], file: file);
+          fileData['url'] = await _uploadFile(
+            fileName: fileData['name'],
+            file: file,
+            bytes: platformFile.bytes,
+          );
           if (fileData['url'] == null) {
             _files.remove(fileData);
           }

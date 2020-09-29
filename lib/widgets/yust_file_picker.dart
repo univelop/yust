@@ -72,7 +72,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
             ],
           ),
           trailing: IconButton(
-            icon: Icon(Icons.add),
+            icon: Icon(Icons.add, color: Theme.of(context).accentColor),
             onPressed: _enabled ? _pickFiles : null,
           ),
           contentPadding: padding,
@@ -122,7 +122,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
     if (result != null) {
       for (final platformFile in result.files) {
         Map<String, String> fileData = {
-          'name': platformFile.name,
+          'name': platformFile.name.split('/').last,
         };
         if (_files.any((file) => file['name'] == fileData['name'])) {
           Yust.service.showAlert(context, 'Nicht möglich',
@@ -131,6 +131,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
           setState(() {
             if (_files == null) _files = [];
             _files.add(fileData);
+            _files.sort((a, b) => a['name'].compareTo(b['name']));
             _processing[fileData['name']] = true;
           });
           File file = File(platformFile.path);

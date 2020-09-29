@@ -380,12 +380,12 @@ class YustService {
     return result;
   }
 
-  Future<void> deleteImage(String path, String imageName) async {
+  Future<void> deleteFile({String path, String name}) async {
     try {
       if (!kIsWeb) {
-        await FirebaseStorage().ref().child(path).child(imageName).delete();
+        await FirebaseStorage().ref().child(path).child(name).delete();
       } else {
-        await YustWebHelper.deleteImage(path, imageName);
+        await YustWebHelper.deleteFile(path: path, name: name);
       }
     } catch (e) {}
   }

@@ -264,8 +264,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
       url = await storageReference.getDownloadURL();
     } else {
-      url =
-          await YustWebHelper.uploadImage(widget.folderPath, imageName, bytes);
+      url = await YustWebHelper.uploadFile(
+          path: widget.folderPath, name: imageName, bytes: bytes);
     }
 
     setState(() {
@@ -287,7 +287,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
               .delete();
         } catch (e) {}
       } else {
-        await YustWebHelper.deleteImage(widget.folderPath, _imageName);
+        await YustWebHelper.deleteFile(
+            path: widget.folderPath, name: _imageName);
       }
 
       setState(() {

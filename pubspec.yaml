@@ -25,6 +25,7 @@ dependencies:
   photo_view: ^0.10.2
   file_picker: ^2.0.0
   mime: ^0.9.7
+  url_launcher: ^5.7.1
 
 dev_dependencies:
   flutter_test:

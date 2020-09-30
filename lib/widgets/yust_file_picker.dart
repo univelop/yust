@@ -121,8 +121,12 @@ class _YustFilePickerState extends State<YustFilePicker> {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
       for (final platformFile in result.files) {
+        var name = platformFile.name.split('/').last;
+        if (name.split('.').last != platformFile.extension) {
+          name += '.' + platformFile.extension;
+        }
         Map<String, String> fileData = {
-          'name': platformFile.name.split('/').last,
+          'name': name,
         };
         if (_files.any((file) => file['name'] == fileData['name'])) {
           Yust.service.showAlert(context, 'Nicht möglich',

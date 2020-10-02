@@ -185,7 +185,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
       return SizedBox.shrink();
     }
     return Container(
-      padding: const EdgeInsets.all(40),
+      padding: const EdgeInsets.all(20),
       decoration: new BoxDecoration(
         color: Colors.black54,
         borderRadius: BorderRadius.all(const Radius.circular(20)),
@@ -195,10 +195,13 @@ class _YustImagePickerState extends State<YustImagePicker> {
         children: <Widget>[
           CircularProgressIndicator(),
           SizedBox(width: 8),
-          Text(
-            'Bild hochladen',
-            style:
-                TextStyle(color: Theme.of(context).accentColor, fontSize: 16),
+          Flexible(
+            child: Text(
+              'Bild hochladen',
+              overflow: TextOverflow.ellipsis,
+              style:
+                  TextStyle(color: Theme.of(context).accentColor, fontSize: 16),
+            ),
           ),
         ],
       ),
@@ -231,7 +234,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
         await _uploadFile(path: image.path, file: File(image.path));
       }
     } else {
-      final result = await FilePicker.platform.pickFiles();
+      final result = await FilePicker.platform.pickFiles(type: FileType.image);
       if (result != null) {
         await _uploadFile(
             path: result.files.single.name, bytes: result.files.single.bytes);
@@ -278,26 +281,30 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
   Future<void> _deleteImage() async {
     if (_imageName != null) {
-      if (!kIsWeb) {
-        try {
-          await FirebaseStorage()
-              .ref()
-              .child(widget.folderPath)
-              .child(_imageName)
-              .delete();
-        } catch (e) {}
-      } else {
-        await YustWebHelper.deleteFile(
-            path: widget.folderPath, name: _imageName);
-      }
+      final confirmed = await Yust.service
+          .showConfirmation(context, 'Wirklich löschen', 'Löschen');
+      if (confirmed == true) {
+        if (!kIsWeb) {
+          try {
+            await FirebaseStorage()
+                .ref()
+                .child(widget.folderPath)
+                .child(_imageName)
+                .delete();
+          } catch (e) {}
+        } else {
+          await YustWebHelper.deleteFile(
+              path: widget.folderPath, name: _imageName);
+        }
 
-      setState(() {
-        _imageName = null;
-        _imageUrl = null;
-        _imageFile = null;
-        _imageBytes = null;
-      });
-      widget.onChanged(null, null);
+        setState(() {
+          _imageName = null;
+          _imageUrl = null;
+          _imageFile = null;
+          _imageBytes = null;
+        });
+        widget.onChanged(null, null);
+      }
     }
   }
 }

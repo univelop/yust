@@ -102,7 +102,9 @@ class _YustFilePickerState extends State<YustFilePicker> {
         children: [
           Icon(Icons.insert_drive_file),
           SizedBox(width: 8),
-          Text(file['name']),
+          Expanded(
+            child: Text(file['name'], overflow: TextOverflow.ellipsis),
+          ),
         ],
       ),
       trailing: _processing[file['name']] == true

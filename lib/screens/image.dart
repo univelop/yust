@@ -34,6 +34,7 @@ class ImageScreen extends StatelessWidget {
     return Container(
       child: PhotoView(
         imageProvider: NetworkImage(url),
+        minScale: PhotoViewComputedScale.contained,
         onTapUp: (context, details, controllerValue) {
           Navigator.pop(context);
         },

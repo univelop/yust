@@ -6,26 +6,28 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
+import 'package:yust/util/list_extension.dart';
 import 'package:yust/util/yust_web_helper.dart';
 
 /// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {
   final String label;
   final String folderPath;
-  final String imageName;
-  final String imageUrl;
+  final bool multiple;
+  final List<Map<String, String>> images;
   final bool zoomable;
-  final void Function(String imageName, String imageUrl) onChanged;
+  final void Function(List<Map<String, String>> images) onChanged;
   final Widget prefixIcon;
 
   YustImagePicker({
     Key key,
     this.label,
     this.folderPath,
-    this.imageName,
-    this.imageUrl,
+    this.multiple = false,
+    this.images,
     this.zoomable = false,
     this.onChanged,
     this.prefixIcon,
@@ -36,17 +38,20 @@ class YustImagePicker extends StatefulWidget {
 }
 
 class _YustImagePickerState extends State<YustImagePicker> {
-  String _imageName;
-  String _imageUrl;
-  File _imageFile;
-  Uint8List _imageBytes;
-  bool _imageProcessing = false;
+  List<YustFile> _files;
   bool _enabled;
 
   @override
   void initState() {
-    _imageName = widget.imageName;
-    _imageUrl = widget.imageUrl;
+    if (widget.images == null) {
+      _files = [];
+    } else if (widget.images.length == 1 && widget.images.first == null) {
+      _files = [];
+    } else {
+      _files = widget.images
+          .map<YustFile>((image) => YustFile.fromJson(image))
+          .toList();
+    }
     _enabled = widget.onChanged != null;
     super.initState();
   }
@@ -72,10 +77,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
                 child: Stack(
                   alignment: AlignmentDirectional.center,
                   children: [
-                    _buildImagePreview(context),
-                    _buildProgressIndicator(context),
+                    _buildImagePreview(context, _files.firstOrNull),
+                    _buildProgressIndicator(context, _files.firstOrNull),
                     _buildPickButtons(context),
-                    _buildRemoveButton(context),
+                    _buildRemoveButton(context, _files.firstOrNull),
                   ],
                 ),
               ),
@@ -115,37 +120,44 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildImagePreview(BuildContext context) {
-    if (_imageName == null && _imageFile == null && _imageBytes == null) {
+  Widget _buildImagePreview(BuildContext context, YustFile file) {
+    if (file == null) {
       return SizedBox.shrink();
     }
     Widget preview;
-    if (_imageFile != null) {
-      preview = Image.file(_imageFile, fit: BoxFit.cover);
-    } else if (_imageBytes != null) {
-      preview = Image.memory(_imageBytes, fit: BoxFit.cover);
+    if (file.file != null) {
+      preview = Image.file(file.file, fit: BoxFit.cover);
+    } else if (file.bytes != null) {
+      preview = Image.memory(file.bytes, fit: BoxFit.cover);
     } else {
       preview = FadeInImage.assetNetwork(
         placeholder: Yust.imagePlaceholderPath,
-        image: widget.imageUrl,
+        image: file.url,
         fit: BoxFit.cover,
       );
     }
-    final zoomEnabled = (_imageUrl != null && widget.zoomable);
+    final zoomEnabled = (file.url != null && widget.zoomable);
     return AspectRatio(
       aspectRatio: 1,
       child: GestureDetector(
         onTap: zoomEnabled
-            ? () => Navigator.pushNamed(context, ImageScreen.routeName,
-                arguments: _imageUrl)
+            ? () =>
+                Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
+                  'url': file.url,
+                })
             : null,
-        child: preview,
+        child: file.url != null
+            ? Hero(
+                tag: file.url,
+                child: preview,
+              )
+            : preview,
       ),
     );
   }
 
   Widget _buildPickButtons(BuildContext context) {
-    if (_imageName != null || _imageFile != null || _imageBytes != null) {
+    if (_files?.firstOrNull != null) {
       return SizedBox.shrink();
     }
     if (kIsWeb) {
@@ -180,8 +192,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
     }
   }
 
-  Widget _buildProgressIndicator(BuildContext context) {
-    if (_imageProcessing == false) {
+  Widget _buildProgressIndicator(BuildContext context, YustFile file) {
+    if (file?.processing != true) {
       return SizedBox.shrink();
     }
     return Container(
@@ -208,8 +220,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildRemoveButton(BuildContext context) {
-    if (_imageName == null || !_enabled) {
+  Widget _buildRemoveButton(BuildContext context, YustFile file) {
+    if (file == null || !_enabled || file.url == null) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -221,7 +233,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          onPressed: _deleteImage,
+          onPressed: () => _deleteImage(_files.firstOrNull),
         ),
       ),
     );
@@ -245,10 +257,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
   Future<void> _uploadFile({String path, File file, Uint8List bytes}) async {
     final imageName =
         Yust.service.randomString(length: 16) + '.' + path.split('.').last;
+    final newFile =
+        YustFile(name: imageName, file: file, bytes: bytes, processing: true);
     setState(() {
-      _imageFile = file;
-      _imageBytes = bytes;
-      _imageProcessing = true;
+      _files.add(newFile);
     });
 
     String url;
@@ -257,7 +269,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
           FirebaseStorage().ref().child(widget.folderPath).child(imageName);
 
       StorageUploadTask uploadTask;
-      uploadTask = storageReference.putFile(_imageFile);
+      uploadTask = storageReference.putFile(file);
       // final StreamSubscription<StorageTaskEvent> streamSubscription =
       //     uploadTask.events.listen((event) {
       //   print('EVENT ${event.type}');
@@ -272,15 +284,14 @@ class _YustImagePickerState extends State<YustImagePicker> {
     }
 
     setState(() {
-      _imageName = imageName;
-      _imageUrl = url;
-      _imageProcessing = false;
+      newFile.url = url;
+      newFile.processing = false;
     });
-    widget.onChanged(_imageName, _imageUrl);
+    widget.onChanged(_files.map((file) => file.toJson()).toList());
   }
 
-  Future<void> _deleteImage() async {
-    if (_imageName != null) {
+  Future<void> _deleteImage(YustFile file) async {
+    if (file != null) {
       final confirmed = await Yust.service
           .showConfirmation(context, 'Wirklich löschen', 'Löschen');
       if (confirmed == true) {
@@ -289,21 +300,17 @@ class _YustImagePickerState extends State<YustImagePicker> {
             await FirebaseStorage()
                 .ref()
                 .child(widget.folderPath)
-                .child(_imageName)
+                .child(file.name)
                 .delete();
           } catch (e) {}
         } else {
           await YustWebHelper.deleteFile(
-              path: widget.folderPath, name: _imageName);
+              path: widget.folderPath, name: file.name);
         }
-
         setState(() {
-          _imageName = null;
-          _imageUrl = null;
-          _imageFile = null;
-          _imageBytes = null;
+          _files.remove(file);
         });
-        widget.onChanged(null, null);
+        widget.onChanged(_files.map((file) => file.toJson()).toList());
       }
     }
   }

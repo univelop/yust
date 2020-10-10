@@ -38,12 +38,12 @@ class _YustFilePickerState extends State<YustFilePicker> {
   @override
   void initState() {
     _files = widget.files;
+    _enabled = widget.onChanged != null;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    _enabled = widget.onChanged != null;
     var padding;
     if (widget.label != null && widget.prefixIcon != null) {
       padding =

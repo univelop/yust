@@ -14,10 +14,10 @@ class ImageScreen extends StatelessWidget {
       url = arguments['url'];
       urls = arguments['urls'];
     }
-    if (url != null) {
-      return _buildSingle(context, url);
+    if (urls != null) {
+      return _buildMultiple(context, urls, url);
     } else {
-      return _buildMultiple(context, urls);
+      return _buildSingle(context, url);
     }
   }
 
@@ -30,14 +30,29 @@ class ImageScreen extends StatelessWidget {
         onTapUp: (context, details, controllerValue) {
           Navigator.pop(context);
         },
+        loadingBuilder: (context, event) => Center(
+          child: Container(
+            width: 20.0,
+            height: 20.0,
+            child: CircularProgressIndicator(),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMultiple(BuildContext context, List<String> urls) {
+  Widget _buildMultiple(
+      BuildContext context, List<String> urls, String activeUrl) {
+    int firstPage = 0;
+    if (activeUrl != null) {
+      firstPage = urls.indexOf(activeUrl);
+    }
+    PageController _pageController = PageController(initialPage: firstPage);
     return Container(
       child: PhotoViewGallery.builder(
+        itemCount: urls.length,
         scrollPhysics: const BouncingScrollPhysics(),
+        pageController: _pageController,
         builder: (BuildContext context, int index) {
           return PhotoViewGalleryPageOptions(
             imageProvider: NetworkImage(urls[index]),
@@ -48,20 +63,14 @@ class ImageScreen extends StatelessWidget {
             },
           );
         },
-        itemCount: urls.length,
         loadingBuilder: (context, event) => Center(
           child: Container(
             width: 20.0,
             height: 20.0,
-            child: CircularProgressIndicator(
-              value: event == null
-                  ? 0
-                  : event.cumulativeBytesLoaded / event.expectedTotalBytes,
-            ),
+            child: CircularProgressIndicator(),
           ),
         ),
         // backgroundDecoration: widget.backgroundDecoration,
-        // pageController: widget.pageController,
         // onPageChanged: onPageChanged,
       ),
     );

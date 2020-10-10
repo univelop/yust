@@ -17,9 +17,9 @@ class YustImagePicker extends StatefulWidget {
   final String label;
   final String folderPath;
   final bool multiple;
-  final List<Map<String, String>> images;
+  final List<Map<String, dynamic>> images;
   final bool zoomable;
-  final void Function(List<Map<String, String>> images) onChanged;
+  final void Function(List<Map<String, dynamic>> images) onChanged;
   final Widget prefixIcon;
 
   YustImagePicker({
@@ -77,16 +77,20 @@ class _YustImagePickerState extends State<YustImagePicker> {
                 child: Stack(
                   alignment: AlignmentDirectional.center,
                   children: [
-                    _buildImagePreview(context, _files.firstOrNull),
-                    _buildProgressIndicator(context, _files.firstOrNull),
+                    if (!widget.multiple)
+                      _buildImagePreview(context, _files.firstOrNull),
+                    if (!widget.multiple)
+                      _buildProgressIndicator(context, _files.firstOrNull),
                     _buildPickButtons(context),
-                    _buildRemoveButton(context, _files.firstOrNull),
+                    if (!widget.multiple)
+                      _buildRemoveButton(context, _files.firstOrNull),
                   ],
                 ),
               ),
             ],
           ),
         ),
+        if (widget.multiple) _buildGallery(context),
         Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
       ],
     );
@@ -120,44 +124,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildImagePreview(BuildContext context, YustFile file) {
-    if (file == null) {
-      return SizedBox.shrink();
-    }
-    Widget preview;
-    if (file.file != null) {
-      preview = Image.file(file.file, fit: BoxFit.cover);
-    } else if (file.bytes != null) {
-      preview = Image.memory(file.bytes, fit: BoxFit.cover);
-    } else {
-      preview = FadeInImage.assetNetwork(
-        placeholder: Yust.imagePlaceholderPath,
-        image: file.url,
-        fit: BoxFit.cover,
-      );
-    }
-    final zoomEnabled = (file.url != null && widget.zoomable);
-    return AspectRatio(
-      aspectRatio: 1,
-      child: GestureDetector(
-        onTap: zoomEnabled
-            ? () =>
-                Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
-                  'url': file.url,
-                })
-            : null,
-        child: file.url != null
-            ? Hero(
-                tag: file.url,
-                child: preview,
-              )
-            : preview,
-      ),
-    );
-  }
-
   Widget _buildPickButtons(BuildContext context) {
-    if (_files?.firstOrNull != null) {
+    if (!widget.multiple && _files?.firstOrNull != null) {
       return SizedBox.shrink();
     }
     if (kIsWeb) {
@@ -190,6 +158,60 @@ class _YustImagePickerState extends State<YustImagePicker> {
         ],
       );
     }
+  }
+
+  Widget _buildGallery(BuildContext context) {
+    if (_files.isEmpty) {
+      return SizedBox.shrink();
+    }
+    return GridView.extent(
+      shrinkWrap: true,
+      maxCrossAxisExtent: 180,
+      primary: false,
+      mainAxisSpacing: 2,
+      crossAxisSpacing: 2,
+      children: _files.map((file) {
+        return Stack(
+          alignment: AlignmentDirectional.center,
+          children: [
+            _buildImagePreview(context, file),
+            _buildProgressIndicator(context, file),
+            _buildRemoveButton(context, file),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildImagePreview(BuildContext context, YustFile file) {
+    if (file == null) {
+      return SizedBox.shrink();
+    }
+    Widget preview;
+    if (file.file != null) {
+      preview = Image.file(file.file, fit: BoxFit.cover);
+    } else if (file.bytes != null) {
+      preview = Image.memory(file.bytes, fit: BoxFit.cover);
+    } else {
+      preview = FadeInImage.assetNetwork(
+        placeholder: Yust.imagePlaceholderPath,
+        image: file.url,
+        fit: BoxFit.cover,
+      );
+    }
+    final zoomEnabled = (file.url != null && widget.zoomable);
+    return AspectRatio(
+      aspectRatio: 1,
+      child: GestureDetector(
+        onTap: zoomEnabled ? () => _showImages(file) : null,
+        child: file.url != null
+            ? Hero(
+                tag: file.url,
+                child: preview,
+              )
+            : preview,
+      ),
+    );
   }
 
   Widget _buildProgressIndicator(BuildContext context, YustFile file) {
@@ -233,7 +255,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          onPressed: () => _deleteImage(_files.firstOrNull),
+          onPressed: () => _deleteImage(file),
         ),
       ),
     );
@@ -285,9 +307,24 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
     setState(() {
       newFile.url = url;
+      // newFile.file = null;
+      // newFile.bytes = null;
       newFile.processing = false;
     });
     widget.onChanged(_files.map((file) => file.toJson()).toList());
+  }
+
+  void _showImages(YustFile activeFile) {
+    if (widget.multiple) {
+      Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
+        'urls': _files.map((file) => file.url).toList(),
+        'url': activeFile.url,
+      });
+    } else {
+      Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
+        'url': activeFile.url,
+      });
+    }
   }
 
   Future<void> _deleteImage(YustFile file) async {

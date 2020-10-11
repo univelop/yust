@@ -5,6 +5,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:mime/mime.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/util/yust_web_helper.dart';
 
@@ -124,8 +125,9 @@ class _YustFilePickerState extends State<YustFilePicker> {
     if (result != null) {
       for (final platformFile in result.files) {
         var name = platformFile.name.split('/').last;
-        if (name.split('.').last != platformFile.extension) {
-          name += '.' + platformFile.extension;
+        final ext = platformFile.extension;
+        if (ext != null && name.split('.').last != ext) {
+          name += '.' + ext;
         }
         Map<String, String> fileData = {
           'name': name,
@@ -140,7 +142,10 @@ class _YustFilePickerState extends State<YustFilePicker> {
             _files.sort((a, b) => a['name'].compareTo(b['name']));
             _processing[fileData['name']] = true;
           });
-          File file = File(platformFile.path);
+          File file;
+          if (platformFile.path != null) {
+            file = File(platformFile.path);
+          }
           fileData['url'] = await _uploadFile(
             fileName: fileData['name'],
             file: file,
@@ -169,7 +174,10 @@ class _YustFilePickerState extends State<YustFilePicker> {
         if (file != null) {
           uploadTask = storageReference.putFile(file);
         } else {
-          uploadTask = storageReference.putData(bytes);
+          var metadata = StorageMetadata(
+            contentType: lookupMimeType(fileName),
+          );
+          uploadTask = storageReference.putData(bytes, metadata);
         }
         await uploadTask.onComplete;
         return await storageReference.getDownloadURL();

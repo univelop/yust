@@ -295,7 +295,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
             .pickFiles(type: FileType.image, allowMultiple: true);
         if (result != null) {
           for (final platformFile in result.files) {
-            _uploadFile(path: platformFile.name, bytes: platformFile.bytes);
+            await _uploadFile(
+                path: platformFile.name, bytes: platformFile.bytes);
           }
         }
       } else {

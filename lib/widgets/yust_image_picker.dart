@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
@@ -135,7 +137,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
           color: Theme.of(context).accentColor,
           iconSize: 40,
           icon: Icon(Icons.image),
-          onPressed: _enabled ? () => _pickImage(ImageSource.gallery) : null,
+          onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
         ),
       );
     } else {
@@ -146,14 +148,14 @@ class _YustImagePickerState extends State<YustImagePicker> {
             color: Theme.of(context).accentColor,
             iconSize: 40,
             icon: Icon(Icons.camera_alt),
-            onPressed: _enabled ? () => _pickImage(ImageSource.camera) : null,
+            onPressed: _enabled ? () => _pickImages(ImageSource.camera) : null,
           ),
           SizedBox(width: 16),
           IconButton(
             color: Theme.of(context).accentColor,
             iconSize: 40,
             icon: Icon(Icons.image),
-            onPressed: _enabled ? () => _pickImage(ImageSource.gallery) : null,
+            onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
           ),
         ],
       );
@@ -261,17 +263,48 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Future<void> _pickImage(ImageSource imageSource) async {
+  Future<void> _pickImages(ImageSource imageSource) async {
     if (!kIsWeb) {
-      final image = await ImagePicker().getImage(source: imageSource);
-      if (image != null) {
-        await _uploadFile(path: image.path, file: File(image.path));
+      if (widget.multiple && imageSource == ImageSource.gallery) {
+        List<Asset> results;
+        try {
+          results = await MultiImagePicker.pickImages(
+            maxImages: 10,
+          );
+        } on NoImagesSelectedException catch (_) {
+          return;
+        } on Exception catch (e) {
+          Yust.service.showAlert(context, 'Fehler', e.toString());
+        }
+        if (results != null) {
+          for (final asset in results) {
+            final byteData = await asset.getByteData();
+            final bytes = byteData.buffer.asUint8List();
+            _uploadFile(path: asset.name, bytes: bytes);
+          }
+        }
+      } else {
+        final image = await ImagePicker().getImage(source: imageSource);
+        if (image != null) {
+          await _uploadFile(path: image.path, file: File(image.path));
+        }
       }
     } else {
-      final result = await FilePicker.platform.pickFiles(type: FileType.image);
-      if (result != null) {
-        await _uploadFile(
-            path: result.files.single.name, bytes: result.files.single.bytes);
+      if (widget.multiple) {
+        final result = await FilePicker.platform
+            .pickFiles(type: FileType.image, allowMultiple: true);
+        if (result != null) {
+          for (final platformFile in result.files) {
+            _uploadFile(path: platformFile.name, bytes: platformFile.bytes);
+          }
+        }
+      } else {
+        final result =
+            await FilePicker.platform.pickFiles(type: FileType.image);
+        if (result != null) {
+          await _uploadFile(
+              path: result.files.single.name, bytes: result.files.single.bytes);
+        }
       }
     }
   }
@@ -291,7 +324,14 @@ class _YustImagePickerState extends State<YustImagePicker> {
           FirebaseStorage().ref().child(widget.folderPath).child(imageName);
 
       StorageUploadTask uploadTask;
-      uploadTask = storageReference.putFile(file);
+      if (file != null) {
+        uploadTask = storageReference.putFile(file);
+      } else {
+        var metadata = StorageMetadata(
+          contentType: lookupMimeType(imageName),
+        );
+        uploadTask = storageReference.putData(bytes, metadata);
+      }
       // final StreamSubscription<StorageTaskEvent> streamSubscription =
       //     uploadTask.events.listen((event) {
       //   print('EVENT ${event.type}');

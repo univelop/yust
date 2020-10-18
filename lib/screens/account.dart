@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_store_builder.dart';
 
 import '../yust.dart';
+import '../yust_store.dart';
 import 'account_edit.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen<T extends YustStore> extends StatelessWidget {
   static const String routeName = '/account';
   static const bool signInRequired = true;
 
   @override
   Widget build(BuildContext context) {
-    return YustStoreBuilder(
+    return YustStoreBuilder<T>(
       builder: (context, child, store) {
         if (store.currUser == null) {
           return Scaffold(
@@ -71,7 +72,6 @@ class AccountScreen extends StatelessWidget {
                 ),
                 onTap: () {
                   Yust.service.signOut(context);
-                  Navigator.pop(context);
                 },
               ),
               Divider(thickness: 1.0),

@@ -21,10 +21,8 @@ class YustService {
   Future<void> signIn(
     BuildContext context,
     String email,
-    String password, {
-    String targetRouteName,
-    dynamic targetRouteArguments,
-  }) async {
+    String password,
+  ) async {
     if (email == null || email == '') {
       throw YustException('Die E-Mail darf nicht leer sein.');
     }
@@ -45,8 +43,6 @@ class YustService {
     String password,
     String passwordConfirmation, {
     YustGender gender,
-    String targetRouteName,
-    dynamic targetRouteArguments,
   }) async {
     if (firstName == null || firstName == '') {
       throw YustException('Der Vorname darf nicht leer sein.');

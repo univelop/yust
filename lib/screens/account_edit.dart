@@ -9,7 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
-class AccountEditScreen extends StatelessWidget {
+import '../yust_store.dart';
+
+class AccountEditScreen<T extends YustStore> extends StatelessWidget {
   static const String routeName = '/accountEdit';
   static const bool signInRequired = true;
 
@@ -22,7 +24,7 @@ class AccountEditScreen extends StatelessWidget {
     return YustFocusHandler(
       child: Scaffold(
         appBar: AppBar(title: Text('Persönliche Daten')),
-        body: YustStoreBuilder(builder: (context, child, store) {
+        body: YustStoreBuilder<T>(builder: (context, child, store) {
           final user = store.currUser;
           return ListView(
             padding: const EdgeInsets.only(top: 20.0),

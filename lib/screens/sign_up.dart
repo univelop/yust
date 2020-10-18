@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yust/models/yust_user.dart';
+import 'package:yust/screens/sign_in.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 import 'package:yust/widgets/yust_select.dart';
@@ -17,16 +18,12 @@ class SignUpScreen extends StatefulWidget {
   final String homeRouteName;
   final String logoAssetName;
   final bool askForGender;
-  final String targetRouteName;
-  final dynamic targetRouteArguments;
 
   SignUpScreen({
     Key key,
     this.homeRouteName = '/',
     this.logoAssetName,
     this.askForGender = false,
-    this.targetRouteName,
-    this.targetRouteArguments,
   }) : super(key: key);
 
   @override
@@ -41,6 +38,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _password;
   String _passwordConfirmation;
   bool _waitingForSignUp = false;
+  void Function() _onSignedIn;
 
   final _firstNameFocus = FocusNode();
   final _lastNameFocus = FocusNode();
@@ -52,6 +50,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final arguments = ModalRoute.of(context).settings.arguments;
+    if (arguments is Map) {
+      _onSignedIn = arguments['onSignedIn'];
+    }
+
     return YustFocusHandler(
       child: Scaffold(
         appBar: AppBar(
@@ -206,7 +209,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: FlatButton(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushNamed(context, SignInScreen.routeName,
+                            arguments: arguments);
                       },
                       child: Text('Hier Anmelden',
                           style: TextStyle(
@@ -269,6 +273,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
             gender: _gender,
           )
           .timeout(Duration(seconds: 10));
+      if (_onSignedIn != null) _onSignedIn();
+      Navigator.popUntil(
+        context,
+        (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
+            .contains(route.settings.name),
+      );
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

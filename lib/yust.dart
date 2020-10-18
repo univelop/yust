@@ -41,17 +41,22 @@ class Yust {
     Yust.useTimestamps = useTimestamps;
     Yust.storageUrl = storageUrl;
     Yust.imagePlaceholderPath = imagePlaceholderPath;
+
     if (kIsWeb) await FirebaseFirestore.instance.enablePersistence();
+
+    PackageInfo packageInfo;
+    if (!kIsWeb) packageInfo = await PackageInfo.fromPlatform();
 
     Yust.store.setState(() {
       Yust.store.authState = AuthState.waiting;
+      Yust.store.packageInfo = packageInfo;
     });
-    final completer = Completer<void>();
-    StreamSubscription<YustUser> userSubscription;
-    FirebaseAuth.instance.authStateChanges().listen(
 
-        ///Calls [Yust.store.setState] on each event.
-        (fireUser) async {
+    StreamSubscription<YustUser> userSubscription;
+
+    ///Calls [Yust.store.setState] on each auth state change event.
+    FirebaseAuth.instance.authStateChanges().listen((fireUser) async {
+      if (userSubscription != null) userSubscription.cancel();
       if (fireUser != null) {
         userSubscription = Yust.service
             .getDoc<YustUser>(Yust.userSetup, fireUser.uid)
@@ -67,25 +72,13 @@ class Yust {
             Yust.store.authState = AuthState.signedIn;
             Yust.store.currUser = user;
           });
-          if (!completer.isCompleted) completer.complete();
         });
       } else {
-        if (userSubscription != null) userSubscription.cancel();
         Yust.store.setState(() {
           Yust.store.authState = AuthState.signedOut;
           Yust.store.currUser = null;
         });
-        if (!completer.isCompleted) completer.complete();
       }
     });
-
-    await completer.future;
-
-    if (!kIsWeb) {
-      final packageInfo = await PackageInfo.fromPlatform();
-      Yust.store.setState(() {
-        Yust.store.packageInfo = packageInfo;
-      });
-    }
   }
 }

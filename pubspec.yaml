@@ -15,7 +15,7 @@ dependencies:
   cloud_firestore: ^0.14.0+2
   firebase_storage: ^4.0.0
 
-  scoped_model: ^1.0.1
+  provider: ^4.3.2+2
   intl: ^0.16.0
   shared_preferences: ^0.5.4+3
   progress_dialog: ^1.2.0

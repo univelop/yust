@@ -6,10 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/screens/reset_password.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
-import 'package:yust/yust_store.dart';
 
 import '../util/yust_exception.dart';
 import '../yust.dart';
+import '../yust_store.dart';
 import 'sign_up.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -17,7 +17,9 @@ class SignInScreen extends StatefulWidget {
   static const bool signInRequired = false;
 
   final String logoAssetName;
+  @Deprecated('Use onSignedIn instead')
   final String targetRouteName;
+  @Deprecated('Use onSignedIn instead')
   final dynamic targetRouteArguments;
 
   SignInScreen({
@@ -35,6 +37,7 @@ class _SignInScreenState extends State<SignInScreen> {
   String _email;
   String _password;
   bool _waitingForSignIn = false;
+  void Function() _onSignedIn;
 
   final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
@@ -67,6 +70,11 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final arguments = ModalRoute.of(context).settings.arguments;
+    if (arguments is Map) {
+      _onSignedIn = arguments['onSignedIn'];
+    }
+
     return YustFocusHandler(
       child: Scaffold(
         appBar: AppBar(
@@ -147,7 +155,8 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: FlatButton(
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
                       onPressed: () {
-                        Navigator.pushNamed(context, SignUpScreen.routeName);
+                        Navigator.pushNamed(context, SignUpScreen.routeName,
+                            arguments: arguments);
                       },
                       child: Text('Hier Registrieren',
                           style: TextStyle(
@@ -198,6 +207,12 @@ class _SignInScreenState extends State<SignInScreen> {
       await Yust.service
           .signIn(context, _email, _password)
           .timeout(Duration(seconds: 10));
+      if (_onSignedIn != null) _onSignedIn();
+      Navigator.popUntil(
+        context,
+        (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
+            .contains(route.settings.name),
+      );
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

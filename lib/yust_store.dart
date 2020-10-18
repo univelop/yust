@@ -1,5 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:package_info/package_info.dart';
-import 'package:scoped_model/scoped_model.dart';
 
 import 'models/yust_user.dart';
 
@@ -9,7 +9,7 @@ enum AuthState {
   signedOut,
 }
 
-class YustStore extends Model {
+class YustStore extends ChangeNotifier {
   AuthState authState;
 
   ///Null if the user is signed out.

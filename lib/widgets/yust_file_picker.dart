@@ -72,15 +72,22 @@ class _YustFilePickerState extends State<YustFilePicker> {
               ),
             ],
           ),
-          trailing: IconButton(
-            icon: Icon(Icons.add, color: Theme.of(context).accentColor),
-            onPressed: _enabled ? _pickFiles : null,
-          ),
+          trailing: _buildAddButton(context),
           contentPadding: padding,
         ),
         _buildFiles(context),
         Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
       ],
+    );
+  }
+
+  _buildAddButton(BuildContext context) {
+    if (!_enabled) {
+      return SizedBox.shrink();
+    }
+    return IconButton(
+      icon: Icon(Icons.add, color: Theme.of(context).accentColor),
+      onPressed: _enabled ? _pickFiles : null,
     );
   }
 
@@ -108,21 +115,30 @@ class _YustFilePickerState extends State<YustFilePicker> {
           ),
         ],
       ),
-      trailing: _processing[file['name']] == true
-          ? CircularProgressIndicator()
-          : IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: _enabled ? () => _deleteFile(file) : null,
-            ),
-      onTap: _enabled ? () => _showFile(file) : null,
+      trailing: _buildDeleteButton(file),
+      onTap: () => _showFile(file),
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    );
+  }
+
+  Widget _buildDeleteButton(Map<String, String> file) {
+    if (!_enabled) {
+      return SizedBox.shrink();
+    }
+    if (_processing[file['name']] == true) {
+      return CircularProgressIndicator();
+    }
+    return IconButton(
+      icon: Icon(Icons.delete),
+      onPressed: _enabled ? () => _deleteFile(file) : null,
     );
   }
 
   Future<void> _pickFiles() async {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
+      if (_files == null) _files = [];
       for (final platformFile in result.files) {
         var name = platformFile.name.split('/').last;
         final ext = platformFile.extension;
@@ -137,7 +153,6 @@ class _YustFilePickerState extends State<YustFilePicker> {
               'Eine Datei mit dem Namen ${fileData['name']} existiert bereits.');
         } else {
           setState(() {
-            if (_files == null) _files = [];
             _files.add(fileData);
             _files.sort((a, b) => a['name'].compareTo(b['name']));
             _processing[fileData['name']] = true;

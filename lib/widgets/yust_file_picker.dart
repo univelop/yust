@@ -1,11 +1,9 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mime/mime.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/util/yust_web_helper.dart';
 
@@ -161,8 +159,9 @@ class _YustFilePickerState extends State<YustFilePicker> {
           if (platformFile.path != null) {
             file = File(platformFile.path);
           }
-          fileData['url'] = await _uploadFile(
-            fileName: fileData['name'],
+          fileData['url'] = await Yust.service.uploadFile(
+            path: widget.folderPath,
+            name: fileData['name'],
             file: file,
             bytes: platformFile.bytes,
           );
@@ -175,35 +174,6 @@ class _YustFilePickerState extends State<YustFilePicker> {
         }
       }
       widget.onChanged(_files);
-    }
-  }
-
-  Future<String> _uploadFile(
-      {String fileName, File file, Uint8List bytes}) async {
-    if (!kIsWeb) {
-      final StorageReference storageReference =
-          FirebaseStorage().ref().child(widget.folderPath).child(fileName);
-
-      try {
-        StorageUploadTask uploadTask;
-        if (file != null) {
-          uploadTask = storageReference.putFile(file);
-        } else {
-          var metadata = StorageMetadata(
-            contentType: lookupMimeType(fileName),
-          );
-          uploadTask = storageReference.putData(bytes, metadata);
-        }
-        await uploadTask.onComplete;
-        return await storageReference.getDownloadURL();
-      } catch (error) {
-        await Yust.service.showAlert(
-            context, 'Ups', 'Fehler beim Upload: ' + error.toString());
-        return null;
-      }
-    } else {
-      return await YustWebHelper.uploadFile(
-          path: widget.folderPath, name: fileName, bytes: bytes);
     }
   }
 

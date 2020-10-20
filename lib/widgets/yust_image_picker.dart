@@ -6,7 +6,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mime/mime.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
@@ -318,38 +317,14 @@ class _YustImagePickerState extends State<YustImagePicker> {
     setState(() {
       _files.add(newFile);
     });
-
-    String url;
-    if (!kIsWeb) {
-      final StorageReference storageReference =
-          FirebaseStorage().ref().child(widget.folderPath).child(imageName);
-
-      StorageUploadTask uploadTask;
-      if (file != null) {
-        uploadTask = storageReference.putFile(file);
-      } else {
-        var metadata = StorageMetadata(
-          contentType: lookupMimeType(imageName),
-        );
-        uploadTask = storageReference.putData(bytes, metadata);
-      }
-      // final StreamSubscription<StorageTaskEvent> streamSubscription =
-      //     uploadTask.events.listen((event) {
-      //   print('EVENT ${event.type}');
-      // });
-      await uploadTask.onComplete;
-      // streamSubscription.cancel();
-
-      url = await storageReference.getDownloadURL();
-    } else {
-      url = await YustWebHelper.uploadFile(
-          path: widget.folderPath, name: imageName, bytes: bytes);
-    }
-
+    String url = await Yust.service.uploadFile(
+        context: context,
+        path: widget.folderPath,
+        name: imageName,
+        file: file,
+        bytes: bytes);
     setState(() {
       newFile.url = url;
-      // newFile.file = null;
-      // newFile.bytes = null;
       newFile.processing = false;
     });
     widget.onChanged(_files.map((file) => file.toJson()).toList());

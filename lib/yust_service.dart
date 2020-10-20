@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +9,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:mime/mime.dart';
 import 'package:yust/util/yust_web_helper.dart';
 
 import 'models/yust_doc.dart';
@@ -374,6 +377,44 @@ class YustService {
     );
 
     return result;
+  }
+
+  Future<String> uploadFile(
+      {BuildContext context,
+      String path,
+      String name,
+      File file,
+      Uint8List bytes}) async {
+    if (!kIsWeb) {
+      final StorageReference storageReference =
+          FirebaseStorage().ref().child(path).child(name);
+
+      try {
+        StorageUploadTask uploadTask;
+        if (file != null) {
+          uploadTask = storageReference.putFile(file);
+        } else {
+          var metadata = StorageMetadata(
+            contentType: lookupMimeType(name),
+          );
+          uploadTask = storageReference.putData(bytes, metadata);
+        }
+        // final StreamSubscription<StorageTaskEvent> streamSubscription =
+        //     uploadTask.events.listen((event) {
+        //   print('EVENT ${event.type}');
+        // });
+        await uploadTask.onComplete;
+        // streamSubscription.cancel();
+        return await storageReference.getDownloadURL();
+      } catch (error) {
+        await showAlert(
+            context, 'Ups', 'Fehler beim Upload: ' + error.toString());
+        return null;
+      }
+    } else {
+      return await YustWebHelper.uploadFile(
+          path: path, name: name, bytes: bytes);
+    }
   }
 
   Future<void> deleteFile({String path, String name}) async {

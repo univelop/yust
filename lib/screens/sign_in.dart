@@ -55,12 +55,14 @@ class _SignInScreenState extends State<SignInScreen> {
     _storeListener = () {
       if (Yust.store.authState == AuthState.signedIn) {
         Yust.store.removeListener(_storeListener);
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          widget.targetRouteName ?? '/',
-          (_) => false,
-          arguments: widget.targetRouteArguments,
-        );
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            widget.targetRouteName ?? '/',
+            (_) => false,
+            arguments: widget.targetRouteArguments,
+          );
+        }
       }
     };
     Yust.store.addListener(_storeListener);

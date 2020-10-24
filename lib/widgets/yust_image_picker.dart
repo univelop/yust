@@ -149,7 +149,6 @@ class _YustImagePickerState extends State<YustImagePicker> {
             icon: Icon(Icons.camera_alt),
             onPressed: _enabled ? () => _pickImages(ImageSource.camera) : null,
           ),
-          SizedBox(width: 16),
           IconButton(
             color: Theme.of(context).accentColor,
             iconSize: 40,

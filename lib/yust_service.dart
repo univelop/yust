@@ -417,6 +417,21 @@ class YustService {
     }
   }
 
+  Future<Uint8List> downloadFile({String path, String name}) async {
+    try {
+      if (!kIsWeb) {
+        return await FirebaseStorage()
+            .ref()
+            .child(path)
+            .child(name)
+            .getData(5 * 1024 * 1024);
+      } else {
+        await YustWebHelper.downloadFile(path: path, name: name);
+      }
+    } catch (e) {}
+    return Uint8List(0);
+  }
+
   Future<void> deleteFile({String path, String name}) async {
     try {
       if (!kIsWeb) {

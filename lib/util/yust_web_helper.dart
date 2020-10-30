@@ -9,6 +9,10 @@ class YustWebHelper {
     return null;
   }
 
+  static Future<void> downloadFile({String path, String name}) async {
+    YustException('Function not implemented');
+  }
+
   static Future<void> deleteFile({String path, String name}) async {
     YustException('Function not implemented');
   }

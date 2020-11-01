@@ -426,7 +426,7 @@ class YustService {
             .child(name)
             .getData(5 * 1024 * 1024);
       } else {
-        await YustWebHelper.downloadFile(path: path, name: name);
+        return await YustWebHelper.downloadFile(path: path, name: name);
       }
     } catch (e) {}
     return Uint8List(0);

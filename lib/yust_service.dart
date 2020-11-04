@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as imageLib;
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
 import 'package:yust/util/yust_web_helper.dart';
@@ -440,6 +441,17 @@ class YustService {
         await YustWebHelper.deleteFile(path: path, name: name);
       }
     } catch (e) {}
+  }
+
+  Uint8List resizeImage(
+      {@required String name, @required Uint8List bytes, int maxWidth = 1024}) {
+    var image = imageLib.decodeNamedImage(bytes, name);
+    if (image.width > image.height && image.width > maxWidth) {
+      image = imageLib.copyResize(image, width: maxWidth);
+    } else if (image.height > image.width && image.height > maxWidth) {
+      image = imageLib.copyResize(image, height: maxWidth);
+    }
+    return imageLib.encodeNamedImage(image, name);
   }
 
   Future<void> showAlert(

@@ -17,4 +17,8 @@ class YustWebHelper {
   static Future<void> deleteFile({String path, String name}) async {
     YustException('Function not implemented');
   }
+
+  static void launch(String url) {
+    YustException('Function not implemented');
+  }
 }

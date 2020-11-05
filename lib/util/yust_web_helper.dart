@@ -18,7 +18,7 @@ class YustWebHelper {
     YustException('Function not implemented');
   }
 
-  static void launch(String url) {
+  static void downloadAndSaveFileByUrl(String url) {
     YustException('Function not implemented');
   }
 }

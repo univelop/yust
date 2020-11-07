@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
@@ -441,6 +442,22 @@ class YustService {
         await YustWebHelper.deleteFile(path: path, name: name);
       }
     } catch (e) {}
+  }
+
+  Future<bool> fileExists({String path, String name}) async {
+    try {
+      if (!kIsWeb) {
+        await FirebaseStorage().ref().child(path).child(name).getDownloadURL();
+      } else {
+        await YustWebHelper.getDownloadUrl(path: path, name: name);
+      }
+    } on PlatformException catch (e) {
+      if (e.code == 'Error -13010') {
+        // Object does not exist
+        return false;
+      }
+    }
+    return true;
   }
 
   Uint8List resizeImage(

@@ -444,20 +444,20 @@ class YustService {
     } catch (e) {}
   }
 
-  Future<bool> fileExists({String path, String name}) async {
-    try {
-      if (!kIsWeb) {
+  Future<bool> fileExist({String path, String name}) async {
+    if (!kIsWeb) {
+      try {
         await FirebaseStorage().ref().child(path).child(name).getDownloadURL();
-      } else {
-        await YustWebHelper.getDownloadUrl(path: path, name: name);
+      } on PlatformException catch (e) {
+        if (e.code == 'Error -13010') {
+          // Object does not exist
+          return false;
+        }
       }
-    } on PlatformException catch (e) {
-      if (e.code == 'Error -13010') {
-        // Object does not exist
-        return false;
-      }
+      return true;
+    } else {
+      return await YustWebHelper.fileExist(path: path, name: name);
     }
-    return true;
   }
 
   Uint8List resizeImage(

@@ -382,16 +382,11 @@ class YustService {
   }
 
   Future<String> uploadFile(
-      {BuildContext context,
-      String path,
-      String name,
-      File file,
-      Uint8List bytes}) async {
-    if (!kIsWeb) {
-      final StorageReference storageReference =
-          FirebaseStorage().ref().child(path).child(name);
-
-      try {
+      {String path, String name, File file, Uint8List bytes}) async {
+    try {
+      if (!kIsWeb) {
+        final StorageReference storageReference =
+            FirebaseStorage().ref().child(path).child(name);
         StorageUploadTask uploadTask;
         if (file != null) {
           uploadTask = storageReference.putFile(file);
@@ -408,14 +403,12 @@ class YustService {
         await uploadTask.onComplete;
         // streamSubscription.cancel();
         return await storageReference.getDownloadURL();
-      } catch (error) {
-        await showAlert(
-            context, 'Ups', 'Fehler beim Upload: ' + error.toString());
-        return null;
+      } else {
+        return await YustWebHelper.uploadFile(
+            path: path, name: name, bytes: bytes);
       }
-    } else {
-      return await YustWebHelper.uploadFile(
-          path: path, name: name, bytes: bytes);
+    } catch (error) {
+      throw YustException('Fehler beim Upload: ' + error.toString());
     }
   }
 

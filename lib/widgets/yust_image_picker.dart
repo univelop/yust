@@ -309,25 +309,25 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _uploadFile({String path, File file, Uint8List bytes}) async {
-    bytes = Yust.service.resizeImage(name: path, bytes: bytes);
-    final imageName =
-        Yust.service.randomString(length: 16) + '.' + path.split('.').last;
-    final newFile =
-        YustFile(name: imageName, file: file, bytes: bytes, processing: true);
-    setState(() {
-      _files.add(newFile);
-    });
-    String url = await Yust.service.uploadFile(
-        context: context,
-        path: widget.folderPath,
-        name: imageName,
-        file: file,
-        bytes: bytes);
-    setState(() {
-      newFile.url = url;
-      newFile.processing = false;
-    });
-    widget.onChanged(_files.map((file) => file.toJson()).toList());
+    try {
+      bytes = Yust.service.resizeImage(name: path, bytes: bytes);
+      final imageName =
+          Yust.service.randomString(length: 16) + '.' + path.split('.').last;
+      final newFile =
+          YustFile(name: imageName, file: file, bytes: bytes, processing: true);
+      setState(() {
+        _files.add(newFile);
+      });
+      String url = await Yust.service.uploadFile(
+          path: widget.folderPath, name: imageName, file: file, bytes: bytes);
+      setState(() {
+        newFile.url = url;
+        newFile.processing = false;
+      });
+      widget.onChanged(_files.map((file) => file.toJson()).toList());
+    } catch (e) {
+      Yust.service.showAlert(context, 'Ups', e.message);
+    }
   }
 
   void _showImages(YustFile activeFile) {

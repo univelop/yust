@@ -86,3 +86,13 @@ Breaking changes:
 * Update firebase
 * Add image picker
 * Improve number field
+
+## 1.4.0 - 2020-11-14
+
+* Add image handling for web
+* Add multiple image picking
+* Add file picker
+* Improve authentication
+* Add file download
+* Add file exisit check
+* Fix bugs

@@ -310,7 +310,13 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
   Future<void> _uploadFile({String path, File file, Uint8List bytes}) async {
     try {
-      bytes = Yust.service.resizeImage(name: path, bytes: bytes);
+      if (file != null) {
+        bytes = Yust.service
+            .resizeImage(name: path, bytes: await file.readAsBytes());
+        file = await file.writeAsBytes(bytes);
+      } else {
+        bytes = Yust.service.resizeImage(name: path, bytes: bytes);
+      }
       final imageName =
           Yust.service.randomString(length: 16) + '.' + path.split('.').last;
       final newFile =

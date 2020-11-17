@@ -44,7 +44,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         labelText: 'E-Mail',
                         border: OutlineInputBorder(),
                       ),
-                      onChanged: (value) => _email = value,
+                      onChanged: (value) => _email = value.trim(),
                     ),
                   ),
                   Padding(
@@ -55,16 +55,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       onPressed: () async {
                         try {
                           await Yust.service.sendPasswordResetEmail(_email);
-                        } on YustException catch (err) {
-                          Yust.service
-                              .showAlert(context, 'Fehler', err.message);
-                        } on PlatformException catch (err) {
-                          Yust.service
-                              .showAlert(context, 'Fehler', err.message);
+                          Navigator.pop(context);
+                          Yust.service.showAlert(context, 'E-Mail verschickt',
+                              'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
+                        } catch (err) {
+                          Yust.service.showAlert(context, 'Fehler',
+                              err.message ?? 'Unbekannter Fehler');
                         }
-                        Navigator.pop(context);
-                        Yust.service.showAlert(context, 'E-Mail verschickt',
-                            'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
                       },
                       child: Text('Passwort vergessen',
                           style:

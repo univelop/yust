@@ -276,13 +276,14 @@ class _YustImagePickerState extends State<YustImagePicker> {
         }
         if (results != null) {
           for (final asset in results) {
-            final byteData = await asset.getByteData();
+            final byteData = await asset.getByteData(quality: 80);
             final bytes = byteData.buffer.asUint8List();
-            _uploadFile(path: asset.name, bytes: bytes);
+            _uploadFile(path: asset.name, bytes: bytes, resize: true);
           }
         }
       } else {
-        final image = await ImagePicker().getImage(source: imageSource);
+        final image = await ImagePicker()
+            .getImage(source: imageSource, maxHeight: 800, maxWidth: 800);
         if (image != null) {
           await _uploadFile(path: image.path, file: File(image.path));
         }
@@ -294,7 +295,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
         if (result != null) {
           for (final platformFile in result.files) {
             await _uploadFile(
-                path: platformFile.name, bytes: platformFile.bytes);
+              path: platformFile.name,
+              bytes: platformFile.bytes,
+              resize: true,
+            );
           }
         }
       } else {
@@ -302,21 +306,18 @@ class _YustImagePickerState extends State<YustImagePicker> {
             await FilePicker.platform.pickFiles(type: FileType.image);
         if (result != null) {
           await _uploadFile(
-              path: result.files.single.name, bytes: result.files.single.bytes);
+            path: result.files.single.name,
+            bytes: result.files.single.bytes,
+            resize: true,
+          );
         }
       }
     }
   }
 
-  Future<void> _uploadFile({String path, File file, Uint8List bytes}) async {
+  Future<void> _uploadFile(
+      {String path, File file, Uint8List bytes, bool resize = false}) async {
     try {
-      if (file != null) {
-        bytes = Yust.service
-            .resizeImage(name: path, bytes: await file.readAsBytes());
-        file = await file.writeAsBytes(bytes);
-      } else {
-        bytes = Yust.service.resizeImage(name: path, bytes: bytes);
-      }
       final imageName =
           Yust.service.randomString(length: 16) + '.' + path.split('.').last;
       final newFile =
@@ -324,6 +325,18 @@ class _YustImagePickerState extends State<YustImagePicker> {
       setState(() {
         _files.add(newFile);
       });
+
+      if (resize) {
+        if (file != null) {
+          bytes = Yust.service.resizeImage(
+              name: path, bytes: await file.readAsBytes(), maxWidth: 800);
+          newFile.file = await file.writeAsBytes(bytes);
+        } else {
+          newFile.bytes =
+              Yust.service.resizeImage(name: path, bytes: bytes, maxWidth: 800);
+        }
+      }
+
       String url = await Yust.service.uploadFile(
           path: widget.folderPath, name: imageName, file: file, bytes: bytes);
       setState(() {

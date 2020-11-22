@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:yust/widgets/yust_date_picker.dart';
 
 import '../yust.dart';
 
-typedef DateTimeCallback = void Function(DateTime);
-
-class YustDatePicker extends StatelessWidget {
+class YustTimePicker extends StatelessWidget {
   final String label;
   final DateTime value;
   final DateTime initialValue;
@@ -13,7 +12,7 @@ class YustDatePicker extends StatelessWidget {
   final YustInputStyle style;
   final Widget prefixIcon;
 
-  YustDatePicker({
+  YustTimePicker({
     Key key,
     this.label,
     this.value,
@@ -45,7 +44,7 @@ class YustDatePicker extends StatelessWidget {
   }
 
   Widget _buildInner(BuildContext context) {
-    final dateText = Yust.service.formatDate(value);
+    final timeText = Yust.service.formatTime(value);
     var padding;
     if (style == YustInputStyle.normal) {
       if (label != null && prefixIcon != null) {
@@ -66,9 +65,9 @@ class YustDatePicker extends StatelessWidget {
     }
     if (label == null) {
       return ListTile(
-        title: Text(dateText),
-        trailing: _buildClearDate(context),
-        onTap: onChanged == null ? null : () => _pickDate(context),
+        title: Text(timeText),
+        trailing: _buildClearTime(context),
+        onTap: onChanged == null ? null : () => _pickTime(context),
         contentPadding: padding,
       );
     } else {
@@ -92,17 +91,17 @@ class YustDatePicker extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Text(dateText),
-            _buildClearDate(context),
+            Text(timeText),
+            _buildClearTime(context),
           ],
         ),
-        onTap: onChanged == null ? null : () => _pickDate(context),
+        onTap: onChanged == null ? null : () => _pickTime(context),
         contentPadding: padding,
       );
     }
   }
 
-  Widget _buildClearDate(BuildContext context) {
+  Widget _buildClearTime(BuildContext context) {
     if (value == null || hideClearButton) {
       return SizedBox.shrink();
     }
@@ -112,29 +111,20 @@ class YustDatePicker extends StatelessWidget {
     );
   }
 
-  void _pickDate(BuildContext context) async {
+  void _pickTime(BuildContext context) async {
     var dateTime = value ?? initialValue;
     if (dateTime == null) {
       final now = DateTime.now();
-      dateTime = DateTime(now.year, now.month, now.day, 0, 0, 0, 0, 0);
+      dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
     }
-    final selectedDate = await showDatePicker(
+    final initialTime = TimeOfDay.fromDateTime(dateTime);
+    final selectedTime = await showTimePicker(
       context: context,
-      initialDate: dateTime,
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-      locale: Locale('de', 'DE'),
+      initialTime: initialTime,
     );
-    if (selectedDate != null) {
-      dateTime = DateTime(
-          selectedDate.year,
-          selectedDate.month,
-          selectedDate.day,
-          dateTime.hour,
-          dateTime.minute,
-          dateTime.second,
-          dateTime.millisecond,
-          dateTime.microsecond);
+    if (selectedTime != null) {
+      dateTime = DateTime(dateTime.year, dateTime.month, dateTime.day,
+          selectedTime.hour, selectedTime.minute, 0, 0, 0);
       onChanged(dateTime);
     }
   }

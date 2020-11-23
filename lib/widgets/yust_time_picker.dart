@@ -121,6 +121,9 @@ class YustTimePicker extends StatelessWidget {
     final selectedTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
+      cancelText: 'Abbrechen',
+      confirmText: 'OK',
+      helpText: 'Uhrzeit wählen',
     );
     if (selectedTime != null) {
       dateTime = DateTime(dateTime.year, dateTime.month, dateTime.day,

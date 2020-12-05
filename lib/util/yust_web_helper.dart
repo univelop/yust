@@ -23,6 +23,11 @@ class YustWebHelper {
     return null;
   }
 
+  static Future<String> getFileDownloadUrl({String path, String name}) async {
+    YustException('Function not implemented');
+    return null;
+  }
+
   static void downloadAndSaveFileByUrl(String url) {
     YustException('Function not implemented');
   }

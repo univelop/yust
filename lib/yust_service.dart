@@ -453,6 +453,18 @@ class YustService {
     }
   }
 
+  Future<String> getFileDownloadUrl({String path, String name}) async {
+    if (!kIsWeb) {
+      return await FirebaseStorage()
+          .ref()
+          .child(path)
+          .child(name)
+          .getDownloadURL();
+    } else {
+      return await YustWebHelper.getFileDownloadUrl(path: path, name: name);
+    }
+  }
+
   Uint8List resizeImage(
       {@required String name, @required Uint8List bytes, int maxWidth = 1024}) {
     var image = imageLib.decodeNamedImage(bytes, name);

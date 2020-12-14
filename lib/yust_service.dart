@@ -9,6 +9,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
@@ -465,7 +466,29 @@ class YustService {
     }
   }
 
-  Uint8List resizeImage(
+  Future<File> resizeImage({@required File file, int maxWidth = 1024}) async {
+    ImageProperties properties =
+        await FlutterNativeImage.getImageProperties(file.path);
+    if (properties.width > properties.height && properties.width > maxWidth) {
+      file = await FlutterNativeImage.compressImage(
+        file.path,
+        quality: 80,
+        targetWidth: maxWidth,
+        targetHeight: (properties.height * maxWidth / properties.width).round(),
+      );
+    } else if (properties.height > properties.width &&
+        properties.height > maxWidth) {
+      file = await FlutterNativeImage.compressImage(
+        file.path,
+        quality: 80,
+        targetWidth: (properties.width * maxWidth / properties.height).round(),
+        targetHeight: maxWidth,
+      );
+    }
+    return file;
+  }
+
+  Uint8List resizeImageBytes(
       {@required String name, @required Uint8List bytes, int maxWidth = 1024}) {
     var image = imageLib.decodeNamedImage(bytes, name);
     if (image.width > image.height && image.width > maxWidth) {

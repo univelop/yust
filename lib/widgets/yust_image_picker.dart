@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
@@ -278,7 +279,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
           for (final asset in results) {
             final byteData = await asset.getByteData(quality: 80);
             final bytes = byteData.buffer.asUint8List();
-            _uploadFile(path: asset.name, bytes: bytes, resize: true);
+            Directory tempDir = await getTemporaryDirectory();
+            final file =
+                await File(tempDir.path + '/' + asset.name).writeAsBytes(bytes);
+            _uploadFile(path: file.path, file: file, resize: true);
           }
         }
       } else {
@@ -328,12 +332,12 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
       if (resize) {
         if (file != null) {
-          bytes = Yust.service.resizeImage(
-              name: path, bytes: await file.readAsBytes(), maxWidth: 800);
-          newFile.file = await file.writeAsBytes(bytes);
+          file = await Yust.service.resizeImage(file: file, maxWidth: 800);
+          newFile.file = file;
         } else {
-          newFile.bytes =
-              Yust.service.resizeImage(name: path, bytes: bytes, maxWidth: 800);
+          bytes = Yust.service
+              .resizeImageBytes(name: path, bytes: bytes, maxWidth: 800);
+          newFile.bytes = bytes;
         }
       }
 

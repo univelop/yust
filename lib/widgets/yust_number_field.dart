@@ -47,7 +47,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
         text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete(_valueToNum(_controller.value.text));
+        widget.onEditingComplete(_valueToNum(_controller.value.text.trim()));
       }
     });
   }
@@ -76,7 +76,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
       onChanged: widget.onChanged == null
           ? null
           : (value) {
-              num numValue = _valueToNum(value);
+              num numValue = _valueToNum(value.trim());
               if (numValue != _oldValue) {
                 setState(() {
                   _oldValue = numValue;

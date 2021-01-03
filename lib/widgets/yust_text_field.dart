@@ -48,7 +48,7 @@ class _YustTextFieldState extends State<YustTextField> {
     _controller = TextEditingController(text: widget.value);
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete(_controller.value.text);
+        widget.onEditingComplete(_controller.value.text.trim());
       }
     });
   }
@@ -76,7 +76,9 @@ class _YustTextFieldState extends State<YustTextField> {
       minLines: widget.minLines,
       controller: _controller,
       focusNode: _focusNode,
-      onChanged: widget.onChanged,
+      onChanged: widget.onChanged == null
+          ? null
+          : (value) => widget.onChanged(value.trim()),
       onTap: widget.onTab,
       readOnly: widget.readOnly,
       enabled: widget.enabled,

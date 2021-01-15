@@ -529,15 +529,15 @@ class YustService {
             title: Text(title),
             actions: <Widget>[
               FlatButton(
-                child: Text(action),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-              ),
-              FlatButton(
                 child: Text("Abbrechen"),
                 onPressed: () {
                   Navigator.of(context).pop(false);
+                },
+              ),
+              FlatButton(
+                child: Text(action),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
                 },
               ),
             ],
@@ -559,15 +559,15 @@ class YustService {
             ),
             actions: <Widget>[
               FlatButton(
-                child: Text(action),
-                onPressed: () {
-                  Navigator.of(context).pop(controller.text);
-                },
-              ),
-              FlatButton(
                 child: Text("Abbrechen"),
                 onPressed: () {
                   Navigator.of(context).pop(null);
+                },
+              ),
+              FlatButton(
+                child: Text(action),
+                onPressed: () {
+                  Navigator.of(context).pop(controller.text);
                 },
               ),
             ],

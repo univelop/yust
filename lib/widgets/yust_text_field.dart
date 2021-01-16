@@ -76,6 +76,9 @@ class _YustTextFieldState extends State<YustTextField> {
       minLines: widget.minLines,
       controller: _controller,
       focusNode: _focusNode,
+      textInputAction: widget.minLines != null
+          ? TextInputAction.newline
+          : TextInputAction.next,
       onChanged: widget.onChanged == null
           ? null
           : (value) => widget.onChanged(value.trim()),

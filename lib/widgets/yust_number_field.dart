@@ -90,6 +90,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp("[0-9\,\.\-]"))
       ],
+      textInputAction: TextInputAction.next,
       onTap: widget.onTab,
       readOnly: widget.readOnly,
       enabled: widget.enabled,

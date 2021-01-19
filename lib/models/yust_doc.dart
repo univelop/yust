@@ -56,6 +56,10 @@ abstract class YustDoc {
     return map.map((key, value) {
       if (value == null) {
         return MapEntry(key, FieldValue.delete());
+      } else if (value is Map) {
+        return MapEntry(key, Map.from(value));
+      } else if (value is List) {
+        return MapEntry(key, List.from(value));
       } else {
         return MapEntry(key, value);
       }

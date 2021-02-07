@@ -74,7 +74,10 @@ class YustInputTile extends StatelessWidget {
             ),
           ],
         ),
-        trailing: child,
+        trailing: Container(
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width - 150),
+            child: child),
         onTap: onTap,
         contentPadding: padding,
       );

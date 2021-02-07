@@ -77,7 +77,11 @@ class YustSelect<T> extends StatelessWidget {
             ),
           ],
         ),
-        trailing: Text(_valueCaption(value)),
+        trailing: Container(
+          constraints:
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 150),
+          child: Text(_valueCaption(value)),
+        ),
         onTap: onSelected == null ? null : () => _selectValue(context),
         contentPadding: padding,
       );

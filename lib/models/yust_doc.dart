@@ -45,6 +45,12 @@ abstract class YustDoc {
     return map.map((key, value) {
       if (value is FieldValue) {
         return MapEntry(key, null);
+      } else if (value is Timestamp) {
+        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T);
+      } else if (value is Map && value['_seconds'] != null) {
+        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T);
+      } else if (value is Map) {
+        return MapEntry(key, YustDoc.mapFromJson(value) as T);
       } else {
         return MapEntry(key, value as T);
       }
@@ -56,8 +62,10 @@ abstract class YustDoc {
     return map.map((key, value) {
       if (value == null) {
         return MapEntry(key, FieldValue.delete());
+      } else if (value is DateTime) {
+        return MapEntry(key, YustDoc.dateTimeToJson(value));
       } else if (value is Map) {
-        return MapEntry(key, Map.from(value));
+        return MapEntry(key, YustDoc.mapToJson(value));
       } else if (value is List) {
         return MapEntry(key, List.from(value));
       } else {

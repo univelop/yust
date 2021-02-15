@@ -64,7 +64,7 @@ abstract class YustDoc {
         return MapEntry(key, FieldValue.delete());
       } else if (value is DateTime) {
         return MapEntry(key, YustDoc.dateTimeToJson(value));
-      } else if (value is Map) {
+      } else if (value is Map<String, dynamic>) {
         return MapEntry(key, YustDoc.mapToJson(value));
       } else if (value is List) {
         return MapEntry(key, List.from(value));

@@ -1,3 +1,13 @@
+## 1.6.0 - 2021-02-19
+
+* Improve date time handling
+* Add offline check
+* Improve yust doc
+
+Breaking changes:
+* `YustDoc.mapFromJson` returs DateTime values instead of Timestamp values.
+* Therefore `YustDoc.mapToJson` transfers DateTime values to Timestamps.
+
 ## 1.5.0 - 2021-02-19
 
 * Add time picker

@@ -1,3 +1,17 @@
+## 1.5.0 - 2021-02-19
+
+* Add time picker
+* Add input tile
+* Migrate to Flutter 1.12
+* Improve reset password
+* Improve image picker
+* Improve resize image
+* Improve text field
+* Improve map from json
+* Improve modal buttons
+* Usability improvements
+* Fix bugs
+
 ## 1.4.0 - 2020-11-14
 
 * Add image handling for web

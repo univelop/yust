@@ -1,40 +1,60 @@
-## 0.1.0 - 2019-07-23
+## 1.5.0 - 2021-02-19
 
-* Initial release
-* Firebase Authentication
-* Firestore load and save services
-* Widgets to handle firebase requests
+* Add time picker
+* Add input tile
+* Migrate to Flutter 1.12
+* Improve reset password
+* Improve image picker
+* Improve resize image
+* Improve text field
+* Improve map from json
+* Improve modal buttons
+* Usability improvements
+* Fix bugs
 
-## 0.2.0 - 2019-07-31
+## 1.4.0 - 2020-11-14
 
-* Improve filters
-* Add random string generator
-* Add account screen
-* Improvements and hotfixes
+* Add image handling for web
+* Add multiple image picking
+* Add file picker
+* Improve authentication
+* Add file download
+* Add file exisit check
+* Fix bugs
 
-## 0.3.0 - 2019-10-25
+## 1.3.0 - 2020-09-24
 
-* Improve doc builder
-* Add sorting for queries
-* Add getDocOnce and getDocsOnce queries
-* Add switch tile widget
-* Add notifications and badges
-* Add progress button
-* Add account edit screen
-* Use firebase document merging
-* Improvements and hotfixes
+* Update firebase
+* Add image picker
+* Improve number field
 
-## 0.4.0 - 2020-01-17
+## 1.2.2 - 2020-09-11
 
-* Update to Flutter 1.12
-* Add insights to doc builder
-* Improve date picker
-* Improve push notifications
-* Enable offline persistance
-* Improve sign in and sign up
-* Improve routing
-* Make user extendable
-* Improve descanding ordering
+* Fix widget overflows
+
+## 1.2.1 - 2020-09-08
+
+* Improve serialization
+
+## 1.2.0 - 2020-09-07
+
+* Add onEditingComplete to widgets
+* Improve store builder
+
+## 1.1.0 - 2020-09-01
+
+* Add prefix icon to widgets
+
+## 1.0.1 - 2020-08-20
+
+* Improve switch
+
+## 1.0.0 - 2020-08-01
+
+* Add created by, modified at, modified by
+* Improve number field
+* Improve authentication
+* Improve widgets
 
 ## 0.5.0 - 2020-06-05
 
@@ -53,46 +73,40 @@ Breaking changes:
 * `createdAt` in YustDoc changed type from String to DateTime.
 * Use `formatDate` and `formatTime` in YustService if you switch to Firebase timestamps. Use `formatIsoDate` and `formatIsoTime` for the old ISO Datetime format.
 
-## 1.0.0 - 2020-08-01
+## 0.4.0 - 2020-01-17
 
-* Add created by, modified at, modified by
-* Improve number field
-* Improve authentication
-* Improve widgets
+* Update to Flutter 1.12
+* Add insights to doc builder
+* Improve date picker
+* Improve push notifications
+* Enable offline persistance
+* Improve sign in and sign up
+* Improve routing
+* Make user extendable
+* Improve descanding ordering
 
-## 1.0.1 - 2020-08-20
+## 0.3.0 - 2019-10-25
 
-* Improve switch
+* Improve doc builder
+* Add sorting for queries
+* Add getDocOnce and getDocsOnce queries
+* Add switch tile widget
+* Add notifications and badges
+* Add progress button
+* Add account edit screen
+* Use firebase document merging
+* Improvements and hotfixes
 
-## 1.1.0 - 2020-09-01
+## 0.2.0 - 2019-07-31
 
-* Add prefix icon to widgets
+* Improve filters
+* Add random string generator
+* Add account screen
+* Improvements and hotfixes
 
-## 1.2.0 - 2020-09-07
+## 0.1.0 - 2019-07-23
 
-* Add onEditingComplete to widgets
-* Improve store builder
-
-## 1.2.1 - 2020-09-08
-
-* Improve serialization
-
-## 1.2.2 - 2020-09-11
-
-* Fix widget overflows
-
-## 1.3.0 - 2020-09-24
-
-* Update firebase
-* Add image picker
-* Improve number field
-
-## 1.4.0 - 2020-11-14
-
-* Add image handling for web
-* Add multiple image picking
-* Add file picker
-* Improve authentication
-* Add file download
-* Add file exisit check
-* Fix bugs
+* Initial release
+* Firebase Authentication
+* Firestore load and save services
+* Widgets to handle firebase requests

@@ -57,10 +57,11 @@ abstract class YustDoc {
     });
   }
 
-  static Map<String, dynamic> mapToJson(Map<String, dynamic> map) {
+  static Map<String, dynamic> mapToJson(Map<String, dynamic> map,
+      {bool removeNullValues = true}) {
     if (map == null) return null;
     return map.map((key, value) {
-      if (value == null) {
+      if (value == null && removeNullValues) {
         return MapEntry(key, FieldValue.delete());
       } else if (value is DateTime) {
         return MapEntry(key, YustDoc.dateTimeToJson(value));

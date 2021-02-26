@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -386,13 +386,16 @@ class YustService {
       {String path, String name, File file, Uint8List bytes}) async {
     try {
       if (!kIsWeb) {
-        final StorageReference storageReference =
-            FirebaseStorage().ref().child(path).child(name);
-        StorageUploadTask uploadTask;
+        final firebase_storage.Reference storageReference = firebase_storage
+            .FirebaseStorage.instance
+            .ref()
+            .child(path)
+            .child(name);
+        firebase_storage.UploadTask uploadTask;
         if (file != null) {
           uploadTask = storageReference.putFile(file);
         } else {
-          var metadata = StorageMetadata(
+          var metadata = firebase_storage.SettableMetadata(
             contentType: lookupMimeType(name),
           );
           uploadTask = storageReference.putData(bytes, metadata);
@@ -401,7 +404,7 @@ class YustService {
         //     uploadTask.events.listen((event) {
         //   print('EVENT ${event.type}');
         // });
-        await uploadTask.onComplete;
+        await uploadTask.whenComplete;
         // streamSubscription.cancel();
         return await storageReference.getDownloadURL();
       } else {
@@ -416,7 +419,7 @@ class YustService {
   Future<Uint8List> downloadFile({String path, String name}) async {
     try {
       if (!kIsWeb) {
-        return await FirebaseStorage()
+        return await firebase_storage.FirebaseStorage.instance
             .ref()
             .child(path)
             .child(name)
@@ -431,7 +434,11 @@ class YustService {
   Future<void> deleteFile({String path, String name}) async {
     try {
       if (!kIsWeb) {
-        await FirebaseStorage().ref().child(path).child(name).delete();
+        await firebase_storage.FirebaseStorage.instance
+            .ref()
+            .child(path)
+            .child(name)
+            .delete();
       } else {
         await YustWebHelper.deleteFile(path: path, name: name);
       }
@@ -441,7 +448,11 @@ class YustService {
   Future<bool> fileExist({String path, String name}) async {
     if (!kIsWeb) {
       try {
-        await FirebaseStorage().ref().child(path).child(name).getDownloadURL();
+        await firebase_storage.FirebaseStorage.instance
+            .ref()
+            .child(path)
+            .child(name)
+            .getDownloadURL();
       } on PlatformException catch (e) {
         if (e.code == 'Error -13010') {
           // Object does not exist
@@ -456,7 +467,7 @@ class YustService {
 
   Future<String> getFileDownloadUrl({String path, String name}) async {
     if (!kIsWeb) {
-      return await FirebaseStorage()
+      return await firebase_storage.FirebaseStorage.instance
           .ref()
           .child(path)
           .child(name)

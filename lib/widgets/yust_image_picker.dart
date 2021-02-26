@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -384,7 +384,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
       if (confirmed == true) {
         if (!kIsWeb) {
           try {
-            await FirebaseStorage()
+            await firebase_storage.FirebaseStorage.instance
                 .ref()
                 .child(widget.folderPath)
                 .child(file.name)

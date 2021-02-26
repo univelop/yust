@@ -1,3 +1,8 @@
+## 1.7.0 - 2021-02-26
+
+* Update firebase
+* Support flutter web directly
+
 ## 1.6.1 - 2021-02-22
 
 * Improve mapToJson

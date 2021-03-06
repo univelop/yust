@@ -7,8 +7,6 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:multi_image_picker/multi_image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
@@ -270,33 +268,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
       if (!kIsWeb) {
-        if (widget.multiple && imageSource == ImageSource.gallery) {
-          List<Asset> results;
-          try {
-            results = await MultiImagePicker.pickImages(
-              maxImages: 10,
-            );
-          } on NoImagesSelectedException catch (_) {
-            return;
-          } on Exception catch (e) {
-            Yust.service.showAlert(context, 'Fehler', e.toString());
-          }
-          if (results != null) {
-            for (final asset in results) {
-              final byteData = await asset.getByteData(quality: 80);
-              final bytes = byteData.buffer.asUint8List();
-              Directory tempDir = await getTemporaryDirectory();
-              final file = await File(tempDir.path + '/' + asset.name)
-                  .writeAsBytes(bytes);
-              _uploadFile(path: file.path, file: file, resize: true);
-            }
-          }
-        } else {
-          final image = await ImagePicker()
-              .getImage(source: imageSource, maxHeight: 800, maxWidth: 800);
-          if (image != null) {
-            await _uploadFile(path: image.path, file: File(image.path));
-          }
+        final image = await ImagePicker()
+            .getImage(source: imageSource, maxHeight: 800, maxWidth: 800);
+        if (image != null) {
+          await _uploadFile(path: image.path, file: File(image.path));
         }
       } else {
         if (widget.multiple) {

@@ -8,6 +8,7 @@ class YustInputTile extends StatelessWidget {
   final Widget child;
   final YustInputStyle style;
   final void Function() onTap;
+  final Widget suffixChild;
 
   const YustInputTile({
     Key key,
@@ -16,6 +17,7 @@ class YustInputTile extends StatelessWidget {
     this.child,
     this.style = YustInputStyle.normal,
     this.onTap,
+    this.suffixChild,
   }) : super(key: key);
 
   @override
@@ -24,6 +26,7 @@ class YustInputTile extends StatelessWidget {
       return Column(
         children: <Widget>[
           _buildInner(context),
+          if (this.suffixChild != null) this.suffixChild,
           Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
         ],
       );

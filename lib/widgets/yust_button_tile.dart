@@ -22,7 +22,6 @@ class YustButtonTile extends StatelessWidget {
     return YustInputTile(
         child: TextButton(onPressed: onPressed, child: Text(buttonText)),
         label: label,
-        prefixIcon: prefixIcon,
-        key: key);
+        prefixIcon: prefixIcon);
   }
 }

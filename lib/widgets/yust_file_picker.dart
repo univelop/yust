@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/util/yust_web_helper.dart';
+import 'package:yust/widgets/yust_input_tile.dart';
 
 import '../yust.dart';
 
@@ -44,40 +45,11 @@ class _YustFilePickerState extends State<YustFilePicker> {
 
   @override
   Widget build(BuildContext context) {
-    var padding;
-    if (widget.label != null && widget.prefixIcon != null) {
-      padding =
-          const EdgeInsets.only(left: 8.0, top: 8.0, right: 16.0, bottom: 8.0);
-    } else {
-      padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
-    }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ListTile(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.prefixIcon != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: widget.prefixIcon,
-                ),
-              Flexible(
-                child: Text(
-                  widget.label ?? '',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ),
-            ],
-          ),
-          trailing: _buildAddButton(context),
-          contentPadding: padding,
-        ),
-        _buildFiles(context),
-        Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
-      ],
-    );
+    return YustInputTile(
+        child: _buildAddButton(context),
+        label: widget.label,
+        prefixIcon: widget.prefixIcon,
+        suffixChild: _buildFiles(context));
   }
 
   _buildAddButton(BuildContext context) {

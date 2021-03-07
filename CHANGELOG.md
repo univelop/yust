@@ -1,3 +1,8 @@
+## 1.8.0 - 2021-03-07
+
+* Add button tile
+* Add prefix icon to text and number field
+
 ## 1.7.0 - 2021-02-26
 
 * Update firebase

@@ -16,6 +16,7 @@ class YustTextField extends StatefulWidget {
   final bool obscureText;
   final YustInputStyle style;
   final Widget prefixIcon;
+  final Widget suffixIcon;
   final TextCapitalization textCapitalization;
 
   YustTextField({
@@ -31,6 +32,7 @@ class YustTextField extends StatefulWidget {
     this.obscureText = false,
     this.style,
     this.prefixIcon,
+    this.suffixIcon,
     this.textCapitalization = TextCapitalization.sentences,
   }) : super(key: key);
 
@@ -71,6 +73,7 @@ class _YustTextFieldState extends State<YustTextField> {
             ? OutlineInputBorder()
             : null,
         prefixIcon: widget.prefixIcon,
+        suffixIcon: widget.suffixIcon,
       ),
       maxLines: widget.obscureText ? 1 : null,
       minLines: widget.minLines,

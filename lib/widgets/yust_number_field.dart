@@ -16,19 +16,21 @@ class YustNumberField extends StatefulWidget {
   final bool enabled;
   final YustInputStyle style;
   final Widget prefixIcon;
+  final Widget suffixIcon;
 
-  YustNumberField({
-    Key key,
-    this.label,
-    this.value,
-    this.onChanged,
-    this.onEditingComplete,
-    this.onTab,
-    this.enabled = true,
-    this.readOnly = false,
-    this.style,
-    this.prefixIcon,
-  }) : super(key: key);
+  YustNumberField(
+      {Key key,
+      this.label,
+      this.value,
+      this.onChanged,
+      this.onEditingComplete,
+      this.onTab,
+      this.enabled = true,
+      this.readOnly = false,
+      this.style,
+      this.prefixIcon,
+      this.suffixIcon})
+      : super(key: key);
 
   @override
   _YustNumberFieldState createState() => _YustNumberFieldState();
@@ -70,6 +72,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
             ? OutlineInputBorder()
             : null,
         prefixIcon: widget.prefixIcon,
+        suffixIcon: widget.suffixIcon,
       ),
       controller: _controller,
       focusNode: _focusNode,

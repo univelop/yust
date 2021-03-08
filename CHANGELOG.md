@@ -1,3 +1,7 @@
+## 1.8.2 - 2021-03-09
+
+* Fix file exists
+
 ## 1.8.1 - 2021-03-08
 
 * Fix file upload

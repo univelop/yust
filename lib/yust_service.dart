@@ -8,7 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:intl/intl.dart';
@@ -453,11 +452,8 @@ class YustService {
             .child(path)
             .child(name)
             .getDownloadURL();
-      } on PlatformException catch (e) {
-        if (e.code == 'Error -13010') {
-          // Object does not exist
-          return false;
-        }
+      } on FirebaseException catch (_) {
+        return false;
       }
       return true;
     } else {

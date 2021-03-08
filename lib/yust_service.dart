@@ -404,7 +404,7 @@ class YustService {
         //     uploadTask.events.listen((event) {
         //   print('EVENT ${event.type}');
         // });
-        await uploadTask.whenComplete;
+        await uploadTask;
         // streamSubscription.cancel();
         return await storageReference.getDownloadURL();
       } else {

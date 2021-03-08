@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:yust/util/yust_exception.dart';
 import 'package:yust/util/yust_web_helper.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 
@@ -137,12 +138,19 @@ class _YustFilePickerState extends State<YustFilePicker> {
             if (platformFile.path != null) {
               file = File(platformFile.path);
             }
-            fileData['url'] = await Yust.service.uploadFile(
-              path: widget.folderPath,
-              name: fileData['name'],
-              file: file,
-              bytes: platformFile.bytes,
-            );
+            try {
+              fileData['url'] = await Yust.service.uploadFile(
+                path: widget.folderPath,
+                name: fileData['name'],
+                file: file,
+                bytes: platformFile.bytes,
+              );
+            } on YustException catch (e) {
+              Yust.service.showAlert(context, 'Ups', e.message);
+            } catch (e) {
+              Yust.service.showAlert(
+                  context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
+            }
             if (fileData['url'] == null) {
               _files.remove(fileData);
             }

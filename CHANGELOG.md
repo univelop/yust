@@ -1,3 +1,7 @@
+## 1.8.1 - 2021-03-08
+
+* Fix file upload
+
 ## 1.8.0 - 2021-03-07
 
 * Add button tile

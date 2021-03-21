@@ -70,7 +70,13 @@ abstract class YustDoc {
       } else if (value is List) {
         return MapEntry(key, List.from(value));
       } else {
-        return MapEntry(key, value);
+        try {
+          // If toJson is defined for the type, use it.
+          return MapEntry(key, (value as dynamic).toJson());
+        } on NoSuchMethodError {
+          // Else: Just return the value
+          return MapEntry(key, value);
+        }
       }
     });
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html' as html;
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -12,7 +13,6 @@ import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
-import 'package:yust/util/yust_web_helper.dart';
 
 import 'models/yust_doc.dart';
 import 'models/yust_doc_setup.dart';
@@ -384,32 +384,27 @@ class YustService {
   Future<String> uploadFile(
       {String path, String name, File file, Uint8List bytes}) async {
     try {
-      if (!kIsWeb) {
-        final firebase_storage.Reference storageReference = firebase_storage
-            .FirebaseStorage.instance
-            .ref()
-            .child(path)
-            .child(name);
-        firebase_storage.UploadTask uploadTask;
-        if (file != null) {
-          uploadTask = storageReference.putFile(file);
-        } else {
-          var metadata = firebase_storage.SettableMetadata(
-            contentType: lookupMimeType(name),
-          );
-          uploadTask = storageReference.putData(bytes, metadata);
-        }
-        // final StreamSubscription<StorageTaskEvent> streamSubscription =
-        //     uploadTask.events.listen((event) {
-        //   print('EVENT ${event.type}');
-        // });
-        await uploadTask;
-        // streamSubscription.cancel();
-        return await storageReference.getDownloadURL();
+      final firebase_storage.Reference storageReference = firebase_storage
+          .FirebaseStorage.instance
+          .ref()
+          .child(path)
+          .child(name);
+      firebase_storage.UploadTask uploadTask;
+      if (file != null) {
+        uploadTask = storageReference.putFile(file);
       } else {
-        return await YustWebHelper.uploadFile(
-            path: path, name: name, bytes: bytes);
+        var metadata = firebase_storage.SettableMetadata(
+          contentType: lookupMimeType(name),
+        );
+        uploadTask = storageReference.putData(bytes, metadata);
       }
+      // final StreamSubscription<StorageTaskEvent> streamSubscription =
+      //     uploadTask.events.listen((event) {
+      //   print('EVENT ${event.type}');
+      // });
+      await uploadTask;
+      // streamSubscription.cancel();
+      return await storageReference.getDownloadURL();
     } catch (error) {
       throw YustException('Fehler beim Upload: ' + error.toString());
     }
@@ -417,60 +412,50 @@ class YustService {
 
   Future<Uint8List> downloadFile({String path, String name}) async {
     try {
-      if (!kIsWeb) {
-        return await firebase_storage.FirebaseStorage.instance
-            .ref()
-            .child(path)
-            .child(name)
-            .getData(5 * 1024 * 1024);
-      } else {
-        return await YustWebHelper.downloadFile(path: path, name: name);
-      }
-    } catch (e) {}
-    return Uint8List(0);
-  }
-
-  Future<void> deleteFile({String path, String name}) async {
-    try {
-      if (!kIsWeb) {
-        await firebase_storage.FirebaseStorage.instance
-            .ref()
-            .child(path)
-            .child(name)
-            .delete();
-      } else {
-        await YustWebHelper.deleteFile(path: path, name: name);
-      }
-    } catch (e) {}
-  }
-
-  Future<bool> fileExist({String path, String name}) async {
-    if (!kIsWeb) {
-      try {
-        await firebase_storage.FirebaseStorage.instance
-            .ref()
-            .child(path)
-            .child(name)
-            .getDownloadURL();
-      } on FirebaseException catch (_) {
-        return false;
-      }
-      return true;
-    } else {
-      return await YustWebHelper.fileExist(path: path, name: name);
-    }
-  }
-
-  Future<String> getFileDownloadUrl({String path, String name}) async {
-    if (!kIsWeb) {
       return await firebase_storage.FirebaseStorage.instance
           .ref()
           .child(path)
           .child(name)
+          .getData(5 * 1024 * 1024);
+    } catch (e) {}
+    return Uint8List(0);
+  }
+
+  void downloadFileWeb({String url}) async {
+    html.AnchorElement anchorElement = new html.AnchorElement(href: url);
+    anchorElement.download = url;
+    anchorElement.click();
+  }
+
+  Future<void> deleteFile({String path, String name}) async {
+    try {
+      await firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child(path)
+          .child(name)
+          .delete();
+    } catch (e) {}
+  }
+
+  Future<bool> fileExist({String path, String name}) async {
+    try {
+      await firebase_storage.FirebaseStorage.instance
+          .ref()
+          .child(path)
+          .child(name)
           .getDownloadURL();
-    } else {
-      return await YustWebHelper.getFileDownloadUrl(path: path, name: name);
+    } on FirebaseException catch (_) {
+      return false;
     }
+    return true;
+  }
+
+  Future<String> getFileDownloadUrl({String path, String name}) async {
+    return await firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child(path)
+        .child(name)
+        .getDownloadURL();
   }
 
   Future<File> resizeImage({@required File file, int maxWidth = 1024}) async {

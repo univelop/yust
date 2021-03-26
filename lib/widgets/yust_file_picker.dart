@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/util/yust_exception.dart';
-import 'package:yust/util/yust_web_helper.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 
 import '../yust.dart';
@@ -188,18 +187,13 @@ class _YustFilePickerState extends State<YustFilePicker> {
       final confirmed = await Yust.service
           .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
       if (confirmed == true) {
-        if (!kIsWeb) {
-          try {
-            await firebase_storage.FirebaseStorage.instance
-                .ref()
-                .child(widget.folderPath)
-                .child(file['name'])
-                .delete();
-          } catch (e) {}
-        } else {
-          await YustWebHelper.deleteFile(
-              path: widget.folderPath, name: file['name']);
-        }
+        try {
+          await firebase_storage.FirebaseStorage.instance
+              .ref()
+              .child(widget.folderPath)
+              .child(file['name'])
+              .delete();
+        } catch (e) {}
 
         setState(() {
           _files.remove(file);

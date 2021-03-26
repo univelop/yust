@@ -13,7 +13,6 @@ import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
-import 'package:yust/util/yust_web_helper.dart';
 
 /// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {
@@ -382,18 +381,13 @@ class _YustImagePickerState extends State<YustImagePicker> {
       final confirmed = await Yust.service
           .showConfirmation(context, 'Wirklich löschen', 'Löschen');
       if (confirmed == true) {
-        if (!kIsWeb) {
-          try {
-            await firebase_storage.FirebaseStorage.instance
-                .ref()
-                .child(widget.folderPath)
-                .child(file.name)
-                .delete();
-          } catch (e) {}
-        } else {
-          await YustWebHelper.deleteFile(
-              path: widget.folderPath, name: file.name);
-        }
+        try {
+          await firebase_storage.FirebaseStorage.instance
+              .ref()
+              .child(widget.folderPath)
+              .child(file.name)
+              .delete();
+        } catch (e) {}
         setState(() {
           _files.remove(file);
         });

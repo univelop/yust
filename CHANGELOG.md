@@ -1,3 +1,9 @@
+## 1.8.3 - 2021-03-26
+
+* Improve mapToJson support
+* Remove web helper
+* Fix flutter web support
+
 ## 1.8.2 - 2021-03-09
 
 * Fix file exists

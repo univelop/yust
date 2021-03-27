@@ -1,3 +1,22 @@
+## 1.8.3 - 2021-03-26
+
+* Improve mapToJson support
+* Remove web helper
+* Fix flutter web support
+
+## 1.8.2 - 2021-03-09
+
+* Fix file exists
+
+## 1.8.1 - 2021-03-08
+
+* Fix file upload
+
+## 1.8.0 - 2021-03-07
+
+* Add button tile
+* Add prefix icon to text and number field
+
 ## 1.7.0 - 2021-02-26
 
 * Update firebase

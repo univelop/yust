@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:html' as html;
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -421,10 +420,9 @@ class YustService {
     return Uint8List(0);
   }
 
+  @Deprecated('use pub open_file instead')
   void downloadFileWeb({String url}) async {
-    html.AnchorElement anchorElement = new html.AnchorElement(href: url);
-    anchorElement.download = url;
-    anchorElement.click();
+    throw YustException('Funktion nicht mehr verfügbar.');
   }
 
   Future<void> deleteFile({String path, String name}) async {

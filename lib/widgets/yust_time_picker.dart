@@ -4,9 +4,7 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../yust.dart';
 
-class YustTimePicker extends StatelessWidget {
-  FocusNode _focusNode = FocusNode();
-
+class YustTimePicker extends StatefulWidget {
   final String label;
   final DateTime value;
   final DateTime initialValue;
@@ -14,7 +12,6 @@ class YustTimePicker extends StatelessWidget {
   final bool hideClearButton;
   final YustInputStyle style;
   final Widget prefixIcon;
-  final MaskTextInputFormatter maskFormatter;
 
   YustTimePicker({
     Key key,
@@ -25,146 +22,80 @@ class YustTimePicker extends StatelessWidget {
     this.hideClearButton = false,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
-  })  : maskFormatter = MaskTextInputFormatter(
-            mask: 'H#:M#',
-            filter: {
-              '#': RegExp(r'[0-9]'),
-              'H': RegExp(r'[0-2]'),
-              'M': RegExp(r'[0-5]')
-            },
-            initialText: Yust.service.formatTime(value)),
-        super(key: key) {
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus) {
-        _setTimeString();
-      }
-    });
+  }) : super(key: key);
+
+  @override
+  _YustTimePickerState createState() => _YustTimePickerState();
+}
+
+class _YustTimePickerState extends State<YustTimePicker> {
+  TextEditingController _controller;
+  MaskTextInputFormatter _maskFormatter;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+        text: Yust.service.formatTime(widget.value ?? widget.initialValue));
+    _maskFormatter = MaskTextInputFormatter(
+      mask: 'H#:M#',
+      filter: {
+        '#': RegExp(r'[0-9]'),
+        'H': RegExp(r'[0-2]'),
+        'M': RegExp(r'[0-5]')
+      },
+      initialText: Yust.service.formatTime(widget.value ?? widget.initialValue),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (style == YustInputStyle.normal) {
-      return Column(
-        children: <Widget>[
-          _buildInner(context),
-          Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
-        ],
-      );
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(4.0),
-        ),
-        child: _buildInner(context),
-      );
-    }
-  }
-
-  Widget _buildInner(BuildContext context) {
-    final timeText = Yust.service.formatTime(value);
-    var padding;
-    if (style == YustInputStyle.normal) {
-      if (label != null && prefixIcon != null) {
-        padding = EdgeInsets.only(
-            left: 8.0,
-            top: 8.0,
-            right: hideClearButton ? 16.0 : 8.0,
-            bottom: 8.0);
-      } else {
-        padding = EdgeInsets.only(
-            left: 16.0,
-            top: 8.0,
-            right: hideClearButton ? 16.0 : 8.0,
-            bottom: 8.0);
-      }
-    } else {
-      padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 2.0);
-    }
-    if (label == null) {
-      return ListTile(
-        title: Text(timeText),
-        trailing: _buildTrailing(context),
-        onTap: onChanged == null ? null : () => _pickTime(context),
-        contentPadding: padding,
-      );
-    } else {
-      return ListTile(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (prefixIcon != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: prefixIcon,
-              ),
-            Flexible(
-              child: Text(
-                label ?? '',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ),
-            Expanded(child: _buildFormatTextField(timeText)),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildTrailing(context),
-          ],
-        ),
-        contentPadding: padding,
-      );
-    }
-  }
-
-  Widget _buildFormatTextField(timeText) {
-    var textEditingController = TextEditingController(text: timeText);
     return TextField(
-        keyboardType: TextInputType.number,
-        focusNode: _focusNode,
-        controller: textEditingController,
-        inputFormatters: [maskFormatter],
-        textAlign: TextAlign.center,
-        decoration: InputDecoration(border: InputBorder.none),
-        onEditingComplete: () => _setTimeString());
-  }
-
-  void _setTimeString() {
-    var time = int.tryParse(maskFormatter.getUnmaskedText().padRight(4, '0'));
-    if (time == 2400) {
-      time == 0;
-    }
-    var hour = time ~/ 100 >= 24 ? 0 : time ~/ 100;
-    var minute = time % 100 >= 60 ? 0 : time % 100;
-    var dateTime = DateTime(1970, 1, 1, hour, minute, 0, 0, 0);
-    onChanged(dateTime);
+      decoration: InputDecoration(
+        labelText: widget.label,
+        contentPadding: const EdgeInsets.all(20.0),
+        border: widget.style == YustInputStyle.outlineBorder
+            ? OutlineInputBorder()
+            : null,
+        prefixIcon: widget.prefixIcon,
+        suffixIcon: _buildTrailing(context),
+      ),
+      controller: _controller,
+      inputFormatters: [_maskFormatter],
+      textInputAction: TextInputAction.next,
+      onChanged:
+          widget.onChanged == null ? null : (value) => _setTimeString(value),
+    );
   }
 
   /// build the clock- / x-icon
   Widget _buildTrailing(BuildContext context) {
-    if (value == null) {
+    if (_controller.text == '') {
       return IconButton(
         icon: Icon(Icons.access_time),
-        onPressed: onChanged == null ? null : () => _pickTime(context),
+        onPressed: widget.onChanged == null ? null : () => _pickTime(context),
       );
     } else {
-      if (hideClearButton) {
+      if (widget.hideClearButton) {
         return SizedBox.shrink();
       }
       return IconButton(
         icon: Icon(Icons.clear),
-        onPressed: onChanged == null ? null : () => onChanged(null),
+        onPressed: widget.onChanged == null ? null : () => _setTime(null),
       );
     }
   }
 
   void _pickTime(BuildContext context) async {
-    var dateTime = value ?? initialValue;
-    if (dateTime == null) {
-      final now = DateTime.now();
-      dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
-    }
+    final now = DateTime.now();
+    var dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
     final initialTime = TimeOfDay.fromDateTime(dateTime);
     final selectedTime = await showTimePicker(
       context: context,
@@ -176,7 +107,27 @@ class YustTimePicker extends StatelessWidget {
     if (selectedTime != null) {
       dateTime = DateTime(dateTime.year, dateTime.month, dateTime.day,
           selectedTime.hour, selectedTime.minute, 0, 0, 0);
-      onChanged(dateTime);
+      _setTime(dateTime);
     }
+  }
+
+  void _setTimeString(String value) {
+    if (value.length == 5) {
+      var time = int.tryParse(_maskFormatter.getUnmaskedText());
+      if (time == 2400) {
+        time == 0;
+      }
+      var hour = time ~/ 100 >= 24 ? 0 : time ~/ 100;
+      var minute = time % 100 >= 60 ? 0 : time % 100;
+      var dateTime = DateTime(1970, 1, 1, hour, minute, 0, 0, 0);
+      _setTime(dateTime);
+    }
+  }
+
+  void _setTime(DateTime dateTime) {
+    setState(() {
+      _controller.text = Yust.service.formatTime(dateTime);
+    });
+    widget.onChanged(dateTime);
   }
 }

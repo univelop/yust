@@ -1,3 +1,7 @@
+## 1.8.4 - 2021-03-27
+
+* Fix bilding issue
+
 ## 1.8.3 - 2021-03-26
 
 * Improve mapToJson support

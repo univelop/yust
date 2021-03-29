@@ -33,14 +33,17 @@ class _YustProgressButtonState extends State<YustProgressButton> {
       waiting = _inProgressLocal;
       _inProgressLocal = null;
     }
-    return RaisedButton(
-      color: widget.color,
-      disabledColor: widget.color,
-      padding: const EdgeInsets.all(10),
-      child: SizedBox(
-        width: double.infinity,
-        height: 40.0,
-        child: Center(child: _buildInnerButton(waiting)),
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        primary: widget.color,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: SizedBox(
+          width: double.infinity,
+          height: 40.0,
+          child: Center(child: _buildInnerButton(waiting)),
+        ),
       ),
       onPressed: waiting ? null : onPressed,
     );

@@ -154,8 +154,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
-                    child: FlatButton(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, SignUpScreen.routeName,
                             arguments: arguments);
@@ -169,8 +168,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
-                    child: FlatButton(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: TextButton(
                       onPressed: () {
                         Navigator.pushNamed(
                             context, ResetPasswordScreen.routeName);

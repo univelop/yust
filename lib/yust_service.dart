@@ -498,7 +498,7 @@ class YustService {
           title: Text(title),
           content: Text(message),
           actions: <Widget>[
-            FlatButton(
+            TextButton(
               child: Text("OK"),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -518,13 +518,13 @@ class YustService {
           return AlertDialog(
             title: Text(title),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: Text("Abbrechen"),
                 onPressed: () {
                   Navigator.of(context).pop(false);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: Text(action),
                 onPressed: () {
                   Navigator.of(context).pop(true);
@@ -548,13 +548,13 @@ class YustService {
               decoration: InputDecoration(hintText: placeholder),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: Text("Abbrechen"),
                 onPressed: () {
                   Navigator.of(context).pop(null);
                 },
               ),
-              FlatButton(
+              TextButton(
                 child: Text(action),
                 onPressed: () {
                   Navigator.of(context).pop(controller.text);
@@ -566,7 +566,7 @@ class YustService {
   }
 
   void showToast(BuildContext context, String message) {
-    Scaffold.of(context).showSnackBar(SnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(message),
     ));
   }

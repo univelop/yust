@@ -58,9 +58,8 @@ class _SignInScreenState extends State<SignInScreen> {
         if (mounted) {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            widget.targetRouteName ?? '/',
+            '/',
             (_) => false,
-            arguments: widget.targetRouteArguments,
           );
         }
       }

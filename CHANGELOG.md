@@ -1,3 +1,8 @@
+## 1.9.0 - 2021-04-01
+
+* Upgrade to Flutter 2
+* Add time picker keyboard support
+
 ## 1.8.4 - 2021-03-27
 
 * Fix bilding issue

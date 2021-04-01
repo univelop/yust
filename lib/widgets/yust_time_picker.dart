@@ -9,9 +9,12 @@ class YustTimePicker extends StatefulWidget {
   final DateTime value;
   final DateTime initialValue;
   final DateTimeCallback onChanged;
+  final void Function() onEditingComplete;
   final bool hideClearButton;
   final YustInputStyle style;
   final Widget prefixIcon;
+  final FocusNode focusNode;
+  final bool autofocus;
 
   YustTimePicker({
     Key key,
@@ -19,9 +22,12 @@ class YustTimePicker extends StatefulWidget {
     this.value,
     this.initialValue,
     this.onChanged,
+    this.onEditingComplete,
     this.hideClearButton = false,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
+    this.focusNode,
+    this.autofocus = false,
   }) : super(key: key);
 
   @override
@@ -70,8 +76,11 @@ class _YustTimePickerState extends State<YustTimePicker> {
       controller: _controller,
       inputFormatters: [_maskFormatter],
       textInputAction: TextInputAction.next,
+      focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
       onChanged:
           widget.onChanged == null ? null : (value) => _setTimeString(value),
+      onEditingComplete: widget.onEditingComplete,
     );
   }
 
@@ -120,12 +129,13 @@ class _YustTimePickerState extends State<YustTimePicker> {
       var hour = time ~/ 100 >= 24 ? 0 : time ~/ 100;
       var minute = time % 100 >= 60 ? 0 : time % 100;
       var dateTime = DateTime(1970, 1, 1, hour, minute, 0, 0, 0);
-      _setTime(dateTime);
+      widget.onChanged(dateTime);
     }
   }
 
   void _setTime(DateTime dateTime) {
     setState(() {
+      _maskFormatter.clear();
       _controller.text = Yust.service.formatTime(dateTime);
     });
     widget.onChanged(dateTime);

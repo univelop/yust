@@ -1,4 +1,4 @@
-import 'package:progress_dialog/progress_dialog.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:yust/models/yust_user.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_select.dart';
@@ -119,13 +119,9 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      final progressDialog = ProgressDialog(context);
-                      progressDialog.style(
-                        message: 'E-Mail wird geändert...',
-                      );
-                      progressDialog.show();
+                      EasyLoading.show(status: 'E-Mail wird geändert...');
                       await Yust.service.changeEmail(email, password);
-                      progressDialog.hide();
+                      EasyLoading.dismiss();
                       Navigator.of(context).pop();
                       Yust.service.showAlert(context, 'E-Mail geändert',
                           'Deine E-Mail wurde erfolgreich geändert.');
@@ -184,14 +180,10 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      final progressDialog = ProgressDialog(context);
-                      progressDialog.style(
-                        message: 'Passwort wird geändert...',
-                      );
-                      progressDialog.show();
+                      EasyLoading.show(status: 'Passwort wird geändert...');
                       await Yust.service
                           .changePassword(newPassword, oldPassword);
-                      progressDialog.hide();
+                      EasyLoading.dismiss();
                       Navigator.of(context).pop();
                       Yust.service.showAlert(context, 'Passwort geändert',
                           'Dein Passwort wurde erfolgreich geändert.');

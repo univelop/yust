@@ -3,13 +3,13 @@ import 'dart:typed_data';
 
 class YustFile {
   String name;
-  String url;
-  File file;
-  Uint8List bytes;
+  String? url;
+  File? file;
+  Uint8List? bytes;
   bool processing;
 
   YustFile({
-    this.name,
+    required this.name,
     this.url,
     this.file,
     this.bytes,

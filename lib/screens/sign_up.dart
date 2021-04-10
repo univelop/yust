@@ -16,11 +16,11 @@ class SignUpScreen extends StatefulWidget {
   static const bool signInRequired = false;
 
   final String homeRouteName;
-  final String logoAssetName;
+  final String? logoAssetName;
   final bool askForGender;
 
   SignUpScreen({
-    Key key,
+    Key? key,
     this.homeRouteName = '/',
     this.logoAssetName,
     this.askForGender = false,
@@ -31,14 +31,14 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  YustGender _gender;
-  String _firstName;
-  String _lastName;
-  String _email;
-  String _password;
-  String _passwordConfirmation;
+  YustGender? _gender;
+  String? _firstName;
+  String? _lastName;
+  String? _email;
+  String? _password;
+  String? _passwordConfirmation;
   bool _waitingForSignUp = false;
-  void Function() _onSignedIn;
+  void Function()? _onSignedIn;
 
   final _firstNameFocus = FocusNode();
   final _lastNameFocus = FocusNode();
@@ -50,7 +50,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context).settings.arguments;
+    final arguments = ModalRoute.of(context)!.settings.arguments;
     if (arguments is Map) {
       _onSignedIn = arguments['onSignedIn'];
     }
@@ -233,7 +233,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return SizedBox(
       height: 200,
       child: Center(
-        child: Image.asset(widget.logoAssetName),
+        child: Image.asset(widget.logoAssetName!),
       ),
     );
   }
@@ -249,7 +249,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         value: _gender,
         optionValues: [YustGender.male, YustGender.female],
         optionLabels: ['Herr', 'Frau'],
-        onSelected: (value) {
+        onSelected: (dynamic value) {
           setState(() {
             _gender = value;
           });
@@ -272,7 +272,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             gender: _gender,
           )
           .timeout(Duration(seconds: 10));
-      if (_onSignedIn != null) _onSignedIn();
+      if (_onSignedIn != null) _onSignedIn!();
       Navigator.popUntil(
         context,
         (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
@@ -281,7 +281,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
+      Yust.service.showAlert(context, 'Fehler', err.message!);
     } on TimeoutException catch (_) {
       Yust.service.showAlert(
         context,

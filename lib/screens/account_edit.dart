@@ -17,7 +17,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
 
   final bool askForGender;
 
-  AccountEditScreen({Key key, this.askForGender = false}) : super(key: key);
+  AccountEditScreen({Key? key, this.askForGender = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(title: Text('Persönliche Daten')),
         body: YustStoreBuilder<T>(builder: (context, child, store) {
-          final user = store.currUser;
+          final user = store.currUser!;
           return ListView(
             padding: const EdgeInsets.only(top: 20.0),
             children: <Widget>[
@@ -75,7 +75,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
       value: user.gender,
       optionValues: [YustGender.male, YustGender.female],
       optionLabels: ['Herr', 'Frau'],
-      onSelected: (value) {
+      onSelected: (dynamic value) {
         user.gender = value;
         Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
       },
@@ -83,8 +83,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
   }
 
   void _changeEmail(BuildContext context) {
-    var email;
-    var password;
+    late var email;
+    late var password;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -127,7 +127,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                           'Deine E-Mail wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.message);
+                      Yust.service.showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
                       Navigator.of(context).pop();
                       Yust.service.showAlert(context, 'Fehler', err.toString());
@@ -143,8 +143,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
   }
 
   void _changePassword(BuildContext context) {
-    var newPassword;
-    var oldPassword;
+    late var newPassword;
+    late var oldPassword;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -189,7 +189,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                           'Dein Passwort wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.message);
+                      Yust.service.showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
                       Navigator.of(context).pop();
                       Yust.service.showAlert(context, 'Fehler', err.toString());

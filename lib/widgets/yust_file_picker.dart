@@ -12,17 +12,17 @@ import 'package:yust/widgets/yust_input_tile.dart';
 import '../yust.dart';
 
 class YustFilePicker extends StatefulWidget {
-  final String label;
+  final String? label;
   final String folderPath;
   final List<Map<String, String>> files;
-  final void Function(List<Map<String, String>> files) onChanged;
-  final Widget prefixIcon;
+  final void Function(List<Map<String, String>> files)? onChanged;
+  final Widget? prefixIcon;
 
   YustFilePicker({
-    Key key,
+    Key? key,
     this.label,
-    this.folderPath,
-    this.files,
+    required this.folderPath,
+    required this.files,
     this.onChanged,
     this.prefixIcon,
   }) : super(key: key);
@@ -32,9 +32,9 @@ class YustFilePicker extends StatefulWidget {
 }
 
 class _YustFilePickerState extends State<YustFilePicker> {
-  List<Map<String, String>> _files;
-  Map<String, bool> _processing = {};
-  bool _enabled;
+  late List<Map<String, String>> _files;
+  Map<String?, bool> _processing = {};
+  late bool _enabled;
 
   @override
   void initState() {
@@ -82,7 +82,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
           Icon(Icons.insert_drive_file),
           SizedBox(width: 8),
           Expanded(
-            child: Text(file['name'], overflow: TextOverflow.ellipsis),
+            child: Text(file['name']!, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
@@ -116,7 +116,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
       if (result != null) {
         if (_files == null) _files = [];
         for (final platformFile in result.files) {
-          var name = platformFile.name.split('/').last;
+          var name = platformFile.name!.split('/').last;
           final ext = platformFile.extension;
           if (ext != null && name.split('.').last != ext) {
             name += '.' + ext;
@@ -130,17 +130,17 @@ class _YustFilePickerState extends State<YustFilePicker> {
           } else {
             setState(() {
               _files.add(fileData);
-              _files.sort((a, b) => a['name'].compareTo(b['name']));
+              _files.sort((a, b) => a['name']!.compareTo(b['name']!));
               _processing[fileData['name']] = true;
             });
-            File file;
+            File? file;
             if (platformFile.path != null) {
-              file = File(platformFile.path);
+              file = File(platformFile.path!);
             }
             try {
               fileData['url'] = await Yust.service.uploadFile(
                 path: widget.folderPath,
-                name: fileData['name'],
+                name: fileData['name']!,
                 file: file,
                 bytes: platformFile.bytes,
               );
@@ -158,7 +158,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
             });
           }
         }
-        widget.onChanged(_files);
+        widget.onChanged!(_files);
       }
     }
   }
@@ -169,8 +169,8 @@ class _YustFilePickerState extends State<YustFilePicker> {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Anzeigen einer Datei ist eine Internetverbindung erforderlich.');
     } else if (file['name'] != null && _processing[file['name']] != true) {
-      if (await canLaunch(file['url'])) {
-        await launch(file['url']);
+      if (await canLaunch(file['url']!)) {
+        await launch(file['url']!);
       } else {
         await Yust.service
             .showAlert(context, 'Ups', 'Die Datei kann nicht geöffnet werden.');
@@ -191,14 +191,14 @@ class _YustFilePickerState extends State<YustFilePicker> {
           await firebase_storage.FirebaseStorage.instance
               .ref()
               .child(widget.folderPath)
-              .child(file['name'])
+              .child(file['name']!)
               .delete();
         } catch (e) {}
 
         setState(() {
           _files.remove(file);
         });
-        widget.onChanged(_files);
+        widget.onChanged!(_files);
       }
     }
   }

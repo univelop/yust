@@ -12,10 +12,10 @@ class YustNotification extends YustDoc {
     fromJson: (json) => YustNotification.fromJson(json),
   );
 
-  String forCollection;
-  String forDocId;
-  String title;
-  String body;
+  String? forCollection;
+  String? forDocId;
+  String? title;
+  String? body;
   Map<String, dynamic> data = {};
 
   YustNotification({

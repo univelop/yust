@@ -8,16 +8,16 @@ class ResetPasswordScreen extends StatefulWidget {
   static const String routeName = '/resetPassword';
   static const bool signInRequired = false;
 
-  final String logoAssetName;
+  final String? logoAssetName;
 
-  ResetPasswordScreen({Key key, this.logoAssetName}) : super(key: key);
+  ResetPasswordScreen({Key? key, this.logoAssetName}) : super(key: key);
 
   @override
   _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
-  String _email;
+  String? _email;
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +57,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           Yust.service.showAlert(context, 'E-Mail verschickt',
                               'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
                         } catch (err) {
-                          Yust.service.showAlert(context, 'Fehler',
-                              err.message ?? 'Unbekannter Fehler');
+                          Yust.service
+                              .showAlert(context, 'Fehler', err.toString());
                         }
                       },
                       child: Text('Passwort vergessen',
@@ -82,7 +82,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
     return SizedBox(
       height: 200,
       child: Center(
-        child: Image.asset(widget.logoAssetName),
+        child: Image.asset(widget.logoAssetName!),
       ),
     );
   }

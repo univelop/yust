@@ -5,22 +5,22 @@ typedef StringCallback = void Function(String);
 typedef TabCallback = void Function();
 
 class YustTextField extends StatefulWidget {
-  final String label;
+  final String? label;
   final String value;
-  final StringCallback onChanged;
-  final StringCallback onEditingComplete;
-  final TabCallback onTab;
-  final int minLines;
+  final StringCallback? onChanged;
+  final StringCallback? onEditingComplete;
+  final TabCallback? onTab;
+  final int? minLines;
   final bool readOnly;
   final bool enabled;
   final bool obscureText;
-  final YustInputStyle style;
-  final Widget prefixIcon;
-  final Widget suffixIcon;
+  final YustInputStyle? style;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
   final TextCapitalization textCapitalization;
 
   YustTextField({
-    Key key,
+    Key? key,
     this.label,
     this.value = '',
     this.onChanged,
@@ -41,7 +41,7 @@ class YustTextField extends StatefulWidget {
 }
 
 class _YustTextFieldState extends State<YustTextField> {
-  TextEditingController _controller;
+  TextEditingController? _controller;
   FocusNode _focusNode = FocusNode();
 
   @override
@@ -50,14 +50,14 @@ class _YustTextFieldState extends State<YustTextField> {
     _controller = TextEditingController(text: widget.value);
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete(_controller.value.text.trim());
+        widget.onEditingComplete!(_controller!.value.text.trim());
       }
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller!.dispose();
     _focusNode.dispose();
 
     super.dispose();
@@ -84,7 +84,7 @@ class _YustTextFieldState extends State<YustTextField> {
           : TextInputAction.next,
       onChanged: widget.onChanged == null
           ? null
-          : (value) => widget.onChanged(value.trim()),
+          : (value) => widget.onChanged!(value.trim()),
       onTap: widget.onTab,
       readOnly: widget.readOnly,
       enabled: widget.enabled,

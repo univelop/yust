@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 
 class YustSwitch extends StatelessWidget {
-  final String label;
+  final String? label;
   final bool value;
-  final Color activeColor;
-  final Widget prefixIcon;
-  final void Function(bool) onChanged;
+  final Color? activeColor;
+  final Widget? prefixIcon;
+  final void Function(bool)? onChanged;
 
   const YustSwitch({
-    Key key,
+    Key? key,
     this.label,
-    this.value,
+    required this.value,
     this.activeColor,
     this.prefixIcon,
     this.onChanged,

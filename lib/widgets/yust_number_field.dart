@@ -3,25 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:yust/yust.dart';
 
-typedef ChangeCallback = void Function(num);
+typedef ChangeCallback = void Function(num?);
 typedef TabCallback = void Function();
 
 class YustNumberField extends StatefulWidget {
-  final String label;
+  final String? label;
   final num value;
-  final ChangeCallback onChanged;
-  final ChangeCallback onEditingComplete;
-  final TabCallback onTab;
+  final ChangeCallback? onChanged;
+  final ChangeCallback? onEditingComplete;
+  final TabCallback? onTab;
   final bool readOnly;
   final bool enabled;
-  final YustInputStyle style;
-  final Widget prefixIcon;
-  final Widget suffixIcon;
+  final YustInputStyle? style;
+  final Widget? prefixIcon;
+  final Widget? suffixIcon;
 
   YustNumberField(
-      {Key key,
+      {Key? key,
       this.label,
-      this.value,
+      required this.value,
       this.onChanged,
       this.onEditingComplete,
       this.onTab,
@@ -37,19 +37,19 @@ class YustNumberField extends StatefulWidget {
 }
 
 class _YustNumberFieldState extends State<YustNumberField> {
-  TextEditingController _controller;
+  late TextEditingController _controller;
   FocusNode _focusNode = FocusNode();
-  num _oldValue;
+  num? _oldValue;
 
   @override
   void initState() {
     super.initState();
 
     _controller = TextEditingController(
-        text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
+        text: widget.value.toString().replaceAll(RegExp(r'\.'), ','));
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete(_valueToNum(_controller.value.text.trim()));
+        widget.onEditingComplete!(_valueToNum(_controller.value.text.trim()));
       }
     });
   }
@@ -79,12 +79,12 @@ class _YustNumberFieldState extends State<YustNumberField> {
       onChanged: widget.onChanged == null
           ? null
           : (value) {
-              num numValue = _valueToNum(value.trim());
+              num? numValue = _valueToNum(value.trim());
               if (numValue != _oldValue) {
                 setState(() {
                   _oldValue = numValue;
                 });
-                widget.onChanged(numValue);
+                widget.onChanged!(numValue);
               }
             },
       keyboardType: kIsWeb
@@ -100,7 +100,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
     );
   }
 
-  num _valueToNum(String value) {
+  num? _valueToNum(String value) {
     if (value == '') {
       return null;
     } else {

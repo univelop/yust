@@ -8,21 +8,21 @@ import 'yust_doc_builder.dart';
 
 class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
-  final List<List<dynamic>> filter;
-  final List<String> orderBy;
+  final List<List<dynamic>>? filter;
+  final List<String>? orderBy;
   final bool _doNotWait;
 
   /// There will never be a null for the list given.
   final Widget Function(List<T>, YustBuilderInsights) builder;
 
   YustDocsBuilder({
-    Key key,
-    @required this.modelSetup,
+    Key? key,
+    required this.modelSetup,
     this.filter,
     this.orderBy,
-    bool doNotWait,
-    @required this.builder,
-  })  : assert(modelSetup != null),
+    bool? doNotWait,
+    required this.builder,
+  })   : assert(modelSetup != null),
         assert(builder != null),
         _doNotWait = doNotWait ?? false,
         super(key: key);
@@ -33,15 +33,14 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
 
 class YustDocsBuilderState<T extends YustDoc>
     extends State<YustDocsBuilder<T>> {
-  /// May not be null.
-  Stream<List<T>> _docStream;
+  late Stream<List<T>> _docStream;
 
   void initStream() {
     _docStream = Yust.service.getDocs<T>(
       widget.modelSetup,
       filterList: widget.filter,
       orderByList: widget.orderBy,
-    );
+    ) as Stream<List<T>>;
   }
 
   bool updateStreamConditionally(YustDocsBuilder oldWidget) {
@@ -66,7 +65,7 @@ class YustDocsBuilderState<T extends YustDoc>
 
   @override
   void didUpdateWidget(YustDocsBuilder oldWidget) {
-    super.didUpdateWidget(oldWidget);
+    super.didUpdateWidget(oldWidget as YustDocsBuilder<T>);
 
     updateStreamConditionally(oldWidget);
   }
@@ -77,12 +76,12 @@ class YustDocsBuilderState<T extends YustDoc>
       stream: _docStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          throw snapshot.error;
+          throw snapshot.error!;
         }
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        if (opts.waiting && !widget._doNotWait) {
+        if (opts.waiting! && !widget._doNotWait) {
           return Center(child: CircularProgressIndicator());
         }
         return widget.builder(snapshot.data ?? [], opts);

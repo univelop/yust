@@ -16,14 +16,14 @@ class SignInScreen extends StatefulWidget {
   static const String routeName = '/signIn';
   static const bool signInRequired = false;
 
-  final String logoAssetName;
+  final String? logoAssetName;
   @Deprecated('Use onSignedIn instead')
-  final String targetRouteName;
+  final String? targetRouteName;
   @Deprecated('Use onSignedIn instead')
   final dynamic targetRouteArguments;
 
   SignInScreen({
-    Key key,
+    Key? key,
     this.logoAssetName,
     this.targetRouteName,
     this.targetRouteArguments,
@@ -34,22 +34,22 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  String _email;
-  String _password;
+  String? _email;
+  String? _password;
   bool _waitingForSignIn = false;
-  void Function() _onSignedIn;
+  void Function()? _onSignedIn;
 
   final _emailController = TextEditingController();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
-  void Function() _storeListener;
+  late void Function() _storeListener;
 
   @override
   void initState() {
     SharedPreferences.getInstance().then((prefs) {
       _email = prefs.getString('email') ?? null;
-      _emailController.text = _email;
+      _emailController.text = _email!;
     });
 
     _storeListener = () {
@@ -71,7 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context).settings.arguments;
+    final arguments = ModalRoute.of(context)!.settings.arguments;
     if (arguments is Map) {
       _onSignedIn = arguments['onSignedIn'];
     }
@@ -194,19 +194,19 @@ class _SignInScreenState extends State<SignInScreen> {
     return SizedBox(
       height: 200,
       child: Center(
-        child: Image.asset(widget.logoAssetName),
+        child: Image.asset(widget.logoAssetName!),
       ),
     );
   }
 
   Future<void> _signIn(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('email', _email);
+    prefs.setString('email', _email!);
     try {
       await Yust.service
           .signIn(context, _email, _password)
           .timeout(Duration(seconds: 10));
-      if (_onSignedIn != null) _onSignedIn();
+      if (_onSignedIn != null) _onSignedIn!();
       Navigator.popUntil(
         context,
         (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
@@ -215,7 +215,7 @@ class _SignInScreenState extends State<SignInScreen> {
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
+      Yust.service.showAlert(context, 'Fehler', err.message!);
     } on TimeoutException catch (_) {
       Yust.service.showAlert(
         context,

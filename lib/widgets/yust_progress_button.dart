@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 class YustProgressButton extends StatefulWidget {
-  final Widget child;
+  final Widget? child;
   final Future<void> Function() onPressed;
-  final Color color;
+  final Color? color;
   final Color spinnerColor;
   final bool inProgress;
 
   YustProgressButton({
-    Key key,
+    Key? key,
     this.child,
-    this.onPressed,
+    required this.onPressed,
     this.color,
     this.spinnerColor = Colors.white,
     this.inProgress = false,
@@ -21,14 +21,12 @@ class YustProgressButton extends StatefulWidget {
 }
 
 class _YustProgressButtonState extends State<YustProgressButton> {
-  bool _inProgressLocal;
+  bool? _inProgressLocal;
 
   @override
   Widget build(BuildContext context) {
-    bool waiting;
-    if (widget.inProgress != null) {
-      waiting = widget.inProgress;
-    }
+    bool? waiting;
+    waiting = widget.inProgress;
     if (_inProgressLocal != null) {
       waiting = _inProgressLocal;
       _inProgressLocal = null;
@@ -42,14 +40,14 @@ class _YustProgressButtonState extends State<YustProgressButton> {
         child: SizedBox(
           width: double.infinity,
           height: 40.0,
-          child: Center(child: _buildInnerButton(waiting)),
+          child: Center(child: _buildInnerButton(waiting!)),
         ),
       ),
       onPressed: waiting ? null : onPressed,
     );
   }
 
-  Widget _buildInnerButton(bool waiting) {
+  Widget? _buildInnerButton(bool waiting) {
     if (waiting) {
       return CircularProgressIndicator(
         valueColor: AlwaysStoppedAnimation<Color>(widget.spinnerColor),

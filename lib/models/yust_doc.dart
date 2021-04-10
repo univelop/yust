@@ -2,25 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../yust.dart';
-import 'yust_doc_setup.dart';
 
 abstract class YustDoc {
-  static final setup = YustDocSetup(collectionName: 'myCollection');
-
   @JsonKey()
-  String id;
+  String? id;
   @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
-  DateTime createdAt;
+  DateTime? createdAt;
   @JsonKey()
-  String createdBy;
+  String? createdBy;
   @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
-  DateTime modifiedAt;
+  DateTime? modifiedAt;
   @JsonKey()
-  String modifiedBy;
+  String? modifiedBy;
   @JsonKey()
-  String userId;
+  String? userId;
   @JsonKey()
-  String envId;
+  String? envId;
 
   YustDoc({
     this.id,
@@ -40,16 +37,16 @@ abstract class YustDoc {
     return list.map((item) => item.toJson()).toList();
   }
 
-  static Map<String, T> mapFromJson<T>(Map<String, dynamic> map) {
+  static Map<String, T?> mapFromJson<T>(Map<String, dynamic> map) {
     if (map == null) return {};
-    return map.map((key, value) {
+    return map.map<String, T?>((key, value) {
       if (value is FieldValue) {
         return MapEntry(key, null);
       } else if (value is Timestamp) {
-        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T);
+        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T?);
       } else if (value is Map && value['_seconds'] != null) {
-        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T);
-      } else if (value is Map) {
+        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T?);
+      } else if (value is Map<String, dynamic>) {
         return MapEntry(key, YustDoc.mapFromJson(value) as T);
       } else {
         return MapEntry(key, value as T);
@@ -57,7 +54,7 @@ abstract class YustDoc {
     });
   }
 
-  static Map<String, dynamic> mapToJson(Map<String, dynamic> map,
+  static Map<String, dynamic>? mapToJson(Map<String, dynamic>? map,
       {bool removeNullValues = true}) {
     if (map == null) return null;
     return map.map((key, value) {
@@ -81,7 +78,7 @@ abstract class YustDoc {
     });
   }
 
-  static DateTime dateTimeFromJson(dynamic timestamp) {
+  static DateTime? dateTimeFromJson(dynamic timestamp) {
     if (timestamp is Timestamp) {
       return timestamp.toDate();
     } else if (timestamp is String) {
@@ -94,7 +91,7 @@ abstract class YustDoc {
     }
   }
 
-  static dynamic dateTimeToJson(DateTime dateTime) {
+  static dynamic dateTimeToJson(DateTime? dateTime) {
     if (dateTime == null) {
       return null;
     } else if (Yust.useTimestamps) {

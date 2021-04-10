@@ -24,8 +24,8 @@ class YustService {
 
   Future<void> signIn(
     BuildContext context,
-    String email,
-    String password,
+    String? email,
+    String? password,
   ) async {
     if (email == null || email == '') {
       throw YustException('Die E-Mail darf nicht leer sein.');
@@ -41,18 +41,24 @@ class YustService {
 
   Future<void> signUp(
     BuildContext context,
-    String firstName,
-    String lastName,
-    String email,
-    String password,
-    String passwordConfirmation, {
-    YustGender gender,
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? password,
+    String? passwordConfirmation, {
+    YustGender? gender,
   }) async {
     if (firstName == null || firstName == '') {
       throw YustException('Der Vorname darf nicht leer sein.');
     }
     if (lastName == null || lastName == '') {
       throw YustException('Der Nachname darf nicht leer sein.');
+    }
+    if (email == null || email == '') {
+      throw YustException('Die E-Mail darf nicht leer sein.');
+    }
+    if (password == null || password == '') {
+      throw YustException('Das Passwort darf nicht leer sein.');
     }
     if (password != passwordConfirmation) {
       throw YustException('Die Passwörter stimmen nicht überein.');
@@ -64,7 +70,7 @@ class YustService {
       ..firstName = firstName
       ..lastName = lastName
       ..gender = gender
-      ..id = userCredential.user.uid;
+      ..id = userCredential.user!.uid;
 
     await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
   }
@@ -88,7 +94,7 @@ class YustService {
     );
   }
 
-  Future<void> sendPasswordResetEmail(String email) async {
+  Future<void> sendPasswordResetEmail(String? email) async {
     if (email == null || email == '') {
       throw YustException('Die E-Mail darf nicht leer sein.');
     }
@@ -98,30 +104,30 @@ class YustService {
   Future<void> changeEmail(String email, String password) async {
     final UserCredential userCredential =
         await fireAuth.signInWithEmailAndPassword(
-      email: Yust.store.currUser.email,
+      email: Yust.store.currUser!.email,
       password: password,
     );
-    await userCredential.user.updateEmail(email);
+    await userCredential.user!.updateEmail(email);
     Yust.store.setState(() {
-      Yust.store.currUser.email = email;
+      Yust.store.currUser!.email = email;
     });
-    Yust.service.saveDoc<YustUser>(Yust.userSetup, Yust.store.currUser);
+    Yust.service.saveDoc<YustUser>(Yust.userSetup, Yust.store.currUser!);
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
     final UserCredential userCredential =
         await fireAuth.signInWithEmailAndPassword(
-      email: Yust.store.currUser.email,
+      email: Yust.store.currUser!.email,
       password: oldPassword,
     );
-    await userCredential.user.updatePassword(newPassword);
+    await userCredential.user!.updatePassword(newPassword);
   }
 
   /// Initialises a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
   /// assigned a new id becoming a new document if it had an id previously.
-  T initDoc<T extends YustDoc>(YustDocSetup<T> modelSetup, [T doc]) {
+  T initDoc<T extends YustDoc>(YustDocSetup<T> modelSetup, [T? doc]) {
     if (doc == null) {
       doc = modelSetup.newDoc();
     }
@@ -132,13 +138,13 @@ class YustService {
     doc.createdAt = DateTime.now();
     doc.createdBy = Yust.store.currUser?.id;
     if (modelSetup.forEnvironment) {
-      doc.envId = Yust.store.currUser.currEnvId;
+      doc.envId = Yust.store.currUser?.currEnvId;
     }
     if (modelSetup.forUser) {
-      doc.userId = Yust.store.currUser.id;
+      doc.userId = Yust.store.currUser?.id;
     }
     if (modelSetup.onInit != null) {
-      modelSetup.onInit(doc);
+      modelSetup.onInit!(doc);
     }
     return doc;
   }
@@ -150,10 +156,10 @@ class YustService {
   ///Multiple of those entries can be repeated.
   ///
   ///[filterList] may be null.
-  Stream<List<T>> getDocs<T extends YustDoc>(
+  Stream<List<T?>> getDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<List<dynamic>> filterList,
-    List<String> orderByList,
+    List<List<dynamic>>? filterList,
+    List<String>? orderByList,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(modelSetup.collectionName);
@@ -167,10 +173,10 @@ class YustService {
     });
   }
 
-  Future<List<T>> getDocsOnce<T extends YustDoc>(
+  Future<List<T?>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<List<dynamic>> filterList,
-    List<String> orderByList,
+    List<List<dynamic>>? filterList,
+    List<String>? orderByList,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(modelSetup.collectionName);
@@ -180,12 +186,12 @@ class YustService {
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
       return snapshot.docs
-          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .map<T?>((docSnapshot) => _getDoc<T>(modelSetup, docSnapshot))
           .toList();
     });
   }
 
-  Stream<T> getDoc<T extends YustDoc>(
+  Stream<T?> getDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     String id,
   ) {
@@ -204,14 +210,14 @@ class YustService {
         .collection(modelSetup.collectionName)
         .doc(id)
         .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => _getDoc(modelSetup, docSnapshot));
+        .then((docSnapshot) => _getDoc<T>(modelSetup, docSnapshot)!);
   }
 
   /// Emits null events if no document was found.
-  Stream<T> getFirstDoc<T extends YustDoc>(
+  Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
-    List<List<dynamic>> filterList, {
-    List<String> orderByList,
+    List<List<dynamic>>? filterList, {
+    List<String>? orderByList,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(modelSetup.collectionName);
@@ -219,7 +225,7 @@ class YustService {
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
 
-    return query.snapshots().map<T>((snapshot) {
+    return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.length > 0) {
         return _getDoc(modelSetup, snapshot.docs[0]);
       } else {
@@ -229,10 +235,10 @@ class YustService {
   }
 
   /// The result is null if no document was found.
-  Future<T> getFirstDocOnce<T extends YustDoc>(
+  Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     List<List<dynamic>> filterList, {
-    List<String> orderByList,
+    List<String>? orderByList,
   }) async {
     Query query =
         FirebaseFirestore.instance.collection(modelSetup.collectionName);
@@ -241,12 +247,12 @@ class YustService {
     query = _executeOrderByList(query, orderByList);
 
     final snapshot = await query.get(GetOptions(source: Source.server));
-    T doc;
+    T? doc;
 
     if (snapshot.docs.length > 0) {
       doc = modelSetup.fromJson(snapshot.docs[0].data());
       if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate(doc);
+        modelSetup.onMigrate!(doc);
       }
     }
 
@@ -278,13 +284,13 @@ class YustService {
       doc.createdBy = doc.modifiedBy;
     }
     if (doc.userId == null && modelSetup.forUser) {
-      doc.userId = Yust.store.currUser.id;
+      doc.userId = Yust.store.currUser!.id;
     }
     if (doc.envId == null && modelSetup.forEnvironment) {
-      doc.envId = Yust.store.currUser.currEnvId;
+      doc.envId = Yust.store.currUser!.currEnvId;
     }
     if (modelSetup.onSave != null && !skipOnSave) {
-      await modelSetup.onSave(doc);
+      await modelSetup.onSave!(doc);
     }
 
     if (doc.id != null) {
@@ -295,16 +301,18 @@ class YustService {
       await ref.set(doc.toJson());
     }
 
-    return getDocOnce<T>(modelSetup, doc.id);
+    return getDocOnce<T>(modelSetup, doc.id!);
   }
 
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<List<dynamic>> filterList,
+    List<List<dynamic>>? filterList,
   }) async {
     final docs = await getDocsOnce<T>(modelSetup, filterList: filterList);
     for (var doc in docs) {
-      await deleteDoc<T>(modelSetup, doc);
+      if (doc != null) {
+        await deleteDoc<T>(modelSetup, doc);
+      }
     }
   }
 
@@ -313,7 +321,7 @@ class YustService {
     T doc,
   ) async {
     if (modelSetup.onDelete != null) {
-      await modelSetup.onDelete(doc);
+      await modelSetup.onDelete!(doc);
     }
     var docRef = FirebaseFirestore.instance
         .collection(modelSetup.collectionName)
@@ -329,8 +337,8 @@ class YustService {
   /// An existing document can be given which will instead be initialised.
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    T doc,
-    Future<void> Function(T) onInitialised,
+    required T doc,
+    Future<void> Function(T)? onInitialised,
   }) async {
     doc = initDoc<T>(modelSetup, doc);
 
@@ -344,19 +352,15 @@ class YustService {
   }
 
   /// Currently works only for web caused by a bug in cloud_firestore.
-  Future<T> updateWithTransaction<T extends YustDoc>(
+  Future<T?> updateWithTransaction<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     String id,
-    T Function(T) handler,
+    T Function(T?) handler,
   ) async {
     assert(kIsWeb,
         'As of version "0.13.4+1" of "cloud_firestore" the transactional feature does not work for at least android systems...');
 
-    assert(modelSetup != null);
-    assert(id?.isNotEmpty ?? false);
-    assert(handler != null);
-
-    T result;
+    T? result;
 
     await FirebaseFirestore.instance.runTransaction(
       (Transaction transaction) async {
@@ -367,7 +371,7 @@ class YustService {
         final DocumentSnapshot startSnapshot =
             await transaction.get(documentReference);
 
-        final T startDocument = _getDoc(modelSetup, startSnapshot);
+        final T? startDocument = _getDoc(modelSetup, startSnapshot);
         final T endDocument = handler(startDocument);
 
         final Map<String, dynamic> endMap = endDocument.toJson();
@@ -381,7 +385,10 @@ class YustService {
   }
 
   Future<String> uploadFile(
-      {String path, String name, File file, Uint8List bytes}) async {
+      {required String path,
+      required String name,
+      File? file,
+      Uint8List? bytes}) async {
     try {
       final firebase_storage.Reference storageReference = firebase_storage
           .FirebaseStorage.instance
@@ -395,7 +402,7 @@ class YustService {
         var metadata = firebase_storage.SettableMetadata(
           contentType: lookupMimeType(name),
         );
-        uploadTask = storageReference.putData(bytes, metadata);
+        uploadTask = storageReference.putData(bytes!, metadata);
       }
       // final StreamSubscription<StorageTaskEvent> streamSubscription =
       //     uploadTask.events.listen((event) {
@@ -409,7 +416,8 @@ class YustService {
     }
   }
 
-  Future<Uint8List> downloadFile({String path, String name}) async {
+  Future<Uint8List?> downloadFile(
+      {required String path, required String name}) async {
     try {
       return await firebase_storage.FirebaseStorage.instance
           .ref()
@@ -421,11 +429,11 @@ class YustService {
   }
 
   @Deprecated('use pub open_file instead')
-  void downloadFileWeb({String url}) async {
+  void downloadFileWeb({required String url}) async {
     throw YustException('Funktion nicht mehr verfügbar.');
   }
 
-  Future<void> deleteFile({String path, String name}) async {
+  Future<void> deleteFile({required String path, required String name}) async {
     try {
       await firebase_storage.FirebaseStorage.instance
           .ref()
@@ -435,7 +443,7 @@ class YustService {
     } catch (e) {}
   }
 
-  Future<bool> fileExist({String path, String name}) async {
+  Future<bool> fileExist({required String path, required String name}) async {
     try {
       await firebase_storage.FirebaseStorage.instance
           .ref()
@@ -448,7 +456,8 @@ class YustService {
     return true;
   }
 
-  Future<String> getFileDownloadUrl({String path, String name}) async {
+  Future<String> getFileDownloadUrl(
+      {required String path, required String name}) async {
     return await firebase_storage.FirebaseStorage.instance
         .ref()
         .child(path)
@@ -456,37 +465,40 @@ class YustService {
         .getDownloadURL();
   }
 
-  Future<File> resizeImage({@required File file, int maxWidth = 1024}) async {
+  Future<File> resizeImage({required File file, int maxWidth = 1024}) async {
     ImageProperties properties =
         await FlutterNativeImage.getImageProperties(file.path);
-    if (properties.width > properties.height && properties.width > maxWidth) {
+    if (properties.width! > properties.height! &&
+        properties.width! > maxWidth) {
       file = await FlutterNativeImage.compressImage(
         file.path,
         quality: 80,
         targetWidth: maxWidth,
-        targetHeight: (properties.height * maxWidth / properties.width).round(),
+        targetHeight:
+            (properties.height! * maxWidth / properties.width!).round(),
       );
-    } else if (properties.height > properties.width &&
-        properties.height > maxWidth) {
+    } else if (properties.height! > properties.width! &&
+        properties.height! > maxWidth) {
       file = await FlutterNativeImage.compressImage(
         file.path,
         quality: 80,
-        targetWidth: (properties.width * maxWidth / properties.height).round(),
+        targetWidth:
+            (properties.width! * maxWidth / properties.height!).round(),
         targetHeight: maxWidth,
       );
     }
     return file;
   }
 
-  Uint8List resizeImageBytes(
-      {@required String name, @required Uint8List bytes, int maxWidth = 1024}) {
-    var image = imageLib.decodeNamedImage(bytes, name);
+  Uint8List? resizeImageBytes(
+      {required String name, required Uint8List bytes, int maxWidth = 1024}) {
+    var image = imageLib.decodeNamedImage(bytes, name)!;
     if (image.width > image.height && image.width > maxWidth) {
       image = imageLib.copyResize(image, width: maxWidth);
     } else if (image.height > image.width && image.height > maxWidth) {
       image = imageLib.copyResize(image, height: maxWidth);
     }
-    return imageLib.encodeNamedImage(image, name);
+    return imageLib.encodeNamedImage(image, name) as Uint8List?;
   }
 
   Future<void> showAlert(
@@ -512,30 +524,32 @@ class YustService {
 
   Future<bool> showConfirmation(
       BuildContext context, String title, String action) {
-    return showDialog<bool>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(title),
-            actions: <Widget>[
-              TextButton(
-                child: Text("Abbrechen"),
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-              ),
-              TextButton(
-                child: Text(action),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-              ),
-            ],
-          );
-        });
+    final confirmed = showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Abbrechen"),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: Text(action),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+    return confirmed as Future<bool>? ?? false as Future<bool>;
   }
 
-  Future<String> showTextFieldDialog(
+  Future<String?> showTextFieldDialog(
       BuildContext context, String title, String placeholder, String action) {
     final controller = TextEditingController();
     return showDialog<String>(
@@ -574,7 +588,7 @@ class YustService {
   /// Does not return null.
   ///
   /// Use formatIsoDate for backwards compatibility.
-  String formatDate(DateTime dateTime, {String format}) {
+  String formatDate(DateTime? dateTime, {String? format}) {
     if (dateTime == null) return '';
 
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
@@ -584,7 +598,7 @@ class YustService {
   /// Does not return null.
   ///
   /// Deprecated, use formatDate instead.
-  String formatIsoDate(String isoDate, {String format}) {
+  String formatIsoDate(String isoDate, {String? format}) {
     if (isoDate == null) return '';
 
     var now = DateTime.parse(isoDate);
@@ -595,7 +609,7 @@ class YustService {
   /// Does not return null.
   ///
   /// Use formatIsoDate for backwards compatibility.
-  String formatTime(DateTime dateTime, {String format}) {
+  String formatTime(DateTime? dateTime, {String? format}) {
     if (dateTime == null) return '';
 
     var formatter = DateFormat(format ?? 'HH:mm');
@@ -605,7 +619,7 @@ class YustService {
   /// Does not return null.
   ///
   /// Deprecated, use formatTime instead.
-  String formatIsoTime(String isoDate, {String format}) {
+  String formatIsoTime(String isoDate, {String? format}) {
     if (isoDate == null) return '';
 
     var now = DateTime.parse(isoDate);
@@ -618,7 +632,7 @@ class YustService {
       dateTime.toIso8601String();
 
   /// Returns null if the string cannot be parsed.
-  DateTime fromStandardDateTimeString(String dateTimeString) =>
+  DateTime? fromStandardDateTimeString(String dateTimeString) =>
       DateTime.tryParse(dateTimeString);
 
   String randomString({int length = 8}) {
@@ -632,7 +646,7 @@ class YustService {
   }
 
   /// Returns null if no data exists.
-  T _getDoc<T extends YustDoc>(
+  T? _getDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     DocumentSnapshot snapshot,
   ) {
@@ -640,20 +654,20 @@ class YustService {
       return null;
     }
 
-    final T document = modelSetup.fromJson(snapshot.data());
+    final T document = modelSetup.fromJson(snapshot.data()!);
 
     if (modelSetup.onMigrate != null) {
-      modelSetup.onMigrate(document);
+      modelSetup.onMigrate!(document);
     }
 
     return document;
   }
 
   Query _filterForEnvironment(Query query) =>
-      query.where('envId', isEqualTo: Yust.store.currUser.currEnvId);
+      query.where('envId', isEqualTo: Yust.store.currUser!.currEnvId);
 
   Query _filterForUser(Query query) =>
-      query.where('userId', isEqualTo: Yust.store.currUser.id);
+      query.where('userId', isEqualTo: Yust.store.currUser!.id);
 
   Query _executeStaticFilters<T extends YustDoc>(
     Query query,
@@ -671,7 +685,7 @@ class YustService {
   ///[filterList] may be null.
   ///If it is not each contained list may not be null
   ///and has to have a length of three.
-  Query _executeFilterList(Query query, List<List<dynamic>> filterList) {
+  Query _executeFilterList(Query query, List<List<dynamic>>? filterList) {
     if (filterList != null) {
       for (var filter in filterList) {
         assert(filter != null && filter.length == 3);
@@ -723,7 +737,7 @@ class YustService {
     return query;
   }
 
-  Query _executeOrderByList(Query query, List<String> orderByList) {
+  Query _executeOrderByList(Query query, List<String>? orderByList) {
     if (orderByList != null) {
       orderByList.asMap().forEach((index, orderBy) {
         if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {

@@ -14,20 +14,20 @@ import 'package:yust/util/list_extension.dart';
 
 /// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {
-  final String label;
+  final String? label;
   final String folderPath;
   final bool multiple;
   final List<Map<String, dynamic>> images;
   final bool zoomable;
-  final void Function(List<Map<String, dynamic>> images) onChanged;
-  final Widget prefixIcon;
+  final void Function(List<Map<String, dynamic>> images)? onChanged;
+  final Widget? prefixIcon;
 
   YustImagePicker({
-    Key key,
+    Key? key,
     this.label,
-    this.folderPath,
+    required this.folderPath,
     this.multiple = false,
-    this.images,
+    required this.images,
     this.zoomable = false,
     this.onChanged,
     this.prefixIcon,
@@ -38,8 +38,8 @@ class YustImagePicker extends StatefulWidget {
 }
 
 class _YustImagePickerState extends State<YustImagePicker> {
-  List<YustFile> _files;
-  bool _enabled;
+  late List<YustFile> _files;
+  late bool _enabled;
 
   @override
   void initState() {
@@ -125,7 +125,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildPickButtons(BuildContext context) {
-    if (!widget.multiple && _files?.firstOrNull != null) {
+    if (!widget.multiple && _files.firstOrNull != null) {
       return SizedBox.shrink();
     }
     if (kIsWeb) {
@@ -182,19 +182,19 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildImagePreview(BuildContext context, YustFile file) {
+  Widget _buildImagePreview(BuildContext context, YustFile? file) {
     if (file == null) {
       return SizedBox.shrink();
     }
     Widget preview;
     if (file.file != null) {
-      preview = Image.file(file.file, fit: BoxFit.cover);
+      preview = Image.file(file.file!, fit: BoxFit.cover);
     } else if (file.bytes != null) {
-      preview = Image.memory(file.bytes, fit: BoxFit.cover);
+      preview = Image.memory(file.bytes!, fit: BoxFit.cover);
     } else {
       preview = FadeInImage.assetNetwork(
-        placeholder: Yust.imagePlaceholderPath,
-        image: file.url,
+        placeholder: Yust.imagePlaceholderPath!,
+        image: file.url ?? '',
         fit: BoxFit.cover,
       );
     }
@@ -205,7 +205,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
         onTap: zoomEnabled ? () => _showImages(file) : null,
         child: file.url != null
             ? Hero(
-                tag: file.url,
+                tag: file.url!,
                 child: preview,
               )
             : preview,
@@ -213,7 +213,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildProgressIndicator(BuildContext context, YustFile file) {
+  Widget _buildProgressIndicator(BuildContext context, YustFile? file) {
     if (file?.processing != true) {
       return SizedBox.shrink();
     }
@@ -241,7 +241,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildRemoveButton(BuildContext context, YustFile file) {
+  Widget _buildRemoveButton(BuildContext context, YustFile? file) {
     if (file == null || !_enabled || file.url == null) {
       return SizedBox.shrink();
     }
@@ -279,7 +279,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
           if (result != null) {
             for (final platformFile in result.files) {
               await _uploadFile(
-                path: platformFile.name,
+                path: platformFile.name!,
                 bytes: platformFile.bytes,
                 resize: true,
               );
@@ -290,7 +290,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
             await _uploadFile(
-              path: result.files.single.name,
+              path: result.files.single.name!,
               bytes: result.files.single.bytes,
               resize: true,
             );
@@ -301,7 +301,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _uploadFile(
-      {String path, File file, Uint8List bytes, bool resize = false}) async {
+      {required String path,
+      File? file,
+      Uint8List? bytes,
+      bool resize = false}) async {
     try {
       final imageName =
           Yust.service.randomString(length: 16) + '.' + path.split('.').last;
@@ -317,7 +320,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
           newFile.file = file;
         } else {
           bytes = Yust.service
-              .resizeImageBytes(name: path, bytes: bytes, maxWidth: 800);
+              .resizeImageBytes(name: path, bytes: bytes!, maxWidth: 800);
           newFile.bytes = bytes;
         }
       }
@@ -328,9 +331,9 @@ class _YustImagePickerState extends State<YustImagePicker> {
         newFile.url = url;
         newFile.processing = false;
       });
-      widget.onChanged(_files.map((file) => file.toJson()).toList());
+      widget.onChanged!(_files.map((file) => file.toJson()).toList());
     } catch (e) {
-      Yust.service.showAlert(context, 'Ups', e.message);
+      Yust.service.showAlert(context, 'Ups', e.toString());
     }
   }
 
@@ -366,7 +369,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
         setState(() {
           _files.remove(file);
         });
-        widget.onChanged(_files.map((file) => file.toJson()).toList());
+        widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
     }
   }

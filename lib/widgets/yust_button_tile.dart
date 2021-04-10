@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 
 class YustButtonTile extends StatelessWidget {
-  final String label;
-  final String buttonText;
-  final Color activeColor;
-  final Widget prefixIcon;
-  final void Function() onPressed;
+  final String? label;
+  final String? buttonText;
+  final Color? activeColor;
+  final Widget? prefixIcon;
+  final void Function()? onPressed;
 
   const YustButtonTile(
-      {Key key,
+      {Key? key,
       this.label,
       this.activeColor,
       this.prefixIcon,
@@ -20,7 +20,7 @@ class YustButtonTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return YustInputTile(
-        child: TextButton(onPressed: onPressed, child: Text(buttonText)),
+        child: TextButton(onPressed: onPressed, child: Text(buttonText ?? '')),
         label: label,
         prefixIcon: prefixIcon);
   }

@@ -9,24 +9,24 @@ part 'yust_user.g.dart';
 class YustUser extends YustDoc {
   static final setup = YustDocSetup<YustUser>(
     collectionName: 'users',
-    newDoc: () => YustUser(),
+    newDoc: () => YustUser(email: '', firstName: '', lastName: ''),
     fromJson: (json) => YustUser.fromJson(json),
   );
 
   String email;
   String firstName;
   String lastName;
-  YustGender gender;
+  YustGender? gender;
 
   @JsonKey(toJson: YustDoc.mapToJson)
   Map<String, bool> envIds = {};
-  String currEnvId;
+  String? currEnvId;
   List<String> deviceIds = [];
 
   YustUser({
-    this.email,
-    this.firstName,
-    this.lastName,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
     this.gender,
   });
 

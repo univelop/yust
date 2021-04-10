@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import '../yust.dart';
 
 class YustInputTile extends StatelessWidget {
-  final String label;
-  final Widget prefixIcon;
+  final String? label;
+  final Widget? prefixIcon;
   final Widget child;
   final YustInputStyle style;
-  final void Function() onTap;
-  final Widget suffixChild;
+  final void Function()? onTap;
+  final Widget? suffixChild;
 
   const YustInputTile({
-    Key key,
+    Key? key,
     this.label,
     this.prefixIcon,
-    this.child,
+    required this.child,
     this.style = YustInputStyle.normal,
     this.onTap,
     this.suffixChild,
@@ -24,9 +24,9 @@ class YustInputTile extends StatelessWidget {
   Widget build(BuildContext context) {
     if (style == YustInputStyle.normal) {
       return Column(
-        children: <Widget>[
+        children: [
           _buildInner(context),
-          if (this.suffixChild != null) this.suffixChild,
+          if (this.suffixChild != null) this.suffixChild!,
           Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
         ],
       );

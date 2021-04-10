@@ -10,12 +10,12 @@ enum AuthState {
 }
 
 class YustStore extends ChangeNotifier {
-  AuthState authState;
+  AuthState authState = AuthState.waiting;
 
   ///Null if the user is signed out.
-  YustUser currUser;
+  YustUser? currUser;
 
-  PackageInfo packageInfo;
+  late PackageInfo packageInfo;
 
   void setState(void Function() f) {
     f();

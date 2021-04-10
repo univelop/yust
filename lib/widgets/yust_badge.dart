@@ -4,7 +4,7 @@ class YustBadge extends StatelessWidget {
 
   final int counter;
 
-  const YustBadge({Key key, this.counter}) : super(key: key);
+  const YustBadge({Key? key, required this.counter}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

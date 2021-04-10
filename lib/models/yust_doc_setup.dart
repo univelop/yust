@@ -16,15 +16,15 @@ class YustDocSetup<T extends YustDoc> {
   ///Should be set to true if this setup is used for an environment.
   bool isEnvironment;
 
-  void Function(T doc) onInit;
-  void Function(T doc) onMigrate;
-  Future<void> Function(T doc) onSave;
-  Future<void> Function(T doc) onDelete;
+  void Function(T doc)? onInit;
+  void Function(T doc)? onMigrate;
+  Future<void> Function(T doc)? onSave;
+  Future<void> Function(T doc)? onDelete;
 
   YustDocSetup({
-    @required this.collectionName,
-    this.fromJson,
-    this.newDoc,
+    required this.collectionName,
+    required this.fromJson,
+    required this.newDoc,
     this.forUser = false,
     this.forEnvironment = false,
     this.isEnvironment = false,

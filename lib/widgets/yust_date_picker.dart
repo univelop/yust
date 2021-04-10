@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../yust.dart';
 
-typedef DateTimeCallback = void Function(DateTime);
+typedef DateTimeCallback = void Function(DateTime?);
 
 class YustDatePicker extends StatelessWidget {
-  final String label;
-  final DateTime value;
-  final DateTime initialValue;
-  final DateTimeCallback onChanged;
+  final String? label;
+  final DateTime? value;
+  final DateTime? initialValue;
+  final DateTimeCallback? onChanged;
   final bool hideClearButton;
   final YustInputStyle style;
-  final Widget prefixIcon;
+  final Widget? prefixIcon;
 
   YustDatePicker({
-    Key key,
+    Key? key,
     this.label,
     this.value,
     this.initialValue,
@@ -108,7 +108,7 @@ class YustDatePicker extends StatelessWidget {
     }
     return IconButton(
       icon: Icon(Icons.clear),
-      onPressed: onChanged == null ? null : () => onChanged(null),
+      onPressed: onChanged == null ? null : () => onChanged!(null),
     );
   }
 
@@ -135,7 +135,7 @@ class YustDatePicker extends StatelessWidget {
           dateTime.second,
           dateTime.millisecond,
           dateTime.microsecond);
-      onChanged(dateTime);
+      onChanged!(dateTime);
     }
   }
 }

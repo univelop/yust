@@ -6,30 +6,30 @@ import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
 class YustBuilderInsights {
-  bool waiting;
+  bool? waiting;
 
   YustBuilderInsights({this.waiting});
 }
 
 class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
-  final String id;
-  final List<List<dynamic>> filter;
-  final List<String> orderBy;
+  final String? id;
+  final List<List<dynamic>>? filter;
+  final List<String>? orderBy;
   final bool _doNotWait;
   final bool _createIfNull;
   final Widget Function(T, YustBuilderInsights) builder;
 
   YustDocBuilder({
-    Key key,
-    @required this.modelSetup,
+    Key? key,
+    required this.modelSetup,
     this.id,
     this.filter,
     this.orderBy,
-    bool doNotWait,
-    bool createIfNull,
-    @required this.builder,
-  })  : assert(modelSetup != null),
+    bool? doNotWait,
+    bool? createIfNull,
+    required this.builder,
+  })   : assert(modelSetup != null),
         assert(builder != null),
         _doNotWait = doNotWait ?? false,
         _createIfNull = createIfNull ?? false,
@@ -41,20 +41,20 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
 
 class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
   /// May not be null.
-  Stream<T> _docStream;
+  Stream<T>? _docStream;
 
   void initStream() {
     if (widget.id != null) {
       _docStream = Yust.service.getDoc<T>(
         widget.modelSetup,
-        widget.id,
-      );
+        widget.id!,
+      ) as Stream<T>?;
     } else {
       _docStream = Yust.service.getFirstDoc<T>(
         widget.modelSetup,
         widget.filter,
         orderByList: widget.orderBy,
-      );
+      ) as Stream<T>?;
     }
   }
 
@@ -81,7 +81,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
 
   @override
   void didUpdateWidget(YustDocBuilder oldWidget) {
-    super.didUpdateWidget(oldWidget);
+    super.didUpdateWidget(oldWidget as YustDocBuilder<T>);
 
     updateStreamConditionally(oldWidget);
   }
@@ -92,7 +92,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
       stream: _docStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          throw snapshot.error;
+          throw snapshot.error!;
         }
         if (snapshot.connectionState == ConnectionState.waiting &&
             !widget._doNotWait) {
@@ -105,7 +105,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        return widget.builder(doc, opts);
+        return widget.builder(doc!, opts);
       },
     );
   }

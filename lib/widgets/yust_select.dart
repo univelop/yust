@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:yust/yust.dart';
 
 class YustSelect<T> extends StatelessWidget {
-  final String label;
+  final String? label;
   final T value;
   final List<T> optionValues;
   final List<String> optionLabels;
-  final void Function(T) onSelected;
+  final void Function(T)? onSelected;
   final YustInputStyle style;
-  final Widget prefixIcon;
+  final Widget? prefixIcon;
 
   const YustSelect({
-    Key key,
+    Key? key,
     this.label,
-    this.value,
-    this.optionValues,
-    this.optionLabels,
+    required this.value,
+    required this.optionValues,
+    required this.optionLabels,
     this.onSelected,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
@@ -108,13 +108,13 @@ class YustSelect<T> extends StatelessWidget {
                   onPressed: () {
                     Navigator.pop(context, optionValue);
                   },
-                  child: Text(_valueCaption(optionValue) ?? ''),
+                  child: Text(_valueCaption(optionValue)),
                 );
               }).toList(),
             );
           });
       if (selectedValue != null) {
-        onSelected(selectedValue);
+        onSelected!(selectedValue);
       }
     }
   }

@@ -5,19 +5,19 @@ import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import '../yust.dart';
 
 class YustTimePicker extends StatefulWidget {
-  final String label;
-  final DateTime value;
-  final DateTime initialValue;
-  final DateTimeCallback onChanged;
-  final void Function() onEditingComplete;
+  final String? label;
+  final DateTime? value;
+  final DateTime? initialValue;
+  final DateTimeCallback? onChanged;
+  final void Function()? onEditingComplete;
   final bool hideClearButton;
   final YustInputStyle style;
-  final Widget prefixIcon;
-  final FocusNode focusNode;
+  final Widget? prefixIcon;
+  final FocusNode? focusNode;
   final bool autofocus;
 
   YustTimePicker({
-    Key key,
+    Key? key,
     this.label,
     this.value,
     this.initialValue,
@@ -35,8 +35,8 @@ class YustTimePicker extends StatefulWidget {
 }
 
 class _YustTimePickerState extends State<YustTimePicker> {
-  TextEditingController _controller;
-  MaskTextInputFormatter _maskFormatter;
+  TextEditingController? _controller;
+  MaskTextInputFormatter? _maskFormatter;
 
   @override
   void initState() {
@@ -56,7 +56,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller!.dispose();
 
     super.dispose();
   }
@@ -74,7 +74,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
         suffixIcon: _buildTrailing(context),
       ),
       controller: _controller,
-      inputFormatters: [_maskFormatter],
+      inputFormatters: [_maskFormatter!],
       textInputAction: TextInputAction.next,
       focusNode: widget.focusNode,
       autofocus: widget.autofocus,
@@ -86,7 +86,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
 
   /// build the clock- / x-icon
   Widget _buildTrailing(BuildContext context) {
-    if (_controller.text == '') {
+    if (_controller!.text == '') {
       return IconButton(
         icon: Icon(Icons.access_time),
         onPressed: widget.onChanged == null ? null : () => _pickTime(context),
@@ -122,22 +122,22 @@ class _YustTimePickerState extends State<YustTimePicker> {
 
   void _setTimeString(String value) {
     if (value.length == 5) {
-      var time = int.tryParse(_maskFormatter.getUnmaskedText());
+      var time = int.tryParse(_maskFormatter!.getUnmaskedText())!;
       if (time == 2400) {
         time == 0;
       }
       var hour = time ~/ 100 >= 24 ? 0 : time ~/ 100;
       var minute = time % 100 >= 60 ? 0 : time % 100;
       var dateTime = DateTime(1970, 1, 1, hour, minute, 0, 0, 0);
-      widget.onChanged(dateTime);
+      widget.onChanged!(dateTime);
     }
   }
 
-  void _setTime(DateTime dateTime) {
+  void _setTime(DateTime? dateTime) {
     setState(() {
-      _maskFormatter.clear();
-      _controller.text = Yust.service.formatTime(dateTime);
+      _maskFormatter!.clear();
+      _controller!.text = Yust.service.formatTime(dateTime);
     });
-    widget.onChanged(dateTime);
+    widget.onChanged!(dateTime);
   }
 }

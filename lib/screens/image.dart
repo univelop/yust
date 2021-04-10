@@ -7,9 +7,9 @@ class ImageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context).settings.arguments;
-    String url;
-    List<String> urls;
+    final arguments = ModalRoute.of(context)!.settings.arguments;
+    String? url;
+    List<String>? urls;
     if (arguments is Map) {
       url = arguments['url'];
       urls = arguments['urls'];
@@ -17,7 +17,7 @@ class ImageScreen extends StatelessWidget {
     if (urls != null) {
       return _buildMultiple(context, urls, url);
     } else {
-      return _buildSingle(context, url);
+      return _buildSingle(context, url!);
     }
   }
 
@@ -42,7 +42,7 @@ class ImageScreen extends StatelessWidget {
   }
 
   Widget _buildMultiple(
-      BuildContext context, List<String> urls, String activeUrl) {
+      BuildContext context, List<String> urls, String? activeUrl) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);

@@ -46,9 +46,16 @@ class _YustNumberFieldState extends State<YustNumberField> {
   @override
   void initState() {
     super.initState();
+    var textEditingController;
+    if (widget.isInteger) {
+      textEditingController =
+          TextEditingController(text: widget.value?.toInt().toString());
+    } else {
+      textEditingController = TextEditingController(
+          text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
+    }
 
-    _controller = TextEditingController(
-        text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
+    _controller = textEditingController;
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
         widget.onEditingComplete(_valueToNum(_controller.value.text.trim()));
@@ -91,9 +98,12 @@ class _YustNumberFieldState extends State<YustNumberField> {
             },
       keyboardType: kIsWeb
           ? null
-          : TextInputType.numberWithOptions(decimal: true, signed: true),
+          : TextInputType.numberWithOptions(
+              decimal: !widget.isInteger, signed: true),
       inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp("[0-9\,\.\-]"))
+        widget.isInteger
+            ? FilteringTextInputFormatter.allow(RegExp("[0-9\-]"))
+            : FilteringTextInputFormatter.allow(RegExp("[0-9\,\.\-]"))
       ],
       textInputAction: TextInputAction.next,
       onTap: widget.onTab,

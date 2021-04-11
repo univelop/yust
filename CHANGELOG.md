@@ -1,3 +1,8 @@
+## 1.9.1 - 2021-04-11
+
+* Upgrade firebase packages
+* Add YustSerializable for a bette toJson support
+
 ## 1.9.0 - 2021-04-01
 
 * Upgrade to Flutter 2

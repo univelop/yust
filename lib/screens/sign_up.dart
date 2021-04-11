@@ -206,8 +206,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
-                    child: FlatButton(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, SignInScreen.routeName,
                             arguments: arguments);

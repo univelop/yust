@@ -106,15 +106,17 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text("Abbrechen"),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
-                FlatButton(
-                  child: Text('Speichern'),
-                  textColor: Theme.of(context).accentColor,
+                TextButton(
+                  child: Text(
+                    'Speichern',
+                    style: TextStyle(color: Theme.of(context).accentColor),
+                  ),
                   onPressed: () async {
                     try {
                       final progressDialog = ProgressDialog(context);
@@ -169,15 +171,17 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
-                FlatButton(
+                TextButton(
                   child: Text("Abbrechen"),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
-                FlatButton(
-                  child: Text('Speichern'),
-                  textColor: Theme.of(context).accentColor,
+                TextButton(
+                  child: Text(
+                    'Speichern',
+                    style: TextStyle(color: Theme.of(context).accentColor),
+                  ),
                   onPressed: () async {
                     try {
                       final progressDialog = ProgressDialog(context);

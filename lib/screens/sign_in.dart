@@ -58,9 +58,8 @@ class _SignInScreenState extends State<SignInScreen> {
         if (mounted) {
           Navigator.pushNamedAndRemoveUntil(
             context,
-            widget.targetRouteName ?? '/',
+            '/',
             (_) => false,
-            arguments: widget.targetRouteArguments,
           );
         }
       }
@@ -154,8 +153,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
-                    child: FlatButton(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, SignUpScreen.routeName,
                             arguments: arguments);
@@ -169,8 +167,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
-                    child: FlatButton(
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                    child: TextButton(
                       onPressed: () {
                         Navigator.pushNamed(
                             context, ResetPasswordScreen.routeName);

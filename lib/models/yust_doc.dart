@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yust/util/yust_serializable.dart';
 
 import '../yust.dart';
 import 'yust_doc_setup.dart';
 
-abstract class YustDoc {
+abstract class YustDoc with YustSerializable {
   static final setup = YustDocSetup(collectionName: 'myCollection');
 
   @JsonKey()
@@ -69,15 +70,20 @@ abstract class YustDoc {
         return MapEntry(key, YustDoc.mapToJson(value));
       } else if (value is List) {
         return MapEntry(key, List.from(value));
+      } else if (value is YustSerializable) {
+        return MapEntry(key, (value as dynamic).toJson());
       } else {
-        try {
-          // If toJson is defined for the type, use it.
-          return MapEntry(key, (value as dynamic).toJson());
-        } on NoSuchMethodError {
-          // Else: Just return the value
-          return MapEntry(key, value);
-        }
+        return MapEntry(key, value);
       }
+      // } else {
+      //   try {
+      //     // If toJson is defined for the type, use it.
+      //     return MapEntry(key, (value as dynamic).toJson());
+      //   } on NoSuchMethodError {
+      //     // Else: Just return the value
+      //     return MapEntry(key, value);
+      //   }
+      // }
     });
   }
 

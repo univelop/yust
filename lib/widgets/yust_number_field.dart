@@ -13,6 +13,7 @@ class YustNumberField extends StatefulWidget {
   final ChangeCallback onEditingComplete;
   final TabCallback onTab;
   final bool readOnly;
+  final bool isInteger;
   final bool enabled;
   final YustInputStyle style;
   final Widget prefixIcon;
@@ -27,6 +28,7 @@ class YustNumberField extends StatefulWidget {
       this.onTab,
       this.enabled = true,
       this.readOnly = false,
+      this.isInteger = false,
       this.style,
       this.prefixIcon,
       this.suffixIcon})

@@ -1,3 +1,7 @@
+## 1.9.2 - 2021-04-12
+
+* Improve number field
+
 ## 1.9.1 - 2021-04-11
 
 * Upgrade firebase packages

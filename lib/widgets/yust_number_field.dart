@@ -11,26 +11,30 @@ class YustNumberField extends StatefulWidget {
   final num value;
   final ChangeCallback onChanged;
   final ChangeCallback onEditingComplete;
+  final void Function() onRealEditingComplete;
   final TabCallback onTab;
   final bool readOnly;
   final bool enabled;
   final YustInputStyle style;
   final Widget prefixIcon;
   final Widget suffixIcon;
+  final FocusNode focusNode;
 
-  YustNumberField(
-      {Key key,
-      this.label,
-      this.value,
-      this.onChanged,
-      this.onEditingComplete,
-      this.onTab,
-      this.enabled = true,
-      this.readOnly = false,
-      this.style,
-      this.prefixIcon,
-      this.suffixIcon})
-      : super(key: key);
+  YustNumberField({
+    Key key,
+    this.label,
+    this.value,
+    this.onChanged,
+    this.onEditingComplete,
+    this.onRealEditingComplete,
+    this.onTab,
+    this.enabled = true,
+    this.readOnly = false,
+    this.style,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.focusNode,
+  }) : super(key: key);
 
   @override
   _YustNumberFieldState createState() => _YustNumberFieldState();
@@ -38,7 +42,7 @@ class YustNumberField extends StatefulWidget {
 
 class _YustNumberFieldState extends State<YustNumberField> {
   TextEditingController _controller;
-  FocusNode _focusNode = FocusNode();
+  FocusNode _focusNode;
   num _oldValue;
 
   @override
@@ -47,6 +51,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
 
     _controller = TextEditingController(
         text: widget.value?.toString()?.replaceAll(RegExp(r'\.'), ','));
+    _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
         widget.onEditingComplete(_valueToNum(_controller.value.text.trim()));
@@ -87,6 +92,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
                 widget.onChanged(numValue);
               }
             },
+      onEditingComplete: widget.onRealEditingComplete,
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),

@@ -72,6 +72,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
             : null,
         prefixIcon: widget.prefixIcon,
         suffixIcon: _buildTrailing(context),
+        hintText: 'HHMM',
       ),
       controller: _controller,
       inputFormatters: [_maskFormatter],

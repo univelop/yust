@@ -9,6 +9,7 @@ class YustSelect<T> extends StatelessWidget {
   final void Function(T) onSelected;
   final YustInputStyle style;
   final Widget prefixIcon;
+  final bool readOnly;
 
   const YustSelect({
     Key key,
@@ -19,6 +20,7 @@ class YustSelect<T> extends StatelessWidget {
     this.onSelected,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -56,7 +58,9 @@ class YustSelect<T> extends StatelessWidget {
     if (label == null) {
       return ListTile(
         title: Text(_valueCaption(value)),
-        onTap: onSelected == null ? null : () => _selectValue(context),
+        onTap: (onSelected == null || readOnly)
+            ? null
+            : () => _selectValue(context),
         contentPadding: padding,
       );
     } else {
@@ -82,7 +86,9 @@ class YustSelect<T> extends StatelessWidget {
               BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 150),
           child: Text(_valueCaption(value)),
         ),
-        onTap: onSelected == null ? null : () => _selectValue(context),
+        onTap: (onSelected == null || readOnly)
+            ? null
+            : () => _selectValue(context),
         contentPadding: padding,
       );
     }

@@ -12,6 +12,7 @@ class YustDatePicker extends StatelessWidget {
   final bool hideClearButton;
   final YustInputStyle style;
   final Widget prefixIcon;
+  final bool readOnly;
 
   YustDatePicker({
     Key key,
@@ -22,6 +23,7 @@ class YustDatePicker extends StatelessWidget {
     this.hideClearButton = false,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -68,7 +70,8 @@ class YustDatePicker extends StatelessWidget {
       return ListTile(
         title: Text(dateText),
         trailing: _buildClearDate(context),
-        onTap: onChanged == null ? null : () => _pickDate(context),
+        onTap:
+            (onChanged == null || readOnly) ? null : () => _pickDate(context),
         contentPadding: padding,
       );
     } else {
@@ -96,14 +99,15 @@ class YustDatePicker extends StatelessWidget {
             _buildClearDate(context),
           ],
         ),
-        onTap: onChanged == null ? null : () => _pickDate(context),
+        onTap:
+            (onChanged == null || readOnly) ? null : () => _pickDate(context),
         contentPadding: padding,
       );
     }
   }
 
   Widget _buildClearDate(BuildContext context) {
-    if (value == null || hideClearButton) {
+    if (value == null || hideClearButton || readOnly) {
       return SizedBox.shrink();
     }
     return IconButton(

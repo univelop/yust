@@ -1,3 +1,9 @@
+## 1.9.3 - 2021-05-03
+
+* Add read only to widgets
+* Change time picker input hint
+* Add pop up title to time picker
+
 ## 1.9.2 - 2021-04-12
 
 * Improve number field

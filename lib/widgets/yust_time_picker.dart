@@ -73,7 +73,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
             ? OutlineInputBorder()
             : null,
         prefixIcon: widget.prefixIcon,
-        suffixIcon: _buildTrailing(context, widget.popUpTitle),
+        suffixIcon: _buildTrailing(context),
         hintText: 'HHMM',
       ),
       controller: _controller,
@@ -88,13 +88,13 @@ class _YustTimePickerState extends State<YustTimePicker> {
   }
 
   /// build the clock- / x-icon
-  Widget _buildTrailing(BuildContext context, String popUpTitle) {
+  Widget _buildTrailing(BuildContext context) {
     if (_controller.text == '') {
       return IconButton(
         icon: Icon(Icons.access_time),
         onPressed: widget.onChanged == null
             ? null
-            : () => _pickTime(context, popUpTitle),
+            : () => _pickTime(context, widget.popUpTitle),
       );
     } else {
       if (widget.hideClearButton) {

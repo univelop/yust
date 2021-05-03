@@ -17,6 +17,7 @@ class YustFilePicker extends StatefulWidget {
   final List<Map<String, String>> files;
   final void Function(List<Map<String, String>> files) onChanged;
   final Widget prefixIcon;
+  final bool readOnly;
 
   YustFilePicker({
     Key key,
@@ -25,6 +26,7 @@ class YustFilePicker extends StatefulWidget {
     this.files,
     this.onChanged,
     this.prefixIcon,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -39,7 +41,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
   @override
   void initState() {
     _files = widget.files;
-    _enabled = widget.onChanged != null;
+    _enabled = (widget.onChanged != null && !widget.readOnly);
     super.initState();
   }
 

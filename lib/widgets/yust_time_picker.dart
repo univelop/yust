@@ -15,6 +15,7 @@ class YustTimePicker extends StatefulWidget {
   final Widget? prefixIcon;
   final FocusNode? focusNode;
   final bool autofocus;
+  final String popUpTitle;
 
   YustTimePicker({
     Key? key,
@@ -28,6 +29,7 @@ class YustTimePicker extends StatefulWidget {
     this.prefixIcon,
     this.focusNode,
     this.autofocus = false,
+    this.popUpTitle = 'Uhrzeit wählen',
   }) : super(key: key);
 
   @override
@@ -72,6 +74,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
             : null,
         prefixIcon: widget.prefixIcon,
         suffixIcon: _buildTrailing(context),
+        hintText: 'HH:MM',
       ),
       controller: _controller,
       inputFormatters: [_maskFormatter!],
@@ -89,7 +92,9 @@ class _YustTimePickerState extends State<YustTimePicker> {
     if (_controller!.text == '') {
       return IconButton(
         icon: Icon(Icons.access_time),
-        onPressed: widget.onChanged == null ? null : () => _pickTime(context),
+        onPressed: widget.onChanged == null
+            ? null
+            : () => _pickTime(context, widget.popUpTitle),
       );
     } else {
       if (widget.hideClearButton) {
@@ -102,7 +107,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
     }
   }
 
-  void _pickTime(BuildContext context) async {
+  void _pickTime(BuildContext context, String title) async {
     final now = DateTime.now();
     var dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
     final initialTime = TimeOfDay.fromDateTime(dateTime);
@@ -111,7 +116,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
       initialTime: initialTime,
       cancelText: 'Abbrechen',
       confirmText: 'OK',
-      helpText: 'Uhrzeit wählen',
+      helpText: title,
     );
     if (selectedTime != null) {
       dateTime = DateTime(dateTime.year, dateTime.month, dateTime.day,

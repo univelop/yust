@@ -7,6 +7,7 @@ class YustSwitch extends StatelessWidget {
   final Color? activeColor;
   final Widget? prefixIcon;
   final void Function(bool)? onChanged;
+  final bool readOnly;
 
   const YustSwitch({
     Key? key,
@@ -15,6 +16,7 @@ class YustSwitch extends StatelessWidget {
     this.activeColor,
     this.prefixIcon,
     this.onChanged,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -23,7 +25,7 @@ class YustSwitch extends StatelessWidget {
         child: Switch(
           value: value,
           activeColor: activeColor,
-          onChanged: onChanged,
+          onChanged: readOnly ? null : onChanged,
         ),
         label: label,
         prefixIcon: prefixIcon);

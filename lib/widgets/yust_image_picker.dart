@@ -21,6 +21,7 @@ class YustImagePicker extends StatefulWidget {
   final bool zoomable;
   final void Function(List<Map<String, dynamic>> images)? onChanged;
   final Widget? prefixIcon;
+  final bool readOnly;
 
   YustImagePicker({
     Key? key,
@@ -31,6 +32,7 @@ class YustImagePicker extends StatefulWidget {
     this.zoomable = false,
     this.onChanged,
     this.prefixIcon,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -52,7 +54,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
           .map<YustFile>((image) => YustFile.fromJson(image))
           .toList();
     }
-    _enabled = widget.onChanged != null;
+    _enabled = (widget.onChanged != null && !widget.readOnly);
     super.initState();
   }
 
@@ -125,7 +127,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildPickButtons(BuildContext context) {
-    if (!widget.multiple && _files.firstOrNull != null) {
+    if (!_enabled || (!widget.multiple && _files.firstOrNull != null)) {
       return SizedBox.shrink();
     }
     if (kIsWeb) {

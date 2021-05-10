@@ -21,7 +21,7 @@ class YustUser extends YustDoc {
   @JsonKey(toJson: YustDoc.mapToJson)
   Map<String, bool> envIds = {};
   String? currEnvId;
-  List<String> deviceIds = [];
+  List<String>? deviceIds = [];
 
   YustUser({
     required this.email,

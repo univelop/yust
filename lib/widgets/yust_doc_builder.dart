@@ -18,7 +18,7 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
   final List<String>? orderBy;
   final bool _doNotWait;
   final bool _createIfNull;
-  final Widget Function(T, YustBuilderInsights) builder;
+  final Widget Function(T?, YustBuilderInsights) builder;
 
   YustDocBuilder({
     Key? key,
@@ -29,9 +29,7 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
     bool? doNotWait,
     bool? createIfNull,
     required this.builder,
-  })   : assert(modelSetup != null),
-        assert(builder != null),
-        _doNotWait = doNotWait ?? false,
+  })   : _doNotWait = doNotWait ?? false,
         _createIfNull = createIfNull ?? false,
         super(key: key);
 
@@ -88,7 +86,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<T>(
+    return StreamBuilder<T?>(
       stream: _docStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -105,7 +103,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        return widget.builder(doc!, opts);
+        return widget.builder(doc, opts);
       },
     );
   }

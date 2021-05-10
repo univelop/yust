@@ -23,7 +23,7 @@ YustUser _$YustUserFromJson(Map json) {
     ..envIds = Map<String, bool>.from(json['envIds'] as Map)
     ..currEnvId = json['currEnvId'] as String?
     ..deviceIds =
-        (json['deviceIds'] as List<dynamic>).map((e) => e as String).toList();
+        (json['deviceIds'] as List<dynamic>?)?.map((e) => e as String).toList();
 }
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{

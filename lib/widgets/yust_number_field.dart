@@ -8,7 +8,7 @@ typedef TabCallback = void Function();
 
 class YustNumberField extends StatefulWidget {
   final String? label;
-  final num value;
+  final num? value;
   final ChangeCallback? onChanged;
   final ChangeCallback? onEditingComplete;
   final void Function()? onRealEditingComplete;
@@ -23,7 +23,7 @@ class YustNumberField extends StatefulWidget {
   YustNumberField({
     Key? key,
     this.label,
-    required this.value,
+    this.value,
     this.onChanged,
     this.onEditingComplete,
     this.onRealEditingComplete,
@@ -50,7 +50,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
     super.initState();
 
     _controller = TextEditingController(
-        text: widget.value.toString().replaceAll(RegExp(r'\.'), ','));
+        text: widget.value?.toString().replaceAll(RegExp(r'\.'), ','));
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {

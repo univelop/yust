@@ -536,8 +536,13 @@ class YustService {
   }
 
   Future<String> showTextFieldDialog(
-      BuildContext context, String title, String placeholder, String action) {
-    final controller = TextEditingController();
+    BuildContext context,
+    String title,
+    String placeholder,
+    String action, [
+    String initialText = '',
+  ]) {
+    final controller = TextEditingController(text: initialText);
     return showDialog<String>(
         context: context,
         builder: (BuildContext context) {

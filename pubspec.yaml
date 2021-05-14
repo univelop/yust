@@ -28,10 +28,13 @@ dependencies:
   url_launcher: ^6.0.2
   http: ^0.13.0
   image: ^3.0.1
+  dio: ^4.0.0-beta4
   flutter_native_image: ^0.0.5+3
   path_provider: ^2.0.1
   connectivity: ^3.0.2
   mask_text_input_formatter: ^1.2.1
+  open_file: ^3.0.3
+  flutter_easyloading: ^2.2.2
 
 dev_dependencies:
   flutter_test:

@@ -1,3 +1,7 @@
+## 2.0.0-nullsafty.1 - 2021-05-17
+
+* Add null safety
+
 ## 1.9.3 - 2021-05-03
 
 * Add read only to widgets

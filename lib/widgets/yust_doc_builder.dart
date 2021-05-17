@@ -39,14 +39,14 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
 
 class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
   /// May not be null.
-  Stream<T>? _docStream;
+  Stream<T?>? _docStream;
 
   void initStream() {
     if (widget.id != null) {
       _docStream = Yust.service.getDoc<T>(
         widget.modelSetup,
         widget.id!,
-      ) as Stream<T>?;
+      );
     } else {
       _docStream = Yust.service.getFirstDoc<T>(
         widget.modelSetup,

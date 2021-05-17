@@ -65,9 +65,6 @@ class _YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFiles(BuildContext context) {
-    if (_files == null) {
-      return SizedBox.shrink();
-    }
     return Column(
       children: _files.map((file) => _buildFile(context, file)).toList(),
     );
@@ -116,7 +113,6 @@ class _YustFilePickerState extends State<YustFilePicker> {
     } else {
       final result = await FilePicker.platform.pickFiles(allowMultiple: true);
       if (result != null) {
-        if (_files == null) _files = [];
         for (final platformFile in result.files) {
           var name = platformFile.name!.split('/').last;
           final ext = platformFile.extension;

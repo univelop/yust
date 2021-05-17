@@ -19,7 +19,7 @@ class YustUser extends YustDoc {
   YustGender? gender;
 
   @JsonKey(toJson: YustDoc.mapToJson)
-  Map<String, bool> envIds = {};
+  Map<String, bool?> envIds = {};
   String? currEnvId;
   List<String>? deviceIds = [];
 

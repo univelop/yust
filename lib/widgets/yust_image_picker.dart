@@ -45,15 +45,9 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
   @override
   void initState() {
-    if (widget.images == null) {
-      _files = [];
-    } else if (widget.images.length == 1 && widget.images.first == null) {
-      _files = [];
-    } else {
-      _files = widget.images
-          .map<YustFile>((image) => YustFile.fromJson(image))
-          .toList();
-    }
+    _files = widget.images
+        .map<YustFile>((image) => YustFile.fromJson(image))
+        .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
     super.initState();
   }
@@ -357,7 +351,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
-    } else if (file != null) {
+    } else {
       final confirmed = await Yust.service
           .showConfirmation(context, 'Wirklich löschen', 'Löschen');
       if (confirmed == true) {

@@ -6,7 +6,7 @@ typedef TabCallback = void Function();
 
 class YustTextField extends StatefulWidget {
   final String? label;
-  final String value;
+  final String? value;
   final StringCallback? onChanged;
   final StringCallback? onEditingComplete;
   final TabCallback? onTab;
@@ -22,7 +22,7 @@ class YustTextField extends StatefulWidget {
   YustTextField({
     Key? key,
     this.label,
-    this.value = '',
+    this.value,
     this.onChanged,
     this.onEditingComplete,
     this.onTab,

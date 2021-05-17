@@ -12,7 +12,10 @@ class ImageScreen extends StatelessWidget {
     List<String>? urls;
     if (arguments is Map) {
       url = arguments['url'];
-      urls = arguments['urls'];
+      final urlsArgs = arguments['urls'];
+      if (urlsArgs is List) {
+        urls = urlsArgs.whereType<String>().toList();
+      }
     }
     if (urls != null) {
       return _buildMultiple(context, urls, url);

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import 'yust_doc.dart';
 
 class YustDocSetup<T extends YustDoc> {

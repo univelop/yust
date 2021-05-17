@@ -156,7 +156,7 @@ class YustService {
   ///Multiple of those entries can be repeated.
   ///
   ///[filterList] may be null.
-  Stream<List<T?>> getDocs<T extends YustDoc>(
+  Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
@@ -169,11 +169,12 @@ class YustService {
     return query.snapshots().map((snapshot) {
       return snapshot.docs
           .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .whereType<T>()
           .toList();
     });
   }
 
-  Future<List<T?>> getDocsOnce<T extends YustDoc>(
+  Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
@@ -186,7 +187,8 @@ class YustService {
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
       return snapshot.docs
-          .map<T?>((docSnapshot) => _getDoc<T>(modelSetup, docSnapshot))
+          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .whereType<T>()
           .toList();
     });
   }
@@ -310,9 +312,7 @@ class YustService {
   }) async {
     final docs = await getDocsOnce<T>(modelSetup, filterList: filterList);
     for (var doc in docs) {
-      if (doc != null) {
-        await deleteDoc<T>(modelSetup, doc);
-      }
+      await deleteDoc<T>(modelSetup, doc);
     }
   }
 
@@ -522,9 +522,9 @@ class YustService {
     );
   }
 
-  Future<bool> showConfirmation(
+  Future<bool?> showConfirmation(
       BuildContext context, String title, String action) {
-    final confirmed = showDialog<bool>(
+    return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -546,11 +546,10 @@ class YustService {
         );
       },
     );
-    return confirmed as Future<bool>? ?? false as Future<bool>;
   }
 
   Future<String?> showTextFieldDialog(
-      BuildContext context, String title, String placeholder, String action) {
+      BuildContext context, String title, String? placeholder, String action) {
     final controller = TextEditingController();
     return showDialog<String>(
         context: context,
@@ -599,8 +598,6 @@ class YustService {
   ///
   /// Deprecated, use formatDate instead.
   String formatIsoDate(String isoDate, {String? format}) {
-    if (isoDate == null) return '';
-
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
     return formatter.format(now);
@@ -620,8 +617,6 @@ class YustService {
   ///
   /// Deprecated, use formatTime instead.
   String formatIsoTime(String isoDate, {String? format}) {
-    if (isoDate == null) return '';
-
     var now = DateTime.parse(isoDate);
     var formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(now);
@@ -688,7 +683,7 @@ class YustService {
   Query _executeFilterList(Query query, List<List<dynamic>>? filterList) {
     if (filterList != null) {
       for (var filter in filterList) {
-        assert(filter != null && filter.length == 3);
+        assert(filter.length == 3);
         var operand1 = filter[0], operator = filter[1], operand2 = filter[2];
 
         switch (operator) {

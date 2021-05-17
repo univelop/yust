@@ -22,9 +22,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
     this.orderBy,
     bool? doNotWait,
     required this.builder,
-  })   : assert(modelSetup != null),
-        assert(builder != null),
-        _doNotWait = doNotWait ?? false,
+  })   : _doNotWait = doNotWait ?? false,
         super(key: key);
 
   @override
@@ -40,7 +38,7 @@ class YustDocsBuilderState<T extends YustDoc>
       widget.modelSetup,
       filterList: widget.filter,
       orderByList: widget.orderBy,
-    ) as Stream<List<T>>;
+    );
   }
 
   bool updateStreamConditionally(YustDocsBuilder oldWidget) {

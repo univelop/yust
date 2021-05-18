@@ -48,8 +48,10 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   void initState() {
     SharedPreferences.getInstance().then((prefs) {
-      _email = prefs.getString('email') ?? null;
-      _emailController.text = _email!;
+      _email = prefs.getString('email');
+      if (_email != null) {
+        _emailController.text = _email!;
+      }
     });
 
     _storeListener = () {

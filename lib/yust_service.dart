@@ -252,12 +252,14 @@ class YustService {
     T? doc;
 
     if (snapshot.docs.length > 0) {
-      doc = modelSetup.fromJson(snapshot.docs[0].data());
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate!(doc);
+      final data = snapshot.docs[0].data();
+      if (data is Map<String, dynamic>) {
+        doc = modelSetup.fromJson(data);
+        if (modelSetup.onMigrate != null) {
+          modelSetup.onMigrate!(doc);
+        }
       }
     }
-
     return doc;
   }
 
@@ -648,14 +650,16 @@ class YustService {
     if (snapshot.exists == false) {
       return null;
     }
+    final data = snapshot.data();
+    if (data is Map<String, dynamic>) {
+      final T document = modelSetup.fromJson(data);
 
-    final T document = modelSetup.fromJson(snapshot.data()!);
+      if (modelSetup.onMigrate != null) {
+        modelSetup.onMigrate!(document);
+      }
 
-    if (modelSetup.onMigrate != null) {
-      modelSetup.onMigrate!(document);
+      return document;
     }
-
-    return document;
   }
 
   Query _filterForEnvironment(Query query) =>

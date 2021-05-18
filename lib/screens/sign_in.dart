@@ -207,11 +207,13 @@ class _SignInScreenState extends State<SignInScreen> {
           .signIn(context, _email, _password)
           .timeout(Duration(seconds: 10));
       if (_onSignedIn != null) _onSignedIn!();
-      Navigator.popUntil(
-        context,
-        (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
-            .contains(route.settings.name),
-      );
+      if (mounted) {
+        Navigator.popUntil(
+          context,
+          (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
+              .contains(route.settings.name),
+        );
+      }
     } on YustException catch (err) {
       Yust.service.showAlert(context, 'Fehler', err.message);
     } on PlatformException catch (err) {

@@ -5,11 +5,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/util/yust_exception.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
-
+import 'package:dio/dio.dart';
 import '../yust.dart';
+import 'package:open_file/open_file.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class YustFilePicker extends StatefulWidget {
   final String? label;
@@ -166,13 +169,40 @@ class _YustFilePickerState extends State<YustFilePicker> {
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Anzeigen einer Datei ist eine Internetverbindung erforderlich.');
+      // is it a valid file?
     } else if (file['name'] != null && _processing[file['name']] != true) {
-      if (await canLaunch(file['url']!)) {
-        await launch(file['url']!);
+      // is the process running on mobile?
+      if (!kIsWeb) {
+        await EasyLoading.show(status: 'Datei laden...');
+        try {
+          final tempDir = await getTemporaryDirectory();
+          await Dio().download(file['url']!, '${tempDir.path}/${file['name']}');
+          var result = await OpenFile.open('${tempDir.path}/${file['name']}');
+          // if cant open file type, tries via browser
+          if (result.type != ResultType.done) {
+            _launchBrowser(file);
+          }
+
+          await EasyLoading.dismiss();
+        } catch (e) {
+          await EasyLoading.dismiss();
+          await Yust.service.showAlert(context, 'Ups',
+              'Die Datei kann nicht geöffnet werden. ${e.toString()}');
+        }
       } else {
-        await Yust.service
-            .showAlert(context, 'Ups', 'Die Datei kann nicht geöffnet werden.');
+        await EasyLoading.show(status: 'Datei laden...');
+        _launchBrowser(file);
+        await EasyLoading.dismiss();
       }
+    }
+  }
+
+  Future<void> _launchBrowser(Map<String, String> file) async {
+    if (await canLaunch(file['url']!)) {
+      await launch(file['url']!);
+    } else {
+      await Yust.service
+          .showAlert(context, 'Ups', 'Die Datei kann nicht geöffnet werden.');
     }
   }
 

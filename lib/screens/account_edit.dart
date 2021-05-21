@@ -83,8 +83,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
   }
 
   void _changeEmail(BuildContext context) {
-    late var email;
-    late var password;
+    var email;
+    var password;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -143,8 +143,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
   }
 
   void _changePassword(BuildContext context) {
-    late var newPassword;
-    late var oldPassword;
+    var newPassword;
+    var oldPassword;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {

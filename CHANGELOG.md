@@ -1,3 +1,9 @@
+## 2.1.0 - 2021-05-30
+
+* Improve text dialog
+* Improve file opening
+* Improve null safety
+
 ## 2.0.0 - 2021-05-18
 
 * Add null safety

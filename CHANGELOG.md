@@ -1,3 +1,7 @@
+## 2.1.1 - 2021-06-03
+
+* Improve null safety
+
 ## 2.1.0 - 2021-05-30
 
 * Improve text dialog

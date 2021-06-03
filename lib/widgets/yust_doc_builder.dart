@@ -29,7 +29,7 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
     bool? doNotWait,
     bool? createIfNull,
     required this.builder,
-  })   : _doNotWait = doNotWait ?? false,
+  })  : _doNotWait = doNotWait ?? false,
         _createIfNull = createIfNull ?? false,
         super(key: key);
 
@@ -52,7 +52,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
         widget.modelSetup,
         widget.filter,
         orderByList: widget.orderBy,
-      ) as Stream<T>?;
+      );
     }
   }
 

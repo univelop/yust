@@ -29,7 +29,10 @@ class YustSwitch extends StatelessWidget {
           child: Checkbox(
             checkColor: activeColor,
             value: value,
-            onChanged: (bool? value) => readOnly ? null : value,
+            onChanged: (bool? value) =>
+                readOnly || value == null || onChanged == null
+                    ? null
+                    : onChanged!(value),
           ),
           label: label,
           prefixIcon: prefixIcon);

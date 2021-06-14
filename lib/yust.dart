@@ -23,6 +23,8 @@ class Yust {
   static late YustService service;
   static late YustDocSetup<YustUser> userSetup;
   static bool useTimestamps = false;
+  static bool useSubcollections = false;
+  static String envCollectionName = 'envs';
   static String? storageUrl;
   static String? imagePlaceholderPath;
 
@@ -31,6 +33,8 @@ class Yust {
     YustService? service,
     YustDocSetup? userSetup,
     bool useTimestamps = false,
+    bool useSubcollections = false,
+    String envCollectionName = 'envs',
     String? storageUrl,
     String? imagePlaceholderPath,
   }) async {
@@ -39,6 +43,8 @@ class Yust {
     Yust.service = service ?? YustService();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
+    Yust.useSubcollections = useSubcollections;
+    Yust.envCollectionName = envCollectionName;
     Yust.storageUrl = storageUrl;
     Yust.imagePlaceholderPath = imagePlaceholderPath;
 

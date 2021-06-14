@@ -6,11 +6,20 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
+
+final Map<String, int> YustImageQuality = {
+  'original': 100,
+  'high': 90,
+  'medium': 50,
+  'low': 25,
+};
 
 /// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {
@@ -22,6 +31,7 @@ class YustImagePicker extends StatefulWidget {
   final void Function(List<Map<String, dynamic>> images)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
+  final int quality;
 
   YustImagePicker({
     Key? key,
@@ -33,6 +43,7 @@ class YustImagePicker extends StatefulWidget {
     this.onChanged,
     this.prefixIcon,
     this.readOnly = false,
+    this.quality = 100,
   }) : super(key: key);
 
   @override
@@ -266,7 +277,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
         final image = await ImagePicker()
             .getImage(source: imageSource, maxHeight: 800, maxWidth: 800);
         if (image != null) {
-          await _uploadFile(path: image.path, file: File(image.path));
+          await _uploadFile(
+              path: image.path,
+              file: File(image.path),
+              quality: widget.quality);
         }
       } else {
         if (widget.multiple) {
@@ -278,6 +292,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
                 path: platformFile.name!,
                 bytes: platformFile.bytes,
                 resize: true,
+                quality: widget.quality,
               );
             }
           }
@@ -286,26 +301,29 @@ class _YustImagePickerState extends State<YustImagePicker> {
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
             await _uploadFile(
-              path: result.files.single.name!,
-              bytes: result.files.single.bytes,
-              resize: true,
-            );
+                path: result.files.single.name!,
+                bytes: result.files.single.bytes,
+                resize: true,
+                quality: widget.quality);
           }
         }
       }
     }
   }
 
-  Future<void> _uploadFile(
-      {required String path,
-      File? file,
-      Uint8List? bytes,
-      bool resize = false}) async {
+  Future<void> _uploadFile({
+    required String path,
+    File? file,
+    Uint8List? bytes,
+    bool resize = false,
+    required int quality,
+  }) async {
     try {
-      final imageName =
+      var imageName =
           Yust.service.randomString(length: 16) + '.' + path.split('.').last;
       final newFile =
           YustFile(name: imageName, file: file, bytes: bytes, processing: true);
+
       setState(() {
         _files.add(newFile);
       });
@@ -320,9 +338,17 @@ class _YustImagePickerState extends State<YustImagePicker> {
           newFile.bytes = bytes;
         }
       }
+      if (_shouldGetCompressed(quality) && file != null) {
+        imageName = 'compressed_' + imageName;
+        file = await _compressAndGetFile(file, imageName, quality);
+      }
+      print(file!.lengthSync());
 
       String url = await Yust.service.uploadFile(
-          path: widget.folderPath, name: imageName, file: file, bytes: bytes);
+          path: widget.folderPath + imageName,
+          name: imageName,
+          file: file,
+          bytes: bytes);
       setState(() {
         newFile.url = url;
         newFile.processing = false;
@@ -368,5 +394,22 @@ class _YustImagePickerState extends State<YustImagePicker> {
         widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
     }
+  }
+
+  Future<File?> _compressAndGetFile(
+      File file, String imageName, int quality) async {
+    var dir = await getTemporaryDirectory();
+    var newTargetPath = dir.absolute.path + imageName;
+    var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      newTargetPath,
+      quality: quality,
+    );
+
+    return result;
+  }
+
+  bool _shouldGetCompressed(int quality) {
+    return quality != YustImageQuality['original'];
   }
 }

@@ -342,7 +342,6 @@ class _YustImagePickerState extends State<YustImagePicker> {
         imageName = 'compressed_' + imageName;
         file = await _compressAndGetFile(file, imageName, quality);
       }
-      print(file!.lengthSync());
 
       String url = await Yust.service.uploadFile(
           path: widget.folderPath + imageName,

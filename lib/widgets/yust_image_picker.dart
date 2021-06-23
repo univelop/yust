@@ -14,11 +14,11 @@ import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 
-final Map<String, int> YustImageQuality = {
-  'original': 100,
-  'high': 90,
-  'medium': 50,
-  'low': 25,
+final Map<String, Map<String, int>> YustImageQuality = {
+  'original': {'quality': 0, 'size': 5000},
+  'high': {'quality': 100, 'size': 2000},
+  'medium': {'quality': 75, 'size': 1200},
+  'low': {'quality': 50, 'size': 800},
 };
 
 /// See https://pub.dev/packages/image_picker for installation information.
@@ -31,7 +31,7 @@ class YustImagePicker extends StatefulWidget {
   final void Function(List<Map<String, dynamic>> images)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
-  final int quality;
+  final String yustQuality;
 
   YustImagePicker({
     Key? key,
@@ -43,7 +43,7 @@ class YustImagePicker extends StatefulWidget {
     this.onChanged,
     this.prefixIcon,
     this.readOnly = false,
-    this.quality = 100,
+    this.yustQuality = 'original',
   }) : super(key: key);
 
   @override
@@ -268,6 +268,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _pickImages(ImageSource imageSource) async {
+    final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
@@ -275,12 +276,12 @@ class _YustImagePickerState extends State<YustImagePicker> {
     } else {
       if (!kIsWeb) {
         final image = await ImagePicker()
-            .getImage(source: imageSource, maxHeight: 800, maxWidth: 800);
+            .getImage(source: imageSource, maxHeight: size, maxWidth: size);
         if (image != null) {
           await _uploadFile(
               path: image.path,
               file: File(image.path),
-              quality: widget.quality);
+              yustQuality: widget.yustQuality);
         }
       } else {
         if (widget.multiple) {
@@ -292,7 +293,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
                 path: platformFile.name!,
                 bytes: platformFile.bytes,
                 resize: true,
-                quality: widget.quality,
+                yustQuality: widget.yustQuality,
               );
             }
           }
@@ -304,7 +305,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
                 path: result.files.single.name!,
                 bytes: result.files.single.bytes,
                 resize: true,
-                quality: widget.quality);
+                yustQuality: widget.yustQuality);
           }
         }
       }
@@ -316,7 +317,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     File? file,
     Uint8List? bytes,
     bool resize = false,
-    required int quality,
+    required String yustQuality,
   }) async {
     try {
       var imageName =
@@ -338,9 +339,10 @@ class _YustImagePickerState extends State<YustImagePicker> {
           newFile.bytes = bytes;
         }
       }
-      if (_shouldGetCompressed(quality) && file != null) {
+      if (_shouldGetCompressed(yustQuality) && file != null) {
         imageName = 'compressed_' + imageName;
-        file = await _compressAndGetFile(file, imageName, quality);
+        file = await _compressAndGetFile(
+            file, imageName, YustImageQuality[yustQuality]!['quality']!);
       }
 
       String url = await Yust.service.uploadFile(
@@ -408,7 +410,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     return result;
   }
 
-  bool _shouldGetCompressed(int quality) {
-    return quality != YustImageQuality['original'];
+  bool _shouldGetCompressed(String yustQuality) {
+    return yustQuality != YustImageQuality.keys.elementAt(0);
   }
 }

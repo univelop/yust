@@ -6,19 +6,17 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 
 final Map<String, Map<String, int>> YustImageQuality = {
-  'original': {'quality': 0, 'size': 5000},
+  'original': {'quality': 100, 'size': 5000},
   'high': {'quality': 100, 'size': 2000},
-  'medium': {'quality': 75, 'size': 1200},
-  'low': {'quality': 50, 'size': 800},
+  'medium': {'quality': 90, 'size': 1200},
+  'low': {'quality': 80, 'size': 800},
 };
 
 /// See https://pub.dev/packages/image_picker for installation information.
@@ -269,14 +267,18 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
   Future<void> _pickImages(ImageSource imageSource) async {
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
+    final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
       if (!kIsWeb) {
-        final image = await ImagePicker()
-            .getImage(source: imageSource, maxHeight: size, maxWidth: size);
+        final image = await ImagePicker().getImage(
+            source: imageSource,
+            maxHeight: size,
+            maxWidth: size,
+            imageQuality: quality);
         if (image != null) {
           await _uploadFile(
               path: image.path,
@@ -320,7 +322,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     required String yustQuality,
   }) async {
     try {
-      var imageName =
+      final imageName =
           Yust.service.randomString(length: 16) + '.' + path.split('.').last;
       final newFile =
           YustFile(name: imageName, file: file, bytes: bytes, processing: true);
@@ -339,17 +341,9 @@ class _YustImagePickerState extends State<YustImagePicker> {
           newFile.bytes = bytes;
         }
       }
-      if (_shouldGetCompressed(yustQuality) && file != null) {
-        imageName = 'compressed_' + imageName;
-        file = await _compressAndGetFile(
-            file, imageName, YustImageQuality[yustQuality]!['quality']!);
-      }
 
       String url = await Yust.service.uploadFile(
-          path: widget.folderPath + imageName,
-          name: imageName,
-          file: file,
-          bytes: bytes);
+          path: widget.folderPath, name: imageName, file: file, bytes: bytes);
       setState(() {
         newFile.url = url;
         newFile.processing = false;
@@ -395,22 +389,5 @@ class _YustImagePickerState extends State<YustImagePicker> {
         widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
     }
-  }
-
-  Future<File?> _compressAndGetFile(
-      File file, String imageName, int quality) async {
-    var dir = await getTemporaryDirectory();
-    var newTargetPath = dir.absolute.path + imageName;
-    var result = await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
-      newTargetPath,
-      quality: quality,
-    );
-
-    return result;
-  }
-
-  bool _shouldGetCompressed(String yustQuality) {
-    return yustQuality != YustImageQuality.keys.elementAt(0);
   }
 }

@@ -146,17 +146,22 @@ class _YustFilePickerState extends State<YustFilePicker> {
                 bytes: platformFile.bytes,
               );
             } on YustException catch (e) {
-              Yust.service.showAlert(context, 'Ups', e.message);
+              if (mounted) {
+                Yust.service.showAlert(context, 'Ups', e.message);
+              }
             } catch (e) {
-              Yust.service.showAlert(
-                  context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
+              if (mounted) {
+                Yust.service.showAlert(context, 'Ups',
+                    'Die Datei konnte nicht hochgeladen werden.');
+              }
             }
             if (fileData['url'] == null) {
               _files.remove(fileData);
             }
-            setState(() {
-              _processing[fileData['name']] = false;
-            });
+            _processing[fileData['name']] = false;
+            if (mounted) {
+              setState(() {});
+            }
           }
         }
         widget.onChanged!(_files);

@@ -330,12 +330,13 @@ class _YustImagePickerState extends State<YustImagePicker> {
     });
     try {
       if (resize) {
+        final size = YustImageQuality[widget.yustQuality]!['size']!;
         if (file != null) {
-          file = await Yust.service.resizeImage(file: file, maxWidth: 800);
+          file = await Yust.service.resizeImage(file: file, maxWidth: size);
           newFile.file = file;
         } else {
           bytes = Yust.service
-              .resizeImageBytes(name: path, bytes: bytes!, maxWidth: 800);
+              .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
           newFile.bytes = bytes;
         }
       }

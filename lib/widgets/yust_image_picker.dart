@@ -19,7 +19,6 @@ final Map<String, Map<String, int>> YustImageQuality = {
   'low': {'quality': 80, 'size': 800},
 };
 
-/// See https://pub.dev/packages/image_picker for installation information.
 class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
@@ -274,7 +273,8 @@ class _YustImagePickerState extends State<YustImagePicker> {
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
       if (!kIsWeb) {
-        final image = await ImagePicker().getImage(
+        final picker = ImagePicker();
+        final image = await picker.getImage(
             source: imageSource,
             maxHeight: size,
             maxWidth: size,
@@ -321,16 +321,14 @@ class _YustImagePickerState extends State<YustImagePicker> {
     bool resize = false,
     required String yustQuality,
   }) async {
+    final imageName =
+        Yust.service.randomString(length: 16) + '.' + path.split('.').last;
+    final newFile =
+        YustFile(name: imageName, file: file, bytes: bytes, processing: true);
+    setState(() {
+      _files.add(newFile);
+    });
     try {
-      final imageName =
-          Yust.service.randomString(length: 16) + '.' + path.split('.').last;
-      final newFile =
-          YustFile(name: imageName, file: file, bytes: bytes, processing: true);
-
-      setState(() {
-        _files.add(newFile);
-      });
-
       if (resize) {
         if (file != null) {
           file = await Yust.service.resizeImage(file: file, maxWidth: 800);
@@ -344,13 +342,19 @@ class _YustImagePickerState extends State<YustImagePicker> {
 
       String url = await Yust.service.uploadFile(
           path: widget.folderPath, name: imageName, file: file, bytes: bytes);
-      setState(() {
-        newFile.url = url;
-        newFile.processing = false;
-      });
+      newFile.url = url;
+      newFile.processing = false;
+      if (mounted) {
+        setState(() {});
+      }
       widget.onChanged!(_files.map((file) => file.toJson()).toList());
     } catch (e) {
-      Yust.service.showAlert(context, 'Ups', e.toString());
+      if (mounted) {
+        setState(() {
+          _files.remove(newFile);
+        });
+        Yust.service.showAlert(context, 'Ups', e.toString());
+      }
     }
   }
 

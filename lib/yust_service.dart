@@ -406,12 +406,7 @@ class YustService {
         );
         uploadTask = storageReference.putData(bytes!, metadata);
       }
-      // final StreamSubscription<StorageTaskEvent> streamSubscription =
-      //     uploadTask.events.listen((event) {
-      //   print('EVENT ${event.type}');
-      // });
       await uploadTask;
-      // streamSubscription.cancel();
       return await storageReference.getDownloadURL();
     } catch (error) {
       throw YustException('Fehler beim Upload: ' + error.toString());

@@ -484,7 +484,7 @@ packages:
       name: mask_text_input_formatter
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.0.0-nullsafety.2"
+    version: "2.0.0"
   matcher:
     dependency: transitive
     description:

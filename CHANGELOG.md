@@ -1,3 +1,10 @@
+## 2.2.0 - 2021-07-02
+
+* Add checkbox control for switch
+* Support Firebase subcollections
+* Add quality setting to image picker
+* Improve file offline handling
+
 ## 2.1.1 - 2021-06-03
 
 * Improve null safety

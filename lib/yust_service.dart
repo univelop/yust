@@ -252,13 +252,7 @@ class YustService {
     T? doc;
 
     if (snapshot.docs.length > 0) {
-      final data = snapshot.docs[0].data();
-      if (data is Map<String, dynamic>) {
-        doc = modelSetup.fromJson(data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate!(doc);
-        }
-      }
+      doc = _getDoc(modelSetup, snapshot.docs[0]);
     }
     return doc;
   }
@@ -296,16 +290,9 @@ class YustService {
     if (modelSetup.onSave != null && !skipOnSave) {
       await modelSetup.onSave!(doc);
     }
+    await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
 
-    if (doc.id != null) {
-      await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
-    } else {
-      var ref = await collection.add(doc.toJson());
-      doc.id = ref.id;
-      await ref.set(doc.toJson());
-    }
-
-    return getDocOnce<T>(modelSetup, doc.id!);
+    return getDocOnce<T>(modelSetup, doc.id);
   }
 
   Future<void> deleteDocs<T extends YustDoc>(
@@ -656,6 +643,10 @@ class YustService {
 
       if (modelSetup.onMigrate != null) {
         modelSetup.onMigrate!(document);
+      }
+
+      if (modelSetup.onGet != null) {
+        modelSetup.onGet!(document);
       }
 
       return document;

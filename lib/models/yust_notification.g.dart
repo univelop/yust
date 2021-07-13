@@ -13,7 +13,7 @@ YustNotification _$YustNotificationFromJson(Map json) {
     title: json['title'] as String?,
     body: json['body'] as String?,
   )
-    ..id = json['id'] as String?
+    ..id = json['id'] as String
     ..createdAt = YustDoc.dateTimeFromJson(json['createdAt'])
     ..createdBy = json['createdBy'] as String?
     ..modifiedAt = YustDoc.dateTimeFromJson(json['modifiedAt'])

@@ -6,22 +6,28 @@ import '../yust.dart';
 
 abstract class YustDoc with YustSerializable {
   @JsonKey()
-  String? id;
+  String id;
+
   @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
   DateTime? createdAt;
+
   @JsonKey()
   String? createdBy;
+
   @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
   DateTime? modifiedAt;
+
   @JsonKey()
   String? modifiedBy;
+
   @JsonKey()
   String? userId;
+
   @JsonKey()
   String? envId;
 
   YustDoc({
-    this.id,
+    this.id = '',
     this.createdAt,
     this.createdBy,
     this.modifiedAt,
@@ -30,7 +36,7 @@ abstract class YustDoc with YustSerializable {
     this.envId,
   });
 
-  YustDoc.fromJson(Map<String, dynamic> json);
+  YustDoc.fromJson(Map<String, dynamic> json) : this.id = '';
 
   Map<String, dynamic> toJson();
 

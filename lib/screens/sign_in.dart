@@ -95,6 +95,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
                     child: TextField(
+                      key: Key('email'),
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'E-Mail',
@@ -114,6 +115,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
                     child: TextField(
+                      key: Key('password'),
                       decoration: InputDecoration(
                         labelText: 'Passwort',
                         border: OutlineInputBorder(),
@@ -138,6 +140,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20.0, vertical: 10.0),
                     child: YustProgressButton(
+                      key: Key('signInButton'),
                       color: Theme.of(context).accentColor,
                       inProgress: _waitingForSignIn,
                       onPressed: () => _signIn(context),

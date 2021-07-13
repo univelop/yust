@@ -23,7 +23,7 @@ class YustNotification extends YustDoc {
     this.forDocId,
     this.title,
     this.body,
-  });
+  }) : super();
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>
       _$YustNotificationFromJson(json);

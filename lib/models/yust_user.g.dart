@@ -13,7 +13,7 @@ YustUser _$YustUserFromJson(Map json) {
     lastName: json['lastName'] as String,
     gender: _$enumDecodeNullable(_$YustGenderEnumMap, json['gender']),
   )
-    ..id = json['id'] as String?
+    ..id = json['id'] as String
     ..createdAt = YustDoc.dateTimeFromJson(json['createdAt'])
     ..createdBy = json['createdBy'] as String?
     ..modifiedAt = YustDoc.dateTimeFromJson(json['modifiedAt'])

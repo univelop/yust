@@ -252,13 +252,7 @@ class YustService {
     T? doc;
 
     if (snapshot.docs.length > 0) {
-      final data = snapshot.docs[0].data();
-      if (data is Map<String, dynamic>) {
-        doc = modelSetup.fromJson(data);
-        if (modelSetup.onMigrate != null) {
-          modelSetup.onMigrate!(doc);
-        }
-      }
+      doc = _getDoc(modelSetup, snapshot.docs[0]);
     }
     return doc;
   }
@@ -656,6 +650,10 @@ class YustService {
 
       if (modelSetup.onMigrate != null) {
         modelSetup.onMigrate!(document);
+      }
+
+      if (modelSetup.onGet != null) {
+        modelSetup.onGet!(document);
       }
 
       return document;

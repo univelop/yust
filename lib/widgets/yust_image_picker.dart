@@ -40,7 +40,7 @@ class YustImagePicker extends StatefulWidget {
     this.onChanged,
     this.prefixIcon,
     this.readOnly = false,
-    this.yustQuality = 'original',
+    this.yustQuality = 'medium',
   }) : super(key: key);
 
   @override

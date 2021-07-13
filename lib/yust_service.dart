@@ -290,16 +290,9 @@ class YustService {
     if (modelSetup.onSave != null && !skipOnSave) {
       await modelSetup.onSave!(doc);
     }
+    await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
 
-    if (doc.id != null) {
-      await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
-    } else {
-      var ref = await collection.add(doc.toJson());
-      doc.id = ref.id;
-      await ref.set(doc.toJson());
-    }
-
-    return getDocOnce<T>(modelSetup, doc.id!);
+    return getDocOnce<T>(modelSetup, doc.id);
   }
 
   Future<void> deleteDocs<T extends YustDoc>(

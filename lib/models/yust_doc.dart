@@ -92,10 +92,12 @@ abstract class YustDoc with YustSerializable {
     });
   }
 
+  // TODO: delete, use convertTimestamp instead
   static DateTime? dateTimeFromJson(dynamic timestamp) {
     if (timestamp is Timestamp) {
       return timestamp.toDate();
-    } else if (timestamp is String) {
+    } else if (timestamp is String &&
+        RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(timestamp)) {
       return DateTime.parse(timestamp);
     } else if (timestamp is Map && timestamp['_seconds'] != null) {
       return Timestamp(timestamp['_seconds'], timestamp['_nanoseconds'])
@@ -105,6 +107,7 @@ abstract class YustDoc with YustSerializable {
     }
   }
 
+  // TODO; delete
   static dynamic dateTimeToJson(DateTime? dateTime) {
     if (dateTime == null) {
       return null;
@@ -112,6 +115,14 @@ abstract class YustDoc with YustSerializable {
       return Timestamp.fromDate(dateTime);
     } else {
       return dateTime.toIso8601String();
+    }
+  }
+
+  static dynamic convertTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    } else {
+      return value;
     }
   }
 }

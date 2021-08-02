@@ -2,6 +2,7 @@ import 'yust_doc.dart';
 
 class YustDocSetup<T extends YustDoc> {
   String collectionName;
+  // TODO: Remove
   T Function(Map<String, dynamic> json) fromJson;
   T Function() newDoc;
 

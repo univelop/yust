@@ -292,6 +292,7 @@ class YustService {
     }
     await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
 
+    // TODO: Remove
     return getDocOnce<T>(modelSetup, doc.id);
   }
 
@@ -638,6 +639,7 @@ class YustService {
       return null;
     }
     final data = snapshot.data();
+    // TODO: Convert timestamps
     if (data is Map<String, dynamic>) {
       final T document = modelSetup.fromJson(data);
 

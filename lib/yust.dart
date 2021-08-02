@@ -23,7 +23,8 @@ class Yust {
   static late YustStore store;
   static late YustService service;
   static late YustDocSetup<YustUser> userSetup;
-  static bool useTimestamps = false;
+  @Deprecated('`useTimestamps` will allways be set to true.')
+  static bool useTimestamps = true;
   static bool useSubcollections = false;
   static String envCollectionName = 'envs';
   static String? storageUrl;

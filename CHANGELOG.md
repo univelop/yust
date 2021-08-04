@@ -1,3 +1,7 @@
+## 2.2.1
+
+- Migrated from the deprecated connectivity plugin to connectivity_plus.
+
 ## 2.2.0 - 2021-07-02
 
 * Add checkbox control for switch

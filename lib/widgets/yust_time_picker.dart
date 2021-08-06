@@ -108,6 +108,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
   }
 
   void _pickTime(BuildContext context, String title) async {
+    Yust.service.unfocusCurrent(context);
     final now = DateTime.now();
     var dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
     final initialTime = TimeOfDay.fromDateTime(dateTime);

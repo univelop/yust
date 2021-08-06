@@ -265,6 +265,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _pickImages(ImageSource imageSource) async {
+    Yust.service.unfocusCurrent(context);
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
@@ -360,6 +361,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   void _showImages(YustFile activeFile) {
+    Yust.service.unfocusCurrent(context);
     if (widget.multiple) {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
         'urls': _files.map((file) => file.url).toList(),
@@ -373,6 +375,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _deleteImage(YustFile file) async {
+    Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',

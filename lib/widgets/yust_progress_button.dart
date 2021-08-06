@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../yust.dart';
+
 class YustProgressButton extends StatefulWidget {
   final Widget? child;
   final Future<void> Function() onPressed;
@@ -58,6 +60,7 @@ class _YustProgressButtonState extends State<YustProgressButton> {
   }
 
   void onPressed() async {
+    Yust.service.unfocusCurrent(context);
     setState(() {
       _inProgressLocal = true;
     });

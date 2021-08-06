@@ -574,6 +574,14 @@ class YustService {
     ));
   }
 
+  /// Does unfocus the current focus node.
+  void unfocusCurrent(BuildContext context) {
+    final currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+  }
+
   /// Does not return null.
   ///
   /// Use formatIsoDate for backwards compatibility.

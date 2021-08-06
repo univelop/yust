@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../yust.dart';
+
 class YustFocusHandler extends StatelessWidget {
   final Widget child;
 
@@ -9,10 +11,7 @@ class YustFocusHandler extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
-        }
+        Yust.service.unfocusCurrent(context);
       },
       child: child,
     );

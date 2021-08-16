@@ -8,7 +8,10 @@ class YustTextField extends StatefulWidget {
   final String? label;
   final String? value;
   final StringCallback? onChanged;
+
+  /// if a validator is implemented, onEditingComplete gets only triggerd, if validator is true (true = returns null)
   final StringCallback? onEditingComplete;
+  final FormFieldValidator<String>? validator;
   final TabCallback? onTab;
   final int? minLines;
   final bool readOnly;
@@ -18,23 +21,26 @@ class YustTextField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final TextCapitalization textCapitalization;
+  final AutovalidateMode? autovalidateMode;
 
-  YustTextField({
-    Key? key,
-    this.label,
-    this.value,
-    this.onChanged,
-    this.onEditingComplete,
-    this.onTab,
-    this.minLines,
-    this.enabled = true,
-    this.readOnly = false,
-    this.obscureText = false,
-    this.style,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.textCapitalization = TextCapitalization.sentences,
-  }) : super(key: key);
+  YustTextField(
+      {Key? key,
+      this.label,
+      this.value,
+      this.onChanged,
+      this.onEditingComplete,
+      this.validator,
+      this.onTab,
+      this.minLines,
+      this.enabled = true,
+      this.readOnly = false,
+      this.obscureText = false,
+      this.style,
+      this.prefixIcon,
+      this.suffixIcon,
+      this.textCapitalization = TextCapitalization.sentences,
+      this.autovalidateMode})
+      : super(key: key);
 
   @override
   _YustTextFieldState createState() => _YustTextFieldState();
@@ -50,7 +56,12 @@ class _YustTextFieldState extends State<YustTextField> {
     _controller = TextEditingController(text: widget.value);
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete!(_controller!.value.text.trim());
+        var textFieldValue = _controller!.value.text.trim();
+        if (widget.validator == null) {
+          widget.onEditingComplete!(textFieldValue);
+        } else if (widget.validator!(textFieldValue) == null) {
+          widget.onEditingComplete!(textFieldValue);
+        }
       }
     });
   }
@@ -65,7 +76,7 @@ class _YustTextFieldState extends State<YustTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       decoration: InputDecoration(
         labelText: widget.label,
         contentPadding: const EdgeInsets.all(20.0),
@@ -90,6 +101,10 @@ class _YustTextFieldState extends State<YustTextField> {
       enabled: widget.enabled,
       obscureText: widget.obscureText,
       textCapitalization: widget.textCapitalization,
+      autovalidateMode: widget.autovalidateMode,
+      validator: widget.validator == null
+          ? null
+          : (value) => widget.validator!(value!.trim()),
     );
   }
 }

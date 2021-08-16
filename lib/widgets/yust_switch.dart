@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 
+import '../yust.dart';
+
 class YustSwitch extends StatelessWidget {
   final String? label;
   final bool value;
@@ -29,10 +31,12 @@ class YustSwitch extends StatelessWidget {
           child: Checkbox(
             checkColor: activeColor,
             value: value,
-            onChanged: (bool? value) =>
-                readOnly || value == null || onChanged == null
-                    ? null
-                    : onChanged!(value),
+            onChanged: (bool? value) {
+              Yust.service.unfocusCurrent(context);
+              readOnly || value == null || onChanged == null
+                  ? null
+                  : onChanged!(value);
+            },
           ),
           label: label,
           prefixIcon: prefixIcon);
@@ -41,7 +45,10 @@ class YustSwitch extends StatelessWidget {
           child: Switch(
             value: value,
             activeColor: activeColor,
-            onChanged: readOnly ? null : onChanged,
+            onChanged: (value) {
+              Yust.service.unfocusCurrent(context);
+              readOnly || onChanged == null ? null : onChanged!(value);
+            },
           ),
           label: label,
           prefixIcon: prefixIcon);

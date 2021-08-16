@@ -109,6 +109,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
   }
 
   Future<void> _pickFiles() async {
+    Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
@@ -170,6 +171,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
   }
 
   Future<void> _showFile(Map<String, String> file) async {
+    Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
@@ -212,6 +214,7 @@ class _YustFilePickerState extends State<YustFilePicker> {
   }
 
   Future<void> _deleteFile(Map<String, String> file) async {
+    Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',

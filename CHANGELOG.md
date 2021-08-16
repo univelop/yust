@@ -1,6 +1,8 @@
-## 2.2.1
+## 2.3.0 - 2021-08-07
 
-- Migrated from the deprecated connectivity plugin to connectivity_plus.
+* Improve focus handling
+* Improve timestamp convertion
+* Fix bugs
 
 ## 2.2.0 - 2021-07-02
 

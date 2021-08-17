@@ -11,6 +11,7 @@ class YustTextField extends StatefulWidget {
 
   /// if a validator is implemented, onEditingComplete gets only triggerd, if validator is true (true = returns null)
   final StringCallback? onEditingComplete;
+  final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
   final TabCallback? onTab;
   final int? minLines;
@@ -29,6 +30,7 @@ class YustTextField extends StatefulWidget {
       this.value,
       this.onChanged,
       this.onEditingComplete,
+      this.controller,
       this.validator,
       this.onTab,
       this.minLines,
@@ -47,16 +49,20 @@ class YustTextField extends StatefulWidget {
 }
 
 class _YustTextFieldState extends State<YustTextField> {
-  TextEditingController? _controller;
+  late TextEditingController _controller;
   FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.value);
+    if (widget.controller != null && widget.value != null) {
+      widget.controller!.text = widget.value!;
+    }
+    _controller =
+        widget.controller ?? TextEditingController(text: widget.value);
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        var textFieldValue = _controller!.value.text.trim();
+        var textFieldValue = _controller.value.text.trim();
         if (widget.validator == null) {
           widget.onEditingComplete!(textFieldValue);
         } else if (widget.validator!(textFieldValue) == null) {
@@ -68,7 +74,7 @@ class _YustTextFieldState extends State<YustTextField> {
 
   @override
   void dispose() {
-    _controller!.dispose();
+    _controller.dispose();
     _focusNode.dispose();
 
     super.dispose();

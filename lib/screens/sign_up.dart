@@ -31,6 +31,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final _formKey = GlobalKey<FormState>();
   YustGender? _gender;
   String? _firstName;
   String? _lastName;
@@ -66,158 +67,194 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Container(
               constraints: BoxConstraints(maxWidth: 600),
               padding: const EdgeInsets.only(top: 40.0),
-              child: Column(
-                children: <Widget>[
-                  _buildLogo(context),
-                  _buildGender(context),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Vorname',
-                        border: OutlineInputBorder(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: <Widget>[
+                    _buildLogo(context),
+                    _buildGender(context),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Vorname',
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        textCapitalization: TextCapitalization.words,
+                        focusNode: _firstNameFocus,
+                        onChanged: (value) => _firstName = value.trim(),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Der Vorname darf nicht leer sein.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (value) {
+                          _firstNameFocus.unfocus();
+                          FocusScope.of(context).requestFocus(_lastNameFocus);
+                          _scrollController.animateTo(
+                              _scrollController.offset + 80,
+                              duration: Duration(milliseconds: 500),
+                              curve: Curves.ease);
+                        },
                       ),
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                      focusNode: _firstNameFocus,
-                      onChanged: (value) => _firstName = value.trim(),
-                      onSubmitted: (value) {
-                        _firstNameFocus.unfocus();
-                        FocusScope.of(context).requestFocus(_lastNameFocus);
-                        _scrollController.animateTo(
-                            _scrollController.offset + 80,
-                            duration: Duration(milliseconds: 500),
-                            curve: Curves.ease);
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Nachname',
-                        border: OutlineInputBorder(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Nachname',
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        textCapitalization: TextCapitalization.words,
+                        focusNode: _lastNameFocus,
+                        onChanged: (value) => _lastName = value.trim(),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Der Nachname darf nicht leer sein.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (value) {
+                          _firstNameFocus.unfocus();
+                          FocusScope.of(context).requestFocus(_emailFocus);
+                          _scrollController.animateTo(
+                              _scrollController.offset + 80,
+                              duration: Duration(milliseconds: 500),
+                              curve: Curves.ease);
+                        },
                       ),
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                      focusNode: _lastNameFocus,
-                      onChanged: (value) => _lastName = value.trim(),
-                      onSubmitted: (value) {
-                        _firstNameFocus.unfocus();
-                        FocusScope.of(context).requestFocus(_emailFocus);
-                        _scrollController.animateTo(
-                            _scrollController.offset + 80,
-                            duration: Duration(milliseconds: 500),
-                            curve: Curves.ease);
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'E-Mail',
-                        border: OutlineInputBorder(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'E-Mail',
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.emailAddress,
+                        textCapitalization: TextCapitalization.none,
+                        focusNode: _emailFocus,
+                        onChanged: (value) => _email = value.trim(),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Die E-Mail darf nicht leer sein.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (value) {
+                          _emailFocus.unfocus();
+                          FocusScope.of(context).requestFocus(_passwordFocus);
+                          _scrollController.animateTo(
+                              _scrollController.offset + 80,
+                              duration: Duration(milliseconds: 500),
+                              curve: Curves.ease);
+                        },
                       ),
-                      textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.emailAddress,
-                      textCapitalization: TextCapitalization.none,
-                      focusNode: _emailFocus,
-                      onChanged: (value) => _email = value.trim(),
-                      onSubmitted: (value) {
-                        _emailFocus.unfocus();
-                        FocusScope.of(context).requestFocus(_passwordFocus);
-                        _scrollController.animateTo(
-                            _scrollController.offset + 80,
-                            duration: Duration(milliseconds: 500),
-                            curve: Curves.ease);
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Passwort',
-                        border: OutlineInputBorder(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Passwort',
+                          border: OutlineInputBorder(),
+                        ),
+                        obscureText: true,
+                        textInputAction: TextInputAction.next,
+                        focusNode: _passwordFocus,
+                        onChanged: (value) => _password = value.trim(),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Das Passwort darf nicht leer sein.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (value) async {
+                          _passwordFocus.unfocus();
+                          FocusScope.of(context)
+                              .requestFocus(_passwordConfirmationFocus);
+                          _scrollController.animateTo(
+                              _scrollController.offset + 80,
+                              duration: Duration(milliseconds: 500),
+                              curve: Curves.ease);
+                        },
                       ),
-                      obscureText: true,
-                      textInputAction: TextInputAction.next,
-                      focusNode: _passwordFocus,
-                      onChanged: (value) => _password = value.trim(),
-                      onSubmitted: (value) async {
-                        _passwordFocus.unfocus();
-                        FocusScope.of(context)
-                            .requestFocus(_passwordConfirmationFocus);
-                        _scrollController.animateTo(
-                            _scrollController.offset + 80,
-                            duration: Duration(milliseconds: 500),
-                            curve: Curves.ease);
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'Passwort bestätigen',
-                        border: OutlineInputBorder(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Passwort bestätigen',
+                          border: OutlineInputBorder(),
+                        ),
+                        obscureText: true,
+                        textInputAction: TextInputAction.send,
+                        focusNode: _passwordConfirmationFocus,
+                        onChanged: (value) =>
+                            _passwordConfirmation = value.trim(),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Die Passwortbestätigung darf nicht leer sein.';
+                          }
+                          if (_password != value) {
+                            return 'Die Passwörter stimmen nicht überein.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (value) async {
+                          _passwordConfirmationFocus.unfocus();
+                          setState(() {
+                            _waitingForSignUp = true;
+                          });
+                          await _signUp(context);
+                          setState(() {
+                            _waitingForSignUp = false;
+                          });
+                        },
                       ),
-                      obscureText: true,
-                      textInputAction: TextInputAction.send,
-                      focusNode: _passwordConfirmationFocus,
-                      onChanged: (value) =>
-                          _passwordConfirmation = value.trim(),
-                      onSubmitted: (value) async {
-                        _passwordConfirmationFocus.unfocus();
-                        setState(() {
-                          _waitingForSignUp = true;
-                        });
-                        await _signUp(context);
-                        setState(() {
-                          _waitingForSignUp = false;
-                        });
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: YustProgressButton(
-                      color: Theme.of(context).accentColor,
-                      inProgress: _waitingForSignUp,
-                      onPressed: () => _signUp(context),
-                      child: Text('Registrieren',
-                          style:
-                              TextStyle(fontSize: 20.0, color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: YustProgressButton(
+                        color: Theme.of(context).accentColor,
+                        inProgress: _waitingForSignUp,
+                        onPressed: () => _signUp(context),
+                        child: Text('Registrieren',
+                            style:
+                                TextStyle(fontSize: 20.0, color: Colors.white)),
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
-                    child: Text('Du hast bereits einen Account?',
-                        style: TextStyle(fontSize: 16.0)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, SignInScreen.routeName,
-                            arguments: arguments);
-                      },
-                      child: Text('Hier Anmelden',
-                          style: TextStyle(
-                              fontSize: 20.0,
-                              color: Theme.of(context).primaryColor)),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
+                      child: Text('Du hast bereits einen Account?',
+                          style: TextStyle(fontSize: 16.0)),
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, SignInScreen.routeName,
+                              arguments: arguments);
+                        },
+                        child: Text('Hier Anmelden',
+                            style: TextStyle(
+                                fontSize: 20.0,
+                                color: Theme.of(context).primaryColor)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -260,38 +297,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _signUp(BuildContext context) async {
-    try {
-      await Yust.service
-          .signUp(
+    if (_formKey.currentState!.validate()) {
+      try {
+        await Yust.service
+            .signUp(
+              context,
+              _firstName!,
+              _lastName!,
+              _email!,
+              _password!,
+              _passwordConfirmation!,
+              gender: _gender,
+            )
+            .timeout(Duration(seconds: 10));
+        if (_onSignedIn != null) _onSignedIn!();
+        if (mounted) {
+          Navigator.popUntil(
             context,
-            _firstName,
-            _lastName,
-            _email,
-            _password,
-            _passwordConfirmation,
-            gender: _gender,
-          )
-          .timeout(Duration(seconds: 10));
-      if (_onSignedIn != null) _onSignedIn!();
-      if (mounted) {
-        Navigator.popUntil(
+            (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
+                .contains(route.settings.name),
+          );
+        }
+      } on YustException catch (err) {
+        Yust.service.showAlert(context, 'Fehler', err.message);
+      } on PlatformException catch (err) {
+        Yust.service.showAlert(context, 'Fehler', err.message!);
+      } on TimeoutException catch (_) {
+        Yust.service.showAlert(
           context,
-          (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
-              .contains(route.settings.name),
+          'Fehler',
+          'Zeitüberschreitung der Anfrage',
         );
+      } catch (err) {
+        Yust.service.showAlert(context, 'Fehler', err.toString());
       }
-    } on YustException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
-    } on PlatformException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message!);
-    } on TimeoutException catch (_) {
-      Yust.service.showAlert(
-        context,
-        'Fehler',
-        'Zeitüberschreitung der Anfrage',
-      );
-    } catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.toString());
     }
   }
 }

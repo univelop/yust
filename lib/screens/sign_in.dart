@@ -34,6 +34,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  final _formKey = GlobalKey<FormState>();
   String? _email;
   String? _password;
   bool _waitingForSignIn = false;
@@ -88,102 +89,118 @@ class _SignInScreenState extends State<SignInScreen> {
             child: Container(
               constraints: BoxConstraints(maxWidth: 600),
               padding: const EdgeInsets.only(top: 40.0),
-              child: Column(
-                children: <Widget>[
-                  _buildLogo(context),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      key: Key('email'),
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        labelText: 'E-Mail',
-                        border: OutlineInputBorder(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: <Widget>[
+                    _buildLogo(context),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        key: Key('email'),
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'E-Mail',
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.emailAddress,
+                        focusNode: _emailFocus,
+                        onChanged: (value) => _email = value.trim(),
+                        onFieldSubmitted: (value) {
+                          _emailFocus.unfocus();
+                          FocusScope.of(context).requestFocus(_passwordFocus);
+                        },
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Die E-Mail darf nicht leer sein.';
+                          } else {
+                            return null;
+                          }
+                        },
                       ),
-                      textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.emailAddress,
-                      focusNode: _emailFocus,
-                      onChanged: (value) => _email = value.trim(),
-                      onSubmitted: (value) {
-                        _emailFocus.unfocus();
-                        FocusScope.of(context).requestFocus(_passwordFocus);
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      key: Key('password'),
-                      decoration: InputDecoration(
-                        labelText: 'Passwort',
-                        border: OutlineInputBorder(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        key: Key('password'),
+                        decoration: InputDecoration(
+                          labelText: 'Passwort',
+                          border: OutlineInputBorder(),
+                        ),
+                        obscureText: true,
+                        textInputAction: TextInputAction.send,
+                        focusNode: _passwordFocus,
+                        onChanged: (value) => _password = value.trim(),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Das Passwort darf nicht leer sein.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (value) async {
+                          _passwordFocus.unfocus();
+                          setState(() {
+                            _waitingForSignIn = true;
+                          });
+                          await _signIn(context);
+                          setState(() {
+                            _waitingForSignIn = false;
+                          });
+                        },
                       ),
-                      obscureText: true,
-                      textInputAction: TextInputAction.send,
-                      focusNode: _passwordFocus,
-                      onChanged: (value) => _password = value.trim(),
-                      onSubmitted: (value) async {
-                        _passwordFocus.unfocus();
-                        setState(() {
-                          _waitingForSignIn = true;
-                        });
-                        await _signIn(context);
-                        setState(() {
-                          _waitingForSignIn = false;
-                        });
-                      },
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: YustProgressButton(
-                      key: Key('signInButton'),
-                      color: Theme.of(context).accentColor,
-                      inProgress: _waitingForSignIn,
-                      onPressed: () => _signIn(context),
-                      child: Text('Anmelden',
-                          style:
-                              TextStyle(fontSize: 20.0, color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: YustProgressButton(
+                        key: Key('signInButton'),
+                        color: Theme.of(context).accentColor,
+                        inProgress: _waitingForSignIn,
+                        onPressed: () => _signIn(context),
+                        child: Text('Anmelden',
+                            style:
+                                TextStyle(fontSize: 20.0, color: Colors.white)),
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                        left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
-                    child: Text('Du hast noch keinen Account?',
-                        style: TextStyle(fontSize: 16.0)),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, SignUpScreen.routeName,
-                            arguments: arguments);
-                      },
-                      child: Text('Hier Registrieren',
-                          style: TextStyle(
-                              fontSize: 20.0,
-                              color: Theme.of(context).primaryColor)),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          left: 20.0, top: 40.0, right: 20.0, bottom: 10.0),
+                      child: Text('Du hast noch keinen Account?',
+                          style: TextStyle(fontSize: 16.0)),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(
-                            context, ResetPasswordScreen.routeName);
-                      },
-                      child: Text('Passwort vergessen',
-                          style: TextStyle(
-                              fontSize: 20.0,
-                              color: Theme.of(context).primaryColor)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, SignUpScreen.routeName,
+                              arguments: arguments);
+                        },
+                        child: Text('Hier Registrieren',
+                            style: TextStyle(
+                                fontSize: 20.0,
+                                color: Theme.of(context).primaryColor)),
+                      ),
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                              context, ResetPasswordScreen.routeName);
+                        },
+                        child: Text('Passwort vergessen',
+                            style: TextStyle(
+                                fontSize: 20.0,
+                                color: Theme.of(context).primaryColor)),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -205,32 +222,34 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _signIn(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('email', _email!);
-    try {
-      await Yust.service
-          .signIn(context, _email, _password)
-          .timeout(Duration(seconds: 10));
-      if (_onSignedIn != null) _onSignedIn!();
-      if (mounted) {
-        Navigator.popUntil(
+    if (_formKey.currentState!.validate()) {
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('email', _email!);
+      try {
+        await Yust.service
+            .signIn(context, _email!, _password!)
+            .timeout(Duration(seconds: 10));
+        if (_onSignedIn != null) _onSignedIn!();
+        if (mounted) {
+          Navigator.popUntil(
+            context,
+            (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
+                .contains(route.settings.name),
+          );
+        }
+      } on YustException catch (err) {
+        Yust.service.showAlert(context, 'Fehler', err.message);
+      } on PlatformException catch (err) {
+        Yust.service.showAlert(context, 'Fehler', err.message!);
+      } on TimeoutException catch (_) {
+        Yust.service.showAlert(
           context,
-          (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
-              .contains(route.settings.name),
+          'Fehler',
+          'Zeitüberschreitung der Anfrage',
         );
+      } catch (err) {
+        Yust.service.showAlert(context, 'Fehler', err.toString());
       }
-    } on YustException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message);
-    } on PlatformException catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.message!);
-    } on TimeoutException catch (_) {
-      Yust.service.showAlert(
-        context,
-        'Fehler',
-        'Zeitüberschreitung der Anfrage',
-      );
-    } catch (err) {
-      Yust.service.showAlert(context, 'Fehler', err.toString());
     }
   }
 }

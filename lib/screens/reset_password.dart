@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
+import 'package:yust/widgets/yust_text_field.dart';
 
 import '../yust.dart';
 
@@ -17,6 +18,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   String? _email;
 
   @override
@@ -31,42 +33,56 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             child: Container(
               constraints: BoxConstraints(maxWidth: 600),
               padding: const EdgeInsets.only(top: 40.0),
-              child: Column(
-                children: <Widget>[
-                  _buildLogo(context),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        labelText: 'E-Mail',
-                        border: OutlineInputBorder(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: <Widget>[
+                    _buildLogo(context),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'E-Mail',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value == '') {
+                            return 'Die E-Mail darf nicht leer sein.';
+                          }
+                          return null;
+                        },
+                        onChanged: (value) => _email = value.trim(),
                       ),
-                      onChanged: (value) => _email = value.trim(),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 10.0),
-                    child: YustProgressButton(
-                      color: Theme.of(context).accentColor,
-                      onPressed: () async {
-                        try {
-                          await Yust.service.sendPasswordResetEmail(_email);
-                          Navigator.pop(context);
-                          Yust.service.showAlert(context, 'E-Mail verschickt',
-                              'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
-                        } catch (err) {
-                          Yust.service
-                              .showAlert(context, 'Fehler', err.toString());
-                        }
-                      },
-                      child: Text('Passwort vergessen',
-                          style:
-                              TextStyle(fontSize: 20.0, color: Colors.white)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0, vertical: 10.0),
+                      child: YustProgressButton(
+                        color: Theme.of(context).accentColor,
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            try {
+                              await Yust.service
+                                  .sendPasswordResetEmail(_email!);
+                              Navigator.pop(context);
+                              Yust.service.showAlert(
+                                  context,
+                                  'E-Mail verschickt',
+                                  'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
+                            } catch (err) {
+                              Yust.service
+                                  .showAlert(context, 'Fehler', err.toString());
+                            }
+                          }
+                        },
+                        child: Text('Passwort vergessen',
+                            style:
+                                TextStyle(fontSize: 20.0, color: Colors.white)),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -24,15 +24,9 @@ class YustService {
 
   Future<void> signIn(
     BuildContext context,
-    String? email,
-    String? password,
+    String email,
+    String password,
   ) async {
-    if (email == null || email == '') {
-      throw YustException('Die E-Mail darf nicht leer sein.');
-    }
-    if (password == null || password == '') {
-      throw YustException('Das Passwort darf nicht leer sein.');
-    }
     await fireAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
@@ -41,28 +35,13 @@ class YustService {
 
   Future<void> signUp(
     BuildContext context,
-    String? firstName,
-    String? lastName,
-    String? email,
-    String? password,
-    String? passwordConfirmation, {
+    String firstName,
+    String lastName,
+    String email,
+    String password,
+    String passwordConfirmation, {
     YustGender? gender,
   }) async {
-    if (firstName == null || firstName == '') {
-      throw YustException('Der Vorname darf nicht leer sein.');
-    }
-    if (lastName == null || lastName == '') {
-      throw YustException('Der Nachname darf nicht leer sein.');
-    }
-    if (email == null || email == '') {
-      throw YustException('Die E-Mail darf nicht leer sein.');
-    }
-    if (password == null || password == '') {
-      throw YustException('Das Passwort darf nicht leer sein.');
-    }
-    if (password != passwordConfirmation) {
-      throw YustException('Die Passwörter stimmen nicht überein.');
-    }
     final UserCredential userCredential = await fireAuth
         .createUserWithEmailAndPassword(email: email, password: password);
     final user = Yust.userSetup.newDoc()
@@ -94,10 +73,7 @@ class YustService {
     );
   }
 
-  Future<void> sendPasswordResetEmail(String? email) async {
-    if (email == null || email == '') {
-      throw YustException('Die E-Mail darf nicht leer sein.');
-    }
+  Future<void> sendPasswordResetEmail(String email) async {
     await fireAuth.sendPasswordResetEmail(email: email);
   }
 

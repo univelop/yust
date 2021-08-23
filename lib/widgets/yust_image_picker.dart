@@ -42,8 +42,6 @@ class YustImagePicker extends StatefulWidget {
     this.readOnly = false,
     this.yustQuality = 'medium',
   }) : super(key: key);
-  static YustImagePickerState? of(BuildContext context) =>
-      context.findRootAncestorStateOfType<YustImagePickerState>();
   @override
   YustImagePickerState createState() => YustImagePickerState();
 }

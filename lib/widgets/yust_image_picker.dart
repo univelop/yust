@@ -42,13 +42,13 @@ class YustImagePicker extends StatefulWidget {
     this.readOnly = false,
     this.yustQuality = 'medium',
   }) : super(key: key);
-  static _YustImagePickerState? of(BuildContext context) =>
-      context.findAncestorStateOfType();
+  static YustImagePickerState? of(BuildContext context) =>
+      context.findRootAncestorStateOfType<YustImagePickerState>();
   @override
-  _YustImagePickerState createState() => _YustImagePickerState();
+  YustImagePickerState createState() => YustImagePickerState();
 }
 
-class _YustImagePickerState extends State<YustImagePicker> {
+class YustImagePickerState extends State<YustImagePicker> {
   late List<YustFile> _files;
   late bool _enabled;
 
@@ -398,9 +398,5 @@ class _YustImagePickerState extends State<YustImagePicker> {
         widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
     }
-  }
-
-  String test() {
-    return 'hallo';
   }
 }

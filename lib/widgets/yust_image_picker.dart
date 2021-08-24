@@ -42,12 +42,11 @@ class YustImagePicker extends StatefulWidget {
     this.readOnly = false,
     this.yustQuality = 'medium',
   }) : super(key: key);
-
   @override
-  _YustImagePickerState createState() => _YustImagePickerState();
+  YustImagePickerState createState() => YustImagePickerState();
 }
 
-class _YustImagePickerState extends State<YustImagePicker> {
+class YustImagePickerState extends State<YustImagePicker> {
   late List<YustFile> _files;
   late bool _enabled;
 
@@ -281,7 +280,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
             maxWidth: size,
             imageQuality: quality);
         if (image != null) {
-          await _uploadFile(
+          await uploadFile(
               path: image.path,
               file: File(image.path),
               yustQuality: widget.yustQuality);
@@ -292,7 +291,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
               .pickFiles(type: FileType.image, allowMultiple: true);
           if (result != null) {
             for (final platformFile in result.files) {
-              await _uploadFile(
+              await uploadFile(
                 path: platformFile.name!,
                 bytes: platformFile.bytes,
                 resize: true,
@@ -304,7 +303,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
           final result =
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
-            await _uploadFile(
+            await uploadFile(
                 path: result.files.single.name!,
                 bytes: result.files.single.bytes,
                 resize: true,
@@ -315,7 +314,7 @@ class _YustImagePickerState extends State<YustImagePicker> {
     }
   }
 
-  Future<void> _uploadFile({
+  Future<void> uploadFile({
     required String path,
     File? file,
     Uint8List? bytes,

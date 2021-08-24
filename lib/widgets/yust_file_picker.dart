@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -33,10 +34,10 @@ class YustFilePicker extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _YustFilePickerState createState() => _YustFilePickerState();
+  YustFilePickerState createState() => YustFilePickerState();
 }
 
-class _YustFilePickerState extends State<YustFilePicker> {
+class YustFilePickerState extends State<YustFilePicker> {
   late List<Map<String, String>> _files;
   Map<String?, bool> _processing = {};
   late bool _enabled;
@@ -108,6 +109,41 @@ class _YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
+  Future<void> addFile(
+      Map<String, String> fileData, File? file, Uint8List? bytes) async {
+    setState(() {
+      _files.add(fileData);
+      _files.sort((a, b) => a['name']!.compareTo(b['name']!));
+      _processing[fileData['name']] = true;
+    });
+
+    try {
+      fileData['url'] = await Yust.service.uploadFile(
+        path: widget.folderPath,
+        name: fileData['name']!,
+        file: file,
+        bytes: bytes,
+      );
+    } on YustException catch (e) {
+      if (mounted) {
+        Yust.service.showAlert(context, 'Ups', e.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        Yust.service.showAlert(
+            context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
+      }
+    }
+    if (fileData['url'] == null) {
+      _files.remove(fileData);
+    }
+    _processing[fileData['name']] = false;
+    if (mounted) {
+      setState(() {});
+    }
+    widget.onChanged!(_files);
+  }
+
   Future<void> _pickFiles() async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
@@ -130,42 +166,14 @@ class _YustFilePickerState extends State<YustFilePicker> {
             Yust.service.showAlert(context, 'Nicht möglich',
                 'Eine Datei mit dem Namen ${fileData['name']} existiert bereits.');
           } else {
-            setState(() {
-              _files.add(fileData);
-              _files.sort((a, b) => a['name']!.compareTo(b['name']!));
-              _processing[fileData['name']] = true;
-            });
             File? file;
             if (platformFile.path != null) {
               file = File(platformFile.path!);
             }
-            try {
-              fileData['url'] = await Yust.service.uploadFile(
-                path: widget.folderPath,
-                name: fileData['name']!,
-                file: file,
-                bytes: platformFile.bytes,
-              );
-            } on YustException catch (e) {
-              if (mounted) {
-                Yust.service.showAlert(context, 'Ups', e.message);
-              }
-            } catch (e) {
-              if (mounted) {
-                Yust.service.showAlert(context, 'Ups',
-                    'Die Datei konnte nicht hochgeladen werden.');
-              }
-            }
-            if (fileData['url'] == null) {
-              _files.remove(fileData);
-            }
-            _processing[fileData['name']] = false;
-            if (mounted) {
-              setState(() {});
-            }
+            await addFile(fileData, file, platformFile.bytes);
           }
+          widget.onChanged!(_files);
         }
-        widget.onChanged!(_files);
       }
     }
   }

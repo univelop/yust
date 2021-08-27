@@ -1,3 +1,9 @@
+## 2.4.0 - 2021-08-27
+
+* Add validation to input fields
+* Add controllers to input fields
+* Fix bugs
+
 ## 2.3.0 - 2021-08-07
 
 * Improve focus handling

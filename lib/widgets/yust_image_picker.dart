@@ -66,8 +66,8 @@ class YustImagePickerState extends State<YustImagePicker> {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 8.0, right: 16.0, bottom: 8.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Wrap(
+            direction: Axis.horizontal,
             children: [
               Flexible(
                 flex: 2,

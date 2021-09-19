@@ -63,32 +63,24 @@ class YustImagePickerState extends State<YustImagePicker> {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 8.0, right: 16.0, bottom: 8.0),
           child: Wrap(
-            direction: Axis.horizontal,
             children: [
-              Flexible(
-                flex: 2,
-                fit: FlexFit.tight,
-                child: _buildLabel(context),
-              ),
-              Flexible(
-                flex: 1,
-                fit: FlexFit.tight,
-                child: Stack(
-                  alignment: AlignmentDirectional.center,
-                  children: [
-                    if (!widget.multiple)
-                      _buildImagePreview(context, _files.firstOrNull),
-                    if (!widget.multiple)
-                      _buildProgressIndicator(context, _files.firstOrNull),
-                    _buildPickButtons(context),
-                    if (!widget.multiple)
-                      _buildRemoveButton(context, _files.firstOrNull),
-                  ],
-                ),
+              _buildLabel(context),
+              Stack(
+                alignment: AlignmentDirectional.center,
+                children: [
+                  if (!widget.multiple)
+                    _buildImagePreview(context, _files.firstOrNull),
+                  if (!widget.multiple)
+                    _buildProgressIndicator(context, _files.firstOrNull),
+                  _buildPickButtons(context),
+                  if (!widget.multiple)
+                    _buildRemoveButton(context, _files.firstOrNull),
+                ],
               ),
             ],
           ),

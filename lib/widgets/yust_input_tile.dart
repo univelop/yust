@@ -90,6 +90,7 @@ class YustInputTile extends StatelessWidget {
         } else {
           return Column(
             mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ListTile(
                 title: Row(

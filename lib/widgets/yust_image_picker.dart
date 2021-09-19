@@ -183,9 +183,9 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
     Widget preview;
     if (file.file != null) {
-      preview = Image.file(file.file!, fit: BoxFit.cover);
+      preview = Image.file(file.file!, fit: BoxFit.scaleDown);
     } else if (file.bytes != null) {
-      preview = Image.memory(file.bytes!, fit: BoxFit.cover);
+      preview = Image.memory(file.bytes!, fit: BoxFit.scaleDown);
     } else {
       preview = FadeInImage.assetNetwork(
         placeholder: Yust.imagePlaceholderPath!,
@@ -194,18 +194,33 @@ class YustImagePickerState extends State<YustImagePicker> {
       );
     }
     final zoomEnabled = (file.url != null && widget.zoomable);
-    return AspectRatio(
-      aspectRatio: 1,
-      child: GestureDetector(
-        onTap: zoomEnabled ? () => _showImages(file) : null,
-        child: file.url != null
-            ? Hero(
-                tag: file.url!,
-                child: preview,
-              )
-            : preview,
-      ),
-    );
+    if (widget.multiple) {
+      return AspectRatio(
+        aspectRatio: 1,
+        child: GestureDetector(
+          onTap: zoomEnabled ? () => _showImages(file) : null,
+          child: file.url != null
+              ? Hero(
+                  tag: file.url!,
+                  child: preview,
+                )
+              : preview,
+        ),
+      );
+    } else {
+      return ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: 300, maxWidth: 400),
+        child: GestureDetector(
+          onTap: zoomEnabled ? () => _showImages(file) : null,
+          child: file.url != null
+              ? Hero(
+                  tag: file.url!,
+                  child: preview,
+                )
+              : preview,
+        ),
+      );
+    }
   }
 
   Widget _buildProgressIndicator(BuildContext context, YustFile? file) {

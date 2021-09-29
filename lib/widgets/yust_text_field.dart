@@ -51,6 +51,7 @@ class YustTextField extends StatefulWidget {
 class _YustTextFieldState extends State<YustTextField> {
   late TextEditingController _controller;
   FocusNode _focusNode = FocusNode();
+  late String _initValue;
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _YustTextFieldState extends State<YustTextField> {
     }
     _controller =
         widget.controller ?? TextEditingController(text: widget.value);
+    _initValue = widget.value ?? '';
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
         var textFieldValue = _controller.value.text.trim();
@@ -82,6 +84,13 @@ class _YustTextFieldState extends State<YustTextField> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.value != null &&
+        widget.onChanged == null &&
+        widget.value != _initValue &&
+        widget.value != _controller.text) {
+      _controller.text = widget.value!;
+      _initValue = widget.value!;
+    }
     return TextFormField(
       decoration: InputDecoration(
         labelText: widget.label,

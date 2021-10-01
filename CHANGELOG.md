@@ -1,3 +1,11 @@
+## 2.5.0 - 2021-10-01
+
+* Migrate to Flutter 2.5.1
+* Improve text and number fields
+* Improve image picker
+* Disable persistence for browser
+* Fix bugs
+
 ## 2.4.0 - 2021-08-27
 
 * Add validation to input fields

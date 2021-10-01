@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
-import 'package:yust/widgets/yust_text_field.dart';
 
 import '../yust.dart';
 
@@ -59,7 +58,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20.0, vertical: 10.0),
                       child: YustProgressButton(
-                        color: Theme.of(context).accentColor,
+                        color: Theme.of(context).colorScheme.secondary,
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             try {

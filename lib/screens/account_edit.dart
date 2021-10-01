@@ -131,7 +131,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 TextButton(
                   child: Text(
                     'Speichern',
-                    style: TextStyle(color: Theme.of(context).accentColor),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary),
                   ),
                   onPressed: () async {
                     try {
@@ -194,7 +195,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 TextButton(
                   child: Text(
                     'Speichern',
-                    style: TextStyle(color: Theme.of(context).accentColor),
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary),
                   ),
                   onPressed: () async {
                     try {

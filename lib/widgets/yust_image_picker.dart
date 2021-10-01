@@ -127,7 +127,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       return Align(
         alignment: Alignment.centerRight,
         child: IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           iconSize: 40,
           icon: Icon(Icons.image),
           onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
@@ -138,13 +138,13 @@ class YustImagePickerState extends State<YustImagePicker> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
           IconButton(
-            color: Theme.of(context).accentColor,
+            color: Theme.of(context).colorScheme.secondary,
             iconSize: 40,
             icon: Icon(Icons.camera_alt),
             onPressed: _enabled ? () => _pickImages(ImageSource.camera) : null,
           ),
           IconButton(
-            color: Theme.of(context).accentColor,
+            color: Theme.of(context).colorScheme.secondary,
             iconSize: 40,
             icon: Icon(Icons.image),
             onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
@@ -242,8 +242,8 @@ class YustImagePickerState extends State<YustImagePicker> {
             child: Text(
               'Bild hochladen',
               overflow: TextOverflow.ellipsis,
-              style:
-                  TextStyle(color: Theme.of(context).accentColor, fontSize: 16),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary, fontSize: 16),
             ),
           ),
         ],
@@ -260,7 +260,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       right: 10,
       child: CircleAvatar(
         radius: 26,
-        backgroundColor: Theme.of(context).accentColor,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,

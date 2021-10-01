@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -10,15 +11,18 @@ class ImageScreen extends StatelessWidget {
     final arguments = ModalRoute.of(context)!.settings.arguments;
     String? url;
     List<String>? urls;
+    Color? navigatorIconColor;
     if (arguments is Map) {
       url = arguments['url'];
       final urlsArgs = arguments['urls'];
+      navigatorIconColor = arguments['navigatorIconColor'];
       if (urlsArgs is List) {
         urls = urlsArgs.whereType<String>().toList();
       }
     }
     if (urls != null) {
-      return _buildMultiple(context, urls, url);
+      return _buildMultiple(
+          context, urls, url, navigatorIconColor ?? Colors.white);
     } else {
       return _buildSingle(context, url!);
     }
@@ -44,38 +48,87 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMultiple(
-      BuildContext context, List<String> urls, String? activeUrl) {
+  Widget _buildMultiple(BuildContext context, List<String> urls,
+      String? activeUrl, Color navigatorIconColor) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
     }
     PageController _pageController = PageController(initialPage: firstPage);
-    return Container(
-      child: PhotoViewGallery.builder(
-        itemCount: urls.length,
-        scrollPhysics: const BouncingScrollPhysics(),
-        pageController: _pageController,
-        builder: (BuildContext context, int index) {
-          return PhotoViewGalleryPageOptions(
-            imageProvider: NetworkImage(urls[index]),
-            minScale: PhotoViewComputedScale.contained,
-            heroAttributes: PhotoViewHeroAttributes(tag: urls[index]),
-            onTapUp: (context, details, controllerValue) {
-              Navigator.pop(context);
+    return Stack(
+      children: [
+        Container(
+          child: PhotoViewGallery.builder(
+            itemCount: urls.length,
+            scrollPhysics: const BouncingScrollPhysics(),
+            pageController: _pageController,
+            builder: (BuildContext context, int index) {
+              return PhotoViewGalleryPageOptions(
+                imageProvider: NetworkImage(urls[index]),
+                minScale: PhotoViewComputedScale.contained,
+                heroAttributes: PhotoViewHeroAttributes(tag: urls[index]),
+                onTapUp: (context, details, controllerValue) {
+                  Navigator.pop(context);
+                },
+              );
             },
-          );
-        },
-        loadingBuilder: (context, event) => Center(
-          child: Container(
-            width: 20.0,
-            height: 20.0,
-            child: CircularProgressIndicator(),
+            loadingBuilder: (context, event) => Center(
+              child: Container(
+                width: 20.0,
+                height: 20.0,
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            // backgroundDecoration: widget.backgroundDecoration,
+            // onPageChanged: onPageChanged,
           ),
         ),
-        // backgroundDecoration: widget.backgroundDecoration,
-        // onPageChanged: onPageChanged,
-      ),
+        if (kIsWeb)
+          Container(
+            padding: const EdgeInsets.all(20.0),
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              iconSize: 125,
+              color: navigatorIconColor,
+              icon: Icon(Icons.arrow_back_ios),
+              onPressed: () {
+                _pageController.previousPage(
+                  duration: new Duration(milliseconds: 500),
+                  curve: Curves.easeOutSine,
+                );
+              },
+            ),
+          ),
+        if (kIsWeb)
+          Container(
+            padding: const EdgeInsets.all(20.0),
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              iconSize: 125,
+              color: navigatorIconColor,
+              icon: Icon(Icons.arrow_forward_ios),
+              onPressed: () {
+                _pageController.nextPage(
+                  duration: new Duration(milliseconds: 500),
+                  curve: Curves.easeOutSine,
+                );
+              },
+            ),
+          ),
+        if (kIsWeb)
+          Container(
+            padding: const EdgeInsets.all(20.0),
+            alignment: Alignment.topRight,
+            child: IconButton(
+              iconSize: 75,
+              color: navigatorIconColor,
+              icon: Icon(Icons.close),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+      ],
     );
   }
 }

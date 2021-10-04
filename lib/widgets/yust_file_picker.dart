@@ -63,7 +63,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       return SizedBox.shrink();
     }
     return IconButton(
-      icon: Icon(Icons.add, color: Theme.of(context).accentColor),
+      icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
       onPressed: _enabled ? _pickFiles : null,
     );
   }

@@ -60,30 +60,66 @@ class YustInputTile extends StatelessWidget {
         contentPadding: padding,
       );
     } else {
-      return ListTile(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (prefixIcon != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: prefixIcon,
-              ),
-            Flexible(
-              child: Text(
-                label ?? '',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
+      return LayoutBuilder(builder: (context, constraints) {
+        if (constraints.maxWidth > 270) {
+          return ListTile(
+            title: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (prefixIcon != null)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: prefixIcon,
+                  ),
+                Flexible(
+                  child: Text(
+                    label ?? '',
+                    overflow: TextOverflow.clip,
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-        trailing: Container(
-            constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width - 150),
-            child: child),
-        onTap: onTap,
-        contentPadding: padding,
-      );
+            trailing: Container(
+                constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width - 150),
+                child: child),
+            onTap: onTap,
+            contentPadding: padding,
+          );
+        } else {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (prefixIcon != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: prefixIcon,
+                      ),
+                    Flexible(
+                      child: Text(
+                        label ?? '',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: onTap,
+                contentPadding: padding,
+              ),
+              Container(
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width - 150),
+                  child: child),
+            ],
+          );
+        }
+      });
     }
   }
 }

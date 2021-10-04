@@ -63,6 +63,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 8.0, right: 16.0, bottom: 8.0),
@@ -70,12 +71,12 @@ class YustImagePickerState extends State<YustImagePicker> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Flexible(
-                flex: 2,
-                fit: FlexFit.tight,
+                flex: 1,
+                fit: FlexFit.loose,
                 child: _buildLabel(context),
               ),
               Flexible(
-                flex: 1,
+                flex: 2,
                 fit: FlexFit.tight,
                 child: Stack(
                   alignment: AlignmentDirectional.center,
@@ -135,7 +136,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       return Align(
         alignment: Alignment.centerRight,
         child: IconButton(
-          color: Theme.of(context).accentColor,
+          color: Theme.of(context).colorScheme.secondary,
           iconSize: 40,
           icon: Icon(Icons.image),
           onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
@@ -146,13 +147,13 @@ class YustImagePickerState extends State<YustImagePicker> {
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
           IconButton(
-            color: Theme.of(context).accentColor,
+            color: Theme.of(context).colorScheme.secondary,
             iconSize: 40,
             icon: Icon(Icons.camera_alt),
             onPressed: _enabled ? () => _pickImages(ImageSource.camera) : null,
           ),
           IconButton(
-            color: Theme.of(context).accentColor,
+            color: Theme.of(context).colorScheme.secondary,
             iconSize: 40,
             icon: Icon(Icons.image),
             onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
@@ -202,18 +203,33 @@ class YustImagePickerState extends State<YustImagePicker> {
       );
     }
     final zoomEnabled = (file.url != null && widget.zoomable);
-    return AspectRatio(
-      aspectRatio: 1,
-      child: GestureDetector(
-        onTap: zoomEnabled ? () => _showImages(file) : null,
-        child: file.url != null
-            ? Hero(
-                tag: file.url!,
-                child: preview,
-              )
-            : preview,
-      ),
-    );
+    if (widget.multiple) {
+      return AspectRatio(
+        aspectRatio: 1,
+        child: GestureDetector(
+          onTap: zoomEnabled ? () => _showImages(file) : null,
+          child: file.url != null
+              ? Hero(
+                  tag: file.url!,
+                  child: preview,
+                )
+              : preview,
+        ),
+      );
+    } else {
+      return ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: 300, maxWidth: 400),
+        child: GestureDetector(
+          onTap: zoomEnabled ? () => _showImages(file) : null,
+          child: file.url != null
+              ? Hero(
+                  tag: file.url!,
+                  child: preview,
+                )
+              : preview,
+        ),
+      );
+    }
   }
 
   Widget _buildProgressIndicator(BuildContext context, YustFile? file) {
@@ -235,8 +251,8 @@ class YustImagePickerState extends State<YustImagePicker> {
             child: Text(
               'Bild hochladen',
               overflow: TextOverflow.ellipsis,
-              style:
-                  TextStyle(color: Theme.of(context).accentColor, fontSize: 16),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.secondary, fontSize: 16),
             ),
           ),
         ],
@@ -253,7 +269,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       right: 10,
       child: CircleAvatar(
         radius: 26,
-        backgroundColor: Theme.of(context).accentColor,
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
@@ -274,16 +290,29 @@ class YustImagePickerState extends State<YustImagePicker> {
     } else {
       if (!kIsWeb) {
         final picker = ImagePicker();
-        final image = await picker.getImage(
-            source: imageSource,
-            maxHeight: size,
-            maxWidth: size,
-            imageQuality: quality);
-        if (image != null) {
-          await uploadFile(
-              path: image.path,
-              file: File(image.path),
-              yustQuality: widget.yustQuality);
+        if (widget.multiple && imageSource == ImageSource.gallery) {
+          final images = await picker.pickMultiImage(
+              maxHeight: size, maxWidth: size, imageQuality: quality);
+          if (images != null) {
+            for (final image in images) {
+              await uploadFile(
+                  path: image.path,
+                  file: File(image.path),
+                  yustQuality: widget.yustQuality);
+            }
+          }
+        } else {
+          final image = await picker.pickImage(
+              source: imageSource,
+              maxHeight: size,
+              maxWidth: size,
+              imageQuality: quality);
+          if (image != null) {
+            await uploadFile(
+                path: image.path,
+                file: File(image.path),
+                yustQuality: widget.yustQuality);
+          }
         }
       } else {
         if (widget.multiple) {

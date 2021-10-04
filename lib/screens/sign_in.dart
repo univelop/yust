@@ -157,7 +157,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           horizontal: 20.0, vertical: 10.0),
                       child: YustProgressButton(
                         key: Key('signInButton'),
-                        color: Theme.of(context).accentColor,
+                        color: Theme.of(context).colorScheme.secondary,
                         inProgress: _waitingForSignIn,
                         onPressed: () => _signIn(context),
                         child: Text('Anmelden',

@@ -225,7 +225,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20.0, vertical: 10.0),
                       child: YustProgressButton(
-                        color: Theme.of(context).accentColor,
+                        color: Theme.of(context).colorScheme.secondary,
                         inProgress: _waitingForSignUp,
                         onPressed: () => _signUp(context),
                         child: Text('Registrieren',

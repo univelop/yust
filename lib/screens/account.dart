@@ -31,7 +31,7 @@ class AccountScreen<T extends YustStore> extends StatelessWidget {
                   children: <Widget>[
                     Icon(
                       Icons.person,
-                      color: Theme.of(context).accentColor,
+                      color: Theme.of(context).colorScheme.secondary,
                       size: 100.0,
                     ),
                     Text(
@@ -39,7 +39,7 @@ class AccountScreen<T extends YustStore> extends StatelessWidget {
                             ' ' +
                             (Yust.store.currUser!.lastName),
                         style: TextStyle(
-                            color: Theme.of(context).accentColor,
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 20.0)),
                   ],
                 ),
@@ -48,12 +48,13 @@ class AccountScreen<T extends YustStore> extends StatelessWidget {
               ListTile(
                 leading: Icon(
                   Icons.person,
-                  color: Theme.of(context).accentColor,
+                  color: Theme.of(context).colorScheme.secondary,
                   size: 40.0,
                 ),
                 title: Text(
                   'Persönliche Daten',
-                  style: TextStyle(color: Theme.of(context).accentColor),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.secondary),
                 ),
                 onTap: () {
                   Navigator.pushNamed(context, AccountEditScreen.routeName);
@@ -63,12 +64,13 @@ class AccountScreen<T extends YustStore> extends StatelessWidget {
               ListTile(
                 leading: Icon(
                   Icons.power_settings_new,
-                  color: Theme.of(context).accentColor,
+                  color: Theme.of(context).colorScheme.secondary,
                   size: 40.0,
                 ),
                 title: Text(
                   'Abmelden',
-                  style: TextStyle(color: Theme.of(context).accentColor),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.secondary),
                 ),
                 onTap: () {
                   Yust.service.signOut(context);

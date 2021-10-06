@@ -513,18 +513,26 @@ class YustService {
     BuildContext context,
     String title,
     String? placeholder,
-    String action, [
+    String action, {
     String initialText = '',
-  ]) {
+
+    /// if validator is set, action gets only triggerd if the validator returns null (means true)
+    FormFieldValidator<String>? validator,
+  }) {
     final controller = TextEditingController(text: initialText);
     return showDialog<String>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text(title),
-            content: TextField(
+            content: TextFormField(
               controller: controller,
               decoration: InputDecoration(hintText: placeholder),
+              autovalidateMode:
+                  validator == null ? null : AutovalidateMode.onUserInteraction,
+              validator: validator == null
+                  ? null
+                  : (value) => validator(value!.trim()),
             ),
             actions: <Widget>[
               TextButton(
@@ -536,7 +544,11 @@ class YustService {
               TextButton(
                 child: Text(action),
                 onPressed: () {
-                  Navigator.of(context).pop(controller.text);
+                  if (validator == null) {
+                    Navigator.of(context).pop(controller.text);
+                  } else if (validator(controller.text.trim()) == null) {
+                    Navigator.of(context).pop(controller.text);
+                  }
                 },
               ),
             ],

@@ -11,18 +11,17 @@ class ImageScreen extends StatelessWidget {
     final arguments = ModalRoute.of(context)!.settings.arguments;
     String? url;
     List<String>? urls;
-    Color? navigatorIconColor;
+
     if (arguments is Map) {
       url = arguments['url'];
       final urlsArgs = arguments['urls'];
-      navigatorIconColor = arguments['navigatorIconColor'];
+
       if (urlsArgs is List) {
         urls = urlsArgs.whereType<String>().toList();
       }
     }
     if (urls != null) {
-      return _buildMultiple(
-          context, urls, url, navigatorIconColor ?? Colors.white);
+      return _buildMultiple(context, urls, url);
     } else {
       return _buildSingle(context, url!);
     }
@@ -48,8 +47,8 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMultiple(BuildContext context, List<String> urls,
-      String? activeUrl, Color navigatorIconColor) {
+  Widget _buildMultiple(
+      BuildContext context, List<String> urls, String? activeUrl) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
@@ -87,45 +86,59 @@ class ImageScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(20.0),
             alignment: Alignment.centerLeft,
-            child: IconButton(
-              iconSize: 125,
-              color: navigatorIconColor,
-              icon: Icon(Icons.arrow_back_ios),
-              onPressed: () {
-                _pageController.previousPage(
-                  duration: new Duration(milliseconds: 500),
-                  curve: Curves.easeOutSine,
-                );
-              },
+            child: CircleAvatar(
+              backgroundColor: Colors.black,
+              radius: 35,
+              child: IconButton(
+                iconSize: 50,
+                color: Colors.white,
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                ),
+                onPressed: () {
+                  _pageController.previousPage(
+                    duration: new Duration(milliseconds: 500),
+                    curve: Curves.easeOutSine,
+                  );
+                },
+              ),
             ),
           ),
         if (kIsWeb)
           Container(
             padding: const EdgeInsets.all(20.0),
             alignment: Alignment.centerRight,
-            child: IconButton(
-              iconSize: 125,
-              color: navigatorIconColor,
-              icon: Icon(Icons.arrow_forward_ios),
-              onPressed: () {
-                _pageController.nextPage(
-                  duration: new Duration(milliseconds: 500),
-                  curve: Curves.easeOutSine,
-                );
-              },
+            child: CircleAvatar(
+              backgroundColor: Colors.black,
+              radius: 35,
+              child: IconButton(
+                iconSize: 50,
+                color: Colors.white,
+                icon: Icon(Icons.arrow_forward_ios),
+                onPressed: () {
+                  _pageController.nextPage(
+                    duration: new Duration(milliseconds: 500),
+                    curve: Curves.easeOutSine,
+                  );
+                },
+              ),
             ),
           ),
         if (kIsWeb)
           Container(
             padding: const EdgeInsets.all(20.0),
             alignment: Alignment.topRight,
-            child: IconButton(
-              iconSize: 75,
-              color: navigatorIconColor,
-              icon: Icon(Icons.close),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+            child: CircleAvatar(
+              backgroundColor: Colors.black,
+              radius: 25,
+              child: IconButton(
+                iconSize: 35,
+                color: Colors.white,
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
             ),
           ),
       ],

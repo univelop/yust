@@ -29,8 +29,6 @@ class YustImagePicker extends StatefulWidget {
   final Widget? prefixIcon;
   final bool readOnly;
   final String yustQuality;
-  final ButtonStyle? refreshButtonStyle;
-  final Color? galleryNavigatorIconColor;
 
   /// default is 15
   final int imageCount;
@@ -47,8 +45,6 @@ class YustImagePicker extends StatefulWidget {
     this.readOnly = false,
     this.yustQuality = 'medium',
     int? imageCount,
-    this.refreshButtonStyle,
-    this.galleryNavigatorIconColor,
   })  : this.imageCount = imageCount ?? 15,
         super(key: key);
   @override
@@ -185,7 +181,10 @@ class YustImagePickerState extends State<YustImagePicker> {
         _buildGalleryView(context),
         if (_files.length > _imageCount)
           ElevatedButton.icon(
-            style: widget.refreshButtonStyle,
+            style: ElevatedButton.styleFrom(
+              primary: Theme.of(context).primaryIconTheme.color,
+              onPrimary: Theme.of(context).backgroundColor,
+            ),
             onPressed: () {
               _imageCount += widget.imageCount;
               setState(() {
@@ -422,7 +421,6 @@ class YustImagePickerState extends State<YustImagePicker> {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
         'urls': _files.map((file) => file.url).toList(),
         'url': activeFile.url,
-        'navigatorIconColor': widget.galleryNavigatorIconColor,
       });
     } else {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {

@@ -54,7 +54,7 @@ class YustImagePicker extends StatefulWidget {
 class YustImagePickerState extends State<YustImagePicker> {
   late List<YustFile> _files;
   late bool _enabled;
-  late int _imageCount;
+  late int _currentImageNumber;
 
   @override
   void initState() {
@@ -62,7 +62,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         .map<YustFile>((image) => YustFile.fromJson(image))
         .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
-    _imageCount = widget.imageCount;
+    _currentImageNumber = widget.imageCount;
     super.initState();
   }
 
@@ -179,14 +179,14 @@ class YustImagePickerState extends State<YustImagePicker> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildGalleryView(context),
-        if (_files.length > _imageCount)
+        if (_files.length > _currentImageNumber)
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               primary: Theme.of(context).primaryIconTheme.color,
               onPrimary: Theme.of(context).backgroundColor,
             ),
             onPressed: () {
-              _imageCount += widget.imageCount;
+              _currentImageNumber += widget.imageCount;
               setState(() {
                 _buildGallery(context);
               });
@@ -201,8 +201,9 @@ class YustImagePickerState extends State<YustImagePicker> {
   GridView _buildGalleryView(
     BuildContext context,
   ) {
-    var pictureFiles =
-        _files.length > _imageCount ? _files.sublist(0, _imageCount) : _files;
+    var pictureFiles = _files.length > _currentImageNumber
+        ? _files.sublist(0, _currentImageNumber)
+        : _files;
 
     return GridView.extent(
       shrinkWrap: true,
@@ -402,8 +403,8 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {});
       }
       widget.onChanged!(_files.map((file) => file.toJson()).toList());
-      if (_imageCount < _files.length) {
-        _imageCount += widget.imageCount;
+      if (_currentImageNumber < _files.length) {
+        _currentImageNumber += widget.imageCount;
       }
     } catch (e) {
       if (mounted) {

@@ -7,7 +7,7 @@ typedef DateTimeCallback = void Function(DateTime?);
 class YustDatePicker extends StatelessWidget {
   final String? label;
   final DateTime? value;
-  final DateTime? initialValue;
+
   final DateTimeCallback? onChanged;
   final bool hideClearButton;
   final YustInputStyle style;
@@ -18,7 +18,6 @@ class YustDatePicker extends StatelessWidget {
     Key? key,
     this.label,
     this.value,
-    this.initialValue,
     this.onChanged,
     this.hideClearButton = false,
     this.style = YustInputStyle.normal,
@@ -118,7 +117,7 @@ class YustDatePicker extends StatelessWidget {
 
   void _pickDate(BuildContext context) async {
     Yust.service.unfocusCurrent(context);
-    var dateTime = value ?? initialValue;
+    var dateTime = value;
     if (dateTime == null) {
       final now = DateTime.now();
       dateTime = DateTime(now.year, now.month, now.day, 0, 0, 0, 0, 0);

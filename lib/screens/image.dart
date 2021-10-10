@@ -1,6 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:share/share.dart';
+import 'package:yust/yust.dart';
 
 class ImageScreen extends StatelessWidget {
   static const String routeName = '/imageScreen';
@@ -25,19 +30,31 @@ class ImageScreen extends StatelessWidget {
   }
 
   Widget _buildSingle(BuildContext context, String url) {
-    return Container(
-      child: PhotoView(
-        imageProvider: NetworkImage(url),
-        minScale: PhotoViewComputedScale.contained,
-        heroAttributes: PhotoViewHeroAttributes(tag: url),
-        onTapUp: (context, details, controllerValue) {
-          Navigator.pop(context);
-        },
-        loadingBuilder: (context, event) => Center(
-          child: Container(
-            width: 20.0,
-            height: 20.0,
-            child: CircularProgressIndicator(),
+    return Scaffold(
+      appBar: AppBar(
+          backgroundColor: Colors.black,
+          actionsIconTheme:
+              IconThemeData(color: Theme.of(context).primaryColor, size: 30.0),
+          actions: [
+            IconButton(
+              onPressed: () => (_shareFile(context, url)),
+              icon: Icon(Icons.share, size: 30.0),
+            )
+          ]),
+      body: Container(
+        child: PhotoView(
+          imageProvider: NetworkImage(url),
+          minScale: PhotoViewComputedScale.contained,
+          heroAttributes: PhotoViewHeroAttributes(tag: url),
+          onTapUp: (context, details, controllerValue) {
+            Navigator.pop(context);
+          },
+          loadingBuilder: (context, event) => Center(
+            child: Container(
+              width: 20.0,
+              height: 20.0,
+              child: CircularProgressIndicator(),
+            ),
           ),
         ),
       ),
@@ -77,5 +94,22 @@ class ImageScreen extends StatelessWidget {
         // onPageChanged: onPageChanged,
       ),
     );
+  }
+
+  Future<void> _shareFile(BuildContext context, String url) async {
+    final String name = Yust.service.randomString();
+    if (true) {
+      await EasyLoading.show(status: 'Datei laden...');
+      try {
+        final tempDir = await getTemporaryDirectory();
+        await Dio().download(url, '${tempDir.path}/' + name);
+        await Share.shareFiles(['${tempDir.path}/' + name], subject: name);
+        await EasyLoading.dismiss();
+      } catch (e) {
+        await EasyLoading.dismiss();
+        await Yust.service.showAlert(context, 'Ups',
+            'Die Datei kann nicht geöffnet werden. ${e.toString()}');
+      }
+    }
   }
 }

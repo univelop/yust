@@ -93,7 +93,7 @@ class ImageScreen extends StatelessWidget {
                 iconSize: 35,
                 color: Colors.white,
                 icon: Icon(
-                  Icons.arrow_back_ios,
+                  Icons.arrow_back_ios_new,
                 ),
                 onPressed: () {
                   _pageController.previousPage(

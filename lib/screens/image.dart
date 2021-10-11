@@ -88,9 +88,9 @@ class ImageScreen extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: CircleAvatar(
               backgroundColor: Colors.black,
-              radius: 35,
+              radius: 25,
               child: IconButton(
-                iconSize: 50,
+                iconSize: 35,
                 color: Colors.white,
                 icon: Icon(
                   Icons.arrow_back_ios,
@@ -110,9 +110,9 @@ class ImageScreen extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: CircleAvatar(
               backgroundColor: Colors.black,
-              radius: 35,
+              radius: 25,
               child: IconButton(
-                iconSize: 50,
+                iconSize: 35,
                 color: Colors.white,
                 icon: Icon(Icons.arrow_forward_ios),
                 onPressed: () {

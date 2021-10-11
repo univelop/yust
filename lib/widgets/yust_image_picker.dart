@@ -180,19 +180,22 @@ class YustImagePickerState extends State<YustImagePicker> {
       children: [
         _buildGalleryView(context),
         if (_files.length > _currentImageNumber)
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              primary: Theme.of(context).primaryIconTheme.color,
-              onPrimary: Theme.of(context).backgroundColor,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).primaryIconTheme.color,
+                onPrimary: Theme.of(context).backgroundColor,
+              ),
+              onPressed: () {
+                _currentImageNumber += widget.imageCount;
+                setState(() {
+                  _buildGallery(context);
+                });
+              },
+              icon: Icon(Icons.refresh),
+              label: Text('mehr laden'),
             ),
-            onPressed: () {
-              _currentImageNumber += widget.imageCount;
-              setState(() {
-                _buildGallery(context);
-              });
-            },
-            icon: Icon(Icons.refresh),
-            label: Text('mehr laden'),
           ),
       ],
     );

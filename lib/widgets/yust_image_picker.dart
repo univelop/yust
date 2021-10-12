@@ -30,6 +30,9 @@ class YustImagePicker extends StatefulWidget {
   final bool readOnly;
   final String yustQuality;
 
+  /// default is 15
+  final int imageCount;
+
   YustImagePicker({
     Key? key,
     this.label,
@@ -41,7 +44,9 @@ class YustImagePicker extends StatefulWidget {
     this.prefixIcon,
     this.readOnly = false,
     this.yustQuality = 'medium',
-  }) : super(key: key);
+    int? imageCount,
+  })  : this.imageCount = imageCount ?? 15,
+        super(key: key);
   @override
   YustImagePickerState createState() => YustImagePickerState();
 }
@@ -49,6 +54,7 @@ class YustImagePicker extends StatefulWidget {
 class YustImagePickerState extends State<YustImagePicker> {
   late List<YustFile> _files;
   late bool _enabled;
+  late int _currentImageNumber;
 
   @override
   void initState() {
@@ -56,6 +62,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         .map<YustFile>((image) => YustFile.fromJson(image))
         .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
+    _currentImageNumber = widget.imageCount;
     super.initState();
   }
 
@@ -167,13 +174,48 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (_files.isEmpty) {
       return SizedBox.shrink();
     }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildGalleryView(context),
+        if (_files.length > _currentImageNumber)
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                primary: Theme.of(context).primaryIconTheme.color,
+                onPrimary: Theme.of(context).backgroundColor,
+              ),
+              onPressed: () {
+                _currentImageNumber += widget.imageCount;
+                setState(() {
+                  _buildGallery(context);
+                });
+              },
+              icon: Icon(Icons.refresh),
+              label: Text('mehr laden'),
+            ),
+          ),
+      ],
+    );
+  }
+
+  GridView _buildGalleryView(
+    BuildContext context,
+  ) {
+    var pictureFiles = _files.length > _currentImageNumber
+        ? _files.sublist(0, _currentImageNumber)
+        : _files;
+
     return GridView.extent(
       shrinkWrap: true,
       maxCrossAxisExtent: 180,
       primary: false,
       mainAxisSpacing: 2,
       crossAxisSpacing: 2,
-      children: _files.map((file) {
+      children: pictureFiles.map((file) {
         return Stack(
           alignment: AlignmentDirectional.center,
           children: [
@@ -378,6 +420,9 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {});
       }
       widget.onChanged!(_files.map((file) => file.toJson()).toList());
+      if (_currentImageNumber < _files.length) {
+        _currentImageNumber += widget.imageCount;
+      }
     } catch (e) {
       if (mounted) {
         setState(() {

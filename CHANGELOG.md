@@ -1,3 +1,11 @@
+## 2.5.2 - 2021-10-02
+
+* Add multiple image support to image picker
+
+## 2.5.1 - 2021-10-01
+
+* Optimize widgets for smaller screens
+
 ## 2.5.0 - 2021-10-01
 
 * Migrate to Flutter 2.5.1

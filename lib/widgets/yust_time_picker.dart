@@ -7,7 +7,6 @@ import '../yust.dart';
 class YustTimePicker extends StatefulWidget {
   final String? label;
   final DateTime? value;
-  final DateTime? initialValue;
   final DateTimeCallback? onChanged;
   final void Function()? onEditingComplete;
   final bool hideClearButton;
@@ -21,7 +20,6 @@ class YustTimePicker extends StatefulWidget {
     Key? key,
     this.label,
     this.value,
-    this.initialValue,
     this.onChanged,
     this.onEditingComplete,
     this.hideClearButton = false,
@@ -43,8 +41,8 @@ class _YustTimePickerState extends State<YustTimePicker> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-        text: Yust.service.formatTime(widget.value ?? widget.initialValue));
+    _controller =
+        TextEditingController(text: Yust.service.formatTime(widget.value));
     _maskFormatter = MaskTextInputFormatter(
       mask: 'H#:M#',
       filter: {
@@ -52,7 +50,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
         'H': RegExp(r'[0-2]'),
         'M': RegExp(r'[0-5]')
       },
-      initialText: Yust.service.formatTime(widget.value ?? widget.initialValue),
+      initialText: Yust.service.formatTime(widget.value),
     );
   }
 
@@ -65,6 +63,9 @@ class _YustTimePickerState extends State<YustTimePicker> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.value == null) {
+      _controller!.text = '';
+    }
     return TextField(
       decoration: InputDecoration(
         labelText: widget.label,

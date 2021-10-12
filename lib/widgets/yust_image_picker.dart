@@ -70,6 +70,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 8.0, right: 16.0, bottom: 8.0),
@@ -233,9 +234,9 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
     Widget preview;
     if (file.file != null) {
-      preview = Image.file(file.file!, fit: BoxFit.scaleDown);
+      preview = Image.file(file.file!, fit: BoxFit.cover);
     } else if (file.bytes != null) {
-      preview = Image.memory(file.bytes!, fit: BoxFit.scaleDown);
+      preview = Image.memory(file.bytes!, fit: BoxFit.cover);
     } else {
       preview = FadeInImage.assetNetwork(
         placeholder: Yust.imagePlaceholderPath!,
@@ -331,16 +332,29 @@ class YustImagePickerState extends State<YustImagePicker> {
     } else {
       if (!kIsWeb) {
         final picker = ImagePicker();
-        final image = await picker.getImage(
-            source: imageSource,
-            maxHeight: size,
-            maxWidth: size,
-            imageQuality: quality);
-        if (image != null) {
-          await uploadFile(
-              path: image.path,
-              file: File(image.path),
-              yustQuality: widget.yustQuality);
+        if (widget.multiple && imageSource == ImageSource.gallery) {
+          final images = await picker.pickMultiImage(
+              maxHeight: size, maxWidth: size, imageQuality: quality);
+          if (images != null) {
+            for (final image in images) {
+              await uploadFile(
+                  path: image.path,
+                  file: File(image.path),
+                  yustQuality: widget.yustQuality);
+            }
+          }
+        } else {
+          final image = await picker.pickImage(
+              source: imageSource,
+              maxHeight: size,
+              maxWidth: size,
+              imageQuality: quality);
+          if (image != null) {
+            await uploadFile(
+                path: image.path,
+                file: File(image.path),
+                yustQuality: widget.yustQuality);
+          }
         }
       } else {
         if (widget.multiple) {

@@ -2,9 +2,11 @@ library yust;
 
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/yust_doc_setup.dart';
@@ -24,9 +26,21 @@ class Yust {
   @Deprecated('`useTimestamps` will allways be set to true.')
   static bool useTimestamps = true;
   static bool useSubcollections = false;
+  static bool firebaseInitalized = false;
   static String envCollectionName = 'envs';
   static String? storageUrl;
   static String? imagePlaceholderPath;
+
+  /// Connnect to the firebase emulator for Firestore and Authentication
+  static Future _connectToFirebaseEmulator(String address) async {
+    FirebaseFirestore.instance.settings = Settings(
+      host: '$address:8080',
+      sslEnabled: false,
+      persistenceEnabled: false,
+    );
+
+    await FirebaseAuth.instance.useEmulator('http://$address:9099');
+  }
 
   static Future<void> initialize({
     YustStore? store,
@@ -37,8 +51,15 @@ class Yust {
     String envCollectionName = 'envs',
     String? storageUrl,
     String? imagePlaceholderPath,
+    String? emulatorAddress,
   }) async {
     await Firebase.initializeApp();
+
+    // Only use emulator when emulatorAddress is provided
+    if (emulatorAddress != null) {
+      await Yust._connectToFirebaseEmulator(emulatorAddress);
+    }
+
     Yust.store = store ?? YustStore();
     Yust.service = service ?? YustService();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
@@ -47,6 +68,13 @@ class Yust {
     Yust.envCollectionName = envCollectionName;
     Yust.storageUrl = storageUrl;
     Yust.imagePlaceholderPath = imagePlaceholderPath;
+
+    // Only enable Persitence if Firebase is not allready initalized.
+    // This is especialy important for Tests
+    if (emulatorAddress == null && kIsWeb && !firebaseInitalized) {
+      await FirebaseFirestore.instance.enablePersistence();
+      firebaseInitalized = true;
+    }
 
     FirebaseStorage.instance.setMaxUploadRetryTime(Duration(seconds: 20));
 

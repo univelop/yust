@@ -1,8 +1,10 @@
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -33,9 +35,7 @@ class ImageScreen extends StatelessWidget {
               IconThemeData(color: Theme.of(context).primaryColor, size: 30.0),
           actions: [
             (kIsWeb)
-                ? IconButton(
-                    onPressed: () => OpenFile.open('url'),
-                    icon: Icon(Icons.download))
+                ? IconButton(onPressed: () => {}, icon: Icon(Icons.download))
                 : IconButton(
                     onPressed: () => (_shareFile(context, url!)),
                     icon: Icon(Icons.share),
@@ -179,6 +179,22 @@ class ImageScreen extends StatelessWidget {
         await Yust.service.showAlert(context, 'Ups',
             'Die Datei kann nicht geöffnet werden. ${e.toString()}');
       }
+    }
+  }
+
+  Future<void> downloadImage(String imageUrl) async {
+    try {
+      final http.Response r = await http.get(
+        Uri.parse(imageUrl),
+      );
+      final data = r.bodyBytes;
+      final base64data = base64Encode(data);
+      final a = html.AnchorElement(href: 'data:image/jpeg;base64,$base64data');
+      a.download = 'download.jpg';
+      a.click();
+      a.remove();
+    } catch (e) {
+      print(e);
     }
   }
 }

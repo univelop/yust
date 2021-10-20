@@ -136,37 +136,90 @@ class YustService {
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
+    DocumentSnapshot? lastVisible,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
+    if (lastVisible != null) {
+      query = query.startAfterDocument(lastVisible);
+    }
+
+    query = query.limit(15);
     return query.snapshots().map((snapshot) {
       return snapshot.docs
-          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
           .whereType<T>()
           .toList();
     });
+  }
+
+  Query<Object?> getQuery<T extends YustDoc>(YustDocSetup<T> modelSetup,
+      List<List<dynamic>>? filterList, List<String>? orderByList) {
+    Query query =
+        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+    // query = _executeOrderByList(query, orderByList);
+    // query = query.orderBy('envId', descending: true);
+    return query;
   }
 
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
+    DocumentSnapshot? lastVisible,
+    int limit: 15,
+    void Function(DocumentSnapshot? lastVisible)? setLastVisible,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
+    if (lastVisible != null) {
+      query = query.startAfterDocument(lastVisible);
+    }
+    query = query.limit(limit);
+
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
+      if (setLastVisible != null && snapshot.docs.isNotEmpty) {
+        setLastVisible(snapshot.docs.last);
+      }
       // print('Get docs once: ${modelSetup.collectionName}');
       return snapshot.docs
-          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
           .whereType<T>()
           .toList();
     });
+  }
+
+  /// Returns null if no data exists.
+  T? transformDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    DocumentSnapshot snapshot,
+  ) {
+    if (snapshot.exists == false) {
+      return null;
+    }
+    final data = snapshot.data();
+    // TODO: Convert timestamps
+    if (data is Map<String, dynamic>) {
+      final T document = modelSetup.fromJson(data);
+
+      if (modelSetup.onMigrate != null) {
+        modelSetup.onMigrate!(document);
+      }
+
+      if (modelSetup.onGet != null) {
+        modelSetup.onGet!(document);
+      }
+
+      return document;
+    }
   }
 
   Stream<T?> getDoc<T extends YustDoc>(
@@ -177,7 +230,7 @@ class YustService {
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .snapshots()
-        .map((docSnapshot) => _getDoc(modelSetup, docSnapshot));
+        .map((docSnapshot) => transformDoc(modelSetup, docSnapshot));
   }
 
   Future<T> getDocOnce<T extends YustDoc>(
@@ -188,7 +241,7 @@ class YustService {
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => _getDoc<T>(modelSetup, docSnapshot)!);
+        .then((docSnapshot) => transformDoc<T>(modelSetup, docSnapshot)!);
   }
 
   /// Emits null events if no document was found.
@@ -205,7 +258,7 @@ class YustService {
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.length > 0) {
-        return _getDoc(modelSetup, snapshot.docs[0]);
+        return transformDoc(modelSetup, snapshot.docs[0]);
       } else {
         return null;
       }
@@ -228,7 +281,7 @@ class YustService {
     T? doc;
 
     if (snapshot.docs.length > 0) {
-      doc = _getDoc(modelSetup, snapshot.docs[0]);
+      doc = transformDoc(modelSetup, snapshot.docs[0]);
     }
     return doc;
   }
@@ -337,7 +390,7 @@ class YustService {
         final DocumentSnapshot startSnapshot =
             await transaction.get(documentReference);
 
-        final T? startDocument = _getDoc(modelSetup, startSnapshot);
+        final T? startDocument = transformDoc(modelSetup, startSnapshot);
         final T endDocument = handler(startDocument);
 
         final Map<String, dynamic> endMap = endDocument.toJson();
@@ -624,31 +677,6 @@ class YustService {
       result += chars[rnd.nextInt(chars.length)];
     }
     return result;
-  }
-
-  /// Returns null if no data exists.
-  T? _getDoc<T extends YustDoc>(
-    YustDocSetup<T> modelSetup,
-    DocumentSnapshot snapshot,
-  ) {
-    if (snapshot.exists == false) {
-      return null;
-    }
-    final data = snapshot.data();
-    // TODO: Convert timestamps
-    if (data is Map<String, dynamic>) {
-      final T document = modelSetup.fromJson(data);
-
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate!(document);
-      }
-
-      if (modelSetup.onGet != null) {
-        modelSetup.onGet!(document);
-      }
-
-      return document;
-    }
   }
 
   Query _filterForEnvironment(Query query) =>

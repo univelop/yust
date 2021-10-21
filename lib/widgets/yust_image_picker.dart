@@ -7,8 +7,11 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
+import 'package:yust/util/helper.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 
@@ -412,10 +415,35 @@ class YustImagePickerState extends State<YustImagePicker> {
         }
       }
 
-      String url = await Yust.service.uploadFile(
-          path: widget.folderPath, name: imageName, file: file, bytes: bytes);
+      String url = '';
+      // String url = await Yust.service.uploadFile(
+      // path: widget.folderPath, name: imageName, file: file, bytes: bytes);
+      if (file != null) {
+        final tempDir = await getTemporaryDirectory();
+        url = '${tempDir.path}/$imageName';
+        // save new image in cache
+        file.copy(path);
+      }
+
       newFile.url = url;
       newFile.processing = false;
+
+      print('FILE:' + Helper.jsonEncode(newFile));
+
+      // read local image cache
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var tmpImages = prefs.getString('temporaryImages');
+      List tmpImagesList;
+      if (tmpImages != null) {
+        tmpImagesList = (Helper.jsonDecode(tmpImages) as List);
+        tmpImagesList.add(newFile);
+      } else {
+        tmpImagesList = [newFile];
+      }
+      // save data from new image
+      prefs.setString('temporaryImages', Helper.jsonEncode(tmpImagesList));
+
+      newFile.url = null;
       if (mounted) {
         setState(() {});
       }

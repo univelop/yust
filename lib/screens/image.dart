@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import '../yust.dart';
 
 class ImageScreen extends StatelessWidget {
   static const String routeName = '/imageScreen';
@@ -30,7 +32,7 @@ class ImageScreen extends StatelessWidget {
   Widget _buildSingle(BuildContext context, String url) {
     return Container(
       child: PhotoView(
-        imageProvider: NetworkImage(url),
+        imageProvider: _getImageOfUrl(url),
         minScale: PhotoViewComputedScale.contained,
         heroAttributes: PhotoViewHeroAttributes(tag: url),
         onTapUp: (context, details, controllerValue) {
@@ -63,7 +65,7 @@ class ImageScreen extends StatelessWidget {
             pageController: _pageController,
             builder: (BuildContext context, int index) {
               return PhotoViewGalleryPageOptions(
-                imageProvider: NetworkImage(urls[index]),
+                imageProvider: _getImageOfUrl(urls[index]),
                 minScale: PhotoViewComputedScale.contained,
                 heroAttributes: PhotoViewHeroAttributes(tag: urls[index]),
                 onTapUp: (context, details, controllerValue) {
@@ -143,5 +145,18 @@ class ImageScreen extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  ImageProvider<Object> _getImageOfUrl(String url) {
+    bool _validURL = Uri.parse(url).isAbsolute;
+    if (_validURL) {
+      return NetworkImage(url);
+    } else {
+      if (File(url).existsSync()) {
+        return FileImage(File(url));
+      } else {
+        return FileImage(File(Yust.imagePlaceholderPath!));
+      }
+    }
   }
 }

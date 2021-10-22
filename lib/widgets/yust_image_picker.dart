@@ -212,6 +212,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         ? _files.sublist(0, _currentImageNumber)
         : _files;
 
+    pictureFiles = _getImagesOfFiles(pictureFiles);
     return GridView.extent(
       shrinkWrap: true,
       maxCrossAxisExtent: 180,
@@ -422,28 +423,41 @@ class YustImagePickerState extends State<YustImagePicker> {
         final tempDir = await getTemporaryDirectory();
         url = '${tempDir.path}/$imageName';
         // save new image in cache
-        file.copy(path);
+        file.copy(url);
       }
 
       newFile.url = url;
       newFile.processing = false;
 
-      print('FILE:' + Helper.jsonEncode(newFile));
+      //print('FILE:' + Helper.jsonEncode(newFile));
 
       // read local image cache
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
+      //await prefs.setString('temporaryImages', '');
       var tmpImages = prefs.getString('temporaryImages');
       List tmpImagesList;
-      if (tmpImages != null) {
+      if (tmpImages != null && tmpImages != '') {
         tmpImagesList = (Helper.jsonDecode(tmpImages) as List);
-        tmpImagesList.add(newFile);
+        tmpImagesList.add([
+          newFile.url,
+          newFile.name,
+          widget.folderPath,
+        ]);
       } else {
-        tmpImagesList = [newFile];
+        tmpImagesList = [
+          [
+            newFile.url,
+            newFile.name,
+            widget.folderPath,
+          ]
+        ];
       }
       // save data from new image
-      prefs.setString('temporaryImages', Helper.jsonEncode(tmpImagesList));
+      await prefs.setString(
+          'temporaryImages', Helper.jsonEncode(tmpImagesList));
 
-      newFile.url = null;
+      //newFile.url = null;
       if (mounted) {
         setState(() {});
       }
@@ -497,6 +511,24 @@ class YustImagePickerState extends State<YustImagePicker> {
         });
         widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
+    }
+  }
+
+  List<YustFile> _getImagesOfFiles(List<YustFile> pictureFiles) {
+    {
+      for (var file in pictureFiles) {
+        if (file.file == null) {
+          bool _validURL = Uri.parse(file.url!).isAbsolute;
+          if (!_validURL) {
+            if (file.url != null && File(file.url!).existsSync()) {
+              file.file = File(file.url!);
+            } else {
+              file.file = File(Yust.imagePlaceholderPath!);
+            }
+          }
+        }
+      }
+      return pictureFiles;
     }
   }
 }

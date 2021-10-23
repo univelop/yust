@@ -1,3 +1,10 @@
+## 2.5.3 - 2021-10-23
+
+* Add validator to text field dialog.
+* Improve date and time picker.
+* Support firebase emulator.
+* Improve image picker and galery.
+
 ## 2.5.2 - 2021-10-02
 
 * Add multiple image support to image picker

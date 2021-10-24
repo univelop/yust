@@ -9,6 +9,7 @@ class YustFile with YustSerializable {
   File? file;
   Uint8List? bytes;
   bool processing;
+  String folderPath;
 
   YustFile({
     required this.name,
@@ -16,12 +17,14 @@ class YustFile with YustSerializable {
     this.file,
     this.bytes,
     this.processing = false,
-  });
+    folderPath,
+  }) : folderPath = folderPath ?? 'false';
 
   factory YustFile.fromJson(Map<String, dynamic> json) {
     return YustFile(
       name: json['name'] as String,
       url: json['url'] as String,
+      folderPath: json['folderPath'] ?? '',
     );
   }
 
@@ -29,6 +32,7 @@ class YustFile with YustSerializable {
     return <String, dynamic>{
       'name': name,
       'url': url,
+      'folderPath': folderPath,
     };
   }
 }

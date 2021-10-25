@@ -28,43 +28,34 @@ class ImageScreen extends StatelessWidget {
         urls = urlsArgs.whereType<String>().toList();
       }
     }
-    return Scaffold(
-      appBar: AppBar(
-          backgroundColor: Colors.black,
-          actionsIconTheme:
-              IconThemeData(color: Theme.of(context).primaryColor, size: 30.0),
-          actions: [
-            (kIsWeb)
-                ? IconButton(onPressed: () => {}, icon: Icon(Icons.download))
-                : IconButton(
-                    onPressed: () => (_shareFile(context, url!)),
-                    icon: Icon(Icons.share),
-                  )
-          ]),
-      body: (urls != null)
-          ? _buildMultiple(context, urls, url)
-          : _buildSingle(context, url!),
-    );
+    if (urls != null) {
+      return _buildMultiple(context, urls, url);
+    } else {
+      return _buildSingle(context, url!);
+    }
   }
 
   Widget _buildSingle(BuildContext context, String url) {
-    return Container(
-      child: PhotoView(
-        imageProvider: NetworkImage(url),
-        minScale: PhotoViewComputedScale.contained,
-        heroAttributes: PhotoViewHeroAttributes(tag: url),
-        onTapUp: (context, details, controllerValue) {
-          Navigator.pop(context);
-        },
-        loadingBuilder: (context, event) => Center(
-          child: Container(
-            width: 20.0,
-            height: 20.0,
-            child: CircularProgressIndicator(),
+    return Stack(children: [
+      Container(
+        child: PhotoView(
+          imageProvider: NetworkImage(url),
+          minScale: PhotoViewComputedScale.contained,
+          heroAttributes: PhotoViewHeroAttributes(tag: url),
+          onTapUp: (context, details, controllerValue) {
+            Navigator.pop(context);
+          },
+          loadingBuilder: (context, event) => Center(
+            child: Container(
+              width: 20.0,
+              height: 20.0,
+              child: CircularProgressIndicator(),
+            ),
           ),
         ),
       ),
-    );
+      _buildShareButton(context, url),
+    ]);
   }
 
   Widget _buildMultiple(
@@ -102,10 +93,11 @@ class ImageScreen extends StatelessWidget {
             // onPageChanged: onPageChanged,
           ),
         ),
+        _buildShareButton(context, activeUrl!),
         if (kIsWeb)
           Container(
             padding: const EdgeInsets.all(20.0),
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.topRight,
             child: CircleAvatar(
               backgroundColor: Colors.black,
               radius: 25,
@@ -165,8 +157,26 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildShareButton(BuildContext context, String url) {
+    return Positioned(
+      top: 0.0,
+      right: 50.0,
+      child: Container(
+        padding: const EdgeInsets.all(20.0),
+        alignment: Alignment.topRight,
+        child: IconButton(
+          iconSize: 35,
+          color: Colors.white,
+          onPressed: () =>
+              {(kIsWeb) ? _downloadImage(url) : _shareFile(context, url)},
+          icon: (kIsWeb) ? Icon(Icons.download) : Icon(Icons.share),
+        ),
+      ),
+    );
+  }
+
   Future<void> _shareFile(BuildContext context, String url) async {
-    final String name = Yust.service.randomString();
+    final String name = Yust.service.randomString() + '.jpg';
     if (true) {
       await EasyLoading.show(status: 'Datei laden...');
       try {
@@ -182,7 +192,7 @@ class ImageScreen extends StatelessWidget {
     }
   }
 
-  Future<void> downloadImage(String imageUrl) async {
+  Future<void> _downloadImage(String imageUrl) async {
     try {
       final http.Response r = await http.get(
         Uri.parse(imageUrl),

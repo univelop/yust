@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 import 'dart:convert';
 import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
@@ -8,7 +9,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:share/share.dart';
 import 'package:yust/yust.dart';
 
 class ImageScreen extends StatelessWidget {
@@ -160,7 +160,7 @@ class ImageScreen extends StatelessWidget {
   Widget _buildShareButton(BuildContext context, String url) {
     return Positioned(
       top: 0.0,
-      right: 50.0,
+      right: kIsWeb ? 50.0 : 0.0,
       child: Container(
         padding: const EdgeInsets.all(20.0),
         alignment: Alignment.topRight,
@@ -168,21 +168,22 @@ class ImageScreen extends StatelessWidget {
           iconSize: 35,
           color: Colors.white,
           onPressed: () =>
-              {(kIsWeb) ? _downloadImage(url) : _shareFile(context, url)},
-          icon: (kIsWeb) ? Icon(Icons.download) : Icon(Icons.share),
+              {kIsWeb ? _downloadImage(url) : _shareFile(context, url)},
+          icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
         ),
       ),
     );
   }
 
   Future<void> _shareFile(BuildContext context, String url) async {
-    final String name = Yust.service.randomString() + '.jpg';
+    final String name = Yust.service.randomString() + '.png';
     if (true) {
       await EasyLoading.show(status: 'Datei laden...');
       try {
         final tempDir = await getTemporaryDirectory();
         await Dio().download(url, '${tempDir.path}/' + name);
-        await Share.shareFiles(['${tempDir.path}/' + name], subject: name);
+        await Share.shareFiles(['${tempDir.path}/' + name],
+            subject: name, mimeTypes: ['image/jpeg', 'image/png']);
         await EasyLoading.dismiss();
       } catch (e) {
         await EasyLoading.dismiss();

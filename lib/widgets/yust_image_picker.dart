@@ -445,7 +445,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         Yust.service.showAlert(context, 'Ups', e.toString());
       }
     }
-    uploadLocalFiles([newFile]);
+    //uploadLocalFiles([newFile]);
   }
 
   void _showImages(YustFile activeFile) {
@@ -528,98 +528,104 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   static Future<void> _uploadFiles() async {
-    List<YustFile> localFiles = await _getLocalFiles();
-    if (localFiles.length == 0) return;
+    var localFiles = await _getLocalFiles();
+    if (localFiles != null) {
+      if (localFiles.length == 0) return;
 
-    try {
-      for (var file in uploadingFiles) {
-        var localFile = null;
+      try {
+        for (var file in uploadingFiles) {
+          var localFile = null;
 
-        try {
-          localFile =
-              localFiles.firstWhere((localFile) => file.url == localFile.url);
-        } catch (e) {}
+          try {
+            localFile =
+                localFiles.firstWhere((localFile) => file.url == localFile.url);
+          } catch (e) {}
 
-        // is there a fitting picture in the local cache?
-        if (localFile != null) {
-          String url = file.url ?? '';
-          if (_isFileInCache(url)) {
-            String url = await Yust.service.uploadFile(
-                path: localFile.url ?? Yust.imagePlaceholderPath!,
-                name: file.name,
-                file: file.file,
-                bytes: file.bytes);
-            print('worked URL:' + url);
+          // is there a fitting picture in the local cache?
+          if (localFile != null) {
+            String url = file.url ?? '';
+            if (_isFileInCache(url)) {
+              String url = await Yust.service.uploadFile(
+                  path: localFile.url ?? Yust.imagePlaceholderPath!,
+                  name: file.name,
+                  file: file.file,
+                  bytes: file.bytes);
+              print('worked URL:' + url);
 
-            if (!_isLocalPath(url)) {
-              //widget.path + file.name
-              // _files.firstWhere((element) => element.folderPath == file.folderPath && element.name = file.name);
+              if (!_isLocalPath(url)) {
+                //widget.path + file.name
+                // _files.firstWhere((element) => element.folderPath == file.folderPath && element.name = file.name);
 
-              file.url = url;
-              _delteLocalFile(file);
+                file.url = url;
+                _delteLocalFile(file);
+              }
             }
           }
         }
+        uploadingTemporaryFiles = false;
+      } catch (e) {
+        print(' didnt work URL:');
+        Future.delayed(const Duration(seconds: 10), () {
+          _uploadFiles();
+        });
       }
-      uploadingTemporaryFiles = false;
-    } catch (e) {
-      print(' didnt work URL:');
-      Future.delayed(const Duration(seconds: 10), () {
-        _uploadFiles();
-      });
     }
   }
 
   Future<void> _validateLocalFiles() async {
-    List<YustFile> localFiles = await _getLocalFiles();
-    // all images from different bricks are valide
-    List<YustFile> foreignLocalFiles = localFiles
-        .where((localFile) => localFile.folderPath != widget.folderPath)
-        .toList();
+    var localFiles = await _getLocalFiles();
+    if (localFiles != null) {
+      // all images from different bricks are valide
+      var foreignLocalFiles = localFiles
+          .where((localFile) => localFile.folderPath != widget.folderPath)
+          .toList();
 
-    List<YustFile> validatedLocalFiles = [];
+      var validatedLocalFiles = [];
 
-    // all images which have a file are valid
-    for (var file in _files) {
-      try {
-        validatedLocalFiles
-            .add(localFiles.firstWhere((image) => file.url == image.url));
-      } catch (e) {}
+      // all images which have a file are valid
+      for (var file in _files) {
+        try {
+          validatedLocalFiles
+              .add(localFiles.firstWhere((image) => file.url == image.url));
+        } catch (e) {}
+      }
+
+      // overriding the old informations
+      _saveLocalFiles([...validatedLocalFiles, ...foreignLocalFiles]);
     }
-
-    // overriding the old informations
-    _saveLocalFiles([...validatedLocalFiles, ...foreignLocalFiles]);
   }
 
-  /// reads local file cache, returns list with files or an empty list
-  static Future<List<YustFile>> _getLocalFiles() async {
+  /// reads local file cache, returns list with files or null
+  static Future<List<YustFile>?> _getLocalFiles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var temporaryJsonFiles = prefs.getString('temporaryImages');
-    var temporaryFiles = [];
-    if (temporaryJsonFiles != null && temporaryJsonFiles != '') {
+    var temporaryFiles;
+    if (temporaryJsonFiles != null && temporaryJsonFiles != '[]') {
       temporaryFiles = Helper.jsonDecode(temporaryJsonFiles);
       temporaryFiles =
           temporaryFiles.map((file) => YustFile.fromJson(file)).toList();
     }
 
-    return temporaryFiles as List<YustFile>;
+    return temporaryFiles;
   }
 
   /// removes the image and the image data from the local cache
   static Future<void> _delteLocalFile(YustFile file) async {
-    List<YustFile> localFiles = await _getLocalFiles();
+    var localFiles = await _getLocalFiles();
+    if (localFiles != null) {
+      //removing image
+      var localFile = localFiles.firstWhere((localFile) =>
+          localFile.folderPath == file.folderPath &&
+          localFile.name == file.name);
 
-    //removing image
-    var localFile = localFiles.firstWhere((localFile) =>
-        localFile.folderPath == file.folderPath && localFile.name == file.name);
+      if (localFile.url != null) {
+        File(localFile.url!).delete();
+      }
 
-    if (localFile.url != null) {
-      File(localFile.url!).delete();
+      //removing image data
+      localFiles.remove(localFile);
+      await _saveLocalFiles(localFiles);
     }
-
-    //removing image data
-    localFiles.remove(localFile);
-    await _saveLocalFiles(localFiles);
   }
 
   /// returns local url from [localFile]
@@ -631,7 +637,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     localFile.copy(url);
     file.url = url;
 
-    List<YustFile> temporaryFiles = await _getLocalFiles();
+    var temporaryFiles = await _getLocalFiles() ?? [];
     temporaryFiles.add(file);
     await _saveLocalFiles(temporaryFiles);
     return file.url!;

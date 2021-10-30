@@ -93,11 +93,10 @@ class ImageScreen extends StatelessWidget {
             // onPageChanged: onPageChanged,
           ),
         ),
-        _buildShareButton(context, activeUrl!),
         if (kIsWeb)
           Container(
             padding: const EdgeInsets.all(20.0),
-            alignment: Alignment.topRight,
+            alignment: Alignment.centerLeft,
             child: CircleAvatar(
               backgroundColor: Colors.black,
               radius: 25,
@@ -153,23 +152,26 @@ class ImageScreen extends StatelessWidget {
               ),
             ),
           ),
+        _buildShareButton(context, activeUrl!),
       ],
     );
   }
 
   Widget _buildShareButton(BuildContext context, String url) {
     return Positioned(
-      top: 0.0,
-      right: kIsWeb ? 50.0 : 0.0,
-      child: Container(
-        padding: const EdgeInsets.all(20.0),
-        alignment: Alignment.topRight,
-        child: IconButton(
-          iconSize: 35,
-          color: Colors.white,
-          onPressed: () =>
-              {kIsWeb ? _downloadImage(url) : _shareFile(context, url)},
-          icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
+      top: 20.0,
+      right: kIsWeb ? 80.0 : 0.0,
+      child: CircleAvatar(
+        backgroundColor: Colors.black,
+        radius: 25,
+        child: Container(
+          child: IconButton(
+            iconSize: 35,
+            color: Colors.white,
+            onPressed: () =>
+                {kIsWeb ? _downloadImage(url) : _shareFile(context, url)},
+            icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
+          ),
         ),
       ),
     );
@@ -194,14 +196,23 @@ class ImageScreen extends StatelessWidget {
   }
 
   Future<void> _downloadImage(String imageUrl) async {
+    var suffix;
+    if (imageUrl.contains('.png') || imageUrl.contains('.PNG')) {
+      suffix = '.png';
+    } else {
+      suffix = '.jpg';
+    }
     try {
       final http.Response r = await http.get(
         Uri.parse(imageUrl),
       );
       final data = r.bodyBytes;
       final base64data = base64Encode(data);
-      final a = html.AnchorElement(href: 'data:image/jpeg;base64,$base64data');
-      a.download = 'download.jpg';
+      final a = html.AnchorElement(
+          href: 'data:image/' + suffix + ';base64,$base64data');
+      final name = imageUrl.substring(
+          imageUrl.lastIndexOf('%2F') + 3, imageUrl.lastIndexOf('%2F') + 19);
+      a.download = name + suffix;
       a.click();
       a.remove();
     } catch (e) {

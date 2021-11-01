@@ -555,31 +555,29 @@ class YustImagePickerState extends State<YustImagePicker> {
             name: localFile.name,
             file: File(localFile.localPath),
           );
-          print('worked URL:' + url);
-
-          //widget.path + file.name
-          // _files.firstWhere((element) => element.folderPath == file.folderPath && element.name = file.name);
-
           //_delteLocalFile(file);
 
           final doc =
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
-          final attribute = doc.get(localFile.docAttribute) as List;
+          if (doc.exists && doc.data() != null) {
+            final attribute = doc.get(localFile.docAttribute) as List;
 
-          var index = attribute.indexWhere((onlineFile) =>
-              YustFile.fromJson(onlineFile).name == localFile.name);
-          if (index >= 0) {
-            attribute[index] = {'name': localFile.name, 'url': url};
+            var index = attribute.indexWhere((onlineFile) =>
+                YustFile.fromJson(onlineFile).name == localFile.name);
+            if (index >= 0) {
+              attribute[index] = {'name': localFile.name, 'url': url};
+              doc.data()!.update(localFile.docAttribute, (value) => attribute);
 
-            // await FirebaseFirestore.instance
-            //     .doc(localFile.pathToDoc)
-            //     .update()
-            //     .print('First Upload');
-
-            // doc.update(attribute);
+              final test = doc.get(localFile.docAttribute) as List;
+              print('');
+              // await _delteLocalFile(localFile);
+              //löschen
+            }
+          } else {
+            // Fehler schmeißen, Fehlerprotokoll?
+            // try-catch
+            //#löschen
           }
-
-          // doc.widget.onUploaded!(url, localFile);
         } else {
           //removing image data
           localFiles.remove(localFile);
@@ -587,8 +585,6 @@ class YustImagePickerState extends State<YustImagePicker> {
         }
       }
     } catch (e) {
-      print(' didnt work URL:');
-
       // Future.delayed(const Duration(seconds: 10), () {
       //   _uploadFiles();
       // });

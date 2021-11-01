@@ -84,7 +84,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _getImagesFromFiles(),
+      future: _loadLocalImages(),
       builder: (context, _) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -438,12 +438,14 @@ class YustImagePickerState extends State<YustImagePicker> {
           newFile.bytes = bytes;
         }
       }
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('temporaryImages', '');
+
       newFile.processing = false;
       if (file != null) {
         await _saveImageTemporary(newFile);
       }
-
-      _uploadFiles();
 
       if (mounted) {
         setState(() {});
@@ -460,7 +462,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         Yust.service.showAlert(context, 'Ups', e.toString());
       }
     }
-    //uploadLocalFiles([newFile]);
+    uploadLocalFiles();
   }
 
   void _showImages(YustFile activeFile) {
@@ -516,7 +518,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
   }
 
-  Future<List<YustFile>> _getImagesFromFiles() async {
+  Future<List<YustFile>> _loadLocalImages() async {
     for (var file in _files) {
       if (file.file == null) {
         if (file.url == null) {
@@ -536,7 +538,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   uploadLocalFiles() {
     if (!uploadingTemporaryFiles) {
       uploadingTemporaryFiles = true;
-      _uploadFiles();
+      //_uploadFiles();
     }
   }
 
@@ -546,12 +548,12 @@ class YustImagePickerState extends State<YustImagePicker> {
     try {
       for (final localFile in localFiles) {
         // is there a fitting picture in the local cache?
-        String url = localFile.url ?? '';
-        if (_isFileInCache(url)) {
-          url = await Yust.service.uploadFile(
-            path: localFile.url!,
+        String localPath = localFile.localPath;
+        if (_isFileInCache(localPath)) {
+          String url = await Yust.service.uploadFile(
+            path: localFile.localPath,
             name: localFile.name,
-            file: File(localFile.url!),
+            file: File(localFile.localPath),
           );
           print('worked URL:' + url);
 
@@ -562,7 +564,20 @@ class YustImagePickerState extends State<YustImagePicker> {
 
           final doc =
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
-          final attribute = doc.get(localFile.docAttribute);
+          final attribute = doc.get(localFile.docAttribute) as List;
+
+          var index = attribute.indexWhere((onlineFile) =>
+              YustFile.fromJson(onlineFile).name == localFile.name);
+          if (index >= 0) {
+            attribute[index] = {'name': localFile.name, 'url': url};
+
+            // await FirebaseFirestore.instance
+            //     .doc(localFile.pathToDoc)
+            //     .update()
+            //     .print('First Upload');
+
+            // doc.update(attribute);
+          }
 
           // doc.widget.onUploaded!(url, localFile);
         } else {
@@ -574,9 +589,9 @@ class YustImagePickerState extends State<YustImagePicker> {
     } catch (e) {
       print(' didnt work URL:');
 
-      Future.delayed(const Duration(seconds: 10), () {
-        _uploadFiles();
-      });
+      // Future.delayed(const Duration(seconds: 10), () {
+      //   _uploadFiles();
+      // });
     }
   }
 
@@ -621,7 +636,6 @@ class YustImagePickerState extends State<YustImagePicker> {
     var localFiles = await _getLocalFiles();
 
     //removing image
-
     var localFile = localFiles.firstWhereOrNull((localFile) =>
         localFile.folderPath == widget.folderPath &&
         localFile.name == file.name);
@@ -658,10 +672,6 @@ class YustImagePickerState extends State<YustImagePicker> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var jsonList = files.map((file) => file.toJson()).toList();
     await prefs.setString('temporaryImages', Helper.jsonEncode(jsonList));
-  }
-
-  static bool _isLocalPath(String path) {
-    return !Uri.parse(path).isAbsolute;
   }
 
   Future<String?> _getLocalPath(String fileName) async {

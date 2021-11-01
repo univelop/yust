@@ -21,7 +21,7 @@ class YustFile with YustSerializable {
   factory YustFile.fromJson(Map<String, dynamic> json) {
     return YustFile(
       name: json['name'] as String,
-      url: json['url'] as String,
+      url: json['url'] as String?,
     );
   }
 

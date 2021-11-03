@@ -18,8 +18,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class YustFilePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
-  final List<Map<String, String>> files;
-  final void Function(List<Map<String, String>> files)? onChanged;
+  final List<Map<String, String?>> files;
+  final void Function(List<Map<String, String?>> files)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
 
@@ -38,7 +38,7 @@ class YustFilePicker extends StatefulWidget {
 }
 
 class YustFilePickerState extends State<YustFilePicker> {
-  late List<Map<String, String>> _files;
+  late List<Map<String, String?>> _files;
   Map<String?, bool> _processing = {};
   late bool _enabled;
 
@@ -74,7 +74,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Widget _buildFile(BuildContext context, Map<String, String> file) {
+  Widget _buildFile(BuildContext context, Map<String, String?> file) {
     if (file['name'] == null) {
       return SizedBox.shrink();
     }
@@ -96,7 +96,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Widget _buildDeleteButton(Map<String, String> file) {
+  Widget _buildDeleteButton(Map<String, String?> file) {
     if (!_enabled) {
       return SizedBox.shrink();
     }
@@ -178,7 +178,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  Future<void> _showFile(Map<String, String> file) async {
+  Future<void> _showFile(Map<String, String?> file) async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
@@ -212,7 +212,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  Future<void> _launchBrowser(Map<String, String> file) async {
+  Future<void> _launchBrowser(Map<String, String?> file) async {
     if (await canLaunch(file['url']!)) {
       await launch(file['url']!);
     } else {
@@ -221,7 +221,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  Future<void> _deleteFile(Map<String, String> file) async {
+  Future<void> _deleteFile(Map<String, String?> file) async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {

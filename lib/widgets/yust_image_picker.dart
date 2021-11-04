@@ -526,8 +526,8 @@ class YustImagePickerState extends State<YustImagePicker> {
         file.url = null;
       }
     }
-    final result = _onlineFiles.map((file) => file.toJson()).toList();
-    widget.onChanged!(result);
+
+    widget.onChanged!(_onlineFiles.map((file) => file.toJson()).toList());
   }
 
   Future<List<YustFile>> _loadLocalImages() async {
@@ -550,9 +550,9 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   uploadLocalFiles() {
-    _uploadFiles();
     if (!uploadingTemporaryFiles) {
       uploadingTemporaryFiles = true;
+      _uploadFiles();
     }
   }
 
@@ -578,29 +578,34 @@ class YustImagePickerState extends State<YustImagePicker> {
                 file: File(localFile.localPath),
               );
 
-              //TODO: offline delete 'local' tag
-              attribute[index] = {'name': localFile.name, 'url': url};
+              // removes 'local' tag
+              attribute[index] = {
+                'name': localFile.name.substring(6),
+                'url': url
+              };
               await FirebaseFirestore.instance
                   .doc(localFile.pathToDoc)
                   .update({localFile.docAttribute: attribute});
 
               await _delteLocalFile(localFile.name);
-              //löschen
             }
           } else {
+            // doc didnt exist. FileData gets removed
             // Fehler schmeißen, Fehlerprotokoll?
             // try-catch
-            //#löschen
+            await _delteLocalFile(localFile.name);
+            throw 'Critical FirebaseFirestore error.  Cannot find the expected DocumentSnapshot!';
           }
         } else {
           //removing image data
           await _delteLocalFile(localFile.name);
         }
       }
+      uploadingTemporaryFiles = false;
     } catch (e) {
-      // Future.delayed(const Duration(seconds: 10), () {
-      //   _uploadFiles();
-      // });
+      Future.delayed(const Duration(seconds: 10), () {
+        _uploadFiles();
+      });
     }
   }
 

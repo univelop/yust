@@ -21,6 +21,7 @@ import 'yust.dart';
 
 class YustService {
   final FirebaseAuth fireAuth = FirebaseAuth.instance;
+  final _yustServiceValidationKey = GlobalKey<FormState>();
 
   Future<void> signIn(
     BuildContext context,
@@ -576,35 +577,41 @@ class YustService {
     return showDialog<String>(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(title),
-            content: TextFormField(
-              controller: controller,
-              decoration: InputDecoration(hintText: placeholder),
-              autovalidateMode:
-                  validator == null ? null : AutovalidateMode.onUserInteraction,
-              validator: validator == null
-                  ? null
-                  : (value) => validator(value!.trim()),
+          return Form(
+            key: _yustServiceValidationKey,
+            child: AlertDialog(
+              title: Text(title),
+              content: TextFormField(
+                controller: controller,
+                decoration: InputDecoration(hintText: placeholder),
+                autovalidateMode: validator == null
+                    ? null
+                    : AutovalidateMode.onUserInteraction,
+                validator: validator == null
+                    ? null
+                    : (value) => validator(value!.trim()),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text("Abbrechen"),
+                  onPressed: () {
+                    Navigator.of(context).pop(null);
+                  },
+                ),
+                TextButton(
+                  child: Text(action),
+                  onPressed: () {
+                    if (validator == null) {
+                      Navigator.of(context).pop(controller.text);
+                    } else if (_yustServiceValidationKey.currentState!
+                        .validate()) {
+                      //if ( validator(controller.text.trim()) == null
+                      Navigator.of(context).pop(controller.text);
+                    }
+                  },
+                ),
+              ],
             ),
-            actions: <Widget>[
-              TextButton(
-                child: Text("Abbrechen"),
-                onPressed: () {
-                  Navigator.of(context).pop(null);
-                },
-              ),
-              TextButton(
-                child: Text(action),
-                onPressed: () {
-                  if (validator == null) {
-                    Navigator.of(context).pop(controller.text);
-                  } else if (validator(controller.text.trim()) == null) {
-                    Navigator.of(context).pop(controller.text);
-                  }
-                },
-              ),
-            ],
           );
         });
   }

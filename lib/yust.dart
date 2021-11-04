@@ -40,6 +40,8 @@ class Yust {
     );
 
     await FirebaseAuth.instance.useEmulator('http://$address:9099');
+
+    await FirebaseStorage.instance.useEmulator(host: address, port: 9199);
   }
 
   static Future<void> initialize({

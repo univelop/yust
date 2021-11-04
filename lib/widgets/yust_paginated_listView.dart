@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:paginate_firestore/bloc/pagination_listeners.dart';
 import 'package:paginate_firestore/paginate_firestore.dart';
@@ -10,8 +9,7 @@ import '../yust.dart';
 
 class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
-  final List<List<dynamic>>? filter;
-  final List<String>? orderBy;
+
   final ScrollController? scrollController;
 
   /// There will never be a null for the list given.
@@ -21,8 +19,6 @@ class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
   YustPaginatedListView({
     Key? key,
     required this.modelSetup,
-    this.filter,
-    this.orderBy,
     required this.listItemBuilder,
     this.scrollController,
   }) : super(key: key);
@@ -39,27 +35,6 @@ class YustPaginatedListViewState<T extends YustDoc>
 
   String key = Yust.service.randomString();
 
-  void updateStreamConditionally(YustPaginatedListView oldWidget) {
-    if (widget.modelSetup != oldWidget.modelSetup ||
-        !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
-        !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
-      _refreshListener.refreshed = true;
-      setState(() {
-        key = Yust.service.randomString();
-      });
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   @override
   void didUpdateWidget(YustPaginatedListView oldWidget) {
     super.didUpdateWidget(oldWidget as YustPaginatedListView<T>);
@@ -68,10 +43,7 @@ class YustPaginatedListViewState<T extends YustDoc>
 
   @override
   Widget build(BuildContext context) {
-    final filters =
-        widget.filter!.where((filter) => filter[0] != null).toList();
-    final query =
-        Yust.service.getQuery(widget.modelSetup, filters, widget.orderBy);
+    final query = Yust.service.getQuery(modelSetup: widget.modelSetup);
     return RefreshIndicator(
       child: PaginateFirestore(
         key: ValueKey(key),
@@ -107,6 +79,15 @@ class YustPaginatedListViewState<T extends YustDoc>
       );
     } else {
       return widget.listItemBuilder(context, item, index);
+    }
+  }
+
+  void updateStreamConditionally(YustPaginatedListView oldWidget) {
+    if (widget.modelSetup != oldWidget.modelSetup) {
+      _refreshListener.refreshed = true;
+      setState(() {
+        key = Yust.service.randomString();
+      });
     }
   }
 }

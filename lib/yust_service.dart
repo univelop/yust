@@ -157,8 +157,10 @@ class YustService {
     });
   }
 
-  Query<Object?> getQuery<T extends YustDoc>(YustDocSetup<T> modelSetup,
-      List<List<dynamic>>? filterList, List<String>? orderByList) {
+  Query<Object?> getQuery<T extends YustDoc>(
+      {required YustDocSetup<T> modelSetup,
+      List<List<dynamic>>? filterList,
+      List<String>? orderByList}) {
     Query query =
         FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);

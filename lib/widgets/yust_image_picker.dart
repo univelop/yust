@@ -13,7 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
-import 'package:yust/util/yust_helper.dart';
+import 'package:yust/util/yust_offlineCache.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 
@@ -77,7 +77,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
-    //_validateLocalFiles();
+    offlineCache.validateLocalFiles();
     super.initState();
   }
 
@@ -453,7 +453,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (_currentImageNumber < _files.length) {
         _currentImageNumber += widget.imageCount;
       }
-      uploadLocalFiles();
+      offlineCache.uploadLocalFiles();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -485,16 +485,13 @@ class YustImagePickerState extends State<YustImagePicker> {
       final confirmed = await Yust.service
           .showConfirmation(context, 'Wirklich löschen', 'Löschen');
       if (confirmed == true) {
-        //TODO: offline: Löschen nur möglich, wenn Internetverbindung steht?
-        // with try-catch structure its possible to delete local files from other devices
         try {
-          await _delteLocalFile(file.name);
+          await offlineCache.delteLocalFile(file.name);
         } catch (e) {}
         setState(() {
           _files.remove(file);
         });
         _onChanged();
-        // widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
     } else if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
@@ -514,7 +511,6 @@ class YustImagePickerState extends State<YustImagePicker> {
           _files.remove(file);
         });
         _onChanged();
-        // widget.onChanged!(_files.map((file) => file.toJson()).toList());
       }
     }
   }
@@ -535,132 +531,18 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (file.file == null) {
         if (_isLocalPath(file.url ?? '') || file.url == null) {
           final path = await _getLocalPath(file.name);
-          if (_isFileInCache(path)) {
+          if (offlineCache.isFileInCache(path)) {
             file.file = File(path!);
             file.url = path;
           } else {
             //TODO: offline: warum wird imagePlaceholderPath nicht als gültiges Bild akzeptiert?
-            file.file = File(Yust.imagePlaceholderPath!);
-            file.url = Yust.imagePlaceholderPath!;
+            file.file = File(Yust.imageGetUploadedPath);
+            file.url = Yust.imageGetUploadedPath;
           }
         }
       }
     }
     return _files;
-  }
-
-  uploadLocalFiles() {
-    if (!uploadingTemporaryFiles) {
-      uploadingTemporaryFiles = true;
-      _uploadFiles();
-    }
-  }
-
-  Future<String?> _uploadFiles() async {
-    var localFiles = await _getLocalFiles();
-
-    try {
-      for (final localFile in localFiles) {
-        // is there a fitting picture in the local cache?
-        if (_isFileInCache(localFile.localPath)) {
-          final doc =
-              await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
-          if (doc.exists && doc.data() != null) {
-            final attribute = doc.get(localFile.docAttribute) as List;
-
-            var index = attribute.indexWhere((onlineFile) =>
-                YustFile.fromJson(onlineFile).name == localFile.name);
-            // is image data in database?
-            if (index >= 0) {
-              String url = await Yust.service.uploadFile(
-                path: localFile.localPath,
-                name: localFile.name,
-                file: File(localFile.localPath),
-              );
-
-              // removes 'local' tag
-              attribute[index] = {
-                'name': localFile.name.substring(6),
-                'url': url
-              };
-              await FirebaseFirestore.instance
-                  .doc(localFile.pathToDoc)
-                  .update({localFile.docAttribute: attribute});
-
-              await _delteLocalFile(localFile.name);
-            }
-          } else {
-            // doc didnt exist. FileData gets removed
-            // Fehler schmeißen, Fehlerprotokoll?
-            // try-catch
-            await _delteLocalFile(localFile.name);
-            throw 'Critical FirebaseFirestore error.  Cannot find the expected DocumentSnapshot!';
-          }
-        } else {
-          //removing image data
-          await _delteLocalFile(localFile.name);
-        }
-      }
-      uploadingTemporaryFiles = false;
-    } catch (e) {
-      Future.delayed(const Duration(seconds: 10), () {
-        _uploadFiles();
-      });
-    }
-  }
-
-  Future<void> _validateLocalFiles() async {
-    var localFiles = await _getLocalFiles();
-
-    // all images from different bricks are valide
-    var foreignLocalFiles = localFiles
-        .where((localFile) => localFile.folderPath != widget.folderPath)
-        .toList();
-
-    var validatedLocalFiles = [];
-
-    // all images which have a file are valid
-    for (var file in _files) {
-      validatedLocalFiles
-          .add(localFiles.firstWhereOrNull((image) => file.url == image.url));
-    }
-
-    // overriding the old informations
-    _saveLocalFiles([...validatedLocalFiles, ...foreignLocalFiles]);
-  }
-
-  /// reads local file cache, returns list with files or null
-  Future<List<YustLocalFile>> _getLocalFiles() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var temporaryJsonFiles = prefs.getString('temporaryImages');
-    List<YustLocalFile> temporaryFiles = [];
-    if (temporaryJsonFiles != null &&
-        temporaryJsonFiles != '[]' &&
-        temporaryJsonFiles != '') {
-      temporaryFiles = Helper.jsonDecode(temporaryJsonFiles)
-          .map<YustLocalFile>((file) => YustLocalFile.fromJson(file))
-          .toList();
-    }
-
-    return temporaryFiles;
-  }
-
-  /// removes the image and the image data from the local cache
-  Future<void> _delteLocalFile(String fileName) async {
-    var localFiles = await _getLocalFiles();
-
-    //removing image
-    var localFile = localFiles.firstWhereOrNull((localFile) =>
-        localFile.folderPath == widget.folderPath &&
-        localFile.name == fileName);
-    if (localFile != null) {
-      if (_isFileInCache(localFile.localPath)) {
-        File(localFile.url!).delete();
-      }
-      //removing image data
-      localFiles.remove(localFile);
-      await _saveLocalFiles(localFiles);
-    }
   }
 
   /// returns local path from [localFile]
@@ -677,28 +559,17 @@ class YustImagePickerState extends State<YustImagePicker> {
         docAttribute: widget.docAttribute,
         localPath: path);
 
-    var temporaryFiles = await _getLocalFiles();
+    var temporaryFiles = await offlineCache.getLocalFiles();
     temporaryFiles.add(localFile);
-    await _saveLocalFiles(temporaryFiles);
+    await offlineCache.saveLocalFiles(temporaryFiles);
     return path;
   }
 
-  /// saves the data from images locally
-  static Future<void> _saveLocalFiles(List<YustLocalFile> files) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var jsonList = files.map((file) => file.toJson()).toList();
-    await prefs.setString('temporaryImages', Helper.jsonEncode(jsonList));
-  }
-
   Future<String?> _getLocalPath(String fileName) async {
-    final localFiles = await _getLocalFiles();
+    final localFiles = await offlineCache.getLocalFiles();
     final localFile =
         localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
     return localFile == null ? null : localFile.localPath;
-  }
-
-  static bool _isFileInCache(String? path) {
-    return path != null && File(path).existsSync();
   }
 
   bool _isLocalFile(String fileName) {

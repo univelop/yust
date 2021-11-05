@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:yust/util/yust_offlineCache.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -22,6 +23,7 @@ enum YustInputStyle {
 class Yust {
   static late YustStore store;
   static late YustService service;
+  static late YustOfflineCache offlineCache;
   static late YustDocSetup<YustUser> userSetup;
   @Deprecated('`useTimestamps` will allways be set to true.')
   static bool useTimestamps = true;
@@ -30,6 +32,7 @@ class Yust {
   static String envCollectionName = 'envs';
   static String? storageUrl;
   static String? imagePlaceholderPath;
+  static String imageGetUploadedPath = '';
 
   /// Connnect to the firebase emulator for Firestore and Authentication
   static Future _connectToFirebaseEmulator(String address) async {
@@ -45,12 +48,14 @@ class Yust {
   static Future<void> initialize({
     YustStore? store,
     YustService? service,
+    YustOfflineCache? offlineCache,
     YustDocSetup? userSetup,
     bool useTimestamps = false,
     bool useSubcollections = false,
     String envCollectionName = 'envs',
     String? storageUrl,
     String? imagePlaceholderPath,
+    String imageGetUploadedPath = '',
     String? emulatorAddress,
   }) async {
     await Firebase.initializeApp();
@@ -62,12 +67,14 @@ class Yust {
 
     Yust.store = store ?? YustStore();
     Yust.service = service ?? YustService();
+    Yust.offlineCache = offlineCache ?? YustOfflineCache();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;
     Yust.storageUrl = storageUrl;
     Yust.imagePlaceholderPath = imagePlaceholderPath;
+    Yust.imageGetUploadedPath = imageGetUploadedPath;
 
     // Only enable Persitence if Firebase is not allready initalized.
     // This is especialy important for Tests

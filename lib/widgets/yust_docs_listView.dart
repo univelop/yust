@@ -76,6 +76,7 @@ class YustDocsListViewState<T extends YustDoc>
         }
         return ListView.builder(
             controller: widget.scrollController,
+            itemCount: snapshot.data?.length,
             itemBuilder: (context, index) {
               return widget.listItemBuilder(
                   context, snapshot.data?[index], index);

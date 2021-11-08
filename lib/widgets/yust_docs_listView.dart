@@ -54,7 +54,7 @@ class YustDocsListViewState<T extends YustDoc>
 
   @override
   Widget build(BuildContext context) {
-    if (widget.filter == null) {
+    if (widget.filter == null || widget.filter!.isEmpty) {
       return YustPaginatedListView(
         modelSetup: widget.modelSetup,
         listItemBuilder: widget.listItemBuilder,

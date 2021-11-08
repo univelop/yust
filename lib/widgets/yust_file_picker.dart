@@ -18,6 +18,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class YustFilePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
+  final String pathToDoc;
+  final String docAttribute;
   final List<Map<String, String?>> files;
   final void Function(List<Map<String, String?>> files)? onChanged;
   final Widget? prefixIcon;
@@ -27,6 +29,8 @@ class YustFilePicker extends StatefulWidget {
     Key? key,
     this.label,
     required this.folderPath,
+    required this.pathToDoc,
+    required this.docAttribute,
     required this.files,
     this.onChanged,
     this.prefixIcon,

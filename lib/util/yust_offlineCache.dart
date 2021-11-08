@@ -51,11 +51,9 @@ class YustOfflineCache {
               await delteLocalFile(localFile.name);
             }
           } else {
-            // doc didnt exist. FileData gets removed
-            // Fehler schmeißen, Fehlerprotokoll?
-            // try-catch
             await delteLocalFile(localFile.name);
-            throw 'Critical FirebaseFirestore error.  Cannot find the expected DocumentSnapshot!';
+            await validateLocalFiles();
+            throw new FirebaseException();
           }
         } else {
           //removing image data
@@ -63,6 +61,8 @@ class YustOfflineCache {
         }
       }
       uploadingTemporaryFiles = false;
+    } on FirebaseException {
+      print('FirebaseException: Cannot find the expected DocumentSnapshot!');
     } catch (e) {
       Future.delayed(const Duration(seconds: 10), () {
         _uploadFiles();
@@ -167,5 +167,11 @@ class YustOfflineCache {
       }
     }
     return item;
+  }
+}
+
+class FirebaseException implements Exception {
+  String errorMessage() {
+    return 'Critical FirebaseFirestore error.  Cannot find the expected DocumentSnapshot!';
   }
 }

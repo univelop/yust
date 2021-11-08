@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,7 +9,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/util/yust_offlineCache.dart';
@@ -77,7 +75,6 @@ class YustImagePickerState extends State<YustImagePicker> {
         .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
-    offlineCache.validateLocalFiles();
     super.initState();
   }
 
@@ -453,7 +450,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (_currentImageNumber < _files.length) {
         _currentImageNumber += widget.imageCount;
       }
-      offlineCache.uploadLocalFiles();
+      YustOfflineCache.uploadLocalFiles();
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -486,7 +483,7 @@ class YustImagePickerState extends State<YustImagePicker> {
           .showConfirmation(context, 'Wirklich löschen', 'Löschen');
       if (confirmed == true) {
         try {
-          await offlineCache.delteLocalFile(file.name);
+          await YustOfflineCache.delteLocalFile(file.name);
         } catch (e) {}
         setState(() {
           _files.remove(file);
@@ -531,11 +528,12 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (file.file == null) {
         if (_isLocalPath(file.url ?? '') || file.url == null) {
           final path = await _getLocalPath(file.name);
-          if (offlineCache.isFileInCache(path)) {
+          if (YustOfflineCache.isFileInCache(path)) {
             file.file = File(path!);
             file.url = path;
           } else {
             //TODO: offline: warum wird imagePlaceholderPath nicht als gültiges Bild akzeptiert?
+            // Idee: URL: 'assets/Bildname', aber im Univelop ordner. Nicht in Yust...
             file.file = File(Yust.imageGetUploadedPath);
             file.url = Yust.imageGetUploadedPath;
           }
@@ -559,14 +557,14 @@ class YustImagePickerState extends State<YustImagePicker> {
         docAttribute: widget.docAttribute,
         localPath: path);
 
-    var temporaryFiles = await offlineCache.getLocalFiles();
+    var temporaryFiles = await YustOfflineCache.getLocalFiles();
     temporaryFiles.add(localFile);
-    await offlineCache.saveLocalFiles(temporaryFiles);
+    await YustOfflineCache.saveLocalFiles(temporaryFiles);
     return path;
   }
 
   Future<String?> _getLocalPath(String fileName) async {
-    final localFiles = await offlineCache.getLocalFiles();
+    final localFiles = await YustOfflineCache.getLocalFiles();
     final localFile =
         localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
     return localFile == null ? null : localFile.localPath;

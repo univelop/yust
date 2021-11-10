@@ -1,14 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/util/yust_offlineCache.dart';
@@ -324,7 +322,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     // file.url can be null, if the file is local
     if (file == null ||
         !_enabled ||
-        (file.url == null && !_isLocalFile(file.name))) {
+        (file.url == null && !YustOfflineCache.isLocalFile(file.name))) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -424,6 +422,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     setState(() {
       _files.add(newFile);
     });
+    //TODO: offline: bytes wenn im WEB, was dann tun!?
     try {
       if (resize) {
         final size = YustImageQuality[widget.yustQuality]!['size']!;
@@ -439,7 +438,12 @@ class YustImagePickerState extends State<YustImagePicker> {
 
       newFile.processing = false;
       if (file != null) {
-        newFile.url = await _saveImageTemporary(newFile);
+        newFile.url = await YustOfflineCache.saveFileTemporary(
+          file: newFile,
+          docAttribute: widget.docAttribute,
+          folderPath: widget.folderPath,
+          pathToDoc: widget.pathToDoc,
+        );
       }
 
       if (mounted) {
@@ -478,12 +482,12 @@ class YustImagePickerState extends State<YustImagePicker> {
   Future<void> _deleteImage(YustFile file) async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (file.url == null) {
+    if (YustOfflineCache.isLocalFile(file.name)) {
       final confirmed = await Yust.service
           .showConfirmation(context, 'Wirklich löschen', 'Löschen');
       if (confirmed == true) {
         try {
-          await YustOfflineCache.delteLocalFile(file.name);
+          await YustOfflineCache.deleteLocalFile(file.name);
         } catch (e) {}
         setState(() {
           _files.remove(file);
@@ -491,6 +495,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         _onChanged();
       }
     } else if (connectivityResult == ConnectivityResult.none) {
+      // if the file is not local, and there is no connectivityResult, you can not delete the file
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
     } else {
@@ -515,7 +520,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   void _onChanged() {
     List<YustFile> _onlineFiles = List.from(_files);
     for (var file in _onlineFiles) {
-      if (_isLocalPath(file.url ?? '')) {
+      if (YustOfflineCache.isLocalPath(file.url ?? '')) {
         file.url = null;
       }
     }
@@ -526,8 +531,8 @@ class YustImagePickerState extends State<YustImagePicker> {
   Future<List<YustFile>> _loadLocalImages() async {
     for (var file in _files) {
       if (file.file == null) {
-        if (_isLocalPath(file.url ?? '') || file.url == null) {
-          final path = await _getLocalPath(file.name);
+        if (YustOfflineCache.isLocalPath(file.url ?? '') || file.url == null) {
+          final path = await YustOfflineCache.getLocalPath(file.name);
           if (YustOfflineCache.isFileInCache(path)) {
             file.file = File(path!);
             file.url = path;
@@ -541,40 +546,5 @@ class YustImagePickerState extends State<YustImagePicker> {
       }
     }
     return _files;
-  }
-
-  /// returns local path from [localFile]
-  Future<String> _saveImageTemporary(YustFile file) async {
-    final tempDir = await getTemporaryDirectory();
-    String path = '${tempDir.path}/${file.name}';
-    // save new image in cache
-    file.file!.copy(path);
-
-    var localFile = new YustLocalFile(
-        name: file.name,
-        folderPath: widget.folderPath,
-        pathToDoc: widget.pathToDoc,
-        docAttribute: widget.docAttribute,
-        localPath: path);
-
-    var temporaryFiles = await YustOfflineCache.getLocalFiles();
-    temporaryFiles.add(localFile);
-    await YustOfflineCache.saveLocalFiles(temporaryFiles);
-    return path;
-  }
-
-  Future<String?> _getLocalPath(String fileName) async {
-    final localFiles = await YustOfflineCache.getLocalFiles();
-    final localFile =
-        localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
-    return localFile == null ? null : localFile.localPath;
-  }
-
-  bool _isLocalFile(String fileName) {
-    return fileName.substring(0, 5) == 'local';
-  }
-
-  bool _isLocalPath(String path) {
-    return !Uri.parse(path).isAbsolute;
   }
 }

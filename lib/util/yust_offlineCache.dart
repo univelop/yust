@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/src/iterable_extensions.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_file.dart';
@@ -27,8 +28,8 @@ class YustOfflineCache {
           final doc =
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
           if (doc.exists && doc.data() != null) {
-            final attribute = doc.get(localFile.docAttribute) as List;
-
+            final attribute = doc.get(localFile.docAttribute); //  as List;
+            //TODO: offline: was wenn nur ein File möglich ist!?
             var index = attribute.indexWhere((onlineFile) =>
                 YustFile.fromJson(onlineFile).name == localFile.name);
             // is image data in database?
@@ -48,16 +49,17 @@ class YustOfflineCache {
                   .doc(localFile.pathToDoc)
                   .update({localFile.docAttribute: attribute});
 
-              await delteLocalFile(localFile.name);
+              await deleteLocalFile(localFile.name);
             }
           } else {
-            await delteLocalFile(localFile.name);
+            //TODO: offline
+            await deleteLocalFile(localFile.name);
             await validateLocalFiles();
             throw new FirebaseException();
           }
         } else {
           //removing image data
-          await delteLocalFile(localFile.name);
+          await deleteLocalFile(localFile.name);
         }
       }
       uploadingTemporaryFiles = false;
@@ -89,7 +91,7 @@ class YustOfflineCache {
         var index = attribute.indexWhere((onlineFile) =>
             YustFile.fromJson(onlineFile).name == localFile.name);
         if (index == -1) {
-          delteLocalFile(localFile.name);
+          deleteLocalFile(localFile.name);
         }
       }
     }
@@ -118,8 +120,33 @@ class YustOfflineCache {
     await prefs.setString('temporaryImages', jsonEncode(jsonList));
   }
 
+  /// returns local path from [localFile]
+  static Future<String> saveFileTemporary({
+    required YustFile file,
+    required String folderPath,
+    required String pathToDoc,
+    required String docAttribute,
+  }) async {
+    final tempDir = await getTemporaryDirectory();
+    String path = '${tempDir.path}/${file.name}';
+    // save new image in cache
+    file.file!.copy(path);
+
+    var localFile = new YustLocalFile(
+        name: file.name,
+        folderPath: folderPath,
+        pathToDoc: pathToDoc,
+        docAttribute: docAttribute,
+        localPath: path);
+
+    var temporaryFiles = await YustOfflineCache.getLocalFiles();
+    temporaryFiles.add(localFile);
+    await YustOfflineCache.saveLocalFiles(temporaryFiles);
+    return path;
+  }
+
   /// removes the image and the image data from the local cache
-  static Future<void> delteLocalFile(String fileName) async {
+  static Future<void> deleteLocalFile(String fileName) async {
     var localFiles = await getLocalFiles();
 
     //removing image
@@ -167,6 +194,21 @@ class YustOfflineCache {
       }
     }
     return item;
+  }
+
+  static bool isLocalPath(String path) {
+    return !Uri.parse(path).isAbsolute;
+  }
+
+  static bool isLocalFile(String fileName) {
+    return fileName.substring(0, 5) == 'local';
+  }
+
+  static Future<String?> getLocalPath(String fileName) async {
+    final localFiles = await YustOfflineCache.getLocalFiles();
+    final localFile =
+        localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
+    return localFile == null ? null : localFile.localPath;
   }
 }
 

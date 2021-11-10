@@ -25,8 +25,8 @@ class YustFile with YustSerializable {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
+  Map<String, String?> toJson() {
+    return <String, String?>{
       'name': name,
       'url': url,
     };
@@ -61,8 +61,8 @@ class YustLocalFile extends YustFile {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
+  Map<String, String> toJson() {
+    return <String, String>{
       'name': name,
       'folderPath': folderPath,
       'pathToDoc': pathToDoc,

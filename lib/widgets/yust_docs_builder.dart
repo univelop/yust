@@ -22,7 +22,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
     this.orderBy,
     bool? doNotWait,
     required this.builder,
-  })   : _doNotWait = doNotWait ?? false,
+  })  : _doNotWait = doNotWait ?? false,
         super(key: key);
 
   @override
@@ -41,17 +41,12 @@ class YustDocsBuilderState<T extends YustDoc>
     );
   }
 
-  bool updateStreamConditionally(YustDocsBuilder oldWidget) {
-    bool updated = false;
-
+  void updateStreamConditionally(YustDocsBuilder oldWidget) {
     if (widget.modelSetup != oldWidget.modelSetup ||
         !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
         !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
-      updated = true;
       initStream();
     }
-
-    return updated;
   }
 
   @override

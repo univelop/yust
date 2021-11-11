@@ -11,6 +11,7 @@ class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
 
   final ScrollController? scrollController;
+  final List<String> orderBy;
 
   /// There will never be a null for the list given.
   // final Widget Function(List<T>, YustBuilderInsights) builder;
@@ -21,6 +22,7 @@ class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
     required this.modelSetup,
     required this.listItemBuilder,
     this.scrollController,
+    required this.orderBy,
   }) : super(key: key);
 
   @override
@@ -43,7 +45,8 @@ class YustPaginatedListViewState<T extends YustDoc>
 
   @override
   Widget build(BuildContext context) {
-    final query = Yust.service.getQuery(modelSetup: widget.modelSetup);
+    final query = Yust.service
+        .getQuery(modelSetup: widget.modelSetup, orderByList: widget.orderBy);
     return RefreshIndicator(
       child: PaginateFirestore(
         key: ValueKey(key),

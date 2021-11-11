@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:yust/widgets/yust_docs_builder.dart';
 import 'package:yust/widgets/yust_paginated_listView.dart';
 
 import '../models/yust_doc.dart';
@@ -35,74 +36,29 @@ class YustDocsListView<T extends YustDoc> extends StatefulWidget {
 
 class YustDocsListViewState<T extends YustDoc>
     extends State<YustDocsListView<T>> {
-  late Stream<List<T>> _docStream;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.filter != null) {
-      initStream();
-    }
-  }
-
-  @override
-  void didUpdateWidget(YustDocsListView oldWidget) {
-    super.didUpdateWidget(oldWidget as YustDocsListView<T>);
-
-    updateStreamConditionally(oldWidget);
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.filter == null || widget.filter!.isEmpty) {
       return YustPaginatedListView(
+        orderBy: widget.orderBy ?? [],
         modelSetup: widget.modelSetup,
         listItemBuilder: widget.listItemBuilder,
         scrollController: widget.scrollController,
       );
     }
 
-    return StreamBuilder<List<T>>(
-      stream: _docStream,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          throw snapshot.error!;
-        }
-        final opts = YustBuilderInsights(
-          waiting: snapshot.connectionState == ConnectionState.waiting,
-        );
-        if (opts.waiting! && !widget._doNotWait) {
-          return Center(child: CircularProgressIndicator());
-        }
-        return ListView.builder(
-            controller: widget.scrollController,
-            itemCount: snapshot.data?.length,
-            itemBuilder: (context, index) {
-              return widget.listItemBuilder(
-                  context, snapshot.data?[index], index);
-            });
-      },
-    );
-  }
-
-  void initStream() {
-    _docStream = Yust.service.getDocs<T>(
-      widget.modelSetup,
-      filterList: widget.filter,
-      orderByList: widget.orderBy,
-    );
-  }
-
-  bool updateStreamConditionally(YustDocsListView oldWidget) {
-    bool updated = false;
-
-    if (widget.modelSetup != oldWidget.modelSetup ||
-        !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
-        !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
-      updated = true;
-      initStream();
-    }
-
-    return updated;
+    return YustDocsBuilder(
+        modelSetup: widget.modelSetup,
+        filter: widget.filter,
+        doNotWait: widget._doNotWait,
+        builder: (objects, insights) {
+          return ListView.builder(
+              controller: widget.scrollController,
+              itemCount: objects.length,
+              itemBuilder: (context, index) {
+                return widget.listItemBuilder(
+                    context, objects[index] as T?, index);
+              });
+        });
   }
 }

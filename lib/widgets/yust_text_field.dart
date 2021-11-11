@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:yust/yust.dart';
 
@@ -20,7 +19,7 @@ class YustTextField extends StatefulWidget {
   final bool readOnly;
   final bool enabled;
   final bool obscureText;
-  final TextInputType keyBoardType;
+  final TextInputType? keyBoardType;
   final YustInputStyle? style;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
@@ -41,7 +40,7 @@ class YustTextField extends StatefulWidget {
       this.enabled = true,
       this.readOnly = false,
       this.obscureText = false,
-      this.keyBoardType = TextInputType.multiline,
+      this.keyBoardType,
       this.style,
       this.prefixIcon,
       this.suffixIcon,

@@ -14,10 +14,12 @@ class YustTextField extends StatefulWidget {
   final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
   final TabCallback? onTab;
+  final int? maxLines;
   final int? minLines;
   final bool readOnly;
   final bool enabled;
   final bool obscureText;
+  final TextInputType? keyBoardType;
   final YustInputStyle? style;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
@@ -33,10 +35,12 @@ class YustTextField extends StatefulWidget {
       this.controller,
       this.validator,
       this.onTab,
+      this.maxLines,
       this.minLines,
       this.enabled = true,
       this.readOnly = false,
       this.obscureText = false,
+      this.keyBoardType,
       this.style,
       this.prefixIcon,
       this.suffixIcon,
@@ -101,10 +105,11 @@ class _YustTextFieldState extends State<YustTextField> {
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.suffixIcon,
       ),
-      maxLines: widget.obscureText ? 1 : null,
+      maxLines: widget.obscureText ? 1 : widget.maxLines,
       minLines: widget.minLines,
       controller: _controller,
       focusNode: _focusNode,
+      keyboardType: widget.keyBoardType,
       textInputAction: widget.minLines != null
           ? TextInputAction.newline
           : TextInputAction.next,

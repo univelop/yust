@@ -1,12 +1,9 @@
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_docs_builder.dart';
 import 'package:yust/widgets/yust_paginated_listView.dart';
 
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
-import '../yust.dart';
-import 'yust_doc_builder.dart';
 
 ///builds a standard listView with pagination if no filters are set
 ///uses the yustdocsbuilder otherwise

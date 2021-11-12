@@ -165,8 +165,8 @@ class YustService {
         FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
-    // query = _executeOrderByList(query, orderByList);
-    // query = query.orderBy('envId', descending: true);
+    query = _executeOrderByList(query, orderByList);
+
     return query;
   }
 

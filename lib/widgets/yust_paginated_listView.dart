@@ -59,7 +59,7 @@ class YustPaginatedListViewState<T extends YustDoc>
         listeners: [
           _refreshListener,
         ],
-        itemsPerPage: 5,
+        itemsPerPage: 50,
       ),
       onRefresh: () async {
         _refreshListener.refreshed = true;

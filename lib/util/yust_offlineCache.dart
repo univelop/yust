@@ -116,9 +116,11 @@ class YustOfflineCache {
         }
       } else {
         // removes file data, because pathToDoc in Database didnt exist
-        // await deleteLocalFile(localFile.name);
-        // await validateLocalFiles();
-        print('FirebaseException: Cannot find the expected DocumentSnapshot!');
+        //TODO: offline: Files die auf eine ungültige Addresse in der DB schreiben wollen, werden gelöscht?
+        await deleteLocalFile(localFile.name);
+        await validateLocalFiles();
+        throw new Exception(
+            'FirebaseException: Cannot find the expected DocumentSnapshot!');
       }
     }
   }

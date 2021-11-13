@@ -121,15 +121,15 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Future<void> addFile(YustFile newFile, Uint8List? bytes) async {
-    //TODO: offline: bytes wenn im WEB, was dann tun!?
+  Future<void> addFile(YustFile newFile) async {
     setState(() {
       _files.add(newFile);
       _files.sort((a, b) => (a.name).compareTo(b.name));
       newFile.processing = true;
     });
 
-    if (_isOfflineUploadPossible()) {
+    //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
+    if (_isOfflineUploadPossible() && newFile.bytes == null) {
       newFile.name = 'local' + newFile.name.replaceAll(' ', '_');
       if (newFile.file != null) {
         newFile.url = await YustOfflineCache.saveFileTemporary(
@@ -145,7 +145,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           path: widget.folderPath,
           name: newFile.name,
           file: newFile.file,
-          bytes: bytes,
+          bytes: newFile.bytes,
         );
       } on YustException catch (e) {
         if (mounted) {
@@ -209,7 +209,8 @@ class YustFilePickerState extends State<YustFilePicker> {
               file = File(platformFile.path!);
             }
             newFile.file = file;
-            await addFile(newFile, platformFile.bytes);
+            newFile.bytes = platformFile.bytes;
+            await addFile(newFile);
           }
 
           _onChanged();

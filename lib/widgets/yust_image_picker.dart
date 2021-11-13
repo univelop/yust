@@ -423,7 +423,6 @@ class YustImagePickerState extends State<YustImagePicker> {
     setState(() {
       _files.add(newFile);
     });
-    //TODO: offline: bytes wenn im WEB, was dann tun!?
     try {
       if (resize) {
         final size = YustImageQuality[widget.yustQuality]!['size']!;
@@ -436,25 +435,23 @@ class YustImagePickerState extends State<YustImagePicker> {
           newFile.bytes = bytes;
         }
       }
-      if (file != null) {
-        if (_isOfflineUploadPossible()) {
-          newFile.name = 'local' + newFile.name;
-          newFile.url = await YustOfflineCache.saveFileTemporary(
-            file: newFile,
-            docAttribute: widget.docAttribute!,
-            folderPath: widget.folderPath,
-            pathToDoc: widget.pathToDoc!,
-          );
-        } else {
-          String url = await Yust.service.uploadFile(
-              path: widget.folderPath,
-              name: imageName,
-              file: file,
-              bytes: bytes);
-          newFile.url = url;
-        }
-        newFile.processing = false;
+
+      //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
+      if (_isOfflineUploadPossible() && newFile.bytes == null) {
+        newFile.name = 'local' + newFile.name;
+        newFile.url = await YustOfflineCache.saveFileTemporary(
+          file: newFile,
+          docAttribute: widget.docAttribute!,
+          folderPath: widget.folderPath,
+          pathToDoc: widget.pathToDoc!,
+        );
+      } else {
+        String url = await Yust.service.uploadFile(
+            path: widget.folderPath, name: imageName, file: file, bytes: bytes);
+        newFile.url = url;
       }
+      newFile.processing = false;
+
       if (mounted) {
         setState(() {});
       }

@@ -11,15 +11,15 @@ import 'package:yust/yust.dart';
 
 class YustOfflineCache {
   static bool uploadingTemporaryFiles = false;
-
+  static Duration reconnectionTime = new Duration(milliseconds: 250);
   static uploadLocalFiles() {
     if (!uploadingTemporaryFiles) {
       uploadingTemporaryFiles = true;
-      _uploadFiles();
+      _uploadFiles(reconnectionTime);
     }
   }
 
-  static Future<String?> _uploadFiles() async {
+  static Future<String?> _uploadFiles(Duration reconnectionTime) async {
     var localFiles = await getLocalFiles();
     try {
       for (final localFile in localFiles) {
@@ -28,46 +28,61 @@ class YustOfflineCache {
           final doc =
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
           if (doc.exists && doc.data() != null) {
-            final attribute = doc.get(localFile.docAttribute); //  as List;
-            //TODO: offline: was wenn nur ein File möglich ist!?
-            var index = attribute.indexWhere((onlineFile) =>
-                YustFile.fromJson(onlineFile).name == localFile.name);
-            // is image data in database?
-            if (index >= 0) {
+            final attribute = doc.get(localFile.docAttribute);
+
+            // Attribute can be list or map, that is why the complex query is used
+            bool valideFile = false;
+            int? index = null;
+            valideFile =
+                (attribute is Map && attribute['name'] == localFile.name);
+            if (!valideFile && attribute is List) {
+              index = attribute.indexWhere((onlineFile) =>
+                  YustFile.fromJson(onlineFile).name == localFile.name);
+              if (index >= 0) valideFile = true;
+            }
+            if (valideFile) {
               String url = await Yust.service.uploadFile(
                 path: localFile.localPath,
                 name: localFile.name,
                 file: File(localFile.localPath),
               );
 
-              // removes 'local' tag
-              attribute[index] = {
-                'name': localFile.name.substring(5),
-                'url': url
-              };
+              // removes the 'local' tag from name and adds url
+              if (attribute is Map) {
+                attribute['name'] = localFile.name.substring(5);
+                attribute['url'] = url;
+              } else if (attribute is List) {
+                attribute[index!] = {
+                  'name': localFile.name.substring(5),
+                  'url': url
+                };
+              }
               await FirebaseFirestore.instance
                   .doc(localFile.pathToDoc)
                   .update({localFile.docAttribute: attribute});
 
+              // File was uploaded successfully. Remove file from cache.
               await deleteLocalFile(localFile.name);
+            } else {
+              throw new Exception();
             }
           } else {
-            //TODO: offline
-            await deleteLocalFile(localFile.name);
-            await validateLocalFiles();
-            throw new FirebaseException();
+            throw new Exception(
+                'database entry did not exist. Try again in a moment.');
           }
         } else {
-          //removing image data
+          //removing file data, because file is missing in local cache
           await deleteLocalFile(localFile.name);
         }
       }
       uploadingTemporaryFiles = false;
-    } on FirebaseException {
-      print('FirebaseException: Cannot find the expected DocumentSnapshot!');
     } catch (e) {
-      Future.delayed(const Duration(seconds: 10), () {
-        _uploadFiles();
+      Future.delayed(reconnectionTime, () {
+        reconnectionTime = reconnectionTime > Duration(minutes: 5)
+            ? Duration(minutes: 5)
+            : reconnectionTime * 1.25;
+        print('next upload in:' + reconnectionTime.toString());
+        _uploadFiles(reconnectionTime);
       });
     }
   }
@@ -86,13 +101,24 @@ class YustOfflineCache {
       final doc =
           await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
       if (doc.exists && doc.data() != null) {
-        final attribute = doc.get(localFile.docAttribute) as List;
-
-        var index = attribute.indexWhere((onlineFile) =>
-            YustFile.fromJson(onlineFile).name == localFile.name);
-        if (index == -1) {
-          deleteLocalFile(localFile.name);
+        final attribute = doc.get(localFile.docAttribute); // as List;
+        if (attribute is Map) {
+          if (attribute['name'] != localFile.name) {
+            deleteLocalFile(localFile.name);
+          }
         }
+        if (attribute is List) {
+          var index = attribute.indexWhere((onlineFile) =>
+              YustFile.fromJson(onlineFile).name == localFile.name);
+          if (index == -1) {
+            deleteLocalFile(localFile.name);
+          }
+        }
+      } else {
+        // removes file data, because pathToDoc in Database didnt exist
+        // await deleteLocalFile(localFile.name);
+        // await validateLocalFiles();
+        print('FirebaseException: Cannot find the expected DocumentSnapshot!');
       }
     }
   }
@@ -209,11 +235,5 @@ class YustOfflineCache {
     final localFile =
         localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
     return localFile == null ? null : localFile.localPath;
-  }
-}
-
-class FirebaseException implements Exception {
-  String errorMessage() {
-    return 'Critical FirebaseFirestore error.  Cannot find the expected DocumentSnapshot!';
   }
 }

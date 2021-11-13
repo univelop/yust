@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:yust/util/yust_exception.dart';
 import 'package:yust/util/yust_offlineCache.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:dio/dio.dart';
@@ -19,8 +20,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class YustFilePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
-  final String pathToDoc;
-  final String docAttribute;
+  final String? pathToDoc;
+  final String? docAttribute;
   final List<Map<String, String?>> files;
   final void Function(List<Map<String, String?>> files)? onChanged;
   final Widget? prefixIcon;
@@ -30,8 +31,8 @@ class YustFilePicker extends StatefulWidget {
     Key? key,
     this.label,
     required this.folderPath,
-    required this.pathToDoc,
-    required this.docAttribute,
+    this.pathToDoc,
+    this.docAttribute,
     required this.files,
     this.onChanged,
     this.prefixIcon,
@@ -50,7 +51,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   void initState() {
     _files =
         widget.files.map<YustFile>((file) => YustFile.fromJson(file)).toList();
-    ;
+
     _enabled = (widget.onChanged != null && !widget.readOnly);
     super.initState();
   }
@@ -85,9 +86,6 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
-    // if (file.name == null) {
-    //   return SizedBox.shrink();
-    // }
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -95,7 +93,11 @@ class YustFilePickerState extends State<YustFilePicker> {
           Icon(Icons.insert_drive_file),
           SizedBox(width: 8),
           Expanded(
-            child: Text(file.name, overflow: TextOverflow.ellipsis),
+            child: Text(
+                YustOfflineCache.isLocalFile(file.name)
+                    ? file.name.substring(5)
+                    : file.name,
+                overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
@@ -121,41 +123,45 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   Future<void> addFile(YustFile newFile, Uint8List? bytes) async {
     //TODO: offline: bytes wenn im WEB, was dann tun!?
-    // try {
-    //   fileData['url'] = await Yust.service.uploadFile(
-    //     path: widget.folderPath,
-    //     name: fileData['name']!,
-    //     file: file,
-    //     bytes: bytes,
-    //   );
-    // } on YustException catch (e) {
-    //   if (mounted) {
-    //     Yust.service.showAlert(context, 'Ups', e.message);
-    //   }
-    // } catch (e) {
-    //   if (mounted) {
-    //     Yust.service.showAlert(
-    //         context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
-    //   }
-    // }
-    // if (fileData['url'] == null) {
-    //   _files.remove(fileData);
-    // }
     setState(() {
       _files.add(newFile);
       _files.sort((a, b) => (a.name).compareTo(b.name));
       newFile.processing = true;
     });
 
-    newFile.name = 'local' + newFile.name.replaceAll(' ', '_');
-    if (newFile.file != null) {
-      newFile.url = await YustOfflineCache.saveFileTemporary(
-        file: newFile,
-        docAttribute: widget.docAttribute,
-        folderPath: widget.folderPath,
-        pathToDoc: widget.pathToDoc,
-      );
+    if (_isOfflineUploadPossible()) {
+      newFile.name = 'local' + newFile.name.replaceAll(' ', '_');
+      if (newFile.file != null) {
+        newFile.url = await YustOfflineCache.saveFileTemporary(
+          file: newFile,
+          docAttribute: widget.docAttribute!,
+          folderPath: widget.folderPath,
+          pathToDoc: widget.pathToDoc!,
+        );
+      }
+    } else {
+      try {
+        newFile.url = await Yust.service.uploadFile(
+          path: widget.folderPath,
+          name: newFile.name,
+          file: newFile.file,
+          bytes: bytes,
+        );
+      } on YustException catch (e) {
+        if (mounted) {
+          Yust.service.showAlert(context, 'Ups', e.message);
+        }
+      } catch (e) {
+        if (mounted) {
+          Yust.service.showAlert(
+              context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
+        }
+      }
+      if (newFile.url == null) {
+        _files.remove(newFile);
+      }
     }
+
     setState(() {
       newFile.processing = false;
     });
@@ -171,36 +177,43 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   Future<void> _pickFiles() async {
     Yust.service.unfocusCurrent(context);
-    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
-    if (result != null) {
-      for (final platformFile in result.files) {
-        var name = platformFile.name!.split('/').last;
-        final ext = platformFile.extension;
-        if (ext != null && name.split('.').last != ext) {
-          name += '.' + ext;
-        }
-
-        final newFile = YustFile(
-          name: name,
-          processing: true,
-        );
-
-        // Map<String, String> fileData = {
-        //   'name': name,
-        // };
-        if (_files.any((file) => file.name == newFile.name)) {
-          Yust.service.showAlert(context, 'Nicht möglich',
-              'Eine Datei mit dem Namen ${newFile.name} existiert bereits.');
-        } else {
-          File? file;
-          if (platformFile.path != null) {
-            file = File(platformFile.path!);
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none &&
+        !_isOfflineUploadPossible()) {
+      Yust.service.showAlert(context, 'Kein Internet',
+          'Für das Hinzufügen einer Datei ist eine Internetverbindung erforderlich.');
+    } else {
+      final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+      if (result != null) {
+        for (final platformFile in result.files) {
+          var name = platformFile.name!.split('/').last;
+          final ext = platformFile.extension;
+          if (ext != null && name.split('.').last != ext) {
+            name += '.' + ext;
           }
-          newFile.file = file;
-          await addFile(newFile, platformFile.bytes);
-        }
 
-        _onChanged();
+          final newFile = YustFile(
+            name: name,
+            processing: true,
+          );
+
+          // Map<String, String> fileData = {
+          //   'name': name,
+          // };
+          if (_files.any((file) => file.name == newFile.name)) {
+            Yust.service.showAlert(context, 'Nicht möglich',
+                'Eine Datei mit dem Namen ${newFile.name} existiert bereits.');
+          } else {
+            File? file;
+            if (platformFile.path != null) {
+              file = File(platformFile.path!);
+            }
+            newFile.file = file;
+            await addFile(newFile, platformFile.bytes);
+          }
+
+          _onChanged();
+        }
       }
     }
   }
@@ -313,8 +326,10 @@ class YustFilePickerState extends State<YustFilePicker> {
         file.url = null;
       }
     }
-
-    // widget.onChanged!(_files);
     widget.onChanged!(_onlineFiles.map((file) => file.toJson()).toList());
+  }
+
+  bool _isOfflineUploadPossible() {
+    return widget.docAttribute != null && widget.pathToDoc != null;
   }
 }

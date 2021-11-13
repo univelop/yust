@@ -23,8 +23,8 @@ final Map<String, Map<String, int>> YustImageQuality = {
 class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
-  final String pathToDoc;
-  final String docAttribute;
+  final String? pathToDoc;
+  final String? docAttribute;
   final bool multiple;
   final List<Map<String, dynamic>> images;
   final bool zoomable;
@@ -41,8 +41,8 @@ class YustImagePicker extends StatefulWidget {
     Key? key,
     this.label,
     required this.folderPath,
-    required this.pathToDoc,
-    required this.docAttribute,
+    this.pathToDoc,
+    this.docAttribute,
     this.multiple = false,
     required this.images,
     this.zoomable = false,
@@ -345,7 +345,8 @@ class YustImagePickerState extends State<YustImagePicker> {
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
+    if (connectivityResult == ConnectivityResult.none &&
+        !_isOfflineUploadPossible()) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
@@ -414,7 +415,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     final imageName =
         Yust.service.randomString(length: 16) + '.' + path.split('.').last;
     final newFile = YustFile(
-      name: 'local' + imageName,
+      name: imageName,
       file: file,
       bytes: bytes,
       processing: true,
@@ -435,17 +436,25 @@ class YustImagePickerState extends State<YustImagePicker> {
           newFile.bytes = bytes;
         }
       }
-
-      newFile.processing = false;
       if (file != null) {
-        newFile.url = await YustOfflineCache.saveFileTemporary(
-          file: newFile,
-          docAttribute: widget.docAttribute,
-          folderPath: widget.folderPath,
-          pathToDoc: widget.pathToDoc,
-        );
+        if (_isOfflineUploadPossible()) {
+          newFile.name = 'local' + newFile.name;
+          newFile.url = await YustOfflineCache.saveFileTemporary(
+            file: newFile,
+            docAttribute: widget.docAttribute!,
+            folderPath: widget.folderPath,
+            pathToDoc: widget.pathToDoc!,
+          );
+        } else {
+          String url = await Yust.service.uploadFile(
+              path: widget.folderPath,
+              name: imageName,
+              file: file,
+              bytes: bytes);
+          newFile.url = url;
+        }
+        newFile.processing = false;
       }
-
       if (mounted) {
         setState(() {});
       }
@@ -546,5 +555,9 @@ class YustImagePickerState extends State<YustImagePicker> {
       }
     }
     return _files;
+  }
+
+  bool _isOfflineUploadPossible() {
+    return widget.docAttribute != null && widget.pathToDoc != null;
   }
 }

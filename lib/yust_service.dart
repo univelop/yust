@@ -137,18 +137,13 @@ class YustService {
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
-    DocumentSnapshot? lastVisible,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
-    if (lastVisible != null) {
-      query = query.startAfterDocument(lastVisible);
-    }
 
-    query = query.limit(15);
     return query.snapshots().map((snapshot) {
       return snapshot.docs
           .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
@@ -174,24 +169,14 @@ class YustService {
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
-    DocumentSnapshot? lastVisible,
-    int limit: 15,
-    void Function(DocumentSnapshot? lastVisible)? setLastVisible,
   }) {
     Query query =
         FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
-    if (lastVisible != null) {
-      query = query.startAfterDocument(lastVisible);
-    }
-    query = query.limit(limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
-      if (setLastVisible != null && snapshot.docs.isNotEmpty) {
-        setLastVisible(snapshot.docs.last);
-      }
       // print('Get docs once: ${modelSetup.collectionName}');
       return snapshot.docs
           .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))

@@ -22,6 +22,9 @@ class ImageScreen extends StatelessWidget {
         urls = urlsArgs.whereType<String>().toList();
       }
     }
+
+    urls = _filterGetUploadedImages(urls);
+
     if (urls != null) {
       return _buildMultiple(context, urls, url);
     } else {
@@ -152,11 +155,19 @@ class ImageScreen extends StatelessWidget {
     if (_validURL) {
       return NetworkImage(url);
     } else {
-      if (File(url).existsSync()) {
-        return FileImage(File(url));
-      } else {
-        return FileImage(File(Yust.imagePlaceholderPath!));
+      return FileImage(File(url));
+    }
+  }
+
+  ///removes the asset images from the gallery
+  List<String>? _filterGetUploadedImages(List? urls) {
+    if (urls == null) return null;
+    List<String> newUrls = [];
+    for (var url in urls) {
+      if (url != Yust.imageGetUploadedPath) {
+        newUrls.add(url);
       }
     }
+    return newUrls;
   }
 }

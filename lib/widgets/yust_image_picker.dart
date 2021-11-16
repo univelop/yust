@@ -6,7 +6,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/util/yust_offlineCache.dart';
@@ -59,9 +61,6 @@ class YustImagePicker extends StatefulWidget {
 }
 
 class YustImagePickerState extends State<YustImagePicker> {
-  static bool uploadingTemporaryFiles = false;
-  static List<YustFile> uploadingFiles = [];
-
   late List<YustFile> _files;
   late bool _enabled;
   late int _currentImageNumber;
@@ -79,8 +78,22 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _loadLocalImages(),
-      builder: (context, _) {
+      future: YustOfflineCache.loadFiles(
+        uploadedFiles: widget.images
+            .map<YustFile>((image) => YustFile.fromJson(image))
+            .toList(),
+        files: _files,
+        ifFileIsNotInCache: (file) async {
+          file.file = await getImageFileFromAssets(Yust.imageGetUploadedPath);
+          file.url = Yust.imageGetUploadedPath;
+          file.processing = true;
+          return file;
+        },
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return SizedBox.shrink();
+        }
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,8 +502,16 @@ class YustImagePickerState extends State<YustImagePicker> {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (YustOfflineCache.isLocalFile(file.name)) {
-      final confirmed = await Yust.service
-          .showConfirmation(context, 'Wirklich löschen', 'Löschen');
+      bool? confirmed = false;
+      if (file.url == Yust.imageGetUploadedPath) {
+        confirmed = await Yust.service.showConfirmation(
+            context,
+            'Achtung! Diese Datei wird soeben von einem anderen Gerät hochgeladen! Willst du diese Datei wirklich löschen?',
+            'Löschen');
+      } else {
+        confirmed = await Yust.service
+            .showConfirmation(context, 'Wirklich löschen', 'Löschen');
+      }
       if (confirmed == true) {
         try {
           await YustOfflineCache.deleteLocalFile(file.name);
@@ -524,7 +545,8 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   void _onChanged() {
-    List<YustFile> _onlineFiles = List.from(_files);
+    List<YustFile> _onlineFiles = _files;
+
     for (var file in _onlineFiles) {
       if (YustOfflineCache.isLocalPath(file.url ?? '')) {
         file.url = null;
@@ -534,27 +556,18 @@ class YustImagePickerState extends State<YustImagePicker> {
     widget.onChanged!(_onlineFiles.map((file) => file.toJson()).toList());
   }
 
-  Future<List<YustFile>> _loadLocalImages() async {
-    for (var file in _files) {
-      if (file.file == null) {
-        if (YustOfflineCache.isLocalPath(file.url ?? '') || file.url == null) {
-          final path = await YustOfflineCache.getLocalPath(file.name);
-          if (YustOfflineCache.isFileInCache(path)) {
-            file.file = File(path!);
-            file.url = path;
-          } else {
-            //TODO: offline: warum wird imagePlaceholderPath nicht als gültiges Bild akzeptiert?
-            // Idee: URL: 'assets/Bildname', aber im Univelop ordner. Nicht in Yust...
-            file.file = File(Yust.imageGetUploadedPath);
-            file.url = Yust.imageGetUploadedPath;
-          }
-        }
-      }
-    }
-    return _files;
-  }
-
   bool _isOfflineUploadPossible() {
     return widget.docAttribute != null && widget.pathToDoc != null;
+  }
+
+  Future<File> getImageFileFromAssets(String path) async {
+    final byteData = await rootBundle.load(path);
+
+    final file = File('${(await getTemporaryDirectory()).path}/$path');
+    await file.create(recursive: true);
+    await file.writeAsBytes(byteData.buffer
+        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+    return file;
   }
 }

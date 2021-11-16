@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
@@ -59,8 +57,15 @@ class YustFilePickerState extends State<YustFilePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: _loadLocalFiles(),
-        builder: (context, _) {
+        future: YustOfflineCache.loadFiles(
+            uploadedFiles: widget.files
+                .map<YustFile>((file) => YustFile.fromJson(file))
+                .toList(),
+            files: _files),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return SizedBox.shrink();
+          }
           return YustInputTile(
               child: _buildAddButton(context),
               label: widget.label,
@@ -222,7 +227,10 @@ class YustFilePickerState extends State<YustFilePicker> {
   Future<void> _showFile(YustFile file) async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
+    if (file.file == null && YustOfflineCache.isLocalFile(file.name)) {
+      Yust.service.showAlert(context, 'Nicht vorhanden',
+          'Die ausgewählte Date wird soeben von einem anderem Gerät hochgeladen. Versuche es später nocheinmal.');
+    } else if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Anzeigen einer Datei ist eine Internetverbindung erforderlich.');
       // is it a valid file?
@@ -266,8 +274,16 @@ class YustFilePickerState extends State<YustFilePicker> {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (YustOfflineCache.isLocalFile(file.name)) {
-      final confirmed = await Yust.service
-          .showConfirmation(context, 'Wirklich löschen', 'Löschen');
+      bool? confirmed = false;
+      if (file.file == null) {
+        confirmed = await Yust.service.showConfirmation(
+            context,
+            'Achtung! Diese Datei wird soeben von einem anderen Gerät hochgeladen! Willst du diese Datei wirklich löschen?',
+            'Löschen');
+      } else {
+        confirmed = await Yust.service
+            .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
+      }
       if (confirmed == true) {
         try {
           await YustOfflineCache.deleteLocalFile(file.name);
@@ -300,24 +316,6 @@ class YustFilePickerState extends State<YustFilePicker> {
         // widget.onChanged!(_files);
       }
     }
-  }
-
-  Future<List<YustFile>> _loadLocalFiles() async {
-    for (var file in _files) {
-      if (file.file == null) {
-        if (YustOfflineCache.isLocalPath(file.url ?? '') || file.url == null) {
-          final path = await YustOfflineCache.getLocalPath(file.name);
-          if (YustOfflineCache.isFileInCache(path)) {
-            file.file = File(path!);
-            file.url = path;
-          } else {
-            //TODO: offline: was mit den Dateien machen, welche bereits in der DB liegen,
-            //aber von einem remden Gerät kommen?
-          }
-        }
-      }
-    }
-    return _files;
   }
 
   void _onChanged() {

@@ -116,13 +116,49 @@ class YustOfflineCache {
         }
       } else {
         // removes file data, because pathToDoc in Database didnt exist
-        //TODO: offline: Files die auf eine ungültige Addresse in der DB schreiben wollen, werden gelöscht?
         await deleteLocalFile(localFile.name);
         await validateLocalFiles();
-        throw new Exception(
-            'FirebaseException: Cannot find the expected DocumentSnapshot!');
+
+        print('OfflineCacheERROR: File ' +
+            localFile.name +
+            ' got deleted. Firebase Database adress ' +
+            localFile.pathToDoc +
+            ' did not exist!');
       }
     }
+  }
+
+  /// checks if the loaded [files] are outdated in comparison to [uploadedFiles]
+  /// and loads the [files] that are cached locally.
+  static Future<List<YustFile>> loadFiles(
+      {required List<YustFile> uploadedFiles,
+      required List<YustFile> files,
+      Future<YustFile> Function(YustFile file)? ifFileIsNotInCache}) async {
+    // checks if the loaded [files] are outdated in comparison to [uploadedFiles]
+    for (var upFile in uploadedFiles) {
+      var uploadedFile =
+          files.indexWhere((file) => file.name.substring(5) == upFile.name);
+      if (uploadedFile >= 0) {
+        files[uploadedFile] = upFile;
+      }
+    }
+
+    // loads the local files and paths
+    // path get saved in url
+    for (var file in files) {
+      if (YustOfflineCache.isLocalPath(file.url ?? '') || file.url == null) {
+        final path = await YustOfflineCache.getLocalPath(file.name);
+        if (YustOfflineCache.isFileInCache(path)) {
+          file.file = File(path!);
+          file.url = path;
+        } else {
+          if (ifFileIsNotInCache != null) {
+            file = await ifFileIsNotInCache(file);
+          }
+        }
+      }
+    }
+    return files;
   }
 
   /// reads local file cache, returns list with files or null

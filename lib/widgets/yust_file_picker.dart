@@ -18,7 +18,13 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class YustFilePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
+
+  /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
   final String? pathToDoc;
+
+  /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
   final String? docAttribute;
   final List<Map<String, String?>> files;
   final void Function(List<Map<String, String?>> files)? onChanged;
@@ -100,7 +106,8 @@ class YustFilePickerState extends State<YustFilePicker> {
           Expanded(
             child: Text(
                 YustOfflineCache.isLocalFile(file.name)
-                    ? file.name.substring(5)
+                    ? file.name.substring(
+                        5) // each local file has the name tag 'local'. It gets hided for the ui.
                     : file.name,
                 overflow: TextOverflow.ellipsis),
           ),
@@ -135,6 +142,7 @@ class YustFilePickerState extends State<YustFilePicker> {
 
     //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
     if (_isOfflineUploadPossible() && newFile.bytes == null) {
+      // Add 'local' as a name suffix to distinguish the files between uploaded and local
       newFile.name = 'local' + newFile.name.replaceAll(' ', '_');
       if (newFile.file != null) {
         newFile.url = await YustOfflineCache.saveFileTemporary(
@@ -174,10 +182,8 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (mounted) {
       setState(() {});
     }
-
     _onChanged();
     YustOfflineCache.uploadLocalFiles();
-    // widget.onChanged!(_files);
   }
 
   Future<void> _pickFiles() async {
@@ -202,9 +208,6 @@ class YustFilePickerState extends State<YustFilePicker> {
             processing: true,
           );
 
-          // Map<String, String> fileData = {
-          //   'name': name,
-          // };
           if (_files.any((file) => file.name == newFile.name)) {
             Yust.service.showAlert(context, 'Nicht möglich',
                 'Eine Datei mit dem Namen ${newFile.name} existiert bereits.');
@@ -318,6 +321,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
+  /// removes file.urls that are paths to a folder
   void _onChanged() {
     List<YustFile> _onlineFiles = List.from(_files);
     for (var file in _onlineFiles) {

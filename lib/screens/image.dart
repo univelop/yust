@@ -150,6 +150,7 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
+  /// because of the offline cache the [url] could be a folder path
   ImageProvider<Object> _getImageOfUrl(String url) {
     bool _validURL = Uri.parse(url).isAbsolute;
     if (_validURL) {
@@ -159,7 +160,8 @@ class ImageScreen extends StatelessWidget {
     }
   }
 
-  ///removes the asset images from the gallery
+  ///removes the [Yust.imageGetUploadedPath]-asset-images from the [urls]
+  ///to show a clean gallery
   List<String>? _filterGetUploadedImages(List? urls) {
     if (urls == null) return null;
     List<String> newUrls = [];

@@ -25,7 +25,13 @@ final Map<String, Map<String, int>> YustImageQuality = {
 class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
+
+  /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
   final String? pathToDoc;
+
+  /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
   final String? docAttribute;
   final bool multiple;
   final List<Map<String, dynamic>> images;
@@ -451,6 +457,7 @@ class YustImagePickerState extends State<YustImagePicker> {
 
       //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
       if (_isOfflineUploadPossible() && newFile.bytes == null) {
+        // Add 'local' as a name suffix to distinguish the files between uploaded and local
         newFile.name = 'local' + newFile.name;
         newFile.url = await YustOfflineCache.saveFileTemporary(
           file: newFile,
@@ -544,6 +551,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
   }
 
+  /// removes file.urls that are paths to a folder
   void _onChanged() {
     List<YustFile> _onlineFiles = _files;
 

@@ -11,18 +11,19 @@ import 'package:yust/yust.dart';
 
 class YustOfflineCache {
   /// shows if the _uploadFiles-procces is currently running
-  static bool uploadingTemporaryFiles = false;
+  static bool _uploadingTemporaryFiles = false;
 
-  /// Steadily increasing by factor 1.25. Indicates the next upload attempt.
-  /// [reconnectionTime] is reset for each upload
-  static Duration reconnectionTime = new Duration(milliseconds: 250);
+  /// Steadily increasing by the [_reconnectionFactor]. Indicates the next upload attempt.
+  /// [_reconnectionTime] is reset for each upload
+  static Duration _reconnectionTime = new Duration(milliseconds: 250);
+  static double _reconnectionFactor = 1.25;
 
-  /// Uploads all local files. If the upload fails,  a new attempt is made after [reconnectionTime].
+  /// Uploads all local files. If the upload fails,  a new attempt is made after [_reconnectionTime].
   /// Can be started only once, renewed call only possible after successful upload
   static uploadLocalFiles() {
-    if (!uploadingTemporaryFiles) {
-      uploadingTemporaryFiles = true;
-      _uploadFiles(reconnectionTime);
+    if (!_uploadingTemporaryFiles) {
+      _uploadingTemporaryFiles = true;
+      _uploadFiles(_reconnectionTime);
     }
   }
 
@@ -30,53 +31,29 @@ class YustOfflineCache {
     var localFiles = await _getLocalFiles();
     try {
       for (final localFile in localFiles) {
-        // is there a fitting file in the local cache?
         if (_isFileInCache(localFile.localPath)) {
           final doc =
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
           if (doc.exists && doc.data() != null) {
             final attribute = doc.get(localFile.docAttribute);
 
-            // Attribute can be a list or map, that is why the following query is used
-            bool valideFile = false;
-            int? index = null;
-            valideFile =
-                (attribute is Map && attribute['name'] == localFile.name);
-            if (!valideFile && attribute is List) {
-              index = attribute.indexWhere((onlineFile) =>
-                  YustFile.fromJson(onlineFile).name == localFile.name);
-              if (index >= 0) valideFile = true;
-            }
+            int index = _getFileIndex(attribute, localFile);
 
-            //If the file is valid, a corresponding instance exists in the database
-            if (valideFile) {
+            if (index >= 0) {
               String url = await Yust.service.uploadFile(
                 path: localFile.localPath,
                 name: localFile.name,
                 file: File(localFile.localPath),
               );
 
-              // removes the 'local' tag from name and adds the url
-              if (attribute is Map) {
-                attribute['name'] = localFile.name.substring(5);
-                attribute['url'] = url;
-              } else if (attribute is List) {
-                attribute[index!] = {
-                  'name': localFile.name.substring(5),
-                  'url': url
-                };
-              }
-              // uploading the changed file data
-              await FirebaseFirestore.instance
-                  .doc(localFile.pathToDoc)
-                  .update({localFile.docAttribute: attribute});
+              _updateAttribute(attribute, localFile, url, index);
 
-              // file uploaded was successfully. Remove file from local cache.
               await deleteLocalFile(localFile.name);
             } else {
               // It is possible that the upload accesses the database before the searched address is initialized.
               // If the access adress is corrupt, the process 'validateLocalFiles' removes the file.
-              throw new Exception();
+              throw new Exception(
+                  'Database entry did not exist. Try again in a moment.');
             }
           } else {
             // It is possible that the upload accesses the database before the searched address is initialized.
@@ -89,14 +66,13 @@ class YustOfflineCache {
           await deleteLocalFile(localFile.name);
         }
       }
-      // successfully uploaded all local files. New upload process is possible
-      uploadingTemporaryFiles = false;
+      _uploadingTemporaryFiles = false;
     } catch (e) {
       Future.delayed(reconnectionTime, () {
         //Limits [reconnectionTime] to 5 minutes
         reconnectionTime = reconnectionTime > Duration(minutes: 5)
             ? Duration(minutes: 5)
-            : reconnectionTime * 1.25;
+            : reconnectionTime * _reconnectionFactor;
         print('OfflineCache: Next upload in:' + reconnectionTime.toString());
         _uploadFiles(reconnectionTime);
       });
@@ -135,7 +111,6 @@ class YustOfflineCache {
           }
         }
       } else {
-        // removes file data, because pathToDoc in database did not exist
         await deleteLocalFile(localFile.name);
         await validateLocalFiles();
 
@@ -181,22 +156,6 @@ class YustOfflineCache {
     return files;
   }
 
-  /// reads local file cache, returns list with [YustLocalFile]'s
-  static Future<List<YustLocalFile>> _getLocalFiles() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    var temporaryJsonFiles = prefs.getString('temporaryFiles');
-    List<YustLocalFile> temporaryFiles = [];
-    if (temporaryJsonFiles != null &&
-        temporaryJsonFiles != '[]' &&
-        temporaryJsonFiles != '') {
-      temporaryFiles = jsonDecode(temporaryJsonFiles)
-          .map<YustLocalFile>((file) => YustLocalFile.fromJson(file))
-          .toList();
-    }
-
-    return temporaryFiles;
-  }
-
   /// returns local path from [file]
   static Future<String> saveFileTemporary({
     required YustFile file,
@@ -226,17 +185,59 @@ class YustOfflineCache {
   static Future<void> deleteLocalFile(String fileName) async {
     var localFiles = await _getLocalFiles();
 
-    //removing file
     var localFile =
         localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
+
     if (localFile != null) {
       if (_isFileInCache(localFile.localPath)) {
         File(localFile.localPath).delete();
       }
-      //removing file data
       localFiles.remove(localFile);
       await _saveLocalFiles(localFiles);
     }
+  }
+
+  /// removes the 'local' tag from name and adds the url
+  static Future<void> _updateAttribute(
+      attribute, YustLocalFile localFile, String url, int index) async {
+    if (attribute is Map) {
+      attribute['name'] = localFile.name.substring(5);
+      attribute['url'] = url;
+    } else if (attribute is List) {
+      attribute[index] = {'name': localFile.name.substring(5), 'url': url};
+    }
+
+    await FirebaseFirestore.instance
+        .doc(localFile.pathToDoc)
+        .update({localFile.docAttribute: attribute});
+  }
+
+  ///If the file has a valid index, a corresponding instance exists in the database.
+  /// returns -1 if the file is not valide
+  static int _getFileIndex(attribute, YustLocalFile localFile) {
+    int index =
+        (attribute is Map && attribute['name'] == localFile.name) ? 0 : -1;
+    if (attribute is List) {
+      index = attribute.indexWhere(
+          (onlineFile) => YustFile.fromJson(onlineFile).name == localFile.name);
+    }
+    return index;
+  }
+
+  /// reads local file cache, returns list with [YustLocalFile]'s
+  static Future<List<YustLocalFile>> _getLocalFiles() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var temporaryJsonFiles = prefs.getString('temporaryFiles');
+    List<YustLocalFile> temporaryFiles = [];
+    if (temporaryJsonFiles != null &&
+        temporaryJsonFiles != '[]' &&
+        temporaryJsonFiles != '') {
+      temporaryFiles = jsonDecode(temporaryJsonFiles)
+          .map<YustLocalFile>((file) => YustLocalFile.fromJson(file))
+          .toList();
+    }
+
+    return temporaryFiles;
   }
 
   /// saves the data from files locally

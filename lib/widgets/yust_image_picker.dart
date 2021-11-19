@@ -363,7 +363,7 @@ class YustImagePickerState extends State<YustImagePicker> {
           if (result != null) {
             for (final platformFile in result.files) {
               await uploadFile(
-                path: platformFile.name!,
+                path: platformFile.name,
                 bytes: platformFile.bytes,
                 resize: true,
                 yustQuality: widget.yustQuality,
@@ -375,7 +375,7 @@ class YustImagePickerState extends State<YustImagePicker> {
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
             await uploadFile(
-                path: result.files.single.name!,
+                path: result.files.single.name,
                 bytes: result.files.single.bytes,
                 resize: true,
                 yustQuality: widget.yustQuality);

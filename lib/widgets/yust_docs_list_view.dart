@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:paginate_firestore/widgets/empty_display.dart';
 import 'package:yust/widgets/yust_docs_builder.dart';
-import 'package:yust/widgets/yust_paginated_listView.dart';
-
+import 'package:yust/widgets/yust_paginated_list_view.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 
@@ -15,12 +15,18 @@ class YustDocsListView<T extends YustDoc> extends StatefulWidget {
   final bool _doNotWait;
   final ScrollController? scrollController;
   final Widget Function(BuildContext, T?, int) listItemBuilder;
+  final Widget? header;
+  final Widget? footer;
+  final Widget emptyInfo;
 
   YustDocsListView({
     Key? key,
     required this.modelSetup,
     this.filter,
     this.orderBy,
+    this.header,
+    this.emptyInfo = const EmptyDisplay(),
+    this.footer,
     bool? doNotWait,
     this.scrollController,
     required this.listItemBuilder,
@@ -37,6 +43,9 @@ class YustDocsListViewState<T extends YustDoc>
   Widget build(BuildContext context) {
     if (widget.filter == null || widget.filter!.isEmpty) {
       return YustPaginatedListView(
+        header: widget.header,
+        footer: widget.footer,
+        emptyInfo: widget.emptyInfo,
         orderBy: widget.orderBy ?? [],
         modelSetup: widget.modelSetup,
         listItemBuilder: widget.listItemBuilder,

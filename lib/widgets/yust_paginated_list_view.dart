@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:paginate_firestore/bloc/pagination_listeners.dart';
 import 'package:paginate_firestore/paginate_firestore.dart';
+import 'package:paginate_firestore/widgets/empty_display.dart';
 
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
@@ -13,6 +13,9 @@ class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
   final ScrollController? scrollController;
   final List<String> orderBy;
   final Widget Function(BuildContext, T?, int) listItemBuilder;
+  final Widget? footer;
+  final Widget? header;
+  final Widget emptyInfo;
 
   YustPaginatedListView({
     Key? key,
@@ -20,6 +23,9 @@ class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
     required this.listItemBuilder,
     this.scrollController,
     required this.orderBy,
+    this.emptyInfo = const EmptyDisplay(),
+    this.footer,
+    this.header,
   }) : super(key: key);
 
   @override
@@ -35,6 +41,9 @@ class YustPaginatedListViewState<T extends YustDoc>
         .getQuery(modelSetup: widget.modelSetup, orderByList: widget.orderBy);
     return PaginateFirestore(
       scrollController: widget.scrollController,
+      header: widget.header,
+      footer: widget.footer,
+      emptyDisplay: widget.emptyInfo,
       itemBuilderType: PaginateBuilderType.listView,
       itemBuilder: (index, context, documentSnapshot) =>
           _itemBuilder(index, context, documentSnapshot),

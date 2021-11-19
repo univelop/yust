@@ -126,32 +126,6 @@ class YustService {
     return doc;
   }
 
-  ///[filterList] each entry represents a condition that has to be met.
-  ///All of those conditions must be true for each returned entry.
-  ///
-  ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
-  ///Multiple of those entries can be repeated.
-  ///
-  ///[filterList] may be null.
-  Stream<List<T>> getDocs<T extends YustDoc>(
-    YustDocSetup<T> modelSetup, {
-    List<List<dynamic>>? filterList,
-    List<String>? orderByList,
-  }) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
-
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs
-          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
-          .whereType<T>()
-          .toList();
-    });
-  }
-
   Query<Object?> getQuery<T extends YustDoc>(
       {required YustDocSetup<T> modelSetup,
       List<List<dynamic>>? filterList,
@@ -165,16 +139,40 @@ class YustService {
     return query;
   }
 
+  ///[filterList] each entry represents a condition that has to be met.
+  ///All of those conditions must be true for each returned entry.
+  ///
+  ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  ///Multiple of those entries can be repeated.
+  ///
+  ///[filterList] may be null.
+  Stream<List<T>> getDocs<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    List<List<dynamic>>? filterList,
+    List<String>? orderByList,
+  }) {
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        orderByList: orderByList,
+        filterList: filterList);
+
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
+          .whereType<T>()
+          .toList();
+    });
+  }
+
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
   }) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        orderByList: orderByList,
+        filterList: filterList);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
@@ -238,11 +236,10 @@ class YustService {
     List<List<dynamic>>? filterList, {
     List<String>? orderByList,
   }) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        filterList: filterList,
+        orderByList: orderByList);
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.length > 0) {
@@ -259,12 +256,10 @@ class YustService {
     List<List<dynamic>> filterList, {
     List<String>? orderByList,
   }) async {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
-
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        filterList: filterList,
+        orderByList: orderByList);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 

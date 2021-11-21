@@ -62,30 +62,28 @@ class YustDocsListViewState<T extends YustDoc>
         filter: widget.filter,
         doNotWait: widget._doNotWait,
         builder: (objects, insights) {
-          if (objects.isEmpty) {
-            return widget.emptyInfo;
-          }
-          if (widget.sort != null) {
-            objects.sort(widget.sort);
-          }
+          objects.sort(widget.sort);
+
           return Container(
             child: CustomScrollView(
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               controller: widget.scrollController,
               semanticChildCount: objects.length,
-              slivers: [
-                widget.header,
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      return widget.listItemBuilder(
-                          context, objects[index], index);
-                    },
-                    childCount: objects.length,
-                  ),
-                ),
-                widget.footer
-              ],
+              slivers: objects.isEmpty
+                  ? [SliverToBoxAdapter(child: widget.emptyInfo)]
+                  : [
+                      widget.header,
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return widget.listItemBuilder(
+                                context, objects[index], index);
+                          },
+                          childCount: objects.length,
+                        ),
+                      ),
+                      widget.footer
+                    ],
             ),
           );
         });

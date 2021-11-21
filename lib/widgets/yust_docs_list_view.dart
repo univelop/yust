@@ -64,27 +64,24 @@ class YustDocsListViewState<T extends YustDoc>
         builder: (objects, insights) {
           objects.sort(widget.sort);
 
-          return Container(
-            child: CustomScrollView(
-              controller: widget.scrollController,
-              semanticChildCount: objects.length,
-              slivers: [
-                widget.header,
-                if (objects.isNotEmpty)
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        return widget.listItemBuilder(
-                            context, objects[index], index);
-                      },
-                      childCount: objects.length,
-                    ),
+          return CustomScrollView(
+            controller: widget.scrollController,
+            semanticChildCount: objects.length,
+            slivers: [
+              widget.header,
+              if (objects.isNotEmpty)
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return widget.listItemBuilder(
+                          context, objects[index], index);
+                    },
+                    childCount: objects.length,
                   ),
-                if (objects.isEmpty)
-                  SliverToBoxAdapter(child: widget.emptyInfo),
-                widget.footer
-              ],
-            ),
+                ),
+              if (objects.isEmpty) SliverToBoxAdapter(child: widget.emptyInfo),
+              widget.footer
+            ],
           );
         });
   }

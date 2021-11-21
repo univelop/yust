@@ -15,22 +15,26 @@ class YustDocsListView<T extends YustDoc> extends StatefulWidget {
   final bool _doNotWait;
   final ScrollController? scrollController;
   final Widget Function(BuildContext, T?, int) listItemBuilder;
-  final Widget? header;
-  final Widget? footer;
+  final Widget header;
+  final Widget footer;
   final Widget emptyInfo;
+  final int Function(T a, T b)? sort;
 
   YustDocsListView({
     Key? key,
     required this.modelSetup,
     this.filter,
     this.orderBy,
-    this.header,
+    Widget? header,
     this.emptyInfo = const EmptyDisplay(),
-    this.footer,
+    Widget? footer,
     bool? doNotWait,
     this.scrollController,
+    required this.sort,
     required this.listItemBuilder,
   })  : _doNotWait = doNotWait ?? false,
+        header = SliverToBoxAdapter(child: header),
+        footer = SliverToBoxAdapter(child: footer),
         super(key: key);
 
   @override
@@ -42,7 +46,7 @@ class YustDocsListViewState<T extends YustDoc>
   @override
   Widget build(BuildContext context) {
     if (widget.filter == null || widget.filter!.isEmpty) {
-      return YustPaginatedListView(
+      return YustPaginatedListView<T>(
         header: widget.header,
         footer: widget.footer,
         emptyInfo: widget.emptyInfo,
@@ -53,18 +57,37 @@ class YustDocsListViewState<T extends YustDoc>
       );
     }
 
-    return YustDocsBuilder(
+    return YustDocsBuilder<T>(
         modelSetup: widget.modelSetup,
         filter: widget.filter,
         doNotWait: widget._doNotWait,
         builder: (objects, insights) {
-          return ListView.builder(
+          if (objects.isEmpty) {
+            return widget.emptyInfo;
+          }
+          if (widget.sort != null) {
+            objects.sort(widget.sort);
+          }
+          return Container(
+            child: CustomScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               controller: widget.scrollController,
-              itemCount: objects.length,
-              itemBuilder: (context, index) {
-                return widget.listItemBuilder(
-                    context, objects[index] as T?, index);
-              });
+              semanticChildCount: objects.length,
+              slivers: [
+                widget.header,
+                SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      return widget.listItemBuilder(
+                          context, objects[index], index);
+                    },
+                    childCount: objects.length,
+                  ),
+                ),
+                widget.footer
+              ],
+            ),
+          );
         });
   }
 }

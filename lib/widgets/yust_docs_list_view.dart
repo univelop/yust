@@ -66,24 +66,24 @@ class YustDocsListViewState<T extends YustDoc>
 
           return Container(
             child: CustomScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               controller: widget.scrollController,
               semanticChildCount: objects.length,
-              slivers: objects.isEmpty
-                  ? [SliverToBoxAdapter(child: widget.emptyInfo)]
-                  : [
-                      widget.header,
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return widget.listItemBuilder(
-                                context, objects[index], index);
-                          },
-                          childCount: objects.length,
-                        ),
-                      ),
-                      widget.footer
-                    ],
+              slivers: [
+                widget.header,
+                if (objects.isNotEmpty)
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        return widget.listItemBuilder(
+                            context, objects[index], index);
+                      },
+                      childCount: objects.length,
+                    ),
+                  ),
+                if (objects.isEmpty)
+                  SliverToBoxAdapter(child: widget.emptyInfo),
+                widget.footer
+              ],
             ),
           );
         });

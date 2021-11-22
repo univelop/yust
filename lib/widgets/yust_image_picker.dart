@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
+import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
@@ -70,6 +71,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   late List<YustFile> _files;
   late bool _enabled;
   late int _currentImageNumber;
+  late YustFileHandler fileHanlder;
 
   @override
   void initState() {
@@ -78,6 +80,16 @@ class YustImagePickerState extends State<YustImagePicker> {
         .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
+    fileHanlder = YustFileHandler(
+      _files,
+      widget.folderPath,
+      _onChanged,
+      (files) {
+        setState(() {
+          _files = files;
+        });
+      },
+    );
     super.initState();
   }
 
@@ -353,7 +365,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          onPressed: () => _deleteImage(file),
+          onPressed: () => fileHanlder.deleteFile(file, context),
         ),
       ),
     );
@@ -475,7 +487,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (mounted) {
         setState(() {});
       }
-      _onChanged();
+      _onChanged(_files);
 
       if (_currentImageNumber < _files.length) {
         _currentImageNumber += widget.imageCount;
@@ -526,7 +538,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {
           _files.remove(file);
         });
-        _onChanged();
+        _onChanged(_files);
       }
     } else if (connectivityResult == ConnectivityResult.none) {
       // if the file is not local, and there is no connectivityResult, you can not delete the file
@@ -546,22 +558,22 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {
           _files.remove(file);
         });
-        _onChanged();
+        _onChanged(_files);
       }
     }
   }
 
   /// removes file.urls that are paths to a folder
-  void _onChanged() {
-    List<YustFile> _onlineFiles = _files;
+  void _onChanged(List<YustFile> onlineFiles) {
+    // List<YustFile> _onlineFiles = _files;
 
-    for (var file in _onlineFiles) {
+    for (var file in onlineFiles) {
       if (YustOfflineCache.isLocalPath(file.url ?? '')) {
         file.url = null;
       }
     }
 
-    widget.onChanged!(_onlineFiles.map((file) => file.toJson()).toList());
+    widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }
 
   bool _isOfflineUploadPossible() {

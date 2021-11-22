@@ -8,9 +8,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/util/yust_exception.dart';
+import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:dio/dio.dart';
+import 'package:yust/widgets/yust_number_field.dart';
 import '../yust.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -50,6 +52,7 @@ class YustFilePicker extends StatefulWidget {
 class YustFilePickerState extends State<YustFilePicker> {
   late List<YustFile> _files;
   late bool _enabled;
+  late YustFileHandler fileHandler;
 
   @override
   void initState() {
@@ -57,6 +60,18 @@ class YustFilePickerState extends State<YustFilePicker> {
         widget.files.map<YustFile>((file) => YustFile.fromJson(file)).toList();
 
     _enabled = (widget.onChanged != null && !widget.readOnly);
+    fileHandler = YustFileHandler(
+      _files,
+      widget.folderPath,
+      _onChanged,
+      (files) {
+        setState(
+          () {
+            _files = files;
+          },
+        );
+      },
+    );
     super.initState();
   }
 
@@ -129,7 +144,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
     return IconButton(
       icon: Icon(Icons.delete),
-      onPressed: _enabled ? () => _deleteFile(file) : null,
+      onPressed: _enabled ? () => fileHandler.deleteFile(file, context) : null,
     );
   }
 
@@ -182,7 +197,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (mounted) {
       setState(() {});
     }
-    _onChanged();
+    _onChanged(_files);
     YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
   }
 
@@ -221,7 +236,7 @@ class YustFilePickerState extends State<YustFilePicker> {
             await addFile(newFile);
           }
 
-          _onChanged();
+          _onChanged(_files);
         }
       }
     }
@@ -294,7 +309,7 @@ class YustFilePickerState extends State<YustFilePicker> {
         setState(() {
           _files.remove(file);
         });
-        _onChanged();
+        _onChanged(_files);
       }
     } else if (connectivityResult == ConnectivityResult.none) {
       // if the file is not local, and there is no connectivityResult, you can not delete the file
@@ -315,21 +330,22 @@ class YustFilePickerState extends State<YustFilePicker> {
         setState(() {
           _files.remove(file);
         });
-        _onChanged();
+        _onChanged(_files);
         // widget.onChanged!(_files);
       }
     }
   }
 
   /// removes file.urls that are paths to a folder
-  void _onChanged() {
-    List<YustFile> _onlineFiles = List.from(_files);
-    for (var file in _onlineFiles) {
+  void _onChanged(List<YustFile> onlineFiles) {
+    // List<YustFile> _onlineFiles = List.from(_files);
+
+    for (var file in onlineFiles) {
       if (YustOfflineCache.isLocalPath(file.url ?? '')) {
         file.url = null;
       }
     }
-    widget.onChanged!(_onlineFiles.map((file) => file.toJson()).toList());
+    widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }
 
   bool _isOfflineUploadPossible() {

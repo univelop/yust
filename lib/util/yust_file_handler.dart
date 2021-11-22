@@ -5,7 +5,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/util/yust_offline_cache.dart';
-import 'package:yust/widgets/yust_image_picker.dart';
 import 'package:yust/yust.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
@@ -22,7 +21,6 @@ class YustFileHandler {
   /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
   /// If not given, uploads are only possible with internet connection
   final String? docAttribute;
-  final String yustQuality;
 
   YustFileHandler({
     required this.files,
@@ -31,7 +29,6 @@ class YustFileHandler {
     required this.changeCallback,
     this.pathToDoc,
     this.docAttribute,
-    this.yustQuality = 'medium',
   });
 
   Future<void> deleteFile(YustFile file, BuildContext context) async {
@@ -84,11 +81,10 @@ class YustFileHandler {
     File? file,
     Uint8List? bytes,
     bool resize = false,
+    required String imageName,
     required bool mounted,
     required BuildContext context,
   }) async {
-    final imageName =
-        Yust.service.randomString(length: 16) + '.' + path.split('.').last;
     final newFile = YustFile(
       name: imageName,
       file: file,
@@ -98,19 +94,6 @@ class YustFileHandler {
     files.add(newFile);
     changeCallback(files);
     try {
-      if (resize) {
-        final size = YustImageQuality[yustQuality]!['size']!;
-        //TODO offline wofür ist size?
-        if (file != null) {
-          file = await Yust.service.resizeImage(file: file, maxWidth: size);
-          newFile.file = file;
-        } else {
-          bytes = Yust.service
-              .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
-          newFile.bytes = bytes;
-        }
-      }
-
       //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
       if (isOfflineUploadPossible() && newFile.bytes == null) {
         // Add 'local' as a name suffix to distinguish the files between uploaded and local

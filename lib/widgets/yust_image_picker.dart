@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -71,7 +70,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   late List<YustFile> _files;
   late bool _enabled;
   late int _currentImageNumber;
-  late YustFileHandler fileHanlder;
+  late YustFileHandler fileHandler;
 
   @override
   void initState() {
@@ -80,7 +79,8 @@ class YustImagePickerState extends State<YustImagePicker> {
         .toList();
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
-    fileHanlder = YustFileHandler(
+
+    fileHandler = YustFileHandler(
       files: _files,
       onChanged: _onChanged,
       changeCallback: (files) {
@@ -94,7 +94,6 @@ class YustImagePickerState extends State<YustImagePicker> {
       docAttribute: widget.docAttribute,
       pathToDoc: widget.pathToDoc,
       folderPath: widget.folderPath,
-      yustQuality: widget.yustQuality,
     );
     super.initState();
   }
@@ -371,7 +370,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          onPressed: () => fileHanlder.deleteFile(file, context),
+          onPressed: () => fileHandler.deleteFile(file, context),
         ),
       ),
     );
@@ -383,7 +382,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none &&
-        !fileHanlder.isOfflineUploadPossible()) {
+        !fileHandler.isOfflineUploadPossible()) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
@@ -394,17 +393,10 @@ class YustImagePickerState extends State<YustImagePicker> {
               maxHeight: size, maxWidth: size, imageQuality: quality);
           if (images != null) {
             for (final image in images) {
-              await fileHanlder.uploadFile(
-                path: image.path,
-                file: File(image.path),
-                resize: true,
-                context: context,
-                mounted: mounted,
-              );
-              // await uploadFile(
-              //     path: image.path,
-              //     file: File(image.path),
-              //     yustQuality: widget.yustQuality);
+              await uploadFile(
+                  path: image.path,
+                  file: File(image.path),
+                  yustQuality: widget.yustQuality);
             }
           }
         } else {
@@ -414,17 +406,10 @@ class YustImagePickerState extends State<YustImagePicker> {
               maxWidth: size,
               imageQuality: quality);
           if (image != null) {
-            await fileHanlder.uploadFile(
-              path: image.path,
-              file: File(image.path),
-              resize: true,
-              context: context,
-              mounted: mounted,
-            );
-            // await uploadFile(
-            //     path: image.path,
-            //     file: File(image.path),
-            //     yustQuality: widget.yustQuality);
+            await uploadFile(
+                path: image.path,
+                file: File(image.path),
+                yustQuality: widget.yustQuality);
           }
         }
       } else {
@@ -433,38 +418,23 @@ class YustImagePickerState extends State<YustImagePicker> {
               .pickFiles(type: FileType.image, allowMultiple: true);
           if (result != null) {
             for (final platformFile in result.files) {
-              await fileHanlder.uploadFile(
+              await uploadFile(
                 path: platformFile.name!,
                 bytes: platformFile.bytes,
                 resize: true,
-                context: context,
-                mounted: mounted,
+                yustQuality: widget.yustQuality,
               );
-
-              // await uploadFile(
-              //   path: platformFile.name!,
-              //   bytes: platformFile.bytes,
-              //   resize: true,
-              //   yustQuality: widget.yustQuality,
-              // );
             }
           }
         } else {
           final result =
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
-            await fileHanlder.uploadFile(
-              path: result.files.single.name!,
-              bytes: result.files.single.bytes,
-              resize: true,
-              context: context,
-              mounted: mounted,
-            );
-            // await uploadFile(
-            //     path: result.files.single.name!,
-            //     bytes: result.files.single.bytes,
-            //     resize: true,
-            //     yustQuality: widget.yustQuality);
+            await uploadFile(
+                path: result.files.single.name!,
+                bytes: result.files.single.bytes,
+                resize: true,
+                yustQuality: widget.yustQuality);
           }
         }
       }
@@ -480,62 +450,21 @@ class YustImagePickerState extends State<YustImagePicker> {
   }) async {
     final imageName =
         Yust.service.randomString(length: 16) + '.' + path.split('.').last;
-    final newFile = YustFile(
-      name: imageName,
-      file: file,
-      bytes: bytes,
-      processing: true,
-    );
-    setState(() {
-      _files.add(newFile);
-    });
-    try {
-      if (resize) {
-        final size = YustImageQuality[widget.yustQuality]!['size']!;
-        if (file != null) {
-          file = await Yust.service.resizeImage(file: file, maxWidth: size);
-          newFile.file = file;
-        } else {
-          bytes = Yust.service
-              .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
-          newFile.bytes = bytes;
-        }
-      }
-
-      //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
-      if (fileHanlder.isOfflineUploadPossible() && newFile.bytes == null) {
-        // Add 'local' as a name suffix to distinguish the files between uploaded and local
-        newFile.name = 'local' + newFile.name;
-        newFile.url = await YustOfflineCache.saveFileTemporary(
-          file: newFile,
-          docAttribute: widget.docAttribute!,
-          folderPath: widget.folderPath,
-          pathToDoc: widget.pathToDoc!,
-        );
+    if (resize) {
+      final size = YustImageQuality[yustQuality]!['size']!;
+      if (file != null) {
+        file = await Yust.service.resizeImage(file: file, maxWidth: size);
       } else {
-        String url = await Yust.service.uploadFile(
-            path: widget.folderPath, name: imageName, file: file, bytes: bytes);
-        newFile.url = url;
-      }
-      newFile.processing = false;
-
-      if (mounted) {
-        setState(() {});
-      }
-      _onChanged(_files);
-
-      if (_currentImageNumber < _files.length) {
-        _currentImageNumber += widget.imageCount;
-      }
-      YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _files.remove(newFile);
-        });
-        Yust.service.showAlert(context, 'Ups', e.toString());
+        bytes = Yust.service
+            .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
       }
     }
+    fileHandler.uploadFile(
+      path: path,
+      imageName: imageName,
+      mounted: mounted,
+      context: context,
+    );
   }
 
   void _showImages(YustFile activeFile) {
@@ -549,52 +478,6 @@ class YustImagePickerState extends State<YustImagePicker> {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
         'url': activeFile.url,
       });
-    }
-  }
-
-  Future<void> _deleteImage(YustFile file) async {
-    Yust.service.unfocusCurrent(context);
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (YustOfflineCache.isLocalFile(file.name)) {
-      bool? confirmed = false;
-      if (file.url == Yust.imageGetUploadedPath) {
-        confirmed = await Yust.service.showConfirmation(
-            context,
-            'Achtung! Diese Datei wird soeben von einem anderen Gerät hochgeladen! Willst du diese Datei wirklich löschen?',
-            'Löschen');
-      } else {
-        confirmed = await Yust.service
-            .showConfirmation(context, 'Wirklich löschen', 'Löschen');
-      }
-      if (confirmed == true) {
-        try {
-          await YustOfflineCache.deleteLocalFile(file.name);
-        } catch (e) {}
-        setState(() {
-          _files.remove(file);
-        });
-        _onChanged(_files);
-      }
-    } else if (connectivityResult == ConnectivityResult.none) {
-      // if the file is not local, and there is no connectivityResult, you can not delete the file
-      Yust.service.showAlert(context, 'Kein Internet',
-          'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
-    } else {
-      final confirmed = await Yust.service
-          .showConfirmation(context, 'Wirklich löschen', 'Löschen');
-      if (confirmed == true) {
-        try {
-          await firebase_storage.FirebaseStorage.instance
-              .ref()
-              .child(widget.folderPath)
-              .child(file.name)
-              .delete();
-        } catch (e) {}
-        setState(() {
-          _files.remove(file);
-        });
-        _onChanged(_files);
-      }
     }
   }
 

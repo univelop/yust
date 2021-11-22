@@ -42,7 +42,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 },
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 onEditingComplete: (value) async {
-                  user.firstName = value;
+                  user.firstName = value!; // value was checked by validator
                   Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
                 },
               ),
@@ -58,7 +58,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 },
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 onEditingComplete: (value) async {
-                  user.lastName = value;
+                  user.lastName = value!; // value was checked by validator
                   Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
                 },
               ),

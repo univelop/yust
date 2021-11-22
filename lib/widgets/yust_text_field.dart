@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:yust/yust.dart';
 
-typedef StringCallback = void Function(String);
+typedef StringCallback = void Function(String?);
 typedef TapCallback = void Function();
 
 class YustTextField extends StatefulWidget {
@@ -68,7 +68,8 @@ class _YustTextFieldState extends State<YustTextField> {
     _initValue = widget.value ?? '';
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        var textFieldValue = _controller.value.text.trim();
+        final textFieldText = _controller.value.text.trim();
+        final textFieldValue = textFieldText == '' ? null : textFieldText;
         if (widget.validator == null) {
           widget.onEditingComplete!(textFieldValue);
         } else if (widget.validator!(textFieldValue) == null) {
@@ -115,7 +116,7 @@ class _YustTextFieldState extends State<YustTextField> {
           : TextInputAction.next,
       onChanged: widget.onChanged == null
           ? null
-          : (value) => widget.onChanged!(value.trim()),
+          : (value) => widget.onChanged!(value == '' ? null : value.trim()),
       onTap: widget.onTap,
       readOnly: widget.readOnly,
       enabled: widget.enabled,

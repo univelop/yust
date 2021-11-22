@@ -36,17 +36,11 @@ class YustFileHandler {
   Future<void> deleteFile(YustFile file, BuildContext context) async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (YustOfflineCache.isLocalFile(file.name)) {
+    if (YustOfflineCache.isLocalPath(file.url ?? '')) {
       bool? confirmed = false;
-      if (file.url == Yust.imageGetUploadedPath || file.file == null) {
-        confirmed = await Yust.service.showConfirmation(
-            context,
-            'Achtung! Diese Datei wird soeben von einem anderen Gerät hochgeladen! Willst du diese Datei wirklich löschen?',
-            'Löschen');
-      } else {
-        confirmed = await Yust.service
-            .showConfirmation(context, 'Wirklich löschen', 'Löschen');
-      }
+      confirmed = await Yust.service
+          .showConfirmation(context, 'Wirklich löschen', 'Löschen');
+
       if (confirmed == true) {
         try {
           await YustOfflineCache.deleteLocalFile(file.name);
@@ -87,18 +81,15 @@ class YustFileHandler {
   }) async {
     final newFile = YustFile(
       name: name,
+      url: '',
       file: file,
       bytes: bytes,
       processing: false,
     );
-
-    files.add(newFile);
+    // files.add(newFile);
     changeCallback(files);
-
     //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
-    if (isOfflineUploadPossible() && newFile.bytes == null) {
-      // Add 'local' as a name suffix to distinguish the files between uploaded and local
-      newFile.name = 'local' + newFile.name;
+    if (isOfflineUploadPossible() && bytes == null) {
       newFile.url = await YustOfflineCache.saveFileTemporary(
         file: newFile,
         docAttribute: docAttribute!,
@@ -121,7 +112,7 @@ class YustFileHandler {
       }
     }
 
-    if (newFile.url == null) {
+    if (newFile.url == '') {
       files.remove(newFile);
       changeCallback(files);
     }
@@ -133,6 +124,19 @@ class YustFileHandler {
     onChanged(files);
 
     YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
+  }
+
+  /// loads the [uploadedFiles] and  the files that are cached locally.
+  Future<void> loadFiles(List<YustFile> uploadedFiles) async {
+    List<YustLocalFile> localFiles = await YustOfflineCache.getLocalFiles();
+    for (var localFile in localFiles) {
+      if (localFile.folderPath == folderPath) {
+        YustFile file = localFile;
+        file.file = File(localFile.localPath);
+        uploadedFiles.add(file);
+      }
+    }
+    files = uploadedFiles;
   }
 
   bool isOfflineUploadPossible() {

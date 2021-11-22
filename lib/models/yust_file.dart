@@ -6,13 +6,14 @@ import 'package:yust/util/yust_serializable.dart';
 class YustFile with YustSerializable {
   String name;
   String? url;
+  //TODO offline is there an existing case, where the url could be null?
   File? file;
   Uint8List? bytes;
   bool processing;
 
   YustFile({
     required this.name,
-    this.url,
+    required this.url,
     this.file,
     this.bytes,
     this.processing = false,
@@ -48,6 +49,7 @@ class YustLocalFile extends YustFile {
     required this.localPath,
   }) : super(
           name: name,
+          url: localPath,
           file: file,
         );
 

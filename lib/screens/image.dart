@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import '../yust.dart';
 
 class ImageScreen extends StatelessWidget {
   static const String routeName = '/imageScreen';
@@ -22,8 +21,6 @@ class ImageScreen extends StatelessWidget {
         urls = urlsArgs.whereType<String>().toList();
       }
     }
-
-    urls = _filterGetUploadedImages(urls);
 
     if (urls != null) {
       return _buildMultiple(context, urls, url);
@@ -158,18 +155,5 @@ class ImageScreen extends StatelessWidget {
     } else {
       return FileImage(File(url));
     }
-  }
-
-  ///removes the [Yust.imageGetUploadedPath]-asset-images from the [urls]
-  ///to show a clean gallery
-  List<String>? _filterGetUploadedImages(List? urls) {
-    if (urls == null) return null;
-    List<String> newUrls = [];
-    for (var url in urls) {
-      if (url != Yust.imageGetUploadedPath) {
-        newUrls.add(url);
-      }
-    }
-    return newUrls;
   }
 }

@@ -101,22 +101,14 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: YustOfflineCache.loadFiles(
-        uploadedFiles: widget.images
-            .map<YustFile>((image) => YustFile.fromJson(image))
-            .toList(),
-        files: _files,
-        ifFileIsNotInCache: (file) async {
-          file.file = await getImageFileFromAssets(Yust.imageGetUploadedPath);
-          file.url = Yust.imageGetUploadedPath;
-          file.processing = true;
-          return file;
-        },
-      ),
+      future: fileHandler.loadFiles(widget.images
+          .map<YustFile>((image) => YustFile.fromJson(image))
+          .toList()),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return SizedBox.shrink();
         }
+        _files = fileHandler.files;
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,7 +350,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     // file.url can be null, if the file is local
     if (file == null ||
         !_enabled ||
-        (file.url == null && !YustOfflineCache.isLocalFile(file.name))) {
+        (file.url == null && !YustOfflineCache.isLocalPath(file.url ?? ''))) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -484,13 +476,8 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   /// removes file.urls that are paths to a folder
   void _onChanged(List<YustFile> onlineFiles) {
-    // List<YustFile> _onlineFiles = _files;
-
-    for (var file in onlineFiles) {
-      if (YustOfflineCache.isLocalPath(file.url ?? '')) {
-        file.url = null;
-      }
-    }
+    onlineFiles
+        .removeWhere((file) => YustOfflineCache.isLocalPath(file.url ?? ''));
 
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }

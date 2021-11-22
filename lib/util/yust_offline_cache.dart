@@ -31,12 +31,10 @@ class YustOfflineCache {
   }
 
   static Future<String?> _uploadFiles(Duration reconnectionTime) async {
-    var localFiles = await _getLocalFiles();
+    var localFiles = await getLocalFiles();
     bool uploadError = false;
 
     //TODO yust_file_handler - merging of file and image picker inkl. callbacks
-
-    //TODO offline Dateien nicht in der DB vermerken bis Upload successfull
 
     for (final localFile in localFiles) {
       try {
@@ -45,25 +43,17 @@ class YustOfflineCache {
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
           if (doc.exists && doc.data() != null) {
             final attribute = doc.get(localFile.docAttribute);
+            //TODO offline wenn image Picker nur ein Bild erlaubt, funktionier der Upload nicht da Attribut an Stelle [localFile.docAttribute] fehlt.
 
-            int index = _getFileIndex(attribute, localFile);
+            String url = await Yust.service.uploadFile(
+              path: localFile.localPath,
+              name: localFile.name,
+              file: File(localFile.localPath),
+            );
 
-            if (index >= 0) {
-              String url = await Yust.service.uploadFile(
-                path: localFile.localPath,
-                name: localFile.name,
-                file: File(localFile.localPath),
-              );
+            _updateAttribute(attribute, localFile, url);
 
-              _updateAttribute(attribute, localFile, url, index);
-
-              await deleteLocalFile(localFile.name);
-            } else {
-              // It is possible that the upload accesses the database before the searched address is initialized.
-              // If the access adress is corrupt, the process 'validateLocalFiles' removes the file.
-              throw new Exception(
-                  'Database entry did not exist. Try again in a moment.');
-            }
+            await deleteLocalFile(localFile.name);
           } else {
             // It is possible that the upload accesses the database before the searched address is initialized.
             // If the access adress is corrupt, the process 'validateLocalFiles' removes the file.
@@ -94,7 +84,7 @@ class YustOfflineCache {
   /// Attention! Writes in the local file.url the folder path!
   /// Checks the local files for corruption and deletes them if necessary.
   static Future<void> validateLocalFiles() async {
-    var localFiles = await _getLocalFiles();
+    var localFiles = await getLocalFiles();
 
     var validatedLocalFiles = localFiles
         .where((localFile) => _isFileInCache(localFile.localPath))
@@ -108,59 +98,11 @@ class YustOfflineCache {
     for (var localFile in validatedLocalFiles) {
       final doc =
           await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
-      if (doc.exists && doc.data() != null) {
-        final attribute = doc.get(localFile.docAttribute); // as List;
-        if (attribute is Map) {
-          if (attribute['name'] != localFile.name) {
-            deleteLocalFile(localFile.name);
-          }
-        }
-        if (attribute is List) {
-          var index = attribute.indexWhere((onlineFile) =>
-              YustFile.fromJson(onlineFile).name == localFile.name);
-          if (index == -1) {
-            deleteLocalFile(localFile.name);
-          }
-        }
-      } else {
+      if (!doc.exists || doc.data() == null) {
         await deleteLocalFile(localFile.name);
         await validateLocalFiles();
       }
     }
-  }
-
-  /// checks if the loaded [files] are outdated in comparison to [uploadedFiles]
-  /// and loads the [files] that are cached locally.
-  static Future<List<YustFile>> loadFiles(
-      {required List<YustFile> uploadedFiles,
-      required List<YustFile> files,
-      Future<YustFile> Function(YustFile file)? ifFileIsNotInCache}) async {
-    // checks if the loaded [files] are outdated in comparison to [uploadedFiles]
-    for (var upFile in uploadedFiles) {
-      var uploadedFile =
-          files.indexWhere((file) => file.name.substring(5) == upFile.name);
-      if (uploadedFile >= 0) {
-        files[uploadedFile] = upFile;
-      }
-    }
-
-    // loads the local files and paths
-    // path get saved in url
-    for (var file in files) {
-      if (YustOfflineCache.isLocalPath(file.url ?? '') || file.url == null) {
-        final path = await YustOfflineCache._getLocalPath(file.name);
-        if (YustOfflineCache._isFileInCache(path)) {
-          file.file = File(path!);
-          file.url = path;
-          file.processing = false;
-        } else {
-          if (ifFileIsNotInCache != null) {
-            file = await ifFileIsNotInCache(file);
-          }
-        }
-      }
-    }
-    return files;
   }
 
   /// returns local path from [file]
@@ -182,7 +124,7 @@ class YustOfflineCache {
         docAttribute: docAttribute,
         localPath: path);
 
-    var temporaryFiles = await YustOfflineCache._getLocalFiles();
+    var temporaryFiles = await YustOfflineCache.getLocalFiles();
     temporaryFiles.add(localFile);
     await YustOfflineCache._saveLocalFiles(temporaryFiles);
     return path;
@@ -190,7 +132,7 @@ class YustOfflineCache {
 
   /// removes the file and the file data from the local cache
   static Future<void> deleteLocalFile(String fileName) async {
-    var localFiles = await _getLocalFiles();
+    var localFiles = await getLocalFiles();
 
     var localFile =
         localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
@@ -204,14 +146,13 @@ class YustOfflineCache {
     }
   }
 
-  /// removes the 'local' tag from name and adds the url
   static Future<void> _updateAttribute(
-      attribute, YustLocalFile localFile, String url, int index) async {
+      attribute, YustLocalFile localFile, String url) async {
     if (attribute is Map) {
-      attribute['name'] = localFile.name.substring(5);
+      attribute['name'] = localFile.name;
       attribute['url'] = url;
     } else if (attribute is List) {
-      attribute[index] = {'name': localFile.name.substring(5), 'url': url};
+      attribute.add({'name': localFile.name, 'url': url});
     }
 
     await FirebaseFirestore.instance
@@ -219,20 +160,8 @@ class YustOfflineCache {
         .update({localFile.docAttribute: attribute});
   }
 
-  ///If the file has a valid index, a corresponding instance exists in the database.
-  /// returns -1 if the file is not valide
-  static int _getFileIndex(attribute, YustLocalFile localFile) {
-    int index =
-        (attribute is Map && attribute['name'] == localFile.name) ? 0 : -1;
-    if (attribute is List) {
-      index = attribute.indexWhere(
-          (onlineFile) => YustFile.fromJson(onlineFile).name == localFile.name);
-    }
-    return index;
-  }
-
   /// reads local file cache, returns list with [YustLocalFile]'s
-  static Future<List<YustLocalFile>> _getLocalFiles() async {
+  static Future<List<YustLocalFile>> getLocalFiles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var temporaryJsonFiles = prefs.getString('temporaryFiles');
     List<YustLocalFile> temporaryFiles = [];
@@ -258,19 +187,8 @@ class YustOfflineCache {
     return !Uri.parse(path).isAbsolute;
   }
 
-  static bool isLocalFile(String fileName) {
-    return fileName.substring(0, 5) == 'local';
-  }
-
   static bool _isFileInCache(String? path) {
     return path != null && File(path).existsSync();
-  }
-
-  static Future<String?> _getLocalPath(String fileName) async {
-    final localFiles = await YustOfflineCache._getLocalFiles();
-    final localFile =
-        localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
-    return localFile == null ? null : localFile.localPath;
   }
 
   static dynamic jsonDecode(String jsonString) {

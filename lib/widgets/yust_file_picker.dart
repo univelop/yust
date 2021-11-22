@@ -1,13 +1,11 @@
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/models/yust_file.dart';
-import 'package:yust/util/yust_exception.dart';
 import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
@@ -79,12 +77,13 @@ class YustFilePickerState extends State<YustFilePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: YustOfflineCache.loadFiles(
-            uploadedFiles: widget.files
-                .map<YustFile>((file) => YustFile.fromJson(file))
-                .toList(),
-            files: _files),
+        future: fileHandler.loadFiles(
+          widget.files
+              .map<YustFile>((file) => YustFile.fromJson(file))
+              .toList(),
+        ),
         builder: (context, snapshot) {
+          _files = fileHandler.files;
           if (snapshot.connectionState != ConnectionState.done) {
             return SizedBox.shrink();
           }
@@ -120,12 +119,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           Icon(Icons.insert_drive_file),
           SizedBox(width: 8),
           Expanded(
-            child: Text(
-                YustOfflineCache.isLocalFile(file.name)
-                    ? file.name.substring(
-                        5) // each local file has the name tag 'local'. It gets hided for the ui.
-                    : file.name,
-                overflow: TextOverflow.ellipsis),
+            child: Text(file.name, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
@@ -197,7 +191,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   Future<void> _showFile(YustFile file) async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (file.file == null && YustOfflineCache.isLocalFile(file.name)) {
+    if (file.file == null && YustOfflineCache.isLocalPath(file.url ?? '')) {
       Yust.service.showAlert(context, 'Nicht vorhanden',
           'Die ausgewählte Date wird soeben von einem anderem Gerät hochgeladen. Versuche es später nocheinmal.');
     } else if (connectivityResult == ConnectivityResult.none) {
@@ -242,13 +236,9 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   /// removes file.urls that are paths to a folder
   void _onChanged(List<YustFile> onlineFiles) {
-    // List<YustFile> _onlineFiles = List.from(_files);
+    onlineFiles
+        .removeWhere((file) => YustOfflineCache.isLocalPath(file.url ?? ''));
 
-    for (var file in onlineFiles) {
-      if (YustOfflineCache.isLocalPath(file.url ?? '')) {
-        file.url = null;
-      }
-    }
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }
 

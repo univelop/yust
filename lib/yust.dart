@@ -32,7 +32,6 @@ class Yust {
   static String envCollectionName = 'envs';
   static String? storageUrl;
   static String? imagePlaceholderPath;
-  static String imageGetUploadedPath = '';
 
   /// Connnect to the firebase emulator for Firestore and Authentication
   static Future _connectToFirebaseEmulator(String address) async {
@@ -57,7 +56,6 @@ class Yust {
     String envCollectionName = 'envs',
     String? storageUrl,
     String? imagePlaceholderPath,
-    String imageGetUploadedPath = '',
     String? emulatorAddress,
   }) async {
     await Firebase.initializeApp();
@@ -76,7 +74,6 @@ class Yust {
     Yust.envCollectionName = envCollectionName;
     Yust.storageUrl = storageUrl;
     Yust.imagePlaceholderPath = imagePlaceholderPath;
-    Yust.imageGetUploadedPath = imageGetUploadedPath;
 
     // Only enable Persitence if Firebase is not allready initalized.
     // This is especialy important for Tests

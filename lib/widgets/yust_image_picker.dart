@@ -460,8 +460,9 @@ class YustImagePickerState extends State<YustImagePicker> {
       }
     }
     fileHandler.uploadFile(
-      path: path,
-      imageName: imageName,
+      file: file,
+      bytes: bytes,
+      name: imageName,
       mounted: mounted,
       context: context,
     );

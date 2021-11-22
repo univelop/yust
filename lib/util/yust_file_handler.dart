@@ -8,6 +8,8 @@ import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/yust.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
+import 'yust_exception.dart';
+
 class YustFileHandler {
   final String folderPath;
   List<YustFile> files;
@@ -77,54 +79,60 @@ class YustFileHandler {
   }
 
   Future<void> uploadFile({
-    required String path,
     File? file,
     Uint8List? bytes,
-    bool resize = false,
-    required String imageName,
+    required String name,
     required bool mounted,
     required BuildContext context,
   }) async {
     final newFile = YustFile(
-      name: imageName,
+      name: name,
       file: file,
       bytes: bytes,
-      processing: true,
+      processing: false,
     );
+
     files.add(newFile);
     changeCallback(files);
-    try {
-      //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
-      if (isOfflineUploadPossible() && newFile.bytes == null) {
-        // Add 'local' as a name suffix to distinguish the files between uploaded and local
-        newFile.name = 'local' + newFile.name;
-        newFile.url = await YustOfflineCache.saveFileTemporary(
-          file: newFile,
-          docAttribute: docAttribute!,
-          folderPath: folderPath,
-          pathToDoc: pathToDoc!,
-        );
-      } else {
-        String url = await Yust.service.uploadFile(
-            path: folderPath, name: imageName, file: file, bytes: bytes);
-        newFile.url = url;
-      }
-      newFile.processing = false;
 
-      if (mounted) {
-        changeCallback(files);
-      }
-      onChanged(files);
-
-      YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
-    } catch (e) {
-      if (mounted) {
-        files.remove(newFile);
-        changeCallback(files);
-
-        Yust.service.showAlert(context, 'Ups', e.toString());
+    //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
+    if (isOfflineUploadPossible() && newFile.bytes == null) {
+      // Add 'local' as a name suffix to distinguish the files between uploaded and local
+      newFile.name = 'local' + newFile.name;
+      newFile.url = await YustOfflineCache.saveFileTemporary(
+        file: newFile,
+        docAttribute: docAttribute!,
+        folderPath: folderPath,
+        pathToDoc: pathToDoc!,
+      );
+    } else {
+      try {
+        newFile.url = await Yust.service
+            .uploadFile(path: folderPath, name: name, file: file, bytes: bytes);
+      } on YustException catch (e) {
+        if (mounted) {
+          Yust.service.showAlert(context, 'Ups', e.message);
+        }
+      } catch (e) {
+        if (mounted) {
+          Yust.service.showAlert(
+              context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
+        }
       }
     }
+
+    if (newFile.url == null) {
+      files.remove(newFile);
+      changeCallback(files);
+    }
+
+    if (mounted) {
+      changeCallback(files);
+    }
+
+    onChanged(files);
+
+    YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
   }
 
   bool isOfflineUploadPossible() {

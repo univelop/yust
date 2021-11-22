@@ -12,7 +12,6 @@ import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:dio/dio.dart';
-import 'package:yust/widgets/yust_number_field.dart';
 import '../yust.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -150,59 +149,6 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Future<void> addFile(YustFile newFile) async {
-    setState(() {
-      _files.add(newFile);
-      _files.sort((a, b) => (a.name).compareTo(b.name));
-      newFile.processing = true;
-    });
-
-    //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
-    if (_isOfflineUploadPossible() && newFile.bytes == null) {
-      // Add 'local' as a name suffix to distinguish the files between uploaded and local
-      newFile.name = 'local' + newFile.name;
-      if (newFile.file != null) {
-        newFile.url = await YustOfflineCache.saveFileTemporary(
-          file: newFile,
-          docAttribute: widget.docAttribute!,
-          folderPath: widget.folderPath,
-          pathToDoc: widget.pathToDoc!,
-        );
-      }
-    } else {
-      try {
-        newFile.url = await Yust.service.uploadFile(
-          path: widget.folderPath,
-          name: newFile.name,
-          file: newFile.file,
-          bytes: newFile.bytes,
-        );
-      } on YustException catch (e) {
-        if (mounted) {
-          Yust.service.showAlert(context, 'Ups', e.message);
-        }
-      } catch (e) {
-        if (mounted) {
-          Yust.service.showAlert(
-              context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
-        }
-      }
-      if (newFile.url == null) {
-        _files.remove(newFile);
-      }
-    }
-
-    setState(() {
-      newFile.processing = false;
-    });
-
-    if (mounted) {
-      setState(() {});
-    }
-    _onChanged(_files);
-    YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
-  }
-
   Future<void> _pickFiles() async {
     Yust.service.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
@@ -220,22 +166,26 @@ class YustFilePickerState extends State<YustFilePicker> {
             name += '.' + ext;
           }
 
-          final newFile = YustFile(
-            name: name,
-            processing: true,
-          );
-
-          if (_files.any((file) => file.name == newFile.name)) {
+          if (_files.any((file) => file.name == name)) {
             Yust.service.showAlert(context, 'Nicht möglich',
-                'Eine Datei mit dem Namen ${newFile.name} existiert bereits.');
+                'Eine Datei mit dem Namen ${name} existiert bereits.');
           } else {
             File? file;
             if (platformFile.path != null) {
               file = File(platformFile.path!);
             }
-            newFile.file = file;
-            newFile.bytes = platformFile.bytes;
-            await addFile(newFile);
+
+            await fileHandler.uploadFile(
+              name: name,
+              file: file,
+              bytes: platformFile.bytes,
+              mounted: mounted,
+              context: context,
+            );
+
+            setState(() {
+              _files.sort((a, b) => (a.name).compareTo(b.name));
+            });
           }
 
           _onChanged(_files);
@@ -287,54 +237,6 @@ class YustFilePickerState extends State<YustFilePicker> {
     } else {
       await Yust.service
           .showAlert(context, 'Ups', 'Die Datei kann nicht geöffnet werden.');
-    }
-  }
-
-  Future<void> _deleteFile(YustFile file) async {
-    Yust.service.unfocusCurrent(context);
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (YustOfflineCache.isLocalFile(file.name)) {
-      bool? confirmed = false;
-      if (file.file == null) {
-        confirmed = await Yust.service.showConfirmation(
-            context,
-            'Achtung! Diese Datei wird soeben von einem anderen Gerät hochgeladen! Willst du diese Datei wirklich löschen?',
-            'Löschen');
-      } else {
-        confirmed = await Yust.service
-            .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
-      }
-      if (confirmed == true) {
-        try {
-          await YustOfflineCache.deleteLocalFile(file.name);
-        } catch (e) {}
-        setState(() {
-          _files.remove(file);
-        });
-        _onChanged(_files);
-      }
-    } else if (connectivityResult == ConnectivityResult.none) {
-      // if the file is not local, and there is no connectivityResult, you can not delete the file
-      Yust.service.showAlert(context, 'Kein Internet',
-          'Für das Löschen einer Datei ist eine Internetverbindung erforderlich.');
-    } else {
-      final confirmed = await Yust.service
-          .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
-      if (confirmed == true) {
-        try {
-          await firebase_storage.FirebaseStorage.instance
-              .ref()
-              .child(widget.folderPath)
-              .child(file.name)
-              .delete();
-        } catch (e) {}
-
-        setState(() {
-          _files.remove(file);
-        });
-        _onChanged(_files);
-        // widget.onChanged!(_files);
-      }
     }
   }
 

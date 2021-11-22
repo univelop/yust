@@ -152,6 +152,7 @@ class YustOfflineCache {
         if (YustOfflineCache._isFileInCache(path)) {
           file.file = File(path!);
           file.url = path;
+          file.processing = false;
         } else {
           if (ifFileIsNotInCache != null) {
             file = await ifFileIsNotInCache(file);

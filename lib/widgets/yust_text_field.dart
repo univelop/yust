@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:yust/yust.dart';
 
 typedef StringCallback = void Function(String);
-typedef TabCallback = void Function();
+typedef TapCallback = void Function();
 
 class YustTextField extends StatefulWidget {
   final String? label;
@@ -13,7 +13,7 @@ class YustTextField extends StatefulWidget {
   final StringCallback? onEditingComplete;
   final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
-  final TabCallback? onTab;
+  final TapCallback? onTap;
   final int? maxLines;
   final int? minLines;
   final bool readOnly;
@@ -34,7 +34,7 @@ class YustTextField extends StatefulWidget {
       this.onEditingComplete,
       this.controller,
       this.validator,
-      this.onTab,
+      this.onTap,
       this.maxLines,
       this.minLines,
       this.enabled = true,
@@ -116,7 +116,7 @@ class _YustTextFieldState extends State<YustTextField> {
       onChanged: widget.onChanged == null
           ? null
           : (value) => widget.onChanged!(value.trim()),
-      onTap: widget.onTab,
+      onTap: widget.onTap,
       readOnly: widget.readOnly,
       enabled: widget.enabled,
       obscureText: widget.obscureText,

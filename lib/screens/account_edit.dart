@@ -66,14 +66,14 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 label: 'E-Mail',
                 value: user.email,
                 readOnly: true,
-                onTab: () => _changeEmail(context),
+                onTap: () => _changeEmail(context),
               ),
               YustTextField(
                 label: 'Passwort',
                 value: '*****',
                 obscureText: true,
                 readOnly: true,
-                onTab: () => _changePassword(context),
+                onTap: () => _changePassword(context),
               ),
             ],
           );

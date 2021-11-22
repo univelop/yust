@@ -61,10 +61,12 @@ class YustFilePickerState extends State<YustFilePicker> {
 
     _enabled = (widget.onChanged != null && !widget.readOnly);
     fileHandler = YustFileHandler(
-      _files,
-      widget.folderPath,
-      _onChanged,
-      (files) {
+      files: _files,
+      folderPath: widget.folderPath,
+      docAttribute: widget.docAttribute,
+      pathToDoc: widget.pathToDoc,
+      onChanged: _onChanged,
+      changeCallback: (files) {
         setState(
           () {
             _files = files;

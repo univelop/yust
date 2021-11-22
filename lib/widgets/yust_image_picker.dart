@@ -81,14 +81,20 @@ class YustImagePickerState extends State<YustImagePicker> {
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
     fileHanlder = YustFileHandler(
-      _files,
-      widget.folderPath,
-      _onChanged,
-      (files) {
+      files: _files,
+      onChanged: _onChanged,
+      changeCallback: (files) {
+        if (_currentImageNumber < files.length) {
+          _currentImageNumber += widget.imageCount;
+        }
         setState(() {
           _files = files;
         });
       },
+      docAttribute: widget.docAttribute,
+      pathToDoc: widget.pathToDoc,
+      folderPath: widget.folderPath,
+      yustQuality: widget.yustQuality,
     );
     super.initState();
   }
@@ -377,7 +383,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none &&
-        !_isOfflineUploadPossible()) {
+        !fileHanlder.isOfflineUploadPossible()) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
@@ -388,10 +394,17 @@ class YustImagePickerState extends State<YustImagePicker> {
               maxHeight: size, maxWidth: size, imageQuality: quality);
           if (images != null) {
             for (final image in images) {
-              await uploadFile(
-                  path: image.path,
-                  file: File(image.path),
-                  yustQuality: widget.yustQuality);
+              await fileHanlder.uploadFile(
+                path: image.path,
+                file: File(image.path),
+                resize: true,
+                context: context,
+                mounted: mounted,
+              );
+              // await uploadFile(
+              //     path: image.path,
+              //     file: File(image.path),
+              //     yustQuality: widget.yustQuality);
             }
           }
         } else {
@@ -401,10 +414,17 @@ class YustImagePickerState extends State<YustImagePicker> {
               maxWidth: size,
               imageQuality: quality);
           if (image != null) {
-            await uploadFile(
-                path: image.path,
-                file: File(image.path),
-                yustQuality: widget.yustQuality);
+            await fileHanlder.uploadFile(
+              path: image.path,
+              file: File(image.path),
+              resize: true,
+              context: context,
+              mounted: mounted,
+            );
+            // await uploadFile(
+            //     path: image.path,
+            //     file: File(image.path),
+            //     yustQuality: widget.yustQuality);
           }
         }
       } else {
@@ -413,23 +433,38 @@ class YustImagePickerState extends State<YustImagePicker> {
               .pickFiles(type: FileType.image, allowMultiple: true);
           if (result != null) {
             for (final platformFile in result.files) {
-              await uploadFile(
+              await fileHanlder.uploadFile(
                 path: platformFile.name!,
                 bytes: platformFile.bytes,
                 resize: true,
-                yustQuality: widget.yustQuality,
+                context: context,
+                mounted: mounted,
               );
+
+              // await uploadFile(
+              //   path: platformFile.name!,
+              //   bytes: platformFile.bytes,
+              //   resize: true,
+              //   yustQuality: widget.yustQuality,
+              // );
             }
           }
         } else {
           final result =
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
-            await uploadFile(
-                path: result.files.single.name!,
-                bytes: result.files.single.bytes,
-                resize: true,
-                yustQuality: widget.yustQuality);
+            await fileHanlder.uploadFile(
+              path: result.files.single.name!,
+              bytes: result.files.single.bytes,
+              resize: true,
+              context: context,
+              mounted: mounted,
+            );
+            // await uploadFile(
+            //     path: result.files.single.name!,
+            //     bytes: result.files.single.bytes,
+            //     resize: true,
+            //     yustQuality: widget.yustQuality);
           }
         }
       }
@@ -468,7 +503,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       }
 
       //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
-      if (_isOfflineUploadPossible() && newFile.bytes == null) {
+      if (fileHanlder.isOfflineUploadPossible() && newFile.bytes == null) {
         // Add 'local' as a name suffix to distinguish the files between uploaded and local
         newFile.name = 'local' + newFile.name;
         newFile.url = await YustOfflineCache.saveFileTemporary(
@@ -574,10 +609,6 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
 
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
-  }
-
-  bool _isOfflineUploadPossible() {
-    return widget.docAttribute != null && widget.pathToDoc != null;
   }
 
   Future<File> getImageFileFromAssets(String path) async {

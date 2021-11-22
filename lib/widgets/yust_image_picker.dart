@@ -480,7 +480,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (_currentImageNumber < _files.length) {
         _currentImageNumber += widget.imageCount;
       }
-      YustOfflineCache.uploadLocalFiles();
+      YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
     } catch (e) {
       if (mounted) {
         setState(() {

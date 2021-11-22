@@ -183,7 +183,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       setState(() {});
     }
     _onChanged();
-    YustOfflineCache.uploadLocalFiles();
+    YustOfflineCache.uploadLocalFiles(validateLocalFiles: false);
   }
 
   Future<void> _pickFiles() async {

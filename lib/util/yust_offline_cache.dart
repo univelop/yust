@@ -19,10 +19,12 @@ class YustOfflineCache {
   static double _reconnectionFactor = 1.25;
 
   /// Uploads all local files. If the upload fails,  a new attempt is made after [_reconnectionTime].
-  /// Can be started only once, renewed call only possible after successful upload
-  static uploadLocalFiles() async {
+  /// Can be started only once, renewed call only possible after successful upload.
+  /// [validateLocalFiles] can delete files added shortly before if they are not yet
+  /// entered in the database. Check this before!
+  static uploadLocalFiles({bool validateLocalFiles = true}) async {
     if (!_uploadingTemporaryFiles) {
-      await YustOfflineCache.validateLocalFiles();
+      if (validateLocalFiles) await YustOfflineCache.validateLocalFiles();
       _uploadingTemporaryFiles = true;
       _uploadFiles(_reconnectionTime);
     }
@@ -30,14 +32,14 @@ class YustOfflineCache {
 
   static Future<String?> _uploadFiles(Duration reconnectionTime) async {
     var localFiles = await _getLocalFiles();
+    bool uploadError = false;
 
     //TODO yust_file_handler - merging of file and image picker inkl. callbacks
 
-    //TODO offline exception handling file für file
+    //TODO offline Dateien nicht in der DB vermerken bis Upload successfull
 
-    //TODO offline offline Dateien nicht in der DB vermerken bis Upload successfull
-    try {
-      for (final localFile in localFiles) {
+    for (final localFile in localFiles) {
+      try {
         if (_isFileInCache(localFile.localPath)) {
           final doc =
               await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
@@ -72,9 +74,13 @@ class YustOfflineCache {
           //removing file data, because file is missing in local cache
           await deleteLocalFile(localFile.name);
         }
+      } catch (e) {
+        uploadError = true;
       }
+    }
+    if (!uploadError) {
       _uploadingTemporaryFiles = false;
-    } catch (e) {
+    } else {
       Future.delayed(reconnectionTime, () {
         //Limits [reconnectionTime] to 5 minutes
         reconnectionTime = reconnectionTime > Duration(minutes: 5)

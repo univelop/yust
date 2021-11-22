@@ -20,8 +20,9 @@ class YustOfflineCache {
 
   /// Uploads all local files. If the upload fails,  a new attempt is made after [_reconnectionTime].
   /// Can be started only once, renewed call only possible after successful upload
-  static uploadLocalFiles() {
+  static uploadLocalFiles() async {
     if (!_uploadingTemporaryFiles) {
+      await YustOfflineCache.validateLocalFiles();
       _uploadingTemporaryFiles = true;
       _uploadFiles(_reconnectionTime);
     }
@@ -29,6 +30,12 @@ class YustOfflineCache {
 
   static Future<String?> _uploadFiles(Duration reconnectionTime) async {
     var localFiles = await _getLocalFiles();
+
+    //TODO yust_file_handler - merging of file and image picker inkl. callbacks
+
+    //TODO offline exception handling file für file
+
+    //TODO offline offline Dateien nicht in der DB vermerken bis Upload successfull
     try {
       for (final localFile in localFiles) {
         if (_isFileInCache(localFile.localPath)) {
@@ -73,7 +80,6 @@ class YustOfflineCache {
         reconnectionTime = reconnectionTime > Duration(minutes: 5)
             ? Duration(minutes: 5)
             : reconnectionTime * _reconnectionFactor;
-        print('OfflineCache: Next upload in:' + reconnectionTime.toString());
         _uploadFiles(reconnectionTime);
       });
     }
@@ -113,12 +119,6 @@ class YustOfflineCache {
       } else {
         await deleteLocalFile(localFile.name);
         await validateLocalFiles();
-
-        print('OfflineCache: ERROR: File ' +
-            localFile.name +
-            ' got deleted. Firebase Database adress ' +
-            localFile.pathToDoc +
-            ' did not exist!');
       }
     }
   }

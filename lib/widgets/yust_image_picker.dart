@@ -11,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
-import 'package:yust/util/yust_offlineCache.dart';
+import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 

@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/util/yust_exception.dart';
-import 'package:yust/util/yust_offlineCache.dart';
+import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:dio/dio.dart';
 import '../yust.dart';
@@ -143,7 +143,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     //if there are bytes in the file, it is a WEB operation > offline compatibility is not implemented
     if (_isOfflineUploadPossible() && newFile.bytes == null) {
       // Add 'local' as a name suffix to distinguish the files between uploaded and local
-      newFile.name = 'local' + newFile.name.replaceAll(' ', '_');
+      newFile.name = 'local' + newFile.name;
       if (newFile.file != null) {
         newFile.url = await YustOfflineCache.saveFileTemporary(
           file: newFile,

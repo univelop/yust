@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:yust/models/yust_local_file.dart';
 import 'package:yust/yust.dart';
 
 class YustOfflineCache {
@@ -38,17 +39,18 @@ class YustOfflineCache {
 
     for (final localFile in localFiles) {
       try {
-        if (_isFileInCache(localFile.localPath)) {
-          final doc =
-              await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
+        if (_isFileInCache(localFile.devicePath)) {
+          final doc = await FirebaseFirestore.instance
+              .doc(localFile.linkedDocPath)
+              .get();
           if (doc.exists && doc.data() != null) {
-            final attribute = doc.get(localFile.docAttribute);
+            final attribute = doc.get(localFile.linkedDocAttribute);
             //TODO offline wenn image Picker nur ein Bild erlaubt, funktionier der Upload nicht da Attribut an Stelle [localFile.docAttribute] fehlt.
 
             String url = await Yust.service.uploadFile(
-              path: localFile.localPath,
+              path: localFile.devicePath,
               name: localFile.name,
-              file: File(localFile.localPath),
+              file: File(localFile.devicePath),
             );
 
             _updateAttribute(attribute, localFile, url);
@@ -87,7 +89,7 @@ class YustOfflineCache {
     var localFiles = await getLocalFiles();
 
     var validatedLocalFiles = localFiles
-        .where((localFile) => _isFileInCache(localFile.localPath))
+        .where((localFile) => _isFileInCache(localFile.devicePath))
         .toList();
 
     // save all local files, which are completely available
@@ -97,7 +99,7 @@ class YustOfflineCache {
     // Checks if all required database addresses are initialized.
     for (var localFile in validatedLocalFiles) {
       final doc =
-          await FirebaseFirestore.instance.doc(localFile.pathToDoc).get();
+          await FirebaseFirestore.instance.doc(localFile.linkedDocPath).get();
       if (!doc.exists || doc.data() == null) {
         await deleteLocalFile(localFile.name);
         await validateLocalFiles();
@@ -119,10 +121,10 @@ class YustOfflineCache {
 
     var localFile = new YustLocalFile(
         name: file.name,
-        folderPath: folderPath,
-        pathToDoc: pathToDoc,
-        docAttribute: docAttribute,
-        localPath: path);
+        storageFolderPath: folderPath,
+        linkedDocPath: pathToDoc,
+        linkedDocAttribute: docAttribute,
+        devicePath: path);
 
     var temporaryFiles = await YustOfflineCache.getLocalFiles();
     temporaryFiles.add(localFile);
@@ -138,8 +140,8 @@ class YustOfflineCache {
         localFiles.firstWhereOrNull((localFile) => localFile.name == fileName);
 
     if (localFile != null) {
-      if (_isFileInCache(localFile.localPath)) {
-        File(localFile.localPath).delete();
+      if (_isFileInCache(localFile.devicePath)) {
+        File(localFile.devicePath).delete();
       }
       localFiles.remove(localFile);
       await _saveLocalFiles(localFiles);
@@ -156,8 +158,8 @@ class YustOfflineCache {
     }
 
     await FirebaseFirestore.instance
-        .doc(localFile.pathToDoc)
-        .update({localFile.docAttribute: attribute});
+        .doc(localFile.linkedDocPath)
+        .update({localFile.linkedDocAttribute: attribute});
   }
 
   /// reads local file cache, returns list with [YustLocalFile]'s

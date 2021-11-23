@@ -3,22 +3,58 @@ import 'dart:typed_data';
 
 import 'package:yust/util/yust_serializable.dart';
 
+/// A binary file handled by database and file storage.
+/// A file is stored in Firebase Storeage and linked to a document in the database.
+/// For offline caching a file can also be stored on the device.
 class YustFile with YustSerializable {
+  /// The name of the file with extension.
   String name;
+
+  /// The URL to download the file.
   String? url;
-  //TODO offline is there an existing case, where the url could be null?
+
+  // TODO: offline is there an existing case, where the url could be null?
+
+  /// The binary file. This attibute is used for iOS and Android. For web [bytes] is used instead.
   File? file;
+
+  /// The binary file for web. For iOS and Android [file] is used instead.
   Uint8List? bytes;
+
+  /// Path to the storage folder. Used for offline caching.
+  String? storageFolderPath;
+
+  /// Path to the file on the device. Used for offline caching.
+  String? devicePath;
+
+  /// Path to the Firebase document. Used for offline caching.
+  String? linkedDocPath;
+
+  /// Attribute of the Firebase document. Used for offline caching.
+  String? linkedDocAttribute;
+
+  /// Is true while uploading the file.
   bool processing;
+
+  /// True if image can be stored in cache.
+  bool get cacheable => linkedDocPath != null && linkedDocAttribute != null;
+
+  /// True if image is cached locally.
+  bool get cached => devicePath != null;
 
   YustFile({
     required this.name,
-    required this.url,
+    this.url,
     this.file,
     this.bytes,
+    this.devicePath,
+    this.storageFolderPath,
+    this.linkedDocPath,
+    this.linkedDocAttribute,
     this.processing = false,
   });
 
+  /// Converts the file to JSON for Firebase. Only relevant attributs are converted.
   factory YustFile.fromJson(Map<String, dynamic> json) {
     return YustFile(
       name: json['name'] as String,
@@ -26,50 +62,33 @@ class YustFile with YustSerializable {
     );
   }
 
+  /// Converts JSON from Firebase to a file. Only relevant attributs are included.
   Map<String, String?> toJson() {
-    return <String, String?>{
+    return {
       'name': name,
       'url': url,
     };
   }
-}
 
-class YustLocalFile extends YustFile {
-  String folderPath;
-  String pathToDoc;
-  String docAttribute;
-  String localPath;
-
-  YustLocalFile({
-    required name,
-    file,
-    required this.folderPath,
-    required this.pathToDoc,
-    required this.docAttribute,
-    required this.localPath,
-  }) : super(
-          name: name,
-          url: localPath,
-          file: file,
-        );
-
-  factory YustLocalFile.fromJson(Map<String, dynamic> json) {
-    return YustLocalFile(
+  /// Converts the file to JSON for local device. Only relevant attributs are converted.
+  factory YustFile.fromLocalJson(Map<String, dynamic> json) {
+    return YustFile(
       name: json['name'] as String,
-      folderPath: json['folderPath'] as String,
-      pathToDoc: json['pathToDoc'] as String,
-      docAttribute: json['docAttribute'] as String,
-      localPath: json['localPath'] as String,
+      storageFolderPath: json['storageFolderPath'] as String,
+      devicePath: json['devicePath'] as String,
+      linkedDocPath: json['linkedDocPath'] as String,
+      linkedDocAttribute: json['linkedDocAttribute'] as String,
     );
   }
 
-  Map<String, String> toJson() {
-    return <String, String>{
+  /// Converts JSON from device to a file. Only relevant attributs are included.
+  Map<String, String?> toLocalJson() {
+    return {
       'name': name,
-      'folderPath': folderPath,
-      'pathToDoc': pathToDoc,
-      'docAttribute': docAttribute,
-      'localPath': localPath,
+      'storageFolderPath': storageFolderPath,
+      'linkedDocPath': linkedDocPath,
+      'linkedDocAttribute': linkedDocAttribute,
+      'devicePath': devicePath,
     };
   }
 }

@@ -81,19 +81,9 @@ class YustImagePickerState extends State<YustImagePicker> {
     _currentImageNumber = widget.imageCount;
 
     fileHandler = YustFileHandler(
-      files: _files,
-      onChanged: _onChanged,
-      changeCallback: (files) {
-        if (_currentImageNumber < files.length) {
-          _currentImageNumber += widget.imageCount;
-        }
-        setState(() {
-          _files = files;
-        });
+      callback: () {
+        setState(() {});
       },
-      docAttribute: widget.docAttribute,
-      pathToDoc: widget.pathToDoc,
-      folderPath: widget.folderPath,
     );
     super.initState();
   }
@@ -101,14 +91,13 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: fileHandler.loadFiles(widget.images
-          .map<YustFile>((image) => YustFile.fromJson(image))
-          .toList()),
+      // future: fileHandler.loadFilesOld(widget.images
+      //     .map<YustFile>((image) => YustFile.fromJson(image))
+      //     .toList()),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return SizedBox.shrink();
         }
-        _files = fileHandler.files;
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +351,8 @@ class YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          onPressed: () => fileHandler.deleteFile(file, context),
+          // onPressed: () => fileHandler.deleteFileOld(file, context),
+          onPressed: () {},
         ),
       ),
     );
@@ -373,8 +363,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none &&
-        !fileHandler.isOfflineUploadPossible()) {
+    if (connectivityResult == ConnectivityResult.none) {
       Yust.service.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
@@ -451,13 +440,13 @@ class YustImagePickerState extends State<YustImagePicker> {
             .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
       }
     }
-    fileHandler.uploadFile(
-      file: file,
-      bytes: bytes,
-      name: imageName,
-      mounted: mounted,
-      context: context,
-    );
+    // fileHandler.uploadFileOld(
+    //   file: file,
+    //   bytes: bytes,
+    //   name: imageName,
+    //   mounted: mounted,
+    //   context: context,
+    // );
   }
 
   void _showImages(YustFile activeFile) {

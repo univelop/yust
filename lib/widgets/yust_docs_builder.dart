@@ -11,6 +11,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final List<List<dynamic>>? filter;
   final List<String>? orderBy;
   final bool _doNotWait;
+  final Widget? loadingIndicator;
 
   /// There will never be a null for the list given.
   final Widget Function(List<T>, YustBuilderInsights) builder;
@@ -22,6 +23,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
     this.orderBy,
     bool? doNotWait,
     required this.builder,
+    this.loadingIndicator,
   })  : _doNotWait = doNotWait ?? false,
         super(key: key);
 
@@ -75,7 +77,9 @@ class YustDocsBuilderState<T extends YustDoc>
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
         if (opts.waiting! && !widget._doNotWait) {
-          return Center(child: CircularProgressIndicator());
+          return widget.loadingIndicator != null
+              ? widget.loadingIndicator!
+              : Center(child: CircularProgressIndicator());
         }
         return widget.builder(snapshot.data ?? [], opts);
       },

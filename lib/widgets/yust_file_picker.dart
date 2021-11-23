@@ -154,7 +154,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       final result = await FilePicker.platform.pickFiles(allowMultiple: true);
       if (result != null) {
         for (final platformFile in result.files) {
-          var name = platformFile.name!.split('/').last;
+          var name = platformFile.name.split('/').last;
           final ext = platformFile.extension;
           if (ext != null && name.split('.').last != ext) {
             name += '.' + ext;

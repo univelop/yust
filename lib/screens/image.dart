@@ -9,33 +9,33 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/yust.dart';
 
 class ImageScreen extends StatelessWidget {
   static const String routeName = '/imageScreen';
-
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context)!.settings.arguments;
+    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
     String? url;
     List<String>? urls;
+    String imageName;
 
-    if (arguments is Map) {
-      url = arguments['url'];
-      final urlsArgs = arguments['urls'];
-
-      if (urlsArgs is List) {
-        urls = urlsArgs.whereType<String>().toList();
-      }
+    url = arguments['url'];
+    final urlsArgs = arguments['urls'];
+    imageName = arguments['name'];
+    if (urlsArgs is List) {
+      urls = urlsArgs.whereType<String>().toList();
     }
+
     if (urls != null) {
-      return _buildMultiple(context, urls, url);
+      return _buildMultiple(context, urls, url, imageName);
     } else {
-      return _buildSingle(context, url!);
+      return _buildSingle(context, url!, imageName);
     }
   }
 
-  Widget _buildSingle(BuildContext context, String url) {
+  Widget _buildSingle(BuildContext context, String url, String imageName) {
     return Stack(children: [
       Container(
         child: PhotoView(
@@ -54,12 +54,13 @@ class ImageScreen extends StatelessWidget {
           ),
         ),
       ),
-      _buildShareButton(context, url),
+      if (kIsWeb) _buildCloseButton(context),
+      _buildShareButton(context, url, imageName),
     ]);
   }
 
-  Widget _buildMultiple(
-      BuildContext context, List<String> urls, String? activeUrl) {
+  Widget _buildMultiple(BuildContext context, List<String> urls,
+      String? activeUrl, String imageName) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
@@ -89,8 +90,6 @@ class ImageScreen extends StatelessWidget {
                 child: CircularProgressIndicator(),
               ),
             ),
-            // backgroundDecoration: widget.backgroundDecoration,
-            // onPageChanged: onPageChanged,
           ),
         ),
         if (kIsWeb)
@@ -135,41 +134,47 @@ class ImageScreen extends StatelessWidget {
               ),
             ),
           ),
-        if (kIsWeb)
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            alignment: Alignment.topRight,
-            child: CircleAvatar(
-              backgroundColor: Colors.black,
-              radius: 25,
-              child: IconButton(
-                iconSize: 35,
-                color: Colors.white,
-                icon: Icon(Icons.close),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-          ),
-        _buildShareButton(context, activeUrl!),
+        if (kIsWeb) _buildCloseButton(context),
+        _buildShareButton(context, activeUrl!, imageName),
       ],
     );
   }
 
-  Widget _buildShareButton(BuildContext context, String url) {
-    return Positioned(
-      top: 20.0,
-      right: kIsWeb ? 80.0 : 0.0,
+  Widget _buildCloseButton(context) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      alignment: Alignment.topRight,
       child: CircleAvatar(
         backgroundColor: Colors.black,
         radius: 25,
-        child: Container(
+        child: IconButton(
+          iconSize: 35,
+          color: Colors.white,
+          icon: Icon(Icons.close),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShareButton(BuildContext context, String url, String imageName) {
+    return Positioned(
+      right: kIsWeb ? 80.0 : 0.0,
+      child: Container(
+        margin: EdgeInsets.all(20),
+        child: CircleAvatar(
+          backgroundColor: Colors.black,
+          radius: 25,
           child: IconButton(
             iconSize: 35,
             color: Colors.white,
-            onPressed: () =>
-                {kIsWeb ? _downloadImage(url) : _shareFile(context, url)},
+            onPressed: () => {
+              kIsWeb
+                  ? _downloadImage(url, imageName)
+                  : _shareFile(context, url, imageName)
+            },
             icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
           ),
         ),
@@ -177,15 +182,19 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _shareFile(BuildContext context, String url) async {
-    final String name = Yust.service.randomString() + '.png';
+  Future<void> _shareFile(
+      BuildContext context, String url, String imageName) async {
+    final pattern = RegExp(r'(\w+)(?=\?)');
+    final suffix = pattern.firstMatch(url)!.group(0);
+
     if (true) {
       await EasyLoading.show(status: 'Datei laden...');
       try {
         final tempDir = await getTemporaryDirectory();
-        await Dio().download(url, '${tempDir.path}/' + name);
-        await Share.shareFiles(['${tempDir.path}/' + name],
-            subject: name, mimeTypes: ['image/jpeg', 'image/png']);
+        final path = '${tempDir.path}/$imageName.$suffix';
+        await Dio().download(url, path);
+        await Share.shareFiles([path],
+            subject: imageName, mimeTypes: ['image/jpeg', 'image/png']);
         await EasyLoading.dismiss();
       } catch (e) {
         await EasyLoading.dismiss();
@@ -195,13 +204,9 @@ class ImageScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _downloadImage(String imageUrl) async {
-    var suffix;
-    if (imageUrl.contains('.png') || imageUrl.contains('.PNG')) {
-      suffix = '.png';
-    } else {
-      suffix = '.jpg';
-    }
+  Future<void> _downloadImage(String imageUrl, String imageName) async {
+    final pattern = RegExp(r'(\w+)(?=\?)');
+    final suffix = pattern.firstMatch(imageUrl)!.group(0);
     try {
       final http.Response r = await http.get(
         Uri.parse(imageUrl),
@@ -209,10 +214,9 @@ class ImageScreen extends StatelessWidget {
       final data = r.bodyBytes;
       final base64data = base64Encode(data);
       final a = html.AnchorElement(
-          href: 'data:image/' + suffix + ';base64,$base64data');
-      final name = imageUrl.substring(
-          imageUrl.lastIndexOf('%2F') + 3, imageUrl.lastIndexOf('%2F') + 19);
-      a.download = name + suffix;
+          href: 'data:image/' + suffix! + ';base64,$base64data');
+
+      a.download = '$imageName.$suffix';
       a.click();
       a.remove();
     } catch (e) {

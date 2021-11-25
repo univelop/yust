@@ -7,7 +7,7 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
-class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
+class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
   final YustDocSetup<T> modelSetup;
 
   final ScrollController? scrollController;
@@ -29,33 +29,28 @@ class YustPaginatedListView<T extends YustDoc> extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  YustPaginatedListViewState<T> createState() =>
-      YustPaginatedListViewState<T>();
-}
-
-class YustPaginatedListViewState<T extends YustDoc>
-    extends State<YustPaginatedListView<T>> {
-  @override
   Widget build(BuildContext context) {
-    final query = Yust.service
-        .getQuery(modelSetup: widget.modelSetup, orderByList: widget.orderBy);
+    final query =
+        Yust.service.getQuery(modelSetup: modelSetup, orderByList: orderBy);
+
     return PaginateFirestore(
-      scrollController: widget.scrollController,
-      header: widget.header,
-      footer: widget.footer,
-      emptyDisplay: widget.emptyInfo,
+      scrollController: scrollController,
+      header: header,
+      footer: footer,
+      emptyDisplay: emptyInfo,
       itemBuilderType: PaginateBuilderType.listView,
       itemBuilder: (index, context, documentSnapshot) =>
           _itemBuilder(index, context, documentSnapshot),
       // orderBy is compulsary to enable pagination
       query: query,
       itemsPerPage: 50,
+      isLive: true,
     );
   }
 
   Widget _itemBuilder(
       int index, BuildContext context, DocumentSnapshot documentSnapshot) {
-    final item = Yust.service.transformDoc(widget.modelSetup, documentSnapshot);
+    final item = Yust.service.transformDoc(modelSetup, documentSnapshot);
     if (item == null) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 100.0),
@@ -67,7 +62,7 @@ class YustPaginatedListViewState<T extends YustDoc>
         ),
       );
     } else {
-      return widget.listItemBuilder(context, item, index);
+      return listItemBuilder(context, item, index);
     }
   }
 }

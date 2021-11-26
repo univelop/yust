@@ -9,7 +9,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/yust.dart';
 
 class ImageScreen extends StatelessWidget {
@@ -184,17 +183,13 @@ class ImageScreen extends StatelessWidget {
 
   Future<void> _shareFile(
       BuildContext context, String url, String imageName) async {
-    final pattern = RegExp(r'(\w+)(?=\?)');
-    final suffix = pattern.firstMatch(url)!.group(0);
-
     if (true) {
       await EasyLoading.show(status: 'Datei laden...');
       try {
         final tempDir = await getTemporaryDirectory();
-        final path = '${tempDir.path}/$imageName.$suffix';
+        final path = '${tempDir.path}/$imageName';
         await Dio().download(url, path);
-        await Share.shareFiles([path],
-            subject: imageName, mimeTypes: ['image/jpeg', 'image/png']);
+        await Share.shareFiles([path], subject: imageName);
         await EasyLoading.dismiss();
       } catch (e) {
         await EasyLoading.dismiss();
@@ -205,18 +200,15 @@ class ImageScreen extends StatelessWidget {
   }
 
   Future<void> _downloadImage(String imageUrl, String imageName) async {
-    final pattern = RegExp(r'(\w+)(?=\?)');
-    final suffix = pattern.firstMatch(imageUrl)!.group(0);
     try {
       final http.Response r = await http.get(
         Uri.parse(imageUrl),
       );
       final data = r.bodyBytes;
       final base64data = base64Encode(data);
-      final a = html.AnchorElement(
-          href: 'data:image/' + suffix! + ';base64,$base64data');
+      final a = html.AnchorElement(href: 'data:image/' + ';base64,$base64data');
 
-      a.download = '$imageName.$suffix';
+      a.download = imageName;
       a.click();
       a.remove();
     } catch (e) {

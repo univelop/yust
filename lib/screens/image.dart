@@ -166,15 +166,19 @@ class ImageScreen extends StatelessWidget {
         child: CircleAvatar(
           backgroundColor: Colors.black,
           radius: 25,
-          child: IconButton(
-            iconSize: 35,
-            color: Colors.white,
-            onPressed: () => {
-              kIsWeb
-                  ? _downloadImage(url, imageName)
-                  : _shareFile(context, url, imageName)
+          child: Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                iconSize: 35,
+                color: Colors.white,
+                onPressed: () => {
+                  kIsWeb
+                      ? _downloadImage(url, imageName)
+                      : _shareFile(context, url, imageName)
+                },
+                icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
+              );
             },
-            icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
           ),
         ),
       ),
@@ -183,13 +187,19 @@ class ImageScreen extends StatelessWidget {
 
   Future<void> _shareFile(
       BuildContext context, String url, String imageName) async {
+    final box = context.findRenderObject() as RenderBox?;
     if (true) {
       await EasyLoading.show(status: 'Datei laden...');
       try {
         final tempDir = await getTemporaryDirectory();
         final path = '${tempDir.path}/$imageName';
         await Dio().download(url, path);
-        await Share.shareFiles([path], subject: imageName);
+        await Share.shareFiles(
+          [path],
+          subject: imageName,
+          sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+        );
+
         await EasyLoading.dismiss();
       } catch (e) {
         await EasyLoading.dismiss();

@@ -19,7 +19,7 @@ class ImageScreen extends StatelessWidget {
     final arguments = ModalRoute.of(context)!.settings.arguments as Map;
     final String? url = arguments['url'];
     String imageName = arguments['name'];
-    String returnLocation = arguments['location'];
+    String? returnLocation = arguments['location'];
     final urlsArgs = arguments['urls'];
     List<String>? urls;
 
@@ -35,7 +35,7 @@ class ImageScreen extends StatelessWidget {
   }
 
   Widget _buildSingle(BuildContext context, String url, String imageName,
-      String returnLocation) {
+      [String? returnLocation]) {
     return Stack(children: [
       Container(
         child: PhotoView(
@@ -60,7 +60,8 @@ class ImageScreen extends StatelessWidget {
   }
 
   Widget _buildMultiple(BuildContext context, List<String> urls,
-      String? activeUrl, String imageName, String returnLocation) {
+      String? activeUrl, String imageName,
+      [String? returnLocation]) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
@@ -140,7 +141,7 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCloseButton(BuildContext context, String returnLocation) {
+  Widget _buildCloseButton(BuildContext context, [String? returnLocation]) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       alignment: Alignment.topRight,
@@ -148,13 +149,14 @@ class ImageScreen extends StatelessWidget {
         backgroundColor: Colors.black,
         radius: 25,
         child: IconButton(
-          iconSize: 35,
-          color: Colors.white,
-          icon: Icon(Icons.close),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, returnLocation);
-          },
-        ),
+            iconSize: 35,
+            color: Colors.white,
+            icon: Icon(Icons.close),
+            onPressed: () {
+              returnLocation == null
+                  ? Navigator.pop(context)
+                  : Navigator.pushReplacementNamed(context, returnLocation);
+            }),
       ),
     );
   }

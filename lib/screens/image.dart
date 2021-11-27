@@ -1,7 +1,8 @@
+import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'dart:convert';
-import 'package:universal_html/html.dart' as html;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -16,25 +17,25 @@ class ImageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final arguments = ModalRoute.of(context)!.settings.arguments as Map;
-    String? url;
-    List<String>? urls;
-    String imageName;
-
-    url = arguments['url'];
+    final String? url = arguments['url'];
+    String imageName = arguments['name'];
+    String returnLocation = arguments['location'];
     final urlsArgs = arguments['urls'];
-    imageName = arguments['name'];
+    List<String>? urls;
+
     if (urlsArgs is List) {
       urls = urlsArgs.whereType<String>().toList();
     }
 
     if (urls != null) {
-      return _buildMultiple(context, urls, url, imageName);
+      return _buildMultiple(context, urls, url, imageName, returnLocation);
     } else {
-      return _buildSingle(context, url!, imageName);
+      return _buildSingle(context, url!, imageName, returnLocation);
     }
   }
 
-  Widget _buildSingle(BuildContext context, String url, String imageName) {
+  Widget _buildSingle(BuildContext context, String url, String imageName,
+      String returnLocation) {
     return Stack(children: [
       Container(
         child: PhotoView(
@@ -53,13 +54,13 @@ class ImageScreen extends StatelessWidget {
           ),
         ),
       ),
-      if (kIsWeb) _buildCloseButton(context),
+      if (kIsWeb) _buildCloseButton(context, returnLocation),
       _buildShareButton(context, url, imageName),
     ]);
   }
 
   Widget _buildMultiple(BuildContext context, List<String> urls,
-      String? activeUrl, String imageName) {
+      String? activeUrl, String imageName, String returnLocation) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
@@ -133,13 +134,13 @@ class ImageScreen extends StatelessWidget {
               ),
             ),
           ),
-        if (kIsWeb) _buildCloseButton(context),
+        if (kIsWeb) _buildCloseButton(context, returnLocation),
         _buildShareButton(context, activeUrl!, imageName),
       ],
     );
   }
 
-  Widget _buildCloseButton(context) {
+  Widget _buildCloseButton(BuildContext context, String returnLocation) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       alignment: Alignment.topRight,
@@ -151,7 +152,7 @@ class ImageScreen extends StatelessWidget {
           color: Colors.white,
           icon: Icon(Icons.close),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushReplacementNamed(context, returnLocation);
           },
         ),
       ),
@@ -161,24 +162,26 @@ class ImageScreen extends StatelessWidget {
   Widget _buildShareButton(BuildContext context, String url, String imageName) {
     return Positioned(
       right: kIsWeb ? 80.0 : 0.0,
-      child: Container(
-        margin: EdgeInsets.all(20),
-        child: CircleAvatar(
-          backgroundColor: Colors.black,
-          radius: 25,
-          child: Builder(
-            builder: (BuildContext context) {
-              return IconButton(
-                iconSize: 35,
-                color: Colors.white,
-                onPressed: () => {
-                  kIsWeb
-                      ? _downloadImage(url, imageName)
-                      : _shareFile(context, url, imageName)
-                },
-                icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
-              );
-            },
+      child: RepaintBoundary(
+        child: Container(
+          margin: EdgeInsets.all(20),
+          child: CircleAvatar(
+            backgroundColor: Colors.black,
+            radius: 25,
+            child: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  iconSize: 35,
+                  color: Colors.white,
+                  onPressed: () => {
+                    kIsWeb
+                        ? _downloadImage(url, imageName)
+                        : _shareFile(context, url, imageName)
+                  },
+                  icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -214,10 +217,10 @@ class ImageScreen extends StatelessWidget {
       final http.Response r = await http.get(
         Uri.parse(imageUrl),
       );
+
       final data = r.bodyBytes;
       final base64data = base64Encode(data);
-      final a = html.AnchorElement(href: 'data:image/' + ';base64,$base64data');
-
+      final a = html.AnchorElement(href: 'data:image/;base64,$base64data');
       a.download = imageName;
       a.click();
       a.remove();

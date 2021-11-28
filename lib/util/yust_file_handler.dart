@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/yust.dart';
 
 import 'yust_exception.dart';
@@ -28,14 +29,22 @@ class YustFileHandler {
   }
 
   Future<void> mergeCachedFiles(List<YustFile> yustFiles, String? linkedDocPath,
-      String? linkedDocAttribute) async {
+      String? linkedDocAttribute,
+      {bool loadCachedImages = false}) async {
     if (linkedDocPath != null && linkedDocAttribute != null) {
-      var cachedFiles = await _getCachedFiles();
+      var cachedFiles = await getCachedFiles();
       cachedFiles = cachedFiles
           .where((yustFile) =>
               yustFile.linkedDocPath == linkedDocPath &&
               yustFile.linkedDocAttribute == linkedDocAttribute)
           .toList();
+
+      if (loadCachedImages) {
+        for (var cachedFile in cachedFiles) {
+          cachedFile.file = File(cachedFile.devicePath!);
+        }
+      }
+
       _mergeIntoYustFiles(yustFiles, cachedFiles);
     }
   }
@@ -45,10 +54,11 @@ class YustFileHandler {
       await _saveFileOnDevice(yustFile);
       try {
         await _uploadFileToStorage(yustFile);
-        await _deleteFileFromCache(yustFile);
+        await deleteFileFromCache(yustFile);
       } catch (error) {
         print(error.toString());
         // TODO: Error handling
+        YustOfflineCache.uploadcachedFiles(validateCachedFiles: false);
       }
     } else {
       await _uploadFileToStorage(yustFile);
@@ -57,7 +67,7 @@ class YustFileHandler {
 
   Future<void> deleteFile(List<YustFile> yustFiles, YustFile yustFile) async {
     if (yustFile.cached) {
-      _deleteFileFromCache(yustFile);
+      deleteFileFromCache(yustFile);
     } else {
       _deleteFileFromStorage(yustFile);
     }
@@ -66,11 +76,12 @@ class YustFileHandler {
   }
 
   Future<void> uploadCachedFiles() async {
-    final cachedFiles = await _getCachedFiles();
+    //TODO: wofür ist diese Methode gedacht?
+    final cachedFiles = await getCachedFiles();
     for (final yustFile in cachedFiles) {
       try {
         await _uploadFileToStorage(yustFile);
-        await _deleteFileFromCache(yustFile, cachedFiles);
+        await deleteFileFromCache(yustFile, cachedFiles);
       } catch (error) {
         print(error.toString());
         // TODO: Error handling
@@ -131,9 +142,9 @@ class YustFileHandler {
     yustFile.devicePath = '${tempDir.path}/${yustFile.name}';
     // TODO: file name muss nicht eindeutig sein.
     await yustFile.file!.copy(yustFile.devicePath!);
-    final cachedFileList = await _getCachedFiles();
+    final cachedFileList = await getCachedFiles();
     cachedFileList.add(yustFile);
-    await _saveCachedFiles(cachedFileList);
+    await saveCachedFiles(cachedFileList);
   }
 
   Future<void> _uploadFileToStorage(YustFile yustFile) async {
@@ -163,21 +174,21 @@ class YustFileHandler {
     }
   }
 
-  Future<void> _deleteFileFromCache(YustFile yustFile,
+  Future<void> deleteFileFromCache(YustFile yustFile,
       [List<YustFile>? cachedFiles]) async {
-    cachedFiles ??= await _getCachedFiles();
+    cachedFiles ??= await getCachedFiles();
     if (yustFile.devicePath != null &&
         File(yustFile.devicePath!).existsSync()) {
       await File(yustFile.devicePath!).delete();
     }
     cachedFiles.removeWhere((f) => f.devicePath == yustFile.devicePath);
-    await _saveCachedFiles(cachedFiles);
+    await saveCachedFiles(cachedFiles);
     yustFile.devicePath = null;
     callback();
   }
 
   /// Loads a list of all cached [YustFile]s.
-  Future<List<YustFile>> _getCachedFiles() async {
+  Future<List<YustFile>> getCachedFiles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var temporaryJsonFiles = prefs.getString('temporaryFiles');
     // TODO: Prefs name ändern?
@@ -187,7 +198,7 @@ class YustFileHandler {
   }
 
   /// Saves all cached [YustFile]s.
-  Future<void> _saveCachedFiles(List<YustFile> yustFiles) async {
+  Future<void> saveCachedFiles(List<YustFile> yustFiles) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var jsonFiles = yustFiles.map((file) => file.toLocalJson()).toList();
     await prefs.setString('temporaryFiles', jsonEncode(jsonFiles));

@@ -5,13 +5,10 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
 import 'package:yust/util/yust_file_handler.dart';
-import 'package:yust/util/yust_offline_cache.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 
@@ -26,18 +23,19 @@ class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
 
-  /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
+  /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
   /// If not given, uploads are only possible with internet connection
-  final String? pathToDoc;
+  final String? linkedDocPath;
 
-  /// [pathToDoc] and [docAttribute] are needed for the offline compatibility.
+  /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
   /// If not given, uploads are only possible with internet connection
-  final String? docAttribute;
+  final String? linkedDocAttribute;
   final bool multiple;
+  //TODO: is dynmaic neccecary?
   final List<Map<String, dynamic>> images;
   final bool zoomable;
   final void Function(List<Map<String, dynamic>> images)? onChanged;
-  final void Function(String url, YustFile localFile)? onUploaded;
+  final void Function(String url, YustFile cachedFile)? onUploaded;
   final Widget? prefixIcon;
   final bool readOnly;
   final String yustQuality;
@@ -49,8 +47,8 @@ class YustImagePicker extends StatefulWidget {
     Key? key,
     this.label,
     required this.folderPath,
-    this.pathToDoc,
-    this.docAttribute,
+    this.linkedDocPath,
+    this.linkedDocAttribute,
     this.multiple = false,
     required this.images,
     this.zoomable = false,
@@ -67,33 +65,38 @@ class YustImagePicker extends StatefulWidget {
 }
 
 class YustImagePickerState extends State<YustImagePicker> {
-  late List<YustFile> _files;
+  late YustFileHandler _fileHandler;
+  late List<YustFile> _yustFiles;
   late bool _enabled;
   late int _currentImageNumber;
-  late YustFileHandler fileHandler;
 
   @override
   void initState() {
-    _files = widget.images
-        .map<YustFile>((image) => YustFile.fromJson(image))
-        .toList();
+    _fileHandler = YustFileHandler(
+      callback: () {
+        _onChanged();
+      },
+    );
+
+    _yustFiles = _fileHandler.yustFilesFromJson(
+        widget.images as List<Map<String, String?>>, widget.folderPath);
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
 
-    fileHandler = YustFileHandler(
-      callback: () {
-        setState(() {});
-      },
-    );
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    _fileHandler.mergeOnlineFiles(_yustFiles,
+        widget.images as List<Map<String, String?>>, widget.folderPath);
     return FutureBuilder(
-      // future: fileHandler.loadFilesOld(widget.images
-      //     .map<YustFile>((image) => YustFile.fromJson(image))
-      //     .toList()),
+      future: _fileHandler.mergeCachedFiles(
+        _yustFiles,
+        widget.linkedDocPath,
+        widget.linkedDocAttribute,
+        loadCachedImages: true,
+      ),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return SizedBox.shrink();
@@ -120,12 +123,13 @@ class YustImagePickerState extends State<YustImagePicker> {
                       alignment: AlignmentDirectional.center,
                       children: [
                         if (!widget.multiple)
-                          _buildImagePreview(context, _files.firstOrNull),
+                          _buildImagePreview(context, _yustFiles.firstOrNull),
                         if (!widget.multiple)
-                          _buildProgressIndicator(context, _files.firstOrNull),
+                          _buildProgressIndicator(
+                              context, _yustFiles.firstOrNull),
                         _buildPickButtons(context),
                         if (!widget.multiple)
-                          _buildRemoveButton(context, _files.firstOrNull),
+                          _buildRemoveButton(context, _yustFiles.firstOrNull),
                       ],
                     ),
                   ),
@@ -169,7 +173,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildPickButtons(BuildContext context) {
-    if (!_enabled || (!widget.multiple && _files.firstOrNull != null)) {
+    if (!_enabled || (!widget.multiple && _yustFiles.firstOrNull != null)) {
       return SizedBox.shrink();
     }
     if (kIsWeb) {
@@ -204,7 +208,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildGallery(BuildContext context) {
-    if (_files.isEmpty) {
+    if (_yustFiles.isEmpty) {
       return SizedBox.shrink();
     }
 
@@ -213,7 +217,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildGalleryView(context),
-        if (_files.length > _currentImageNumber)
+        if (_yustFiles.length > _currentImageNumber)
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton.icon(
@@ -238,9 +242,9 @@ class YustImagePickerState extends State<YustImagePicker> {
   GridView _buildGalleryView(
     BuildContext context,
   ) {
-    var pictureFiles = _files.length > _currentImageNumber
-        ? _files.sublist(0, _currentImageNumber)
-        : _files;
+    var pictureFiles = _yustFiles.length > _currentImageNumber
+        ? _yustFiles.sublist(0, _currentImageNumber)
+        : _yustFiles;
 
     return GridView.extent(
       shrinkWrap: true,
@@ -335,11 +339,8 @@ class YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildRemoveButton(BuildContext context, YustFile? file) {
-    // file.url can be null, if the file is local
-    if (file == null ||
-        !_enabled ||
-        (file.url == null && !YustOfflineCache.isLocalPath(file.url ?? ''))) {
+  Widget _buildRemoveButton(BuildContext context, YustFile? yustFile) {
+    if (yustFile == null || !_enabled) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -351,8 +352,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          // onPressed: () => fileHandler.deleteFileOld(file, context),
-          onPressed: () {},
+          onPressed: () => _fileHandler.deleteFile(_yustFiles, yustFile),
         ),
       ),
     );
@@ -440,45 +440,36 @@ class YustImagePickerState extends State<YustImagePicker> {
             .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
       }
     }
-    // fileHandler.uploadFileOld(
-    //   file: file,
-    //   bytes: bytes,
-    //   name: imageName,
-    //   mounted: mounted,
-    //   context: context,
-    // );
+    final newYustFile = YustFile(
+      name: imageName,
+      file: file,
+      bytes: bytes,
+      storageFolderPath: widget.folderPath,
+      linkedDocPath: widget.linkedDocPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+    );
+
+    _yustFiles.add(newYustFile);
+    await _fileHandler.addFile(newYustFile);
+    _onChanged();
   }
 
   void _showImages(YustFile activeFile) {
     Yust.service.unfocusCurrent(context);
     if (widget.multiple) {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
-        'urls': _files.map((file) => file.url).toList(),
-        'url': activeFile.url,
+        'urls': _yustFiles.map((f) => f.cached ? f.devicePath : f.url).toList(),
+        'url': activeFile.cached ? activeFile.devicePath : activeFile.url,
       });
     } else {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
-        'url': activeFile.url,
+        'url': activeFile.cached ? activeFile.devicePath : activeFile.url,
       });
     }
   }
 
-  /// removes file.urls that are paths to a folder
-  void _onChanged(List<YustFile> onlineFiles) {
-    onlineFiles
-        .removeWhere((file) => YustOfflineCache.isLocalPath(file.url ?? ''));
-
+  void _onChanged() {
+    final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
-  }
-
-  Future<File> getImageFileFromAssets(String path) async {
-    final byteData = await rootBundle.load(path);
-
-    final file = File('${(await getTemporaryDirectory()).path}/$path');
-    await file.create(recursive: true);
-    await file.writeAsBytes(byteData.buffer
-        .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-
-    return file;
   }
 }

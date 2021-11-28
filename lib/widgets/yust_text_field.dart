@@ -7,9 +7,10 @@ typedef TapCallback = void Function();
 class YustTextField extends StatefulWidget {
   final String? label;
   final String? value;
+  final TextStyle? textStyle;
   final StringCallback? onChanged;
 
-  /// if a validator is implemented, onEditingComplete gets only triggerd, if validator is true (true = returns null)
+  /// if a validator is implemented, onEditingComplete gets only triggered, if validator is true (true = returns null)
   final StringCallback? onEditingComplete;
   final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
@@ -30,6 +31,7 @@ class YustTextField extends StatefulWidget {
       {Key? key,
       this.label,
       this.value,
+      this.textStyle,
       this.onChanged,
       this.onEditingComplete,
       this.controller,
@@ -106,6 +108,7 @@ class _YustTextFieldState extends State<YustTextField> {
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.suffixIcon,
       ),
+      style: widget.textStyle,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
       minLines: widget.minLines,
       controller: _controller,

@@ -13,8 +13,6 @@ class YustFile with YustSerializable {
   /// The URL to download the file.
   String? url;
 
-  // TODO: offline is there an existing case, where the url could be null?
-
   /// The binary file. This attibute is used for iOS and Android. For web [bytes] is used instead.
   File? file;
 

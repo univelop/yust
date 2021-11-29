@@ -91,11 +91,10 @@ class YustImagePickerState extends State<YustImagePicker> {
     _fileHandler.mergeOnlineFiles(_yustFiles,
         widget.images as List<Map<String, String?>>, widget.folderPath);
     return FutureBuilder(
-      future: _fileHandler.mergeCachedFiles(
+      future: mergeAndLoadCachedFiles(
         _yustFiles,
         widget.linkedDocPath,
         widget.linkedDocAttribute,
-        loadCachedImages: true,
       ),
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
@@ -352,7 +351,9 @@ class YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.clear),
           color: Colors.black,
-          onPressed: () => _fileHandler.deleteFile(_yustFiles, yustFile),
+          onPressed: () async {
+            await _fileHandler.deleteFile(_yustFiles, yustFile);
+          },
         ),
       ),
     );
@@ -451,7 +452,6 @@ class YustImagePickerState extends State<YustImagePicker> {
 
     _yustFiles.add(newYustFile);
     await _fileHandler.addFile(newYustFile);
-    _onChanged();
   }
 
   void _showImages(YustFile activeFile) {
@@ -468,7 +468,23 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
   }
 
+  Future<void> mergeAndLoadCachedFiles(List<YustFile> yustFiles,
+      String? linkedDocPath, String? linkedDocAttribute) async {
+    await _fileHandler.mergeCachedFiles(
+        yustFiles, linkedDocPath, linkedDocAttribute);
+
+    for (var yustFile in yustFiles) {
+      if (yustFile.cached) {
+        yustFile.file = File(yustFile.devicePath!);
+      }
+    }
+  }
+
   void _onChanged() {
+    //TODO: have to load widget.images if new upload happend
+    // has to take the local yustFiles if the file got removed
+    // List<YustFile> _yustFiles = _fileHandler.yustFilesFromJson(
+    //     widget.images as List<Map<String, String?>>, widget.folderPath);
     final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }

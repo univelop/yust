@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:yust/util/yust_offline_cache.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -22,7 +21,6 @@ enum YustInputStyle {
 class Yust {
   static late YustStore store;
   static late YustService service;
-  static late YustOfflineCache offlineCache;
   static late YustDocSetup<YustUser> userSetup;
   @Deprecated('`useTimestamps` will allways be set to true.')
   static bool useTimestamps = true;
@@ -47,7 +45,6 @@ class Yust {
   static Future<void> initialize({
     YustStore? store,
     YustService? service,
-    YustOfflineCache? offlineCache,
     YustDocSetup? userSetup,
     bool useTimestamps = false,
     bool useSubcollections = false,
@@ -65,7 +62,6 @@ class Yust {
 
     Yust.store = store ?? YustStore();
     Yust.service = service ?? YustService();
-    Yust.offlineCache = offlineCache ?? YustOfflineCache();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
     Yust.useTimestamps = useTimestamps;
     Yust.useSubcollections = useSubcollections;

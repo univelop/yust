@@ -167,7 +167,7 @@ class YustFilePickerState extends State<YustFilePicker> {
                 'Eine Datei mit dem Namen ${fileData['name']} existiert bereits.');
           } else {
             File? file;
-            if (platformFile.path != null) {
+            if (!kIsWeb && platformFile.path != null) {
               file = File(platformFile.path!);
             }
             await addFile(fileData, file, platformFile.bytes);

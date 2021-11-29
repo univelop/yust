@@ -442,13 +442,11 @@ class YustImagePickerState extends State<YustImagePicker> {
         'urls': _files.map((file) => file.url).toList(),
         'url': activeFile.url,
         'name': activeFile.name,
-        'location': html.window.location.href.split('#').last,
       });
     } else {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
         'url': activeFile.url,
         'name': activeFile.name,
-        'location': html.window.location.href.split('#').last,
       });
     }
   }

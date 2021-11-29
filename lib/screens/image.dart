@@ -19,7 +19,7 @@ class ImageScreen extends StatelessWidget {
     final arguments = ModalRoute.of(context)!.settings.arguments as Map;
     final String? url = arguments['url'];
     String imageName = arguments['name'];
-    String? returnLocation = arguments['location'];
+
     final urlsArgs = arguments['urls'];
     List<String>? urls;
 
@@ -28,14 +28,13 @@ class ImageScreen extends StatelessWidget {
     }
 
     if (urls != null) {
-      return _buildMultiple(context, urls, url, imageName, returnLocation);
+      return _buildMultiple(context, urls, url, imageName);
     } else {
-      return _buildSingle(context, url!, imageName, returnLocation);
+      return _buildSingle(context, url!, imageName);
     }
   }
 
-  Widget _buildSingle(BuildContext context, String url, String imageName,
-      [String? returnLocation]) {
+  Widget _buildSingle(BuildContext context, String url, String imageName) {
     return Stack(children: [
       Container(
         child: PhotoView(
@@ -54,14 +53,13 @@ class ImageScreen extends StatelessWidget {
           ),
         ),
       ),
-      if (kIsWeb) _buildCloseButton(context, returnLocation),
+      if (kIsWeb) _buildCloseButton(context),
       _buildShareButton(context, url, imageName),
     ]);
   }
 
   Widget _buildMultiple(BuildContext context, List<String> urls,
-      String? activeUrl, String imageName,
-      [String? returnLocation]) {
+      String? activeUrl, String imageName) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
@@ -135,13 +133,13 @@ class ImageScreen extends StatelessWidget {
               ),
             ),
           ),
-        if (kIsWeb) _buildCloseButton(context, returnLocation),
+        if (kIsWeb) _buildCloseButton(context),
         _buildShareButton(context, activeUrl!, imageName),
       ],
     );
   }
 
-  Widget _buildCloseButton(BuildContext context, [String? returnLocation]) {
+  Widget _buildCloseButton(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       alignment: Alignment.topRight,
@@ -153,9 +151,7 @@ class ImageScreen extends StatelessWidget {
             color: Colors.white,
             icon: Icon(Icons.close),
             onPressed: () {
-              returnLocation == null
-                  ? Navigator.pop(context)
-                  : Navigator.pushReplacementNamed(context, returnLocation);
+              Navigator.pop(context);
             }),
       ),
     );

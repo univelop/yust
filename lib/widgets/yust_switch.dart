@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yust/widgets/yust_input_tile.dart';
+import 'package:yust/widgets/yust_list_tile.dart';
 
 import '../yust.dart';
 
@@ -27,8 +27,9 @@ class YustSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (switchRepresentation == 'checkbox') {
-      return YustInputTile(
-          child: Checkbox(
+      return YustListTile(
+          label: label,
+          suffixChild: Checkbox(
             checkColor: activeColor,
             value: value,
             onChanged: (bool? value) {
@@ -38,11 +39,17 @@ class YustSwitch extends StatelessWidget {
                   : onChanged!(value);
             },
           ),
-          label: label,
+          onTap: readOnly || onChanged == null
+              ? null
+              : () {
+                  Yust.service.unfocusCurrent(context);
+                  onChanged!(!value);
+                },
           prefixIcon: prefixIcon);
     } else {
-      return YustInputTile(
-          child: Switch(
+      return YustListTile(
+          label: label,
+          suffixChild: Switch(
             value: value,
             activeColor: activeColor,
             onChanged: (value) {
@@ -50,7 +57,12 @@ class YustSwitch extends StatelessWidget {
               readOnly || onChanged == null ? null : onChanged!(value);
             },
           ),
-          label: label,
+          onTap: readOnly || onChanged == null
+              ? null
+              : () {
+                  Yust.service.unfocusCurrent(context);
+                  onChanged!(!value);
+                },
           prefixIcon: prefixIcon);
     }
   }

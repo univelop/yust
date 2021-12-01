@@ -3,6 +3,7 @@ import 'package:yust/yust.dart';
 
 typedef StringCallback = void Function(String?);
 typedef TapCallback = void Function();
+typedef DeleteCallback = Future<void> Function();
 
 class YustTextField extends StatefulWidget {
   final String? label;
@@ -15,6 +16,7 @@ class YustTextField extends StatefulWidget {
   final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
   final TapCallback? onTap;
+  final DeleteCallback? onDelete;
   final int? maxLines;
   final int? minLines;
   final bool readOnly;
@@ -37,6 +39,7 @@ class YustTextField extends StatefulWidget {
       this.controller,
       this.validator,
       this.onTap,
+      this.onDelete,
       this.maxLines,
       this.minLines,
       this.enabled = true,
@@ -98,37 +101,56 @@ class _YustTextFieldState extends State<YustTextField> {
       _controller.text = widget.value!;
       _initValue = widget.value!;
     }
-    return TextFormField(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-        border: widget.style == YustInputStyle.outlineBorder
-            ? OutlineInputBorder()
-            : null,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: widget.suffixIcon,
-      ),
-      style: widget.textStyle,
-      maxLines: widget.obscureText ? 1 : widget.maxLines,
-      minLines: widget.minLines,
-      controller: _controller,
-      focusNode: _focusNode,
-      keyboardType: widget.keyBoardType,
-      textInputAction: widget.minLines != null
-          ? TextInputAction.newline
-          : TextInputAction.next,
-      onChanged: widget.onChanged == null
-          ? null
-          : (value) => widget.onChanged!(value == '' ? null : value.trim()),
-      onTap: widget.onTap,
-      readOnly: widget.readOnly,
-      enabled: widget.enabled,
-      obscureText: widget.obscureText,
-      textCapitalization: widget.textCapitalization,
-      autovalidateMode: widget.autovalidateMode,
-      validator: widget.validator == null
-          ? null
-          : (value) => widget.validator!(value!.trim()),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: widget.label,
+                  contentPadding: const EdgeInsets.all(20.0),
+                  border: widget.style == YustInputStyle.outlineBorder
+                      ? OutlineInputBorder()
+                      : InputBorder.none,
+                  prefixIcon: widget.prefixIcon,
+                ),
+                style: widget.textStyle,
+                maxLines: widget.obscureText ? 1 : widget.maxLines,
+                minLines: widget.minLines,
+                controller: _controller,
+                focusNode: _focusNode,
+                keyboardType: widget.keyBoardType,
+                textInputAction: widget.minLines != null
+                    ? TextInputAction.newline
+                    : TextInputAction.next,
+                onChanged: widget.onChanged == null
+                    ? null
+                    : (value) =>
+                        widget.onChanged!(value == '' ? null : value.trim()),
+                onTap: widget.onTap,
+                readOnly: widget.readOnly,
+                enabled: widget.enabled,
+                obscureText: widget.obscureText,
+                textCapitalization: widget.textCapitalization,
+                autovalidateMode: widget.autovalidateMode,
+                validator: widget.validator == null
+                    ? null
+                    : (value) => widget.validator!(value!.trim()),
+              ),
+            ),
+            if (widget.onDelete != null && widget.value != '')
+              IconButton(
+                  onPressed: widget.onDelete!,
+                  icon: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).primaryColor,
+                  )),
+            widget.suffixIcon ?? SizedBox(),
+          ],
+        ),
+        Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
+      ],
     );
   }
 }

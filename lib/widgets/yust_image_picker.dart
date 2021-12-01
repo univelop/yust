@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/image.dart';
+import 'package:yust/widgets/yust_list_tile.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
 
@@ -68,70 +69,16 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0, right: 16.0, bottom: 8.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                flex: 1,
-                fit: FlexFit.loose,
-                child: _buildLabel(context),
-              ),
-              Flexible(
-                flex: 2,
-                fit: FlexFit.tight,
-                child: Stack(
-                  alignment: AlignmentDirectional.center,
-                  children: [
-                    if (!widget.multiple)
-                      _buildImagePreview(context, _files.firstOrNull),
-                    if (!widget.multiple)
-                      _buildProgressIndicator(context, _files.firstOrNull),
-                    _buildPickButtons(context),
-                    if (!widget.multiple)
-                      _buildRemoveButton(context, _files.firstOrNull),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (widget.multiple) _buildGallery(context),
-        Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
-      ],
-    );
-  }
-
-  Widget _buildLabel(BuildContext context) {
-    var padding;
-    if (widget.label != null && widget.prefixIcon != null) {
-      padding = EdgeInsets.only(left: 8.0);
-    } else {
-      padding = EdgeInsets.only(left: 16.0);
-    }
-    return ListTile(
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (widget.prefixIcon != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
-              child: widget.prefixIcon,
+    return YustListTile(
+      label: widget.label,
+      suffixChild: _buildPickButtons(context),
+      prefixIcon: widget.prefixIcon,
+      below: widget.multiple
+          ? _buildGallery(context)
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 2.0),
+              child: _buildSingleImage(context, _files.firstOrNull),
             ),
-          Flexible(
-            child: Text(
-              widget.label ?? '',
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-        ],
-      ),
-      contentPadding: padding,
     );
   }
 
@@ -143,29 +90,34 @@ class YustImagePickerState extends State<YustImagePicker> {
       return Align(
         alignment: Alignment.centerRight,
         child: IconButton(
-          color: Theme.of(context).colorScheme.secondary,
+          color: Theme.of(context).colorScheme.primary,
           iconSize: 40,
           icon: Icon(Icons.image),
           onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
         ),
       );
     } else {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: <Widget>[
-          IconButton(
-            color: Theme.of(context).colorScheme.secondary,
-            iconSize: 40,
-            icon: Icon(Icons.camera_alt),
-            onPressed: _enabled ? () => _pickImages(ImageSource.camera) : null,
-          ),
-          IconButton(
-            color: Theme.of(context).colorScheme.secondary,
-            iconSize: 40,
-            icon: Icon(Icons.image),
-            onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
-          ),
-        ],
+      return SizedBox(
+        width: 150,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: <Widget>[
+            IconButton(
+              color: Theme.of(context).colorScheme.primary,
+              iconSize: 40,
+              icon: Icon(Icons.camera_alt),
+              onPressed:
+                  _enabled ? () => _pickImages(ImageSource.camera) : null,
+            ),
+            IconButton(
+              color: Theme.of(context).colorScheme.primary,
+              iconSize: 40,
+              icon: Icon(Icons.image),
+              onPressed:
+                  _enabled ? () => _pickImages(ImageSource.gallery) : null,
+            ),
+          ],
+        ),
       );
     }
   }
@@ -198,6 +150,7 @@ class YustImagePickerState extends State<YustImagePicker> {
               label: Text('mehr laden'),
             ),
           ),
+        SizedBox(height: 2)
       ],
     );
   }
@@ -216,15 +169,19 @@ class YustImagePickerState extends State<YustImagePicker> {
       mainAxisSpacing: 2,
       crossAxisSpacing: 2,
       children: pictureFiles.map((file) {
-        return Stack(
-          alignment: AlignmentDirectional.center,
-          children: [
-            _buildImagePreview(context, file),
-            _buildProgressIndicator(context, file),
-            _buildRemoveButton(context, file),
-          ],
-        );
+        return _buildSingleImage(context, file);
       }).toList(),
+    );
+  }
+
+  Widget _buildSingleImage(BuildContext context, YustFile? file) {
+    return Stack(
+      alignment: AlignmentDirectional.center,
+      children: [
+        _buildImagePreview(context, file),
+        _buildProgressIndicator(context, file),
+        _buildRemoveButton(context, file),
+      ],
     );
   }
 
@@ -310,10 +267,10 @@ class YustImagePickerState extends State<YustImagePicker> {
       top: 10,
       right: 10,
       child: CircleAvatar(
-        radius: 26,
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+        radius: 20,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: IconButton(
-          icon: Icon(Icons.clear),
+          icon: Icon(Icons.delete),
           color: Colors.black,
           onPressed: () => _deleteImage(file),
         ),

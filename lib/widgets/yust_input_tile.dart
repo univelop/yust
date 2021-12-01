@@ -4,7 +4,7 @@ import 'package:yust/yust.dart';
 import '../yust.dart';
 
 typedef TapCallback = void Function();
-typedef DeleteCallback = void Function();
+typedef DeleteCallback = Future<void> Function();
 
 class YustInputTile extends StatefulWidget {
   final String? label;
@@ -44,17 +44,11 @@ class _YustInputTileState extends State<YustInputTile> {
         textStyle: widget.textStyle,
         readOnly: true,
         prefixIcon: widget.prefixIcon,
-        suffixIcon: (widget.onDelete != null && widget.text != '')
-            ? IconButton(
-                onPressed: widget.onDelete!,
-                icon: Icon(
-                  Icons.delete,
-                  color: Theme.of(context).primaryColor,
-                ))
-            : SizedBox(),
+        suffixIcon: widget.suffixChild,
         onTap: () {
           widget.onTap;
         },
+        onDelete: widget.onDelete,
       );
     } else {
       return Text('Nicht normales Feld');

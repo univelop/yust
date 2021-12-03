@@ -97,9 +97,6 @@ class YustImagePickerState extends State<YustImagePicker> {
         widget.linkedDocAttribute,
       ),
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return SizedBox.shrink();
-        }
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

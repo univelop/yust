@@ -17,6 +17,8 @@ import 'yust_exception.dart';
 
 class YustFileHandler {
   final Function() callback;
+  // TODO folderpath hinterlegen
+  // gibt immer files eines storageFolderPath zurück (lokal und online), eig. reicht storageFolderPath
 
   /// shows if the _uploadFiles-procces is currently running
   bool _uploadingCachedFiles = false;
@@ -60,7 +62,7 @@ class YustFileHandler {
       } catch (error) {
         print(error.toString());
         // TODO: Error handling
-
+        // TODO: als Attribute, last Error hinterlegen auf dem Device
         Future.delayed(_reuploadTime, () {
           uploadCachedFiles(validateCachedFiles: false);
         });
@@ -84,6 +86,10 @@ class YustFileHandler {
   /// Can be started only once, renewed call only possible after successful upload.
   /// [validateCachedFiles] can delete files added shortly before if they are not yet
   /// entered in the database. Check this before!
+
+  // TODO: uploadCachedFiles im konstanten Intervall von 1 Minute ab App start.
+  // pro File eigene FileHandler instanz für upload
+  // als einzige Static methode
   Future<void> uploadCachedFiles({bool validateCachedFiles = true}) async {
     if (!_uploadingCachedFiles) {
       if (validateCachedFiles) await _validateCachedFiles();
@@ -169,7 +175,10 @@ class YustFileHandler {
   Future<void> _saveFileOnDevice(YustFile yustFile) async {
     final tempDir = await getTemporaryDirectory();
     yustFile.devicePath = '${tempDir.path}/${yustFile.name}';
+
     // TODO: file name muss nicht eindeutig sein.
+    // als Unterordner -> Workspace -> recordId -> record
+
     await yustFile.file!.copy(yustFile.devicePath!);
     final cachedFileList = await _getCachedFiles();
     cachedFileList.add(yustFile);
@@ -208,7 +217,6 @@ class YustFileHandler {
     );
     yustFile.url = url;
 
-    // TODO: Wo updaten wir die Datenbank?
     if (yustFile.cached) await _updateDocAttribute(attribute, yustFile, url);
 
     yustFile.processing = false;
@@ -273,7 +281,8 @@ class YustFileHandler {
   Future<List<YustFile>> _getCachedFiles() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var temporaryJsonFiles = prefs.getString('temporaryFiles');
-    // TODO: Prefs name ändern?
+    // TODO: Prefs name ändern? - YustFiles
+
     return jsonDecode(temporaryJsonFiles ?? '[]')
         .map<YustFile>((file) => YustFile.fromLocalJson(file))
         .toList();

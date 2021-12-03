@@ -21,6 +21,7 @@ class YustTextField extends StatefulWidget {
   final int? minLines;
   final bool readOnly;
   final bool enabled;
+  final bool showSelected;
   final bool obscureText;
   final TextInputType? keyBoardType;
   final YustInputStyle? style;
@@ -43,6 +44,7 @@ class YustTextField extends StatefulWidget {
       this.maxLines,
       this.minLines,
       this.enabled = true,
+      this.showSelected = true,
       this.readOnly = false,
       this.obscureText = false,
       this.keyBoardType,
@@ -109,6 +111,9 @@ class _YustTextFieldState extends State<YustTextField> {
               child: TextFormField(
                 decoration: InputDecoration(
                   labelText: widget.label,
+                  labelStyle: widget.showSelected
+                      ? null
+                      : TextStyle(color: Colors.black54),
                   contentPadding: const EdgeInsets.all(20.0),
                   border: widget.style == YustInputStyle.outlineBorder
                       ? OutlineInputBorder()

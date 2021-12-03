@@ -11,7 +11,6 @@ class YustInputTile extends StatelessWidget {
   final String? text;
   final TextStyle? textStyle;
   final Widget? prefixIcon;
-  final Widget? child;
   final YustInputStyle style;
   final TapCallback? onTap;
   final DeleteCallback? onDelete;
@@ -23,7 +22,6 @@ class YustInputTile extends StatelessWidget {
     this.text,
     this.textStyle,
     this.prefixIcon,
-    this.child,
     this.style = YustInputStyle.normal,
     this.onTap,
     this.onDelete,
@@ -38,10 +36,16 @@ class YustInputTile extends StatelessWidget {
       textStyle: textStyle,
       style: style,
       readOnly: true,
+      showSelected: false,
       prefixIcon: prefixIcon,
       suffixIcon: suffixChild,
       onTap: onTap,
-      onDelete: onDelete,
+      onDelete: onDelete == null
+          ? null
+          : () async {
+              FocusScope.of(context).unfocus();
+              await onDelete!();
+            },
     );
   }
 }

@@ -149,7 +149,8 @@ class _YustTextFieldState extends State<YustTextField> {
             widget.suffixIcon ?? SizedBox(),
           ],
         ),
-        Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
+        if (widget.style == YustInputStyle.normal)
+          Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
       ],
     );
   }

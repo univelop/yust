@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:yust/yust.dart';
 
 class YustSelect<T> extends StatelessWidget {
@@ -25,73 +26,17 @@ class YustSelect<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (style == YustInputStyle.normal) {
-      return Column(
-        children: <Widget>[
-          _buildInner(context),
-          Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
-        ],
-      );
-    } else {
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(4.0),
-        ),
-        child: _buildInner(context),
-      );
-    }
-  }
-
-  Widget _buildInner(BuildContext context) {
-    var padding;
-    if (style == YustInputStyle.normal) {
-      if (label != null && prefixIcon != null) {
-        padding = const EdgeInsets.only(
-            left: 8.0, top: 8.0, right: 16.0, bottom: 8.0);
-      } else {
-        padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
-      }
-    } else {
-      padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0);
-    }
-    if (label == null) {
-      return ListTile(
-        title: Text(_valueCaption(value)),
-        onTap: (onSelected == null || readOnly)
-            ? null
-            : () => _selectValue(context),
-        contentPadding: padding,
-      );
-    } else {
-      return ListTile(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (prefixIcon != null)
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: prefixIcon,
-              ),
-            Flexible(
-              child: Text(
-                label ?? '',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ),
-          ],
-        ),
-        trailing: Container(
-          constraints:
-              BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 150),
-          child: Text(_valueCaption(value)),
-        ),
-        onTap: (onSelected == null || readOnly)
-            ? null
-            : () => _selectValue(context),
-        contentPadding: padding,
-      );
-    }
+    return YustInputTile(
+      label: label ?? '',
+      text: _valueCaption(value),
+      prefixIcon: prefixIcon,
+      style: style,
+      onTap:
+          (onSelected == null || readOnly) ? null : () => _selectValue(context),
+      onDelete: () async {
+        onSelected!(optionValues[0]);
+      },
+    );
   }
 
   String _valueCaption(T value) {

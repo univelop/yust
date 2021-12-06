@@ -66,20 +66,19 @@ class YustImagePicker extends StatefulWidget {
 
 class YustImagePickerState extends State<YustImagePicker> {
   late YustFileHandler _fileHandler;
-  late List<YustFile> _yustFiles;
+  List<YustFile> _yustFiles = [];
   late bool _enabled;
   late int _currentImageNumber;
 
   @override
   void initState() {
     _fileHandler = YustFileHandler(
-      callback: () {
-        _onChanged();
-      },
+      storageFolderPath: widget.folderPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+      linkedDocPath: widget.linkedDocPath,
+      onlineFiles: widget.images as List<Map<String, String?>>,
     );
 
-    _yustFiles = _fileHandler.yustFilesFromJson(
-        widget.images as List<Map<String, String?>>, widget.folderPath);
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
 
@@ -88,14 +87,8 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
-    _fileHandler.mergeOnlineFiles(_yustFiles,
-        widget.images as List<Map<String, String?>>, widget.folderPath);
     return FutureBuilder(
-      future: mergeAndLoadCachedFiles(
-        _yustFiles,
-        widget.linkedDocPath,
-        widget.linkedDocAttribute,
-      ),
+      future: loadFiles(),
       builder: (context, snapshot) {
         return Column(
           mainAxisSize: MainAxisSize.min,
@@ -349,7 +342,8 @@ class YustImagePickerState extends State<YustImagePicker> {
           icon: Icon(Icons.clear),
           color: Colors.black,
           onPressed: () async {
-            await _fileHandler.deleteFile(_yustFiles, yustFile);
+            await _fileHandler.deleteFile(yustFile);
+            await _onChanged();
           },
         ),
       ),
@@ -447,8 +441,8 @@ class YustImagePickerState extends State<YustImagePicker> {
       linkedDocAttribute: widget.linkedDocAttribute,
     );
 
-    _yustFiles.add(newYustFile);
     await _fileHandler.addFile(newYustFile);
+    await _onChanged();
   }
 
   void _showImages(YustFile activeFile) {
@@ -465,23 +459,21 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
   }
 
-  Future<void> mergeAndLoadCachedFiles(List<YustFile> yustFiles,
-      String? linkedDocPath, String? linkedDocAttribute) async {
-    await _fileHandler.mergeCachedFiles(
-        yustFiles, linkedDocPath, linkedDocAttribute);
+  Future<void> loadFiles() async {
+    _yustFiles = await _fileHandler
+        .updateFiles(widget.images as List<Map<String, String?>>);
 
-    for (var yustFile in yustFiles) {
+    for (var yustFile in _yustFiles) {
       if (yustFile.cached) {
         yustFile.file = File(yustFile.devicePath!);
       }
     }
   }
 
-  void _onChanged() {
-    //TODO: have to load widget.images if new upload happend
-    // has to take the local yustFiles if the file got removed
-    // List<YustFile> _yustFiles = _fileHandler.yustFilesFromJson(
-    //     widget.images as List<Map<String, String?>>, widget.folderPath);
+  Future<void> _onChanged() async {
+    _yustFiles = await _fileHandler
+        .updateFiles(widget.images as List<Map<String, String?>>);
+    setState(() {});
     final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }

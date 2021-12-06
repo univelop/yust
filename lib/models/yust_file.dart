@@ -31,6 +31,9 @@ class YustFile with YustSerializable {
   /// Attribute of the Firebase document. Used for offline caching.
   String? linkedDocAttribute;
 
+  /// stores the last error. Used in offline caching
+  String? lastError;
+
   /// Is true while uploading the file.
   bool processing;
 
@@ -50,6 +53,7 @@ class YustFile with YustSerializable {
     this.linkedDocPath,
     this.linkedDocAttribute,
     this.processing = false,
+    this.lastError,
   });
 
   /// Converts the file to JSON for Firebase. Only relevant attributs are converted.
@@ -76,6 +80,7 @@ class YustFile with YustSerializable {
       devicePath: json['devicePath'] as String,
       linkedDocPath: json['linkedDocPath'] as String,
       linkedDocAttribute: json['linkedDocAttribute'] as String,
+      lastError: json['lastError'] as String?,
     );
   }
 
@@ -87,6 +92,7 @@ class YustFile with YustSerializable {
       'linkedDocPath': linkedDocPath,
       'linkedDocAttribute': linkedDocAttribute,
       'devicePath': devicePath,
+      'lastError': lastError,
     };
   }
 }

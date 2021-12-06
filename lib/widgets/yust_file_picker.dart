@@ -49,31 +49,25 @@ class YustFilePicker extends StatefulWidget {
 
 class YustFilePickerState extends State<YustFilePicker> {
   late YustFileHandler _fileHandler;
-  late List<YustFile> _yustFiles;
+  List<YustFile> _yustFiles = [];
   late bool _enabled;
 
   @override
   void initState() {
     _fileHandler = YustFileHandler(
-      callback: () {
-        _onChanged();
-      },
+      storageFolderPath: widget.folderPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+      linkedDocPath: widget.linkedDocPath,
+      onlineFiles: widget.files,
     );
-    _yustFiles =
-        _fileHandler.yustFilesFromJson(widget.files, widget.folderPath);
     _enabled = (widget.onChanged != null && !widget.readOnly);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    _fileHandler.mergeOnlineFiles(_yustFiles, widget.files, widget.folderPath);
     return FutureBuilder(
-      future: _fileHandler.mergeCachedFiles(
-        _yustFiles,
-        widget.linkedDocPath,
-        widget.linkedDocAttribute,
-      ),
+      future: _loadFiles(),
       builder: (context, snapshot) {
         return YustInputTile(
             child: _buildAddButton(context),
@@ -157,7 +151,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           _yustFiles.sort((a, b) => (a.name).compareTo(b.name));
           await _fileHandler.addFile(newYustFile);
         }
-        _onChanged();
+        await _onChanged();
       }
     }
   }
@@ -168,7 +162,8 @@ class YustFilePickerState extends State<YustFilePicker> {
         .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
     if (confirmed == true) {
       try {
-        await _fileHandler.deleteFile(_yustFiles, yustFile);
+        await _fileHandler.deleteFile(yustFile);
+        await _onChanged();
       } catch (e) {
         await Yust.service.showAlert(context, 'Ups',
             'Die Datei kann nicht gelöscht werden. ${e.toString()}');
@@ -176,7 +171,13 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  void _onChanged() {
+  Future<void> _loadFiles() async {
+    _yustFiles = await _fileHandler.updateFiles(widget.files);
+  }
+
+  Future<void> _onChanged() async {
+    _yustFiles = await _fileHandler.updateFiles(widget.files);
+    setState(() {});
     final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
   }

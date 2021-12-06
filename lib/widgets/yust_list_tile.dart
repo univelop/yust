@@ -81,7 +81,6 @@ class YustListTile extends StatelessWidget {
       trailing: navigate
           ? Icon(
               Icons.navigate_next,
-              color: Theme.of(context).primaryColor,
             )
           : suffixChild,
       onTap: onTap,

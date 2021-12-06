@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:yust/yust.dart';
 
+typedef DeleteCallback = Future<void> Function();
+
 class YustSelect<T> extends StatelessWidget {
   final String? label;
   final T value;
   final List<T> optionValues;
   final List<String> optionLabels;
   final void Function(T)? onSelected;
+  final DeleteCallback? onDelete;
   final YustInputStyle style;
   final Widget? prefixIcon;
   final bool readOnly;
@@ -19,6 +22,7 @@ class YustSelect<T> extends StatelessWidget {
     required this.optionValues,
     required this.optionLabels,
     this.onSelected,
+    this.onDelete,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
     this.readOnly = false,
@@ -33,9 +37,7 @@ class YustSelect<T> extends StatelessWidget {
       style: style,
       onTap:
           (onSelected == null || readOnly) ? null : () => _selectValue(context),
-      onDelete: () async {
-        onSelected!(optionValues[0]);
-      },
+      onDelete: onDelete,
     );
   }
 

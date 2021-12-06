@@ -11,8 +11,7 @@ import '../yust.dart';
 class YustFilePicker extends StatefulWidget {
   final String? label;
 
-  final List<Map<String, String?>> files;
-  // TODO: Transform to List<YustFile> ?
+  final List<YustFile> files;
 
   /// Path to folder where the files are stored.
   final String folderPath;

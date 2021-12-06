@@ -24,7 +24,7 @@ class YustFileHandler {
 
   /// Attribute of the Firebase document.
   final String? linkedDocAttribute;
-  List<Map<String, String?>> onlineFiles;
+  List<YustFile> onlineFiles;
 
   /// shows if the _uploadFiles-procces is currently running
   static bool _uploadingCachedFiles = false;
@@ -44,8 +44,7 @@ class YustFileHandler {
     required this.onlineFiles,
   });
 
-  Future<List<YustFile>> updateFiles(
-      List<Map<String, String?>> onlineFiles) async {
+  Future<List<YustFile>> updateFiles(List<YustFile> onlineFiles) async {
     _yustFiles = [];
     _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
     await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
@@ -53,12 +52,13 @@ class YustFileHandler {
     return _yustFiles;
   }
 
-  void _mergeOnlineFiles(List<YustFile> yustFiles,
-      List<Map<String, String?>> onlineFiles, String storageFolderPath) async {
-    final onlineYustFiles = yustFilesFromJson(onlineFiles, storageFolderPath);
+  void _mergeOnlineFiles(List<YustFile> yustFiles, List<YustFile> onlineFiles,
+      String storageFolderPath) async {
+    onlineFiles.forEach((f) => f.storageFolderPath = storageFolderPath);
+
     if (_lastDeletedFile != null)
-      onlineYustFiles.removeWhere((f) => f.name == _lastDeletedFile!.name);
-    _mergeIntoYustFiles(_yustFiles, onlineYustFiles);
+      onlineFiles.removeWhere((f) => f.name == _lastDeletedFile!.name);
+    _mergeIntoYustFiles(_yustFiles, onlineFiles);
   }
 
   Future<void> _mergeCachedFiles(List<YustFile> yustFiles,

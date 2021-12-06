@@ -31,8 +31,7 @@ class YustImagePicker extends StatefulWidget {
   /// If not given, uploads are only possible with internet connection
   final String? linkedDocAttribute;
   final bool multiple;
-  //TODO: is dynmaic neccecary?
-  final List<Map<String, dynamic>> images;
+  final List<YustFile> images;
   final bool zoomable;
   final void Function(List<Map<String, dynamic>> images)? onChanged;
   final void Function(String url, YustFile cachedFile)? onUploaded;
@@ -76,7 +75,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       storageFolderPath: widget.folderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
-      onlineFiles: widget.images as List<Map<String, String?>>,
+      onlineFiles: widget.images,
     );
 
     _enabled = (widget.onChanged != null && !widget.readOnly);
@@ -460,8 +459,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> loadFiles() async {
-    _yustFiles = await _fileHandler
-        .updateFiles(widget.images as List<Map<String, String?>>);
+    _yustFiles = await _fileHandler.updateFiles(widget.images);
 
     for (var yustFile in _yustFiles) {
       if (yustFile.cached) {
@@ -471,8 +469,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _onChanged() async {
-    _yustFiles = await _fileHandler
-        .updateFiles(widget.images as List<Map<String, String?>>);
+    _yustFiles = await _fileHandler.updateFiles(widget.images);
     setState(() {});
     final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
     widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());

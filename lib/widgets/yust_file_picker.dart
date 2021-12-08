@@ -184,7 +184,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   File? _platformFileToFile(PlatformFile platformFile) {
-    if (platformFile.path != null) {
+    if (!kIsWeb && platformFile.path != null) {
       return File(platformFile.path!);
     }
   }

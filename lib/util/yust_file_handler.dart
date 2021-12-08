@@ -24,7 +24,6 @@ class YustFileHandler {
 
   /// Attribute of the Firebase document.
   final String? linkedDocAttribute;
-  List<YustFile> onlineFiles;
 
   /// shows if the _uploadFiles-procces is currently running
   static bool _uploadingCachedFiles = false;
@@ -35,29 +34,41 @@ class YustFileHandler {
   double _reuploadFactor = 1.25;
 
   List<YustFile> _yustFiles = [];
-  YustFile? _lastDeletedFile;
 
   YustFileHandler({
     required this.storageFolderPath,
     this.linkedDocAttribute,
     this.linkedDocPath,
-    required this.onlineFiles,
   });
 
-  Future<List<YustFile>> updateFiles(List<YustFile> onlineFiles) async {
+  List<YustFile> getFiles() {
+    return _yustFiles;
+  }
+
+  List<YustFile> getOnlineFiles() {
+    return _yustFiles.where((f) => f.cached == false).toList();
+  }
+
+  Future<void> updateFiles(List<YustFile> onlineFiles,
+      {bool loadFiles = false}) async {
     _yustFiles = [];
     _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
     await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
 
-    return _yustFiles;
+    if (loadFiles) await _loadFiles();
+  }
+
+  Future<void> _loadFiles() async {
+    for (var yustFile in _yustFiles) {
+      if (yustFile.cached) {
+        yustFile.file = File(yustFile.devicePath!);
+      }
+    }
   }
 
   void _mergeOnlineFiles(List<YustFile> yustFiles, List<YustFile> onlineFiles,
       String storageFolderPath) async {
     onlineFiles.forEach((f) => f.storageFolderPath = storageFolderPath);
-
-    if (_lastDeletedFile != null)
-      onlineFiles.removeWhere((f) => f.name == _lastDeletedFile!.name);
     _mergeIntoYustFiles(_yustFiles, onlineFiles);
   }
 
@@ -79,7 +90,7 @@ class YustFileHandler {
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
       try {
-        throw Error();
+        // throw Error();
         await _uploadFileToStorage(yustFile);
         await _deleteFileFromCache(yustFile);
       } catch (error) {
@@ -93,6 +104,7 @@ class YustFileHandler {
       }
     } else {
       await _uploadFileToStorage(yustFile);
+      _yustFiles.add(yustFile);
     }
   }
 
@@ -102,8 +114,6 @@ class YustFileHandler {
     } else {
       await _deleteFileFromStorage(yustFile);
     }
-
-    _lastDeletedFile = yustFile;
     _yustFiles.removeWhere((f) => f.name == yustFile.name);
   }
 
@@ -116,8 +126,7 @@ class YustFileHandler {
     if (!_uploadingCachedFiles) {
       _uploadingCachedFiles = true;
 
-      YustFileHandler _filehandler =
-          new YustFileHandler(storageFolderPath: '', onlineFiles: []);
+      YustFileHandler _filehandler = new YustFileHandler(storageFolderPath: '');
       if (validateCachedFiles) await _filehandler._validateCachedFiles();
 
       await _filehandler._uploadCachedFiles(_filehandler._reuploadTime);
@@ -230,9 +239,7 @@ class YustFileHandler {
           'Can not upload file. The storage folder path is missing.'));
     }
 
-    // yustFile.processing = true;
     var attribute;
-
     if (yustFile.cached) {
       if (_isFileInCache(yustFile)) {
         attribute = await _getDocAttribute(yustFile);
@@ -240,7 +247,6 @@ class YustFileHandler {
       } else {
         //removing file data, because file is missing in cache
         await _deleteFileFromCache(yustFile);
-        // yustFile.processing = false;
         return;
       }
     }

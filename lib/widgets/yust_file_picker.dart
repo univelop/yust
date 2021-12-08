@@ -48,8 +48,7 @@ class YustFilePicker extends StatefulWidget {
 
 class YustFilePickerState extends State<YustFilePicker> {
   late YustFileHandler _fileHandler;
-  List<YustFile> _yustFiles = [];
-  //TODO Files direkt vom FileHandler beziehen
+
   late bool _enabled;
 
   @override
@@ -58,7 +57,6 @@ class YustFilePickerState extends State<YustFilePicker> {
       storageFolderPath: widget.folderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
-      onlineFiles: widget.files,
     );
     _enabled = (widget.onChanged != null && !widget.readOnly);
     super.initState();
@@ -67,7 +65,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _loadFiles(),
+      future: _fileHandler.updateFiles(widget.files),
       builder: (context, snapshot) {
         return YustInputTile(
             child: _buildAddButton(context),
@@ -90,7 +88,10 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   Widget _buildFiles(BuildContext context) {
     return Column(
-      children: _yustFiles.map((file) => _buildFile(context, file)).toList(),
+      children: _fileHandler
+          .getFiles()
+          .map((file) => _buildFile(context, file))
+          .toList(),
     );
   }
 
@@ -143,15 +144,17 @@ class YustFilePickerState extends State<YustFilePicker> {
           linkedDocAttribute: widget.linkedDocAttribute,
         );
 
-        if (_yustFiles.any((file) => file.name == newYustFile.name)) {
+        if (_fileHandler
+            .getFiles()
+            .any((file) => file.name == newYustFile.name)) {
           Yust.service.showAlert(context, 'Nicht möglich',
               'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
         } else {
-          _yustFiles.add(newYustFile);
-          _yustFiles.sort((a, b) => (a.name).compareTo(b.name));
+          _fileHandler.getFiles().add(newYustFile);
+          _fileHandler.getFiles().sort((a, b) => (a.name).compareTo(b.name));
           await _fileHandler.addFile(newYustFile);
         }
-        await _onChanged();
+        widget.onChanged!(_fileHandler.getOnlineFiles());
       }
     }
   }
@@ -163,23 +166,12 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (confirmed == true) {
       try {
         await _fileHandler.deleteFile(yustFile);
-        await _onChanged();
+        widget.onChanged!(_fileHandler.getOnlineFiles());
       } catch (e) {
         await Yust.service.showAlert(context, 'Ups',
             'Die Datei kann nicht gelöscht werden. ${e.toString()}');
       }
     }
-  }
-
-  Future<void> _loadFiles() async {
-    _yustFiles = await _fileHandler.updateFiles(widget.files);
-  }
-
-  Future<void> _onChanged() async {
-    _yustFiles = await _fileHandler.updateFiles(widget.files);
-    setState(() {});
-    final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
-    widget.onChanged!(onlineFiles);
   }
 
   String _getFileName(PlatformFile platformFile) {

@@ -95,4 +95,8 @@ class YustFile with YustSerializable {
       'lastError': lastError,
     };
   }
+
+  static Map<String, String?>? fileToJson(YustFile? file) {
+    return file?.toJson();
+  }
 }

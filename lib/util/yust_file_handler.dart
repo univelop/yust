@@ -79,7 +79,7 @@ class YustFileHandler {
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
       try {
-        // throw Error();
+        throw Error();
         await _uploadFileToStorage(yustFile);
         await _deleteFileFromCache(yustFile);
       } catch (error) {
@@ -105,15 +105,12 @@ class YustFileHandler {
 
     _lastDeletedFile = yustFile;
     _yustFiles.removeWhere((f) => f.name == yustFile.name);
-    // callback();
   }
 
   /// Uploads all cached files. If the upload fails,  a new attempt is made after [_reuploadTime].
   /// Can be started only once, renewed call only possible after successful upload.
   /// [validateCachedFiles] can delete files added shortly before if they are not yet
   /// entered in the database. Check this before!
-
-  // TODO: uploadCachedFiles im konstanten Intervall von 1 Minute ab App start.
   static Future<void> uploadCachedFiles(
       {bool validateCachedFiles = true}) async {
     if (!_uploadingCachedFiles) {
@@ -262,9 +259,15 @@ class YustFileHandler {
   Future<void> _updateDocAttribute(
       attribute, YustFile cachedFile, String url) async {
     if (attribute is Map) {
-      attribute['name'] = cachedFile.name;
-      attribute['url'] = url;
-    } else if (attribute is List) {
+      if (attribute['url'] == null) {
+        attribute['name'] = cachedFile.name;
+        attribute['url'] = url;
+      } else {
+        // edge case: image picker changes from single- to multi-image view
+        attribute = [attribute];
+      }
+    }
+    if (attribute is List) {
       attribute.add({'name': cachedFile.name, 'url': url});
     }
 
@@ -350,10 +353,10 @@ class YustFileHandler {
     }
   }
 
-  /// Limits [reuploadTime] to 5 minutes
+  /// Limits [reuploadTime] to 10 minutes
   Duration _incReuploadTime(Duration reuploadTime) {
-    return reuploadTime > Duration(minutes: 5)
-        ? Duration(minutes: 5)
+    return reuploadTime > Duration(minutes: 10)
+        ? Duration(minutes: 10)
         : reuploadTime * _reuploadFactor;
   }
 

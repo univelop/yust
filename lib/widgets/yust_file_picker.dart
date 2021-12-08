@@ -24,7 +24,7 @@ class YustFilePicker extends StatefulWidget {
   /// If not given, uploads are only possible with internet connection
   final String? linkedDocAttribute;
 
-  final void Function(List<Map<String, String?>> files)? onChanged;
+  final void Function(List<YustFile> files)? onChanged;
 
   final Widget? prefixIcon;
 
@@ -49,6 +49,7 @@ class YustFilePicker extends StatefulWidget {
 class YustFilePickerState extends State<YustFilePicker> {
   late YustFileHandler _fileHandler;
   List<YustFile> _yustFiles = [];
+  //TODO Files direkt vom FileHandler beziehen
   late bool _enabled;
 
   @override
@@ -178,7 +179,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     _yustFiles = await _fileHandler.updateFiles(widget.files);
     setState(() {});
     final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
-    widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
+    widget.onChanged!(onlineFiles);
   }
 
   String _getFileName(PlatformFile platformFile) {

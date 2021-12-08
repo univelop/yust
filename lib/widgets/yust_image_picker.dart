@@ -21,7 +21,9 @@ final Map<String, Map<String, int>> YustImageQuality = {
 
 class YustImagePicker extends StatefulWidget {
   final String? label;
-  final String folderPath;
+
+  /// Path to the storage folder.
+  final String storageFolderPath;
 
   /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
   /// If not given, uploads are only possible with internet connection
@@ -33,7 +35,7 @@ class YustImagePicker extends StatefulWidget {
   final bool multiple;
   final List<YustFile> images;
   final bool zoomable;
-  final void Function(List<Map<String, dynamic>> images)? onChanged;
+  final void Function(List<YustFile> images)? onChanged;
   final void Function(String url, YustFile cachedFile)? onUploaded;
   final Widget? prefixIcon;
   final bool readOnly;
@@ -45,7 +47,7 @@ class YustImagePicker extends StatefulWidget {
   YustImagePicker({
     Key? key,
     this.label,
-    required this.folderPath,
+    required this.storageFolderPath,
     this.linkedDocPath,
     this.linkedDocAttribute,
     this.multiple = false,
@@ -72,7 +74,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   void initState() {
     _fileHandler = YustFileHandler(
-      storageFolderPath: widget.folderPath,
+      storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
       onlineFiles: widget.images,
@@ -435,7 +437,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       name: imageName,
       file: file,
       bytes: bytes,
-      storageFolderPath: widget.folderPath,
+      storageFolderPath: widget.storageFolderPath,
       linkedDocPath: widget.linkedDocPath,
       linkedDocAttribute: widget.linkedDocAttribute,
     );
@@ -472,6 +474,6 @@ class YustImagePickerState extends State<YustImagePicker> {
     _yustFiles = await _fileHandler.updateFiles(widget.images);
     setState(() {});
     final onlineFiles = _yustFiles.where((f) => f.cached == false).toList();
-    widget.onChanged!(onlineFiles.map((file) => file.toJson()).toList());
+    widget.onChanged!(onlineFiles);
   }
 }

@@ -67,13 +67,12 @@ class YustListTile extends StatelessWidget {
         children: [
           if (prefixIcon != null)
             Padding(
-              padding: const EdgeInsets.only(right: 8.0, left: 3.0),
+              padding: const EdgeInsets.only(right: 10.0, left: 3.0),
               child: prefixIcon,
             ),
           Flexible(
             child: Text(
               label ?? '',
-              style: TextStyle(color: Colors.grey[600]),
             ),
           ),
         ],

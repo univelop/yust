@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:html' as html;
 import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';

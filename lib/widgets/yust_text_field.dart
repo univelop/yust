@@ -108,47 +108,42 @@ class _YustTextFieldState extends State<YustTextField> {
         Row(
           children: [
             Expanded(
-              child: Theme(
-                data: Theme.of(context).copyWith(
-                  focusColor: Colors.red[500],
-                  highlightColor: Colors.red[500],
-                  primaryColor: Colors.red[500],
-                ),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    labelText: widget.label,
-                    // labelStyle: widget.showSelected
-                    //     ? null
-                    //     : TextStyle(color: Colors.grey[600]),
-                    contentPadding: const EdgeInsets.all(20.0),
-                    border: widget.style == YustInputStyle.outlineBorder
-                        ? OutlineInputBorder()
-                        : InputBorder.none,
-                    prefixIcon: widget.prefixIcon,
-                  ),
-                  style: widget.textStyle,
-                  maxLines: widget.obscureText ? 1 : widget.maxLines,
-                  minLines: widget.minLines,
-                  controller: _controller,
-                  focusNode: _focusNode,
-                  keyboardType: widget.keyBoardType,
-                  textInputAction: widget.minLines != null
-                      ? TextInputAction.newline
-                      : TextInputAction.next,
-                  onChanged: widget.onChanged == null
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: widget.label,
+                  labelStyle: widget.showSelected
                       ? null
-                      : (value) =>
-                          widget.onChanged!(value == '' ? null : value.trim()),
-                  onTap: widget.onTap,
-                  readOnly: widget.readOnly,
-                  enabled: widget.enabled,
-                  obscureText: widget.obscureText,
-                  textCapitalization: widget.textCapitalization,
-                  autovalidateMode: widget.autovalidateMode,
-                  validator: widget.validator == null
-                      ? null
-                      : (value) => widget.validator!(value!.trim()),
+                      : TextStyle(
+                          color: Theme.of(context).textTheme.caption?.color ??
+                              Colors.black),
+                  contentPadding: const EdgeInsets.all(20.0),
+                  border: widget.style == YustInputStyle.outlineBorder
+                      ? OutlineInputBorder()
+                      : InputBorder.none,
+                  prefixIcon: widget.prefixIcon,
                 ),
+                style: widget.textStyle,
+                maxLines: widget.obscureText ? 1 : widget.maxLines,
+                minLines: widget.minLines,
+                controller: _controller,
+                focusNode: _focusNode,
+                keyboardType: widget.keyBoardType,
+                textInputAction: widget.minLines != null
+                    ? TextInputAction.newline
+                    : TextInputAction.next,
+                onChanged: widget.onChanged == null
+                    ? null
+                    : (value) =>
+                        widget.onChanged!(value == '' ? null : value.trim()),
+                onTap: widget.onTap,
+                readOnly: widget.readOnly,
+                enabled: widget.enabled,
+                obscureText: widget.obscureText,
+                textCapitalization: widget.textCapitalization,
+                autovalidateMode: widget.autovalidateMode,
+                validator: widget.validator == null
+                    ? null
+                    : (value) => widget.validator!(value!.trim()),
               ),
             ),
             if (widget.onDelete != null && widget.value != '')

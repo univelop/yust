@@ -51,7 +51,7 @@ class YustSwitch extends StatelessWidget {
           label: label,
           suffixChild: Switch(
             value: value,
-            activeColor: activeColor,
+            activeColor: activeColor ?? Theme.of(context).primaryColor,
             onChanged: (value) {
               Yust.service.unfocusCurrent(context);
               readOnly || onChanged == null ? null : onChanged!(value);

@@ -87,6 +87,7 @@ class YustFileHandler {
   }
 
   Future<void> addFile(YustFile yustFile) async {
+    _yustFiles.add(yustFile);
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
       try {
@@ -104,7 +105,6 @@ class YustFileHandler {
       }
     } else {
       await _uploadFileToStorage(yustFile);
-      _yustFiles.add(yustFile);
     }
   }
 

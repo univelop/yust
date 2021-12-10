@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,7 @@ class YustFilePicker extends StatefulWidget {
   final List<YustFile> files;
 
   /// Path to folder where the files are stored.
-  final String folderPath;
+  final String storageFolderPath;
 
   /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
   /// If not given, uploads are only possible with internet connection
@@ -34,7 +35,7 @@ class YustFilePicker extends StatefulWidget {
     Key? key,
     this.label,
     required this.files,
-    required this.folderPath,
+    required this.storageFolderPath,
     this.linkedDocPath,
     this.linkedDocAttribute,
     this.onChanged,
@@ -54,7 +55,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   @override
   void initState() {
     _fileHandler = YustFileHandler(
-      storageFolderPath: widget.folderPath,
+      storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
     );
@@ -87,11 +88,10 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFiles(BuildContext context) {
+    List<YustFile> _files = _fileHandler.getFiles();
+    _files.sort((a, b) => (a.name).compareTo(b.name));
     return Column(
-      children: _fileHandler
-          .getFiles()
-          .map((file) => _buildFile(context, file))
-          .toList(),
+      children: _files.map((file) => _buildFile(context, file)).toList(),
     );
   }
 
@@ -135,28 +135,37 @@ class YustFilePickerState extends State<YustFilePicker> {
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
       for (final platformFile in result.files) {
-        final newYustFile = YustFile(
+        await uploadFile(
           name: _getFileName(platformFile),
           file: _platformFileToFile(platformFile),
           bytes: platformFile.bytes,
-          storageFolderPath: widget.folderPath,
-          linkedDocPath: widget.linkedDocPath,
-          linkedDocAttribute: widget.linkedDocAttribute,
         );
-
-        if (_fileHandler
-            .getFiles()
-            .any((file) => file.name == newYustFile.name)) {
-          Yust.service.showAlert(context, 'Nicht möglich',
-              'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
-        } else {
-          _fileHandler.getFiles().add(newYustFile);
-          _fileHandler.getFiles().sort((a, b) => (a.name).compareTo(b.name));
-          await _fileHandler.addFile(newYustFile);
-        }
-        widget.onChanged!(_fileHandler.getOnlineFiles());
       }
     }
+  }
+
+  Future<void> uploadFile({
+    required String name,
+    File? file,
+    Uint8List? bytes,
+  }) async {
+    final newYustFile = YustFile(
+      name: name,
+      file: file,
+      bytes: bytes,
+      storageFolderPath: widget.storageFolderPath,
+      linkedDocPath: widget.linkedDocPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+    );
+
+    if (_fileHandler.getFiles().any((file) => file.name == newYustFile.name)) {
+      Yust.service.showAlert(context, 'Nicht möglich',
+          'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
+    } else {
+      await _fileHandler.addFile(newYustFile);
+    }
+
+    widget.onChanged!(_fileHandler.getOnlineFiles());
   }
 
   Future<void> _deleteFile(YustFile yustFile) async {

@@ -1,54 +1,57 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:yust/yust.dart';
 
 class ImageScreen extends StatelessWidget {
   static const String routeName = '/imageScreen';
-
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context)!.settings.arguments;
-    String? url;
+    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
+    final String? url = arguments['url'];
+    String imageName = arguments['name'];
+
+    final urlsArgs = arguments['urls'];
     List<String>? urls;
 
-    if (arguments is Map) {
-      url = arguments['url'];
-      final urlsArgs = arguments['urls'];
-
-      if (urlsArgs is List) {
-        urls = urlsArgs.whereType<String>().toList();
-      }
+    if (urlsArgs is List) {
+      urls = urlsArgs.whereType<String>().toList();
     }
+
     if (urls != null) {
-      return _buildMultiple(context, urls, url);
+      return _buildMultiple(context, urls, url, imageName);
     } else {
-      return _buildSingle(context, url!);
+      return _buildSingle(context, url!, imageName);
     }
   }
 
-  Widget _buildSingle(BuildContext context, String url) {
-    return Container(
-      child: PhotoView(
-        imageProvider: NetworkImage(url),
-        minScale: PhotoViewComputedScale.contained,
-        heroAttributes: PhotoViewHeroAttributes(tag: url),
-        onTapUp: (context, details, controllerValue) {
-          Navigator.pop(context);
-        },
-        loadingBuilder: (context, event) => Center(
-          child: Container(
-            width: 20.0,
-            height: 20.0,
-            child: CircularProgressIndicator(),
+  Widget _buildSingle(BuildContext context, String url, String imageName) {
+    return Stack(children: [
+      Container(
+        child: PhotoView(
+          imageProvider: NetworkImage(url),
+          minScale: PhotoViewComputedScale.contained,
+          heroAttributes: PhotoViewHeroAttributes(tag: url),
+          onTapUp: (context, details, controllerValue) {
+            Navigator.pop(context);
+          },
+          loadingBuilder: (context, event) => Center(
+            child: Container(
+              width: 20.0,
+              height: 20.0,
+              child: CircularProgressIndicator(),
+            ),
           ),
         ),
       ),
-    );
+      if (kIsWeb) _buildCloseButton(context),
+      _buildShareButton(context, url, imageName),
+    ]);
   }
 
-  Widget _buildMultiple(
-      BuildContext context, List<String> urls, String? activeUrl) {
+  Widget _buildMultiple(BuildContext context, List<String> urls,
+      String? activeUrl, String imageName) {
     int firstPage = 0;
     if (activeUrl != null) {
       firstPage = urls.indexOf(activeUrl);
@@ -78,8 +81,6 @@ class ImageScreen extends StatelessWidget {
                 child: CircularProgressIndicator(),
               ),
             ),
-            // backgroundDecoration: widget.backgroundDecoration,
-            // onPageChanged: onPageChanged,
           ),
         ),
         if (kIsWeb)
@@ -124,24 +125,55 @@ class ImageScreen extends StatelessWidget {
               ),
             ),
           ),
-        if (kIsWeb)
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            alignment: Alignment.topRight,
-            child: CircleAvatar(
-              backgroundColor: Colors.black,
-              radius: 25,
-              child: IconButton(
-                iconSize: 35,
-                color: Colors.white,
-                icon: Icon(Icons.close),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
+        if (kIsWeb) _buildCloseButton(context),
+        _buildShareButton(context, activeUrl!, imageName),
+      ],
+    );
+  }
+
+  Widget _buildCloseButton(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      alignment: Alignment.topRight,
+      child: CircleAvatar(
+        backgroundColor: Colors.black,
+        radius: 25,
+        child: IconButton(
+            iconSize: 35,
+            color: Colors.white,
+            icon: Icon(Icons.close),
+            onPressed: () {
+              Navigator.pop(context);
+            }),
+      ),
+    );
+  }
+
+  Widget _buildShareButton(BuildContext context, String url, String imageName) {
+    return Positioned(
+      right: kIsWeb ? 80.0 : 0.0,
+      child: RepaintBoundary(
+        child: Container(
+          margin: EdgeInsets.all(20),
+          child: CircleAvatar(
+            backgroundColor: Colors.black,
+            radius: 25,
+            child: Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  iconSize: 35,
+                  color: Colors.white,
+                  onPressed: () {
+                    Yust.service.downloadAndLaunchFile(
+                        context: context, url: url, name: imageName);
+                  },
+                  icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
+                );
+              },
             ),
           ),
-      ],
+        ),
+      ),
     );
   }
 }

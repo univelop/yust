@@ -435,14 +435,17 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   void _showImages(YustFile activeFile) {
     Yust.service.unfocusCurrent(context);
+
     if (widget.multiple) {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
         'urls': _files.map((file) => file.url).toList(),
         'url': activeFile.url,
+        'name': activeFile.name,
       });
     } else {
       Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
         'url': activeFile.url,
+        'name': activeFile.name,
       });
     }
   }

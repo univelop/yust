@@ -105,6 +105,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           Expanded(
             child: Text(file.name, overflow: TextOverflow.ellipsis),
           ),
+          _buildCachedIndicator(file),
         ],
       ),
       trailing: _buildDeleteButton(file),
@@ -127,6 +128,23 @@ class YustFilePickerState extends State<YustFilePicker> {
     return IconButton(
       icon: Icon(Icons.delete),
       onPressed: _enabled ? () => _deleteFile(file) : null,
+    );
+  }
+
+  Widget _buildCachedIndicator(YustFile file) {
+    if (!file.cached || !_enabled) {
+      return SizedBox.shrink();
+    }
+    if (file.processing == true) {
+      return CircularProgressIndicator();
+    }
+    return IconButton(
+      icon: Icon(Icons.cloud_upload_outlined),
+      color: Colors.black,
+      onPressed: () async {
+        await Yust.service.showAlert(context, 'Lokal gespeicherte Datei',
+            'Diese Datei ist noch nicht hochgeladen.');
+      },
     );
   }
 

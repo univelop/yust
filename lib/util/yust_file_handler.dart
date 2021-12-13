@@ -91,7 +91,6 @@ class YustFileHandler {
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
       try {
-        // throw Error();
         await _uploadFileToStorage(yustFile);
         await _deleteFileFromCache(yustFile);
       } catch (error) {
@@ -108,6 +107,7 @@ class YustFileHandler {
     }
   }
 
+  /// if online files get deleted while the device is offline, error is thrown
   Future<void> deleteFile(YustFile yustFile) async {
     if (yustFile.cached) {
       await _deleteFileFromCache(yustFile);

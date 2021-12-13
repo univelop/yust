@@ -250,6 +250,7 @@ class YustImagePickerState extends State<YustImagePicker> {
             _buildImagePreview(context, file),
             _buildProgressIndicator(context, file),
             _buildRemoveButton(context, file),
+            _buildCachedIndicator(context, file),
           ],
         );
       }).toList(),
@@ -272,7 +273,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         fit: BoxFit.cover,
       );
     }
-    final zoomEnabled = (file.url != null && widget.zoomable);
+    final zoomEnabled = (widget.zoomable);
     if (widget.multiple) {
       return AspectRatio(
         aspectRatio: 1,
@@ -344,10 +345,33 @@ class YustImagePickerState extends State<YustImagePicker> {
           icon: Icon(Icons.clear),
           color: Colors.black,
           onPressed: () async {
-            await _fileHandler.deleteFile(yustFile);
-            widget.onChanged!(_fileHandler.getOnlineFiles());
+            try {
+              await _fileHandler.deleteFile(yustFile);
+              widget.onChanged!(_fileHandler.getOnlineFiles());
+            } catch (e) {
+              await Yust.service.showAlert(context, 'Ups',
+                  'Das Bild kann nicht gelöscht werden. ${e.toString()}');
+            }
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildCachedIndicator(BuildContext context, YustFile? yustFile) {
+    if (yustFile == null || !yustFile.cached || !_enabled) {
+      return SizedBox.shrink();
+    }
+    return Positioned(
+      bottom: 5,
+      right: 5,
+      child: IconButton(
+        icon: Icon(Icons.cloud_upload_outlined),
+        color: Colors.white,
+        onPressed: () async {
+          await Yust.service.showAlert(context, 'Lokal gespeichertes Bild',
+              'Dieses Bild ist noch nicht hochgeladen.');
+        },
       ),
     );
   }

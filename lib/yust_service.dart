@@ -396,13 +396,11 @@ class YustService {
   }
 
   Future<void> deleteFile({required String path, required String name}) async {
-    try {
-      await firebase_storage.FirebaseStorage.instance
-          .ref()
-          .child(path)
-          .child(name)
-          .delete();
-    } catch (e) {}
+    await firebase_storage.FirebaseStorage.instance
+        .ref()
+        .child(path)
+        .child(name)
+        .delete();
   }
 
   Future<bool> fileExist({required String path, required String name}) async {

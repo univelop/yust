@@ -350,7 +350,7 @@ class YustImagePickerState extends State<YustImagePicker> {
               widget.onChanged!(_fileHandler.getOnlineFiles());
             } catch (e) {
               await Yust.service.showAlert(context, 'Ups',
-                  'Das Bild kann nicht gelöscht werden. ${e.toString()}');
+                  'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
             }
           },
         ),

@@ -370,6 +370,9 @@ class YustService {
           .child(path)
           .child(name);
       firebase_storage.UploadTask uploadTask;
+      // firebase_storage.
+      // setMaxUploadRetryTimeMillis
+      //TODO: maxUploadTime has to be set in storage (currently maxTime is 10 Minutes)
       if (file != null) {
         uploadTask = storageReference.putFile(file);
       } else {

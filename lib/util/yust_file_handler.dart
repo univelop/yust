@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -90,18 +91,9 @@ class YustFileHandler {
     _yustFiles.add(yustFile);
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
-      try {
-        await _uploadFileToStorage(yustFile);
-        await _deleteFileFromCache(yustFile);
-      } catch (error) {
-        print(error.toString());
-        yustFile.lastError = error.toString();
-        await _saveFileOnDevice(yustFile);
-
-        Future.delayed(_reuploadTime, () {
-          uploadCachedFiles(validateCachedFiles: false);
-        });
-      }
+      Future.delayed(_reuploadTime, () {
+        if (!_uploadingCachedFiles) _uploadCachedFiles(_reuploadTime);
+      });
     } else {
       await _uploadFileToStorage(yustFile);
     }
@@ -136,7 +128,7 @@ class YustFileHandler {
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
     final cachedFiles = await _getCachedFiles();
     bool uploadError = false;
-
+    // print("Cache: try to upload");
     for (final yustFile in cachedFiles) {
       try {
         await _uploadFileToStorage(yustFile);
@@ -144,16 +136,19 @@ class YustFileHandler {
       } catch (error) {
         print(error.toString());
         yustFile.lastError = error.toString();
-        _saveFileOnDevice(yustFile);
-
         uploadError = true;
       }
     }
 
     if (!uploadError) {
+      // print("Cache: Success!");
       _uploadingCachedFiles = false;
     } else {
+      // saving cachedFiles, to store error log messages
+      _saveCachedFiles(cachedFiles);
+
       reuploadTime = reuploadTime;
+      // print("Cache: Try again in " + reuploadTime.toString());
       Future.delayed(reuploadTime, () {
         reuploadTime = _incReuploadTime(reuploadTime);
         _uploadCachedFiles(reuploadTime);
@@ -241,7 +236,7 @@ class YustFileHandler {
 
     var attribute;
     if (yustFile.cached) {
-      if (_isFileInCache(yustFile)) {
+      if (await _isFileInCache(yustFile)) {
         attribute = await _getDocAttribute(yustFile);
         yustFile.file = File(yustFile.devicePath!);
       } else {
@@ -305,7 +300,8 @@ class YustFileHandler {
   Future<void> _deleteFileFromStorage(YustFile yustFile) async {
     if (yustFile.storageFolderPath != null) {
       await Yust.service
-          .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name);
+          .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name)
+          .timeout(Duration(seconds: 1));
     }
   }
 
@@ -318,7 +314,6 @@ class YustFileHandler {
 
     cachedFiles.removeWhere((f) => f.devicePath == yustFile.devicePath);
     await _saveCachedFiles(cachedFiles);
-    yustFile.devicePath = null;
   }
 
   /// Loads a list of all cached [YustFile]s.
@@ -366,8 +361,8 @@ class YustFileHandler {
         : reuploadTime * _reuploadFactor;
   }
 
-  bool _isFileInCache(YustFile yustFile) {
+  Future<bool> _isFileInCache(YustFile yustFile) async {
     return yustFile.devicePath != null &&
-        File(yustFile.devicePath!).existsSync();
+        await File(yustFile.devicePath!).exists();
   }
 }

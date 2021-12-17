@@ -412,7 +412,7 @@ class YustImagePickerState extends State<YustImagePicker> {
           'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
     } else {
       final confirmed = await Yust.service
-          .showConfirmation(context, 'Wirklich löschen', 'Löschen');
+          .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
       if (confirmed == true) {
         try {
           await firebase_storage.FirebaseStorage.instance

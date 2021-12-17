@@ -36,7 +36,6 @@ class YustInputTile extends StatelessWidget {
       textStyle: textStyle,
       style: style,
       readOnly: true,
-      enabled: false,
       showSelected: false,
       prefixIcon: prefixIcon,
       suffixIcon: suffixChild,

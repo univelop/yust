@@ -74,22 +74,33 @@ abstract class YustDoc with YustSerializable {
       } else if (value is Map<String, dynamic>) {
         return MapEntry(key, YustDoc.mapToJson(value));
       } else if (value is List) {
-        return MapEntry(key, List.from(value));
+        return MapEntry(key, YustDoc.listToJson(value));
       } else if (value is YustSerializable) {
         return MapEntry(key, (value as dynamic).toJson());
       } else {
         return MapEntry(key, value);
       }
-      // } else {
-      //   try {
-      //     // If toJson is defined for the type, use it.
-      //     return MapEntry(key, (value as dynamic).toJson());
-      //   } on NoSuchMethodError {
-      //     // Else: Just return the value
-      //     return MapEntry(key, value);
-      //   }
-      // }
     });
+  }
+
+  static List<dynamic>? listToJson(List<dynamic>? list,
+      {bool removeNullValues = true}) {
+    if (list == null) return null;
+    return list.map((value) {
+      if (value == null && removeNullValues) {
+        return FieldValue.delete();
+      } else if (value is DateTime) {
+        return YustDoc.dateTimeToJson(value);
+      } else if (value is Map<String, dynamic>) {
+        return YustDoc.mapToJson(value);
+      } else if (value is List) {
+        return YustDoc.listToJson(value);
+      } else if (value is YustSerializable) {
+        return (value as dynamic).toJson();
+      } else {
+        return value;
+      }
+    }).toList();
   }
 
   // TODO: delete, use convertTimestamp instead

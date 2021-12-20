@@ -29,7 +29,15 @@ class YustListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (style == YustInputStyle.normal) {
+    if (style == YustInputStyle.outlineBorder) {
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(4.0),
+        ),
+        child: _buildInner(context),
+      );
+    } else {
       return Column(
         children: <Widget>[
           _buildInner(context),
@@ -37,15 +45,6 @@ class YustListTile extends StatelessWidget {
           if (divider) Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
         ],
       );
-    } else {
-      return Text('Anderer Style');
-      // return Container(
-      //   decoration: BoxDecoration(
-      //     border: Border.all(color: Colors.grey),
-      //     borderRadius: BorderRadius.circular(4.0),
-      //   ),
-      //   child: _buildInner(context),
-      // );
     }
   }
 

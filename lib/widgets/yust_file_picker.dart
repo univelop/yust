@@ -60,6 +60,11 @@ class YustFilePickerState extends State<YustFilePicker> {
       linkedDocPath: widget.linkedDocPath,
     );
     _enabled = (widget.onChanged != null && !widget.readOnly);
+
+    if (widget.files.isEmpty && _enabled) {
+      widget.onChanged!([]);
+    }
+
     super.initState();
   }
 
@@ -182,8 +187,11 @@ class YustFilePickerState extends State<YustFilePicker> {
     } else {
       await _fileHandler.addFile(newYustFile);
     }
-
-    widget.onChanged!(_fileHandler.getOnlineFiles());
+    if (!newYustFile.cached) {
+      widget.onChanged!(_fileHandler.getOnlineFiles());
+    } else {
+      setState(() {});
+    }
   }
 
   Future<void> _deleteFile(YustFile yustFile) async {
@@ -193,7 +201,11 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (confirmed == true) {
       try {
         await _fileHandler.deleteFile(yustFile);
-        widget.onChanged!(_fileHandler.getOnlineFiles());
+        if (!yustFile.cached) {
+          widget.onChanged!(_fileHandler.getOnlineFiles());
+        } else {
+          setState(() {});
+        }
       } catch (e) {
         await Yust.service.showAlert(context, 'Ups',
             'Die Datei kann nicht gelöscht werden. ${e.toString()}');

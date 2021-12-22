@@ -81,6 +81,10 @@ class YustImagePickerState extends State<YustImagePicker> {
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
 
+    if (widget.images.isEmpty && _enabled) {
+      widget.onChanged!([]);
+    }
+
     super.initState();
   }
 
@@ -347,7 +351,11 @@ class YustImagePickerState extends State<YustImagePicker> {
           onPressed: () async {
             try {
               await _fileHandler.deleteFile(yustFile);
-              widget.onChanged!(_fileHandler.getOnlineFiles());
+              if (!yustFile.cached) {
+                widget.onChanged!(_fileHandler.getOnlineFiles());
+              } else {
+                setState(() {});
+              }
             } catch (e) {
               await Yust.service.showAlert(context, 'Ups',
                   'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
@@ -468,7 +476,12 @@ class YustImagePickerState extends State<YustImagePicker> {
     );
 
     await _fileHandler.addFile(newYustFile);
-    widget.onChanged!(_fileHandler.getOnlineFiles());
+
+    if (!newYustFile.cacheable) {
+      widget.onChanged!(_fileHandler.getOnlineFiles());
+    } else {
+      setState(() {});
+    }
   }
 
   void _showImages(YustFile activeFile) {

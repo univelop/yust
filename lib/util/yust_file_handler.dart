@@ -91,9 +91,10 @@ class YustFileHandler {
     _yustFiles.add(yustFile);
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
-      Future.delayed(_reuploadTime, () {
-        if (!_uploadingCachedFiles) _uploadCachedFiles(_reuploadTime);
-      });
+      if (!_uploadingCachedFiles) {
+        _uploadingCachedFiles = true;
+        _uploadCachedFiles(_reuploadTime);
+      }
     } else {
       await _uploadFileToStorage(yustFile);
     }
@@ -126,10 +127,11 @@ class YustFileHandler {
   }
 
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
-    final cachedFiles = await _getCachedFiles();
+    List<YustFile> cachedFiles = await _getCachedFiles();
     bool uploadError = false;
     // print("Cache: try to upload");
     for (final yustFile in cachedFiles) {
+      yustFile.lastError = null;
       try {
         await _uploadFileToStorage(yustFile);
         await _deleteFileFromCache(yustFile);
@@ -140,12 +142,22 @@ class YustFileHandler {
       }
     }
 
+    cachedFiles.removeWhere((f) => f.lastError == null);
+    int length = cachedFiles.length;
+    _mergeIntoYustFiles(cachedFiles, await _getCachedFiles());
+
+    if (length < cachedFiles.length) {
+      // retry upload with reseted uploadTime because new files where added
+      uploadError = true;
+      reuploadTime = _reuploadTime;
+    }
+
     if (!uploadError) {
       // print("Cache: Success!");
       _uploadingCachedFiles = false;
     } else {
       // saving cachedFiles, to store error log messages
-      _saveCachedFiles(cachedFiles);
+      await _saveCachedFiles(cachedFiles);
 
       reuploadTime = reuploadTime;
       // print("Cache: Try again in " + reuploadTime.toString());
@@ -196,9 +208,18 @@ class YustFileHandler {
     return yustFiles.map((f) => f.toJson()).toList();
   }
 
+  /// works for cacheable and non-cacheable files
   void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles) {
     for (final newFile in newFiles) {
-      if (!yustFiles.any((yustFile) => yustFile.name == newFile.name)) {
+      if (!yustFiles.any((yustFile) {
+        bool nameEQ = yustFile.name == newFile.name;
+        if (yustFile.cacheable && newFile.cacheable) {
+          return nameEQ &&
+              yustFile.linkedDocPath == newFile.linkedDocPath &&
+              yustFile.linkedDocAttribute == newFile.linkedDocAttribute;
+        }
+        return nameEQ;
+      })) {
         yustFiles.add(newFile);
       }
     }
@@ -269,6 +290,7 @@ class YustFileHandler {
       }
     }
     if (attribute is List) {
+      attribute.removeWhere((f) => f['name'] == cachedFile.name);
       attribute.add({'name': cachedFile.name, 'url': url});
     }
 
@@ -279,14 +301,16 @@ class YustFileHandler {
 
   Future<dynamic> _getDocAttribute(YustFile yustFile) async {
     var attribute;
-    final doc =
-        await FirebaseFirestore.instance.doc(yustFile.linkedDocPath!).get();
+    final doc = await FirebaseFirestore.instance
+        .doc(yustFile.linkedDocPath!)
+        .get(GetOptions(source: Source.server));
+
     if (doc.exists && doc.data() != null) {
       try {
         attribute = doc.get(yustFile.linkedDocAttribute!);
       } catch (e) {
         // edge case, image picker allows only one image, attribute must be initialized manually
-        attribute = {'name': '', 'url': null};
+        attribute = {'name': yustFile.name, 'url': null};
       }
     } else {
       // It is possible that the upload accesses the database before the searched address is initialized.

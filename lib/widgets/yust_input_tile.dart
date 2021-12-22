@@ -14,7 +14,6 @@ class YustInputTile extends StatelessWidget {
   final YustInputStyle style;
   final TapCallback? onTap;
   final DeleteCallback? onDelete;
-  final bool isFilter;
   final Widget? suffixChild;
 
   const YustInputTile({
@@ -26,38 +25,27 @@ class YustInputTile extends StatelessWidget {
     this.style = YustInputStyle.normal,
     this.onTap,
     this.onDelete,
-    this.isFilter = false,
     this.suffixChild,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return isFilter
-        ? YustTextField(
-            label: label,
-            value: text,
-            textStyle: textStyle,
-            style: style,
-            readOnly: true,
-            showSelected: false,
-            onTap: onTap,
-          )
-        : YustTextField(
-            label: label,
-            value: text,
-            textStyle: textStyle,
-            style: style,
-            readOnly: true,
-            showSelected: false,
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixChild,
-            onTap: onTap,
-            onDelete: onDelete == null
-                ? null
-                : () async {
-                    FocusScope.of(context).unfocus();
-                    await onDelete!();
-                  },
-          );
+    return YustTextField(
+      label: label,
+      value: text,
+      textStyle: textStyle,
+      style: style,
+      readOnly: true,
+      showSelected: false,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixChild,
+      onTap: onTap,
+      onDelete: onDelete == null
+          ? null
+          : () async {
+              FocusScope.of(context).unfocus();
+              await onDelete!();
+            },
+    );
   }
 }

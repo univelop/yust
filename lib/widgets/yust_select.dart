@@ -14,6 +14,7 @@ class YustSelect<T> extends StatelessWidget {
   final YustInputStyle style;
   final Widget? prefixIcon;
   final bool readOnly;
+  final bool isFilter;
 
   const YustSelect({
     Key? key,
@@ -26,6 +27,7 @@ class YustSelect<T> extends StatelessWidget {
     this.style = YustInputStyle.normal,
     this.prefixIcon,
     this.readOnly = false,
+    this.isFilter = false,
   }) : super(key: key);
 
   @override
@@ -38,6 +40,7 @@ class YustSelect<T> extends StatelessWidget {
       onTap:
           (onSelected == null || readOnly) ? null : () => _selectValue(context),
       onDelete: onDelete,
+      isFilter: isFilter,
     );
   }
 

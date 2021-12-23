@@ -66,46 +66,52 @@ class _YustTimePickerState extends State<YustTimePicker> {
     if (widget.value == null) {
       _controller!.text = '';
     }
-    return TextField(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-        border: widget.style == YustInputStyle.outlineBorder
-            ? OutlineInputBorder()
-            : null,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: _buildTrailing(context),
-        hintText: 'HH:MM',
-      ),
-      controller: _controller,
-      inputFormatters: [_maskFormatter!],
-      textInputAction: TextInputAction.next,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      onChanged:
-          widget.onChanged == null ? null : (value) => _setTimeString(value),
-      onEditingComplete: widget.onEditingComplete,
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: widget.label,
+              contentPadding: const EdgeInsets.all(20.0),
+              border: widget.style == YustInputStyle.outlineBorder
+                  ? OutlineInputBorder()
+                  : null,
+              prefixIcon: widget.prefixIcon,
+              suffixIcon: _buildTrailing(context),
+              hintText: 'HH:MM',
+            ),
+            controller: _controller,
+            inputFormatters: [_maskFormatter!],
+            textInputAction: TextInputAction.next,
+            focusNode: widget.focusNode,
+            autofocus: widget.autofocus,
+            onChanged: widget.onChanged == null
+                ? null
+                : (value) => _setTimeString(value),
+            onEditingComplete: widget.onEditingComplete,
+          ),
+        ),
+        if (_controller!.text != '' && !widget.hideClearButton)
+          IconButton(
+              onPressed: widget.onChanged == null ? null : () => _setTime(null),
+              icon: Icon(
+                Icons.delete,
+                color: Theme.of(context).primaryColor,
+              )),
+      ],
     );
   }
 
   /// build the clock- / x-icon
   Widget _buildTrailing(BuildContext context) {
-    if (_controller!.text == '') {
-      return IconButton(
-        icon: Icon(Icons.access_time),
-        onPressed: widget.onChanged == null
-            ? null
-            : () => _pickTime(context, widget.popUpTitle),
-      );
-    } else {
-      if (widget.hideClearButton) {
-        return SizedBox.shrink();
-      }
-      return IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: widget.onChanged == null ? null : () => _setTime(null),
-      );
-    }
+    return (_controller!.text == '')
+        ? IconButton(
+            icon: Icon(Icons.access_time),
+            onPressed: widget.onChanged == null
+                ? null
+                : () => _pickTime(context, widget.popUpTitle),
+          )
+        : SizedBox();
   }
 
   void _pickTime(BuildContext context, String title) async {

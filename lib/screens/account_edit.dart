@@ -7,7 +7,6 @@ import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 import '../yust_store.dart';
 
@@ -42,7 +41,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 },
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 onEditingComplete: (value) async {
-                  user.firstName = value;
+                  user.firstName = value!; // value was checked by validator
                   Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
                 },
               ),
@@ -58,7 +57,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 },
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 onEditingComplete: (value) async {
-                  user.lastName = value;
+                  user.lastName = value!; // value was checked by validator
                   Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
                 },
               ),
@@ -66,14 +65,14 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 label: 'E-Mail',
                 value: user.email,
                 readOnly: true,
-                onTab: () => _changeEmail(context),
+                onTap: () => _changeEmail(context),
               ),
               YustTextField(
                 label: 'Passwort',
                 value: '*****',
                 obscureText: true,
                 readOnly: true,
-                onTab: () => _changePassword(context),
+                onTap: () => _changePassword(context),
               ),
             ],
           );

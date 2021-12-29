@@ -133,6 +133,19 @@ class YustService {
     return doc;
   }
 
+  Query<Object?> getQuery<T extends YustDoc>(
+      {required YustDocSetup<T> modelSetup,
+      List<List<dynamic>>? filterList,
+      List<String>? orderByList}) {
+    Query query =
+        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
+    query = _executeStaticFilters(query, modelSetup);
+    query = _executeFilterList(query, filterList);
+    query = _executeOrderByList(query, orderByList);
+
+    return query;
+  }
+
   ///[filterList] each entry represents a condition that has to be met.
   ///All of those conditions must be true for each returned entry.
   ///
@@ -145,14 +158,14 @@ class YustService {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
   }) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        orderByList: orderByList,
+        filterList: filterList);
+
     return query.snapshots().map((snapshot) {
       return snapshot.docs
-          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
           .whereType<T>()
           .toList();
     });
@@ -163,18 +176,43 @@ class YustService {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
   }) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        orderByList: orderByList,
+        filterList: filterList);
+
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
       return snapshot.docs
-          .map((docSnapshot) => _getDoc(modelSetup, docSnapshot))
+          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
           .whereType<T>()
           .toList();
     });
+  }
+
+  /// Returns null if no data exists.
+  T? transformDoc<T extends YustDoc>(
+    YustDocSetup<T> modelSetup,
+    DocumentSnapshot snapshot,
+  ) {
+    if (snapshot.exists == false) {
+      return null;
+    }
+    final data = snapshot.data();
+    // TODO: Convert timestamps
+    if (data is Map<String, dynamic>) {
+      final T document = modelSetup.fromJson(data);
+
+      if (modelSetup.onMigrate != null) {
+        modelSetup.onMigrate!(document);
+      }
+
+      if (modelSetup.onGet != null) {
+        modelSetup.onGet!(document);
+      }
+
+      return document;
+    }
   }
 
   Stream<T?> getDoc<T extends YustDoc>(
@@ -185,7 +223,7 @@ class YustService {
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .snapshots()
-        .map((docSnapshot) => _getDoc(modelSetup, docSnapshot));
+        .map((docSnapshot) => transformDoc(modelSetup, docSnapshot));
   }
 
   Future<T> getDocOnce<T extends YustDoc>(
@@ -196,7 +234,7 @@ class YustService {
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => _getDoc<T>(modelSetup, docSnapshot)!);
+        .then((docSnapshot) => transformDoc<T>(modelSetup, docSnapshot)!);
   }
 
   /// Emits null events if no document was found.
@@ -205,15 +243,14 @@ class YustService {
     List<List<dynamic>>? filterList, {
     List<String>? orderByList,
   }) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        filterList: filterList,
+        orderByList: orderByList);
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.length > 0) {
-        return _getDoc(modelSetup, snapshot.docs[0]);
+        return transformDoc(modelSetup, snapshot.docs[0]);
       } else {
         return null;
       }
@@ -226,17 +263,15 @@ class YustService {
     List<List<dynamic>> filterList, {
     List<String>? orderByList,
   }) async {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
-    query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
-    query = _executeOrderByList(query, orderByList);
-
+    Query query = getQuery(
+        modelSetup: modelSetup,
+        filterList: filterList,
+        orderByList: orderByList);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 
     if (snapshot.docs.length > 0) {
-      doc = _getDoc(modelSetup, snapshot.docs[0]);
+      doc = transformDoc(modelSetup, snapshot.docs[0]);
     }
     return doc;
   }
@@ -345,7 +380,7 @@ class YustService {
         final DocumentSnapshot startSnapshot =
             await transaction.get(documentReference);
 
-        final T? startDocument = _getDoc(modelSetup, startSnapshot);
+        final T? startDocument = transformDoc(modelSetup, startSnapshot);
         final T endDocument = handler(startDocument);
 
         final Map<String, dynamic> endMap = endDocument.toJson();
@@ -704,31 +739,6 @@ class YustService {
       result += chars[rnd.nextInt(chars.length)];
     }
     return result;
-  }
-
-  /// Returns null if no data exists.
-  T? _getDoc<T extends YustDoc>(
-    YustDocSetup<T> modelSetup,
-    DocumentSnapshot snapshot,
-  ) {
-    if (snapshot.exists == false) {
-      return null;
-    }
-    final data = snapshot.data();
-    // TODO: Convert timestamps
-    if (data is Map<String, dynamic>) {
-      final T document = modelSetup.fromJson(data);
-
-      if (modelSetup.onMigrate != null) {
-        modelSetup.onMigrate!(document);
-      }
-
-      if (modelSetup.onGet != null) {
-        modelSetup.onGet!(document);
-      }
-
-      return document;
-    }
   }
 
   Query _filterForEnvironment(Query query) =>

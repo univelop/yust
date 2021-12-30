@@ -74,11 +74,6 @@ class YustService {
     ///This also assumes that [fireAuth.signOut] was successfull, of which I do not know how to be certain.
     await completer.future;
     Yust.store.removeListener(complete);
-
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      Navigator.defaultRouteName,
-      (_) => false,
-    );
   }
 
   Future<void> sendPasswordResetEmail(String email) async {

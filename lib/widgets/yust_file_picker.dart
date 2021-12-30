@@ -9,8 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:yust/util/yust_exception.dart';
-import 'package:yust/widgets/yust_input_tile.dart';
 import 'package:dio/dio.dart';
+import 'package:yust/widgets/yust_list_tile.dart';
 import '../yust.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -51,11 +51,11 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return YustInputTile(
-        child: _buildAddButton(context),
+    return YustListTile(
+        suffixChild: _buildAddButton(context),
         label: widget.label,
         prefixIcon: widget.prefixIcon,
-        suffixChild: _buildFiles(context));
+        below: _buildFiles(context));
   }
 
   _buildAddButton(BuildContext context) {
@@ -63,7 +63,9 @@ class YustFilePickerState extends State<YustFilePicker> {
       return SizedBox.shrink();
     }
     return IconButton(
-      icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
+      iconSize: 40,
+      icon:
+          Icon(Icons.add_circle, color: Theme.of(context).colorScheme.primary),
       onPressed: _enabled ? _pickFiles : null,
     );
   }
@@ -105,6 +107,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
     return IconButton(
       icon: Icon(Icons.delete),
+      color: Theme.of(context).colorScheme.primary,
       onPressed: _enabled ? () => _deleteFile(file) : null,
     );
   }

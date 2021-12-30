@@ -31,11 +31,7 @@ class Yust {
 
   /// Connnect to the firebase emulator for Firestore and Authentication
   static Future _connectToFirebaseEmulator(String address) async {
-    FirebaseFirestore.instance.settings = Settings(
-      host: '$address:8080',
-      sslEnabled: false,
-      persistenceEnabled: false,
-    );
+    FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
 
     await FirebaseAuth.instance.useEmulator('http://$address:9099');
 

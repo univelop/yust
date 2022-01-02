@@ -86,22 +86,13 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (!_enabled || (!widget.multiple && _files.firstOrNull != null)) {
       return SizedBox.shrink();
     }
-    if (kIsWeb) {
-      return Align(
-        alignment: Alignment.centerRight,
-        child: IconButton(
-          color: Theme.of(context).colorScheme.primary,
-          iconSize: 40,
-          icon: Icon(Icons.image),
-          onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
-        ),
-      );
-    } else {
-      return SizedBox(
-        width: 150,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: <Widget>[
+
+    return SizedBox(
+      width: 150,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: <Widget>[
+          if (!kIsWeb)
             IconButton(
               color: Theme.of(context).colorScheme.primary,
               iconSize: 40,
@@ -109,17 +100,15 @@ class YustImagePickerState extends State<YustImagePicker> {
               onPressed:
                   _enabled ? () => _pickImages(ImageSource.camera) : null,
             ),
-            IconButton(
-              color: Theme.of(context).colorScheme.primary,
-              iconSize: 40,
-              icon: Icon(Icons.image),
-              onPressed:
-                  _enabled ? () => _pickImages(ImageSource.gallery) : null,
-            ),
-          ],
-        ),
-      );
-    }
+          IconButton(
+            color: Theme.of(context).colorScheme.primary,
+            iconSize: 40,
+            icon: Icon(Icons.image),
+            onPressed: _enabled ? () => _pickImages(ImageSource.gallery) : null,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildGallery(BuildContext context) {

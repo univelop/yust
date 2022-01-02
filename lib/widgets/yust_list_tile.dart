@@ -62,7 +62,7 @@ class YustListTile extends StatelessWidget {
     }
     return ListTile(
       title: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           if (prefixIcon != null)
             Padding(

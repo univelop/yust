@@ -3,9 +3,9 @@ import 'package:yust/widgets/yust_store_builder.dart';
 
 import '../yust.dart';
 import '../yust_store.dart';
-import 'account_edit.dart';
+import 'yust_account_edit_screen.dart';
 
-class AccountScreen<T extends YustStore> extends StatelessWidget {
+class YustAccountScreen<T extends YustStore> extends StatelessWidget {
   static const String routeName = '/account';
   static const bool signInRequired = true;
 
@@ -57,7 +57,7 @@ class AccountScreen<T extends YustStore> extends StatelessWidget {
                       TextStyle(color: Theme.of(context).colorScheme.secondary),
                 ),
                 onTap: () {
-                  Navigator.pushNamed(context, AccountEditScreen.routeName);
+                  Navigator.pushNamed(context, YustAccountEditScreen.routeName);
                 },
               ),
               Divider(thickness: 1.0),
@@ -73,7 +73,7 @@ class AccountScreen<T extends YustStore> extends StatelessWidget {
                       TextStyle(color: Theme.of(context).colorScheme.secondary),
                 ),
                 onTap: () {
-                  Yust.service.signOut(context);
+                  Yust.authService.signOut(context);
                 },
               ),
               Divider(thickness: 1.0),

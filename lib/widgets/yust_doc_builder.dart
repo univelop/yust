@@ -16,8 +16,8 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
   final String? id;
   final List<List<dynamic>>? filter;
   final List<String>? orderBy;
-  final bool _doNotWait;
-  final bool _createIfNull;
+  final bool showLoadingSpinner;
+  final bool createIfNull;
   final Widget Function(T?, YustBuilderInsights) builder;
 
   YustDocBuilder({
@@ -27,11 +27,10 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
     this.filter,
     this.orderBy,
     bool? doNotWait,
-    bool? createIfNull,
+    this.showLoadingSpinner = false,
+    this.createIfNull = false,
     required this.builder,
-  })  : _doNotWait = doNotWait ?? false,
-        _createIfNull = createIfNull ?? false,
-        super(key: key);
+  }) : super(key: key);
 
   @override
   YustDocBuilderState<T> createState() => YustDocBuilderState<T>();
@@ -43,12 +42,12 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
 
   void initStream() {
     if (widget.id != null) {
-      _docStream = Yust.service.getDoc<T>(
+      _docStream = Yust.databaseService.getDoc<T>(
         widget.modelSetup,
         widget.id!,
       );
     } else {
-      _docStream = Yust.service.getFirstDoc<T>(
+      _docStream = Yust.databaseService.getFirstDoc<T>(
         widget.modelSetup,
         widget.filter,
         orderByList: widget.orderBy,
@@ -93,12 +92,12 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
           throw snapshot.error!;
         }
         if (snapshot.connectionState == ConnectionState.waiting &&
-            !widget._doNotWait) {
+            widget.showLoadingSpinner) {
           return Center(child: CircularProgressIndicator());
         }
         var doc = snapshot.data;
-        if (doc == null && widget._createIfNull) {
-          doc = Yust.service.initDoc<T>(widget.modelSetup);
+        if (doc == null && widget.createIfNull) {
+          doc = Yust.databaseService.initDoc<T>(widget.modelSetup);
         }
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,

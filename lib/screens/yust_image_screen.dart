@@ -2,37 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
+import 'package:yust/models/yust_file.dart';
 import 'package:yust/yust.dart';
 
-class ImageScreen extends StatelessWidget {
+class YustImageScreen extends StatelessWidget {
+  final List<YustFile> files;
+
+  final int? activeImageIndex;
+
+  YustImageScreen({
+    Key? key,
+    required this.files,
+    this.activeImageIndex,
+  }) : super(key: key);
+
   static const String routeName = '/imageScreen';
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context)!.settings.arguments as Map;
-    final String? url = arguments['url'];
-    String imageName = arguments['name'];
-
-    final urlsArgs = arguments['urls'];
-    List<String>? urls;
-
-    if (urlsArgs is List) {
-      urls = urlsArgs.whereType<String>().toList();
-    }
-
-    if (urls != null) {
-      return _buildMultiple(context, urls, url, imageName);
+    if (files.length == 1) {
+      return _buildSingle(context);
     } else {
-      return _buildSingle(context, url!, imageName);
+      return _buildMultiple(context);
     }
   }
 
-  Widget _buildSingle(BuildContext context, String url, String imageName) {
+  Widget _buildSingle(BuildContext context) {
+    final file = files.first;
+    if (file.url == null) {
+      return SizedBox.shrink();
+    }
     return Stack(children: [
       Container(
         child: PhotoView(
-          imageProvider: NetworkImage(url),
+          imageProvider: NetworkImage(file.url!),
           minScale: PhotoViewComputedScale.contained,
-          heroAttributes: PhotoViewHeroAttributes(tag: url),
+          heroAttributes: PhotoViewHeroAttributes(tag: file.url!),
           onTapUp: (context, details, controllerValue) {
             Navigator.pop(context);
           },
@@ -46,29 +50,26 @@ class ImageScreen extends StatelessWidget {
         ),
       ),
       if (kIsWeb) _buildCloseButton(context),
-      _buildShareButton(context, url, imageName),
+      _buildShareButton(context, file),
     ]);
   }
 
-  Widget _buildMultiple(BuildContext context, List<String> urls,
-      String? activeUrl, String imageName) {
-    int firstPage = 0;
-    if (activeUrl != null) {
-      firstPage = urls.indexOf(activeUrl);
-    }
+  Widget _buildMultiple(BuildContext context) {
+    int firstPage = activeImageIndex ?? 0;
     PageController _pageController = PageController(initialPage: firstPage);
     return Stack(
       children: [
         Container(
           child: PhotoViewGallery.builder(
-            itemCount: urls.length,
+            itemCount: files.length,
             scrollPhysics: const BouncingScrollPhysics(),
             pageController: _pageController,
             builder: (BuildContext context, int index) {
               return PhotoViewGalleryPageOptions(
-                imageProvider: NetworkImage(urls[index]),
+                imageProvider: NetworkImage(files[index].url ?? ''),
                 minScale: PhotoViewComputedScale.contained,
-                heroAttributes: PhotoViewHeroAttributes(tag: urls[index]),
+                heroAttributes:
+                    PhotoViewHeroAttributes(tag: files[index].url ?? ''),
                 onTapUp: (context, details, controllerValue) {
                   Navigator.pop(context);
                 },
@@ -126,7 +127,7 @@ class ImageScreen extends StatelessWidget {
             ),
           ),
         if (kIsWeb) _buildCloseButton(context),
-        _buildShareButton(context, activeUrl!, imageName),
+        _buildShareButton(context, files[activeImageIndex ?? 0]),
       ],
     );
   }
@@ -149,7 +150,7 @@ class ImageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildShareButton(BuildContext context, String url, String imageName) {
+  Widget _buildShareButton(BuildContext context, YustFile file) {
     return Positioned(
       right: kIsWeb ? 80.0 : 0.0,
       child: RepaintBoundary(
@@ -164,8 +165,8 @@ class ImageScreen extends StatelessWidget {
                   iconSize: 35,
                   color: Colors.white,
                   onPressed: () {
-                    Yust.service.downloadAndLaunchFile(
-                        context: context, url: url, name: imageName);
+                    Yust.fileService.downloadAndLaunchFile(
+                        context: context, url: file.url!, name: file.name);
                   },
                   icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
                 );

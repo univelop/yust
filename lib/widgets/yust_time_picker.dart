@@ -41,8 +41,8 @@ class _YustTimePickerState extends State<YustTimePicker> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        TextEditingController(text: Yust.service.formatTime(widget.value));
+    _controller = TextEditingController(
+        text: Yust.helperService.formatTime(widget.value));
     _maskFormatter = MaskTextInputFormatter(
       mask: 'H#:M#',
       filter: {
@@ -50,7 +50,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
         'H': RegExp(r'[0-2]'),
         'M': RegExp(r'[0-5]')
       },
-      initialText: Yust.service.formatTime(widget.value),
+      initialText: Yust.helperService.formatTime(widget.value),
     );
   }
 
@@ -115,7 +115,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
   }
 
   void _pickTime(BuildContext context, String title) async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     final now = DateTime.now();
     var dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
     final initialTime = TimeOfDay.fromDateTime(dateTime);
@@ -149,7 +149,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
   void _setTime(DateTime? dateTime) {
     setState(() {
       _maskFormatter!.clear();
-      _controller!.text = Yust.service.formatTime(dateTime);
+      _controller!.text = Yust.helperService.formatTime(dateTime);
     });
     widget.onChanged!(dateTime);
   }

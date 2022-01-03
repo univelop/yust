@@ -10,7 +10,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
   final List<List<dynamic>>? filter;
   final List<String>? orderBy;
-  final bool _doNotWait;
+  final bool showLoadingSpinner;
   final Widget? loadingIndicator;
 
   /// There will never be a null for the list given.
@@ -22,10 +22,10 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
     this.filter,
     this.orderBy,
     bool? doNotWait,
-    required this.builder,
+    this.showLoadingSpinner = false,
     this.loadingIndicator,
-  })  : _doNotWait = doNotWait ?? false,
-        super(key: key);
+    required this.builder,
+  }) : super(key: key);
 
   @override
   YustDocsBuilderState<T> createState() => YustDocsBuilderState<T>();
@@ -36,7 +36,7 @@ class YustDocsBuilderState<T extends YustDoc>
   late Stream<List<T>> _docStream;
 
   void initStream() {
-    _docStream = Yust.service.getDocs<T>(
+    _docStream = Yust.databaseService.getDocs<T>(
       widget.modelSetup,
       filterList: widget.filter,
       orderByList: widget.orderBy,
@@ -76,7 +76,7 @@ class YustDocsBuilderState<T extends YustDoc>
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        if (opts.waiting! && !widget._doNotWait) {
+        if (opts.waiting! && widget.showLoadingSpinner) {
           return widget.loadingIndicator != null
               ? widget.loadingIndicator!
               : Center(child: CircularProgressIndicator());

@@ -10,7 +10,11 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
-import 'yust_service.dart';
+import 'services/yust_alert_service.dart';
+import 'services/yust_auth_service.dart';
+import 'services/yust_database_service.dart';
+import 'services/yust_file_service.dart';
+import 'services/yust_helper_service.dart';
 import 'yust_store.dart';
 
 enum YustInputStyle {
@@ -20,10 +24,12 @@ enum YustInputStyle {
 
 class Yust {
   static late YustStore store;
-  static late YustService service;
+  static final YustAuthService authService = YustAuthService();
+  static final YustDatabaseService databaseService = YustDatabaseService();
+  static final YustFileService fileService = YustFileService();
+  static final YustAlertService alertService = YustAlertService();
+  static final YustHelperService helperService = YustHelperService();
   static late YustDocSetup<YustUser> userSetup;
-  @Deprecated('`useTimestamps` will allways be set to true.')
-  static bool useTimestamps = true;
   static bool useSubcollections = false;
   static String envCollectionName = 'envs';
   static String? storageUrl;
@@ -40,7 +46,6 @@ class Yust {
 
   static Future<void> initialize({
     YustStore? store,
-    YustService? service,
     YustDocSetup? userSetup,
     bool useTimestamps = false,
     bool useSubcollections = false,
@@ -57,9 +62,7 @@ class Yust {
     }
 
     Yust.store = store ?? YustStore();
-    Yust.service = service ?? YustService();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
-    Yust.useTimestamps = useTimestamps;
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;
     Yust.storageUrl = storageUrl;
@@ -80,14 +83,14 @@ class Yust {
     FirebaseAuth.instance.authStateChanges().listen((fireUser) async {
       if (userSubscription != null) userSubscription!.cancel();
       if (fireUser != null) {
-        userSubscription = Yust.service
+        userSubscription = Yust.databaseService
             .getDoc<YustUser>(Yust.userSetup, fireUser.uid)
             .listen((user) async {
           if (user == null) {
             user = Yust.userSetup.newDoc()
               ..id = fireUser.uid
               ..email = fireUser.email!;
-            await Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+            await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
           }
 
           Yust.store.setState(() {

@@ -30,8 +30,8 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final query =
-        Yust.service.getQuery(modelSetup: modelSetup, orderByList: orderBy);
+    final query = Yust.databaseService
+        .getQuery(modelSetup: modelSetup, orderByList: orderBy);
 
     return PaginateFirestore(
       scrollController: scrollController,
@@ -50,7 +50,8 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
 
   Widget _itemBuilder(
       int index, BuildContext context, DocumentSnapshot documentSnapshot) {
-    final item = Yust.service.transformDoc(modelSetup, documentSnapshot);
+    final item =
+        Yust.databaseService.transformDoc(modelSetup, documentSnapshot);
     if (item == null) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 100.0),

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -258,13 +259,13 @@ class YustFileHandler {
     var attribute;
     if (yustFile.cached) {
       if (await _isFileInCache(yustFile)) {
-        attribute = await _getDocAttribute(yustFile);
         yustFile.file = File(yustFile.devicePath!);
       } else {
         //removing file data, because file is missing in cache
         await _deleteFileFromCache(yustFile);
         return;
       }
+      attribute = await _getDocAttribute(yustFile);
     }
 
     final url = await Yust.service.uploadFile(
@@ -279,24 +280,40 @@ class YustFileHandler {
   }
 
   Future<void> _updateDocAttribute(
-      attribute, YustFile cachedFile, String url) async {
-    if (attribute is Map) {
-      if (attribute['url'] == null) {
-        attribute['name'] = cachedFile.name;
-        attribute['url'] = url;
-      } else {
-        // edge case: image picker changes from single- to multi-image view
-        attribute = [attribute];
-      }
-    }
-    if (attribute is List) {
-      attribute.removeWhere((f) => f['name'] == cachedFile.name);
-      attribute.add({'name': cachedFile.name, 'url': url});
-    }
+      oldAttribute, YustFile cachedFile, String url) async {
+    var newAttribute = await _getDocAttribute(cachedFile);
 
-    await FirebaseFirestore.instance
-        .doc(cachedFile.linkedDocPath!)
-        .update({cachedFile.linkedDocAttribute!: attribute});
+    if (_areAttributesEqual(oldAttribute, newAttribute)) {
+      if (oldAttribute is Map) {
+        if (oldAttribute['url'] == null) {
+          oldAttribute['name'] = cachedFile.name;
+          oldAttribute['url'] = url;
+        } else {
+          // edge case: image picker changes from single- to multi-image view
+          oldAttribute = [oldAttribute];
+        }
+      }
+      if (oldAttribute is List) {
+        oldAttribute.removeWhere((f) => f['name'] == cachedFile.name);
+        oldAttribute.add({'name': cachedFile.name, 'url': url});
+      }
+
+      await FirebaseFirestore.instance
+          .doc(cachedFile.linkedDocPath!)
+          .update({cachedFile.linkedDocAttribute!: oldAttribute});
+    } else {
+      _updateDocAttribute(newAttribute, cachedFile, url);
+    }
+  }
+
+  bool _areAttributesEqual(a1, a2) {
+    if (a1 is Map && a2 is Map) {
+      return a1['name'] == a2['name'] && a1['url'] == a2['url'];
+    }
+    if (a1 is List && a2 is List) {
+      return DeepCollectionEquality().equals(a1, a2);
+    }
+    return false;
   }
 
   Future<dynamic> _getDocAttribute(YustFile yustFile) async {

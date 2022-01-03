@@ -477,7 +477,7 @@ class YustImagePickerState extends State<YustImagePicker> {
 
     await _fileHandler.addFile(newYustFile);
 
-    if (!newYustFile.cacheable) {
+    if (!newYustFile.cacheable || kIsWeb) {
       widget.onChanged!(_fileHandler.getOnlineFiles());
     } else {
       setState(() {});

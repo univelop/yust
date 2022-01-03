@@ -48,7 +48,7 @@ class YustTextField extends StatefulWidget {
       this.readOnly = false,
       this.obscureText = false,
       this.keyBoardType,
-      this.style,
+      this.style = YustInputStyle.normal,
       this.prefixIcon,
       this.suffixIcon,
       this.textCapitalization = TextCapitalization.sentences,

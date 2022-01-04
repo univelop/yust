@@ -9,7 +9,6 @@ enum AuthState {
   signedOut,
 }
 
-// TODO: Refacotor
 class YustStore extends ChangeNotifier {
   AuthState authState = AuthState.waiting;
 

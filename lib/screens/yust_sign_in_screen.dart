@@ -32,7 +32,6 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
   String? _email;
   String? _password;
   bool _waitingForSignIn = false;
-  // TODO: deprecated?
   void Function()? _onSignedIn;
 
   final _emailController = TextEditingController();

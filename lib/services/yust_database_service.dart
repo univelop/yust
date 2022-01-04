@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_doc_setup.dart';
 
@@ -242,40 +241,6 @@ class YustDatabaseService {
     await saveDoc<T>(modelSetup, doc);
 
     return doc;
-  }
-
-  /// Currently works only for web caused by a bug in cloud_firestore.
-  // TODO: Delete?
-  Future<T?> updateWithTransaction<T extends YustDoc>(
-    YustDocSetup<T> modelSetup,
-    String id,
-    T Function(T?) handler,
-  ) async {
-    assert(kIsWeb,
-        'As of version "0.13.4+1" of "cloud_firestore" the transactional feature does not work for at least android systems...');
-
-    T? result;
-
-    await FirebaseFirestore.instance.runTransaction(
-      (Transaction transaction) async {
-        final DocumentReference documentReference = FirebaseFirestore.instance
-            .collection(_getCollectionPath(modelSetup))
-            .doc(id);
-
-        final DocumentSnapshot startSnapshot =
-            await transaction.get(documentReference);
-
-        final T? startDocument = transformDoc(modelSetup, startSnapshot);
-        final T endDocument = handler(startDocument);
-
-        final Map<String, dynamic> endMap = endDocument.toJson();
-        transaction.set(documentReference, endMap);
-
-        result = endDocument;
-      },
-    );
-
-    return result;
   }
 
   String _getCollectionPath(YustDocSetup modelSetup) {

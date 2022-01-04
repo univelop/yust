@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
-import 'package:yust/screens/image.dart';
+import 'package:yust/screens/yust_image_screen.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
@@ -268,12 +268,12 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Future<void> _pickImages(ImageSource imageSource) async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.service.showAlert(context, 'Kein Internet',
+      Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
       if (!kIsWeb) {
@@ -338,8 +338,9 @@ class YustImagePickerState extends State<YustImagePicker> {
     bool resize = false,
     required String yustQuality,
   }) async {
-    final imageName =
-        Yust.service.randomString(length: 16) + '.' + path.split('.').last;
+    final imageName = Yust.helperService.randomString(length: 16) +
+        '.' +
+        path.split('.').last;
     final newFile =
         YustFile(name: imageName, file: file, bytes: bytes, processing: true);
     setState(() {
@@ -349,16 +350,16 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (resize) {
         final size = YustImageQuality[widget.yustQuality]!['size']!;
         if (file != null) {
-          file = await Yust.service.resizeImage(file: file, maxWidth: size);
+          file = await Yust.fileService.resizeImage(file: file, maxWidth: size);
           newFile.file = file;
         } else {
-          bytes = Yust.service
+          bytes = Yust.fileService
               .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
           newFile.bytes = bytes;
         }
       }
 
-      String url = await Yust.service.uploadFile(
+      String url = await Yust.fileService.uploadFile(
           path: widget.folderPath, name: imageName, file: file, bytes: bytes);
       newFile.url = url;
       newFile.processing = false;
@@ -374,36 +375,29 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {
           _files.remove(newFile);
         });
-        Yust.service.showAlert(context, 'Ups', e.toString());
+        Yust.alertService.showAlert(context, 'Ups', e.toString());
       }
     }
   }
 
   void _showImages(YustFile activeFile) {
-    Yust.service.unfocusCurrent(context);
-
-    if (widget.multiple) {
-      Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
-        'urls': _files.map((file) => file.url).toList(),
-        'url': activeFile.url,
-        'name': activeFile.name,
-      });
-    } else {
-      Navigator.pushNamed(context, ImageScreen.routeName, arguments: {
-        'url': activeFile.url,
-        'name': activeFile.name,
-      });
-    }
+    Yust.helperService.unfocusCurrent(context);
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => YustImageScreen(
+        files: _files,
+        activeImageIndex: _files.indexOf(activeFile),
+      ),
+    ));
   }
 
   Future<void> _deleteImage(YustFile file) async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.service.showAlert(context, 'Kein Internet',
+      Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
     } else {
-      final confirmed = await Yust.service
+      final confirmed = await Yust.alertService
           .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
       if (confirmed == true) {
         try {

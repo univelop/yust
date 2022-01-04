@@ -4,19 +4,20 @@ import 'package:yust/widgets/yust_progress_button.dart';
 
 import '../yust.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
+class YustResetPasswordScreen extends StatefulWidget {
   static const String routeName = '/resetPassword';
   static const bool signInRequired = false;
 
   final String? logoAssetName;
 
-  ResetPasswordScreen({Key? key, this.logoAssetName}) : super(key: key);
+  YustResetPasswordScreen({Key? key, this.logoAssetName}) : super(key: key);
 
   @override
-  _ResetPasswordScreenState createState() => _ResetPasswordScreenState();
+  _YustResetPasswordScreenState createState() =>
+      _YustResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _YustResetPasswordScreenState extends State<YustResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _email;
 
@@ -62,15 +63,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
                             try {
-                              await Yust.service
+                              await Yust.authService
                                   .sendPasswordResetEmail(_email!);
                               Navigator.pop(context);
-                              Yust.service.showAlert(
+                              Yust.alertService.showAlert(
                                   context,
                                   'E-Mail verschickt',
                                   'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
                             } catch (err) {
-                              Yust.service
+                              Yust.alertService
                                   .showAlert(context, 'Fehler', err.toString());
                             }
                           }

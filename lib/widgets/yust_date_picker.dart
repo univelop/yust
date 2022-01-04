@@ -30,7 +30,7 @@ class YustDatePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return YustInputTile(
       label: label ?? '',
-      text: Yust.service.formatDate(value),
+      text: Yust.helperService.formatDate(value),
       style: style,
       prefixIcon: prefixIcon,
       onTap: (onChanged == null || readOnly) ? null : () => _pickDate(context),
@@ -43,7 +43,7 @@ class YustDatePicker extends StatelessWidget {
   }
 
   void _pickDate(BuildContext context) async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     var dateTime = value;
     if (dateTime == null) {
       final now = DateTime.now();

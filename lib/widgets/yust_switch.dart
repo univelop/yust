@@ -33,7 +33,7 @@ class YustSwitch extends StatelessWidget {
             checkColor: activeColor,
             value: value,
             onChanged: (bool? value) {
-              Yust.service.unfocusCurrent(context);
+              Yust.helperService.unfocusCurrent(context);
               readOnly || value == null || onChanged == null
                   ? null
                   : onChanged!(value);
@@ -42,7 +42,7 @@ class YustSwitch extends StatelessWidget {
           onTap: readOnly || onChanged == null
               ? null
               : () {
-                  Yust.service.unfocusCurrent(context);
+                  Yust.helperService.unfocusCurrent(context);
                   onChanged!(!value);
                 },
           prefixIcon: prefixIcon);
@@ -53,14 +53,14 @@ class YustSwitch extends StatelessWidget {
             value: value,
             activeColor: activeColor ?? Theme.of(context).primaryColor,
             onChanged: (value) {
-              Yust.service.unfocusCurrent(context);
+              Yust.helperService.unfocusCurrent(context);
               readOnly || onChanged == null ? null : onChanged!(value);
             },
           ),
           onTap: readOnly || onChanged == null
               ? null
               : () {
-                  Yust.service.unfocusCurrent(context);
+                  Yust.helperService.unfocusCurrent(context);
                   onChanged!(!value);
                 },
           prefixIcon: prefixIcon);

@@ -40,10 +40,6 @@ abstract class YustDoc with YustSerializable {
 
   Map<String, dynamic> toJson();
 
-  static List<dynamic> docListToJson(List<dynamic> list) {
-    return list.map((item) => item.toJson()).toList();
-  }
-
   static Map<String, T?> mapFromJson<T>(Map<String, dynamic>? map) {
     if (map == null) {
       return {};
@@ -71,32 +67,34 @@ abstract class YustDoc with YustSerializable {
         return MapEntry(key, FieldValue.delete());
       } else if (value is DateTime) {
         return MapEntry(key, YustDoc.convertToTimestamp(value));
-      } else if (value is Map<String, dynamic>) {
-        return MapEntry(key, YustDoc.mapToJson(value));
-      } else if (value is List) {
-        return MapEntry(key, YustDoc.listToJson(value));
       } else if (value is YustSerializable) {
         return MapEntry(key, (value as dynamic).toJson());
+      } else if (value is Map<String, dynamic>) {
+        return MapEntry(
+            key, YustDoc.mapToJson(value, removeNullValues: removeNullValues));
+      } else if (value is List) {
+        return MapEntry(key, YustDoc.listToJson(value));
       } else {
         return MapEntry(key, value);
       }
     });
   }
 
-  static List<dynamic>? listToJson(List<dynamic>? list,
-      {bool removeNullValues = true}) {
+  static Map<String, dynamic>? mapToPureJson(Map<String, dynamic>? map) {
+    return YustDoc.mapToJson(map, removeNullValues: false);
+  }
+
+  static List<dynamic>? listToJson(List<dynamic>? list) {
     if (list == null) return null;
     return list.map((value) {
-      if (value == null && removeNullValues) {
-        return FieldValue.delete();
-      } else if (value is DateTime) {
+      if (value is DateTime) {
         return YustDoc.convertToTimestamp(value);
-      } else if (value is Map<String, dynamic>) {
-        return YustDoc.mapToJson(value);
-      } else if (value is List) {
-        return YustDoc.listToJson(value);
       } else if (value is YustSerializable) {
         return (value as dynamic).toJson();
+      } else if (value is Map<String, dynamic>) {
+        return YustDoc.mapToJson(value, removeNullValues: false);
+      } else if (value is List) {
+        return YustDoc.listToJson(value);
       } else {
         return value;
       }

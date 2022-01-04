@@ -34,7 +34,7 @@ class YustDatePicker extends StatelessWidget {
       style: style,
       prefixIcon: prefixIcon,
       onTap: (onChanged == null || readOnly) ? null : () => _pickDate(context),
-      onDelete: onChanged == null
+      onDelete: (onChanged == null || hideClearButton)
           ? null
           : () async {
               onChanged!(null);

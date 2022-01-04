@@ -195,7 +195,8 @@ class YustDatabaseService {
     if (modelSetup.onSave != null && !skipOnSave) {
       await modelSetup.onSave!(doc);
     }
-    await collection.doc(doc.id).set(doc.toJson(), SetOptions(merge: merge));
+    final jsonDoc = doc.toJson();
+    await collection.doc(doc.id).set(jsonDoc, SetOptions(merge: merge));
   }
 
   Future<void> deleteDocs<T extends YustDoc>(

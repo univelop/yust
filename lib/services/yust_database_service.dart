@@ -1,10 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_doc_setup.dart';
+import "package:fake_cloud_firestore/fake_cloud_firestore.dart";
 
 import '../yust.dart';
 
 class YustDatabaseService {
+  FirebaseFirestore fireStore;
+
+  YustDatabaseService() : fireStore = FirebaseFirestore.instance;
+  YustDatabaseService.mocked() : fireStore = new FakeFirebaseFirestore();
+
   /// Initialises a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
@@ -13,10 +19,7 @@ class YustDatabaseService {
     if (doc == null) {
       doc = modelSetup.newDoc();
     }
-    doc.id = FirebaseFirestore.instance
-        .collection(_getCollectionPath(modelSetup))
-        .doc()
-        .id;
+    doc.id = fireStore.collection(_getCollectionPath(modelSetup)).doc().id;
     doc.createdAt = DateTime.now();
     doc.createdBy = Yust.store.currUser?.id;
     if (modelSetup.forEnvironment) {
@@ -35,8 +38,7 @@ class YustDatabaseService {
       {required YustDocSetup<T> modelSetup,
       List<List<dynamic>>? filterList,
       List<String>? orderByList}) {
-    Query query =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
+    Query query = fireStore.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
@@ -106,7 +108,7 @@ class YustDatabaseService {
     YustDocSetup<T> modelSetup,
     String id,
   ) {
-    return FirebaseFirestore.instance
+    return fireStore
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .snapshots()
@@ -117,7 +119,7 @@ class YustDatabaseService {
     YustDocSetup<T> modelSetup,
     String id,
   ) {
-    return FirebaseFirestore.instance
+    return fireStore
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
@@ -174,8 +176,7 @@ class YustDatabaseService {
     bool trackModification = true,
     bool skipOnSave = false,
   }) async {
-    var collection =
-        FirebaseFirestore.instance.collection(_getCollectionPath(modelSetup));
+    var collection = fireStore.collection(_getCollectionPath(modelSetup));
     if (trackModification) {
       doc.modifiedAt = DateTime.now();
       doc.modifiedBy = Yust.store.currUser?.id;
@@ -216,9 +217,8 @@ class YustDatabaseService {
     if (modelSetup.onDelete != null) {
       await modelSetup.onDelete!(doc);
     }
-    var docRef = FirebaseFirestore.instance
-        .collection(_getCollectionPath(modelSetup))
-        .doc(doc.id);
+    var docRef =
+        fireStore.collection(_getCollectionPath(modelSetup)).doc(doc.id);
     await docRef.delete();
   }
 

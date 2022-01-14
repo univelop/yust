@@ -24,9 +24,9 @@ enum YustInputStyle {
 
 class Yust {
   static late YustStore store;
-  static final YustAuthService authService = YustAuthService();
-  static final YustDatabaseService databaseService = YustDatabaseService();
-  static final YustFileService fileService = YustFileService();
+  static late YustAuthService authService;
+  static late final YustDatabaseService databaseService;
+  static late final YustFileService fileService;
   static final YustAlertService alertService = YustAlertService();
   static final YustHelperService helperService = YustHelperService();
   static late YustDocSetup<YustUser> userSetup;
@@ -42,6 +42,13 @@ class Yust {
     await FirebaseAuth.instance.useEmulator('http://$address:9099');
 
     await FirebaseStorage.instance.useEmulator(host: address, port: 9199);
+  }
+
+  static Future<void> initializeMocked({YustStore? store}) async {
+    Yust.store = store ?? YustStore();
+    Yust.authService = YustAuthService.mocked();
+    Yust.databaseService = YustDatabaseService.mocked();
+    Yust.fileService = YustFileService.mocked();
   }
 
   static Future<void> initialize({
@@ -62,6 +69,9 @@ class Yust {
     }
 
     Yust.store = store ?? YustStore();
+    Yust.authService = YustAuthService();
+    Yust.databaseService = YustDatabaseService();
+    Yust.fileService = YustFileService();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;

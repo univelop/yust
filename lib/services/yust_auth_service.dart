@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import '../models/yust_user.dart';
 import '../yust.dart';
 
 class YustAuthService {
-  final FirebaseAuth fireAuth = FirebaseAuth.instance;
+  FirebaseAuth fireAuth;
+
+  YustAuthService() : fireAuth = FirebaseAuth.instance;
+  YustAuthService.mocked() : fireAuth = new MockFirebaseAuth();
 
   Future<void> signIn(
     BuildContext context,

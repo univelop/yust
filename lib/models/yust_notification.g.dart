@@ -6,22 +6,20 @@ part of 'yust_notification.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustNotification _$YustNotificationFromJson(Map json) {
-  return YustNotification(
-    forCollection: json['forCollection'] as String?,
-    forDocId: json['forDocId'] as String?,
-    title: json['title'] as String?,
-    body: json['body'] as String?,
-  )
-    ..id = json['id'] as String
-    ..createdAt = YustDoc.convertTimestamp(json['createdAt'])
-    ..createdBy = json['createdBy'] as String?
-    ..modifiedAt = YustDoc.convertTimestamp(json['modifiedAt'])
-    ..modifiedBy = json['modifiedBy'] as String?
-    ..userId = json['userId'] as String?
-    ..envId = json['envId'] as String?
-    ..data = Map<String, dynamic>.from(json['data'] as Map);
-}
+YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
+      forCollection: json['forCollection'] as String?,
+      forDocId: json['forDocId'] as String?,
+      title: json['title'] as String?,
+      body: json['body'] as String?,
+    )
+      ..id = json['id'] as String
+      ..createdAt = YustDoc.convertTimestamp(json['createdAt'])
+      ..createdBy = json['createdBy'] as String?
+      ..modifiedAt = YustDoc.convertTimestamp(json['modifiedAt'])
+      ..modifiedBy = json['modifiedBy'] as String?
+      ..userId = json['userId'] as String?
+      ..envId = json['envId'] as String?
+      ..data = Map<String, dynamic>.from(json['data'] as Map);
 
 Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
     <String, dynamic>{

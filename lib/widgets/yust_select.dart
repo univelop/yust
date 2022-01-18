@@ -13,6 +13,7 @@ class YustSelect<T> extends StatelessWidget {
   final DeleteCallback? onDelete;
   final YustInputStyle style;
   final Widget? prefixIcon;
+  final Widget? suffixChild;
   final bool readOnly;
 
   const YustSelect({
@@ -25,6 +26,7 @@ class YustSelect<T> extends StatelessWidget {
     this.onDelete,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
+    this.suffixChild,
     this.readOnly = false,
   }) : super(key: key);
 
@@ -34,6 +36,7 @@ class YustSelect<T> extends StatelessWidget {
       label: label ?? '',
       text: _valueCaption(value),
       prefixIcon: prefixIcon,
+      suffixChild: suffixChild,
       style: style,
       onTap:
           (onSelected == null || readOnly) ? null : () => _selectValue(context),

@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:yust/util/yust_serializable.dart';
-
-class YustFile with YustSerializable {
+class YustFile {
   String name;
   String? url;
   File? file;

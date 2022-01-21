@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+
 import 'package:yust/util/yust_serializable.dart';
+
+const NULL_PLACEHOLDER = 'NULL_VALUE';
 
 abstract class YustDoc with YustSerializable {
   @JsonKey()
@@ -40,12 +43,21 @@ abstract class YustDoc with YustSerializable {
 
   Map<String, dynamic> toJson();
 
+  static String? stringFromJson(String? str) {
+    if (str == NULL_PLACEHOLDER) {
+      return null;
+    }
+    return str;
+  }
+
   static Map<String, T?> mapFromJson<T>(Map<String, dynamic>? map) {
     if (map == null) {
       return {};
     }
     return map.map<String, T?>((key, value) {
-      if (value is FieldValue) {
+      if (value == NULL_PLACEHOLDER) {
+        return MapEntry(key, null);
+      } else if (value is FieldValue) {
         return MapEntry(key, null);
       } else if (value is Timestamp) {
         return MapEntry(key, YustDoc.convertTimestamp(value) as T?);

@@ -25,7 +25,8 @@ class YustAlertService {
   }
 
   Future<bool?> showConfirmation(
-      BuildContext context, String title, String action) {
+      BuildContext context, String title, String action,
+      [String cancelText = 'Abbrechen']) {
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -33,38 +34,13 @@ class YustAlertService {
           title: Text(title),
           actions: <Widget>[
             TextButton(
-              child: Text("Abbrechen"),
+              child: Text(cancelText),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
             ),
             TextButton(
               child: Text(action),
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<bool?> showOption(BuildContext context, String title) {
-    return showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          actions: <Widget>[
-            TextButton(
-              child: Text("Nein"),
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-            ),
-            TextButton(
-              child: Text("Ja"),
               onPressed: () {
                 Navigator.of(context).pop(true);
               },

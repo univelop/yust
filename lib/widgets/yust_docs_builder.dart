@@ -14,7 +14,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final Widget? loadingIndicator;
 
   /// There will never be a null for the list given.
-  final Widget Function(List<T>, YustBuilderInsights) builder;
+  final Widget Function(List<T>, YustBuilderInsights, BuildContext) builder;
 
   YustDocsBuilder({
     Key? key,
@@ -81,7 +81,7 @@ class YustDocsBuilderState<T extends YustDoc>
               ? widget.loadingIndicator!
               : Center(child: CircularProgressIndicator());
         }
-        return widget.builder(snapshot.data ?? [], opts);
+        return widget.builder(snapshot.data ?? [], opts, context);
       },
     );
   }

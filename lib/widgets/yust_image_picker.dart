@@ -382,7 +382,7 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   void _showImages(YustFile activeFile) {
     Yust.helperService.unfocusCurrent(context);
-    Navigator.of(context).push(MaterialPageRoute(
+    Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => YustImageScreen(
         files: _files,
         activeImageIndex: _files.indexOf(activeFile),

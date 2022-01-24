@@ -5,7 +5,7 @@ class YustAlertService {
 
   Future<void> showAlert(
       BuildContext context, String title, String message) async {
-    await showDialog(
+    await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

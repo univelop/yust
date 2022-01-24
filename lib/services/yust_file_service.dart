@@ -17,7 +17,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:yust/util/yust_exception.dart';
 import 'package:universal_html/html.dart' as html;
-import "package:firebase_storage_mocks/firebase_storage_mocks.dart";
 
 import '../yust.dart';
 
@@ -36,6 +35,8 @@ class YustFileService {
     try {
       final firebase_storage.Reference storageReference =
           fireStorage.ref().child(path).child(name);
+      firebase_storage.FirebaseStorage.instance
+          .setMaxUploadRetryTime(Duration(seconds: 30));
       firebase_storage.UploadTask uploadTask;
       if (file != null) {
         uploadTask = storageReference.putFile(file);
@@ -131,9 +132,7 @@ class YustFileService {
   }
 
   Future<void> deleteFile({required String path, required String name}) async {
-    try {
-      await fireStorage.ref().child(path).child(name).delete();
-    } catch (e) {}
+    await fireStorage.ref().child(path).child(name).delete();
   }
 
   Future<bool> fileExist({required String path, required String name}) async {

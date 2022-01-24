@@ -179,9 +179,11 @@ class YustFileHandler {
         } else if (yustFile.url == null) {
           throw YustException('Die Datei existiert nicht.');
         } else {
+          await EasyLoading.show(status: 'Datei laden...');
           filePath = await _getDirectory(yustFile) + '${yustFile.name}';
 
           await Dio().download(yustFile.url!, filePath);
+          await EasyLoading.dismiss();
         }
         var result = await OpenFile.open(filePath);
         if (result.type != ResultType.done) {
@@ -193,7 +195,7 @@ class YustFileHandler {
       await EasyLoading.dismiss();
     } catch (e) {
       await EasyLoading.dismiss();
-      await Yust.service.showAlert(context, 'Ups',
+      await Yust.alertService.showAlert(context, 'Ups',
           'Die Datei kann nicht geöffnet werden. ${e.toString()}');
     }
   }
@@ -268,7 +270,7 @@ class YustFileHandler {
       attribute = await _getDocAttribute(yustFile);
     }
 
-    final url = await Yust.service.uploadFile(
+    final url = await Yust.fileService.uploadFile(
       path: yustFile.storageFolderPath!,
       name: yustFile.name,
       file: yustFile.file,
@@ -340,7 +342,7 @@ class YustFileHandler {
 
   Future<void> _deleteFileFromStorage(YustFile yustFile) async {
     if (yustFile.storageFolderPath != null) {
-      await Yust.service
+      await Yust.fileService
           .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name)
           .timeout(Duration(seconds: 1));
     }

@@ -50,7 +50,7 @@ class _YustImageScreenState extends State<YustImageScreen> {
     return Stack(children: [
       Container(
         child: PhotoView(
-          imageProvider: _getImageOfUrl(file.url!),
+          imageProvider: _getImageOfUrl(file),
           minScale: PhotoViewComputedScale.contained,
           heroAttributes: PhotoViewHeroAttributes(tag: file.url!),
           onTapUp: (context, details, controllerValue) {
@@ -85,7 +85,7 @@ class _YustImageScreenState extends State<YustImageScreen> {
             },
             builder: (BuildContext context, int index) {
               return PhotoViewGalleryPageOptions(
-                imageProvider: _getImageOfUrl(widget.files[index].url ?? ''),
+                imageProvider: _getImageOfUrl(widget.files[index]),
                 minScale: PhotoViewComputedScale.contained,
                 heroAttributes:
                     PhotoViewHeroAttributes(tag: widget.files[index].url ?? ''),
@@ -197,13 +197,12 @@ class _YustImageScreenState extends State<YustImageScreen> {
     );
   }
 
-  /// because of the offline cache the [url] could be a folder path
-  ImageProvider<Object> _getImageOfUrl(String url) {
-    bool _validURL = Uri.parse(url).isAbsolute;
-    if (_validURL) {
-      return NetworkImage(url);
+  /// because of the offline cache the file could be a stored online or on device
+  ImageProvider<Object> _getImageOfUrl(YustFile file) {
+    if (file.cached) {
+      return FileImage(File(file.devicePath!));
     } else {
-      return FileImage(File(url));
+      return NetworkImage(file.url!);
     }
   }
 }

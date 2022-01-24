@@ -37,6 +37,8 @@ class YustFileHandler {
 
   List<YustFile> _yustFiles = [];
 
+  var uploadControllIndex = 0;
+
   YustFileHandler({
     required this.storageFolderPath,
     this.linkedDocAttribute,
@@ -92,10 +94,7 @@ class YustFileHandler {
     _yustFiles.add(yustFile);
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);
-      if (!_uploadingCachedFiles) {
-        _uploadingCachedFiles = true;
-        _uploadCachedFiles(_reuploadTime);
-      }
+      _startUploadingCachedFiles();
     } else {
       await _uploadFileToStorage(yustFile);
     }
@@ -113,24 +112,29 @@ class YustFileHandler {
 
   /// Uploads all cached files. If the upload fails,  a new attempt is made after [_reuploadTime].
   /// Can be started only once, renewed call only possible after successful upload.
-  /// [validateCachedFiles] can delete files added shortly before if they are not yet
-  /// entered in the database. Check this before!
-  static Future<void> uploadCachedFiles(
-      {bool validateCachedFiles = true}) async {
+  static Future<void> uploadCachedFiles() async {
+    if (!_uploadingCachedFiles) {
+      YustFileHandler _filehandler = new YustFileHandler(storageFolderPath: '');
+      await _filehandler._validateCachedFiles();
+      _filehandler._startUploadingCachedFiles();
+    }
+  }
+
+  void _startUploadingCachedFiles() {
     if (!_uploadingCachedFiles) {
       _uploadingCachedFiles = true;
-
-      YustFileHandler _filehandler = new YustFileHandler(storageFolderPath: '');
-      if (validateCachedFiles) await _filehandler._validateCachedFiles();
-
-      await _filehandler._uploadCachedFiles(_filehandler._reuploadTime);
+      uploadControllIndex++;
+      if (uploadControllIndex > 1) {
+        print("CRITICAL ERROR");
+      }
+      _uploadCachedFiles(_reuploadTime);
     }
   }
 
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
+    print("UCI: " + uploadControllIndex.toString());
     List<YustFile> cachedFiles = await _getCachedFiles();
     bool uploadError = false;
-    // print("Cache: try to upload");
     for (final yustFile in cachedFiles) {
       yustFile.lastError = null;
       try {
@@ -154,14 +158,13 @@ class YustFileHandler {
     }
 
     if (!uploadError) {
-      // print("Cache: Success!");
       _uploadingCachedFiles = false;
+      uploadControllIndex--;
     } else {
       // saving cachedFiles, to store error log messages
       await _saveCachedFiles(cachedFiles);
 
       reuploadTime = reuploadTime;
-      // print("Cache: Try again in " + reuploadTime.toString());
       Future.delayed(reuploadTime, () {
         reuploadTime = _incReuploadTime(reuploadTime);
         _uploadCachedFiles(reuploadTime);
@@ -344,7 +347,7 @@ class YustFileHandler {
     if (yustFile.storageFolderPath != null) {
       await Yust.fileService
           .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name)
-          .timeout(Duration(seconds: 1));
+          .timeout(Duration(seconds: 20));
     }
   }
 

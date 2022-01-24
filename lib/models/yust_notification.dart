@@ -4,7 +4,7 @@ import 'package:yust/models/yust_doc_setup.dart';
 
 part 'yust_notification.g.dart';
 
-@JsonSerializable(anyMap: true)
+@JsonSerializable()
 class YustNotification extends YustDoc {
   static final setup = YustDocSetup<YustNotification>(
     collectionName: 'notifications',

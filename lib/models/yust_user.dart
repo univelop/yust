@@ -5,7 +5,7 @@ import 'yust_doc_setup.dart';
 
 part 'yust_user.g.dart';
 
-@JsonSerializable(anyMap: true)
+@JsonSerializable()
 class YustUser extends YustDoc {
   static final setup = YustDocSetup<YustUser>(
     collectionName: 'users',

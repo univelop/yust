@@ -24,9 +24,9 @@ class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
   final bool multiple;
-  final YustFilesJson images;
+  final List<YustFile> images;
   final bool zoomable;
-  final void Function(YustFilesJson images)? onChanged;
+  final void Function(List<YustFile> images)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
   final String yustQuality;
@@ -59,9 +59,8 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   void initState() {
-    _files = widget.images
-        .map<YustFile>((image) => YustFile.fromJson(image))
-        .toList();
+    _files = widget.images;
+
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
     super.initState();
@@ -366,7 +365,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (mounted) {
         setState(() {});
       }
-      widget.onChanged!(_files.map((file) => file.toJson()).toList());
+      widget.onChanged!(_files);
       if (_currentImageNumber < _files.length) {
         _currentImageNumber += widget.imageCount;
       }
@@ -404,13 +403,13 @@ class YustImagePickerState extends State<YustImagePicker> {
           await firebase_storage.FirebaseStorage.instance
               .ref()
               .child(widget.folderPath)
-              .child(file.name)
+              .child(file.name!)
               .delete();
         } catch (e) {}
         setState(() {
           _files.remove(file);
         });
-        widget.onChanged!(_files.map((file) => file.toJson()).toList());
+        widget.onChanged!(_files);
       }
     }
   }

@@ -5,21 +5,36 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/yust.dart';
 
-class YustImageScreen extends StatelessWidget {
+class YustImageScreen extends StatefulWidget {
   final List<YustFile> files;
 
-  final int? activeImageIndex;
+  final int activeImageIndex;
 
   YustImageScreen({
     Key? key,
     required this.files,
-    this.activeImageIndex,
+    this.activeImageIndex = 0,
   }) : super(key: key);
 
   static const String routeName = '/imageScreen';
+
+  @override
+  _YustImageScreenState createState() => _YustImageScreenState();
+}
+
+class _YustImageScreenState extends State<YustImageScreen> {
+  late int activeImageIndex;
+  late PageController _pageController;
+  @override
+  void initState() {
+    activeImageIndex = widget.activeImageIndex;
+    _pageController = PageController(initialPage: activeImageIndex);
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (files.length == 1) {
+    if (widget.files.length == 1) {
       return _buildSingle(context);
     } else {
       return _buildMultiple(context);
@@ -27,7 +42,7 @@ class YustImageScreen extends StatelessWidget {
   }
 
   Widget _buildSingle(BuildContext context) {
-    final file = files.first;
+    final file = widget.files.first;
     if (file.url == null) {
       return SizedBox.shrink();
     }
@@ -55,21 +70,24 @@ class YustImageScreen extends StatelessWidget {
   }
 
   Widget _buildMultiple(BuildContext context) {
-    int firstPage = activeImageIndex ?? 0;
-    PageController _pageController = PageController(initialPage: firstPage);
     return Stack(
       children: [
         Container(
           child: PhotoViewGallery.builder(
-            itemCount: files.length,
+            itemCount: widget.files.length,
             scrollPhysics: const BouncingScrollPhysics(),
             pageController: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                activeImageIndex = index;
+              });
+            },
             builder: (BuildContext context, int index) {
               return PhotoViewGalleryPageOptions(
-                imageProvider: NetworkImage(files[index].url ?? ''),
+                imageProvider: NetworkImage(widget.files[index].url ?? ''),
                 minScale: PhotoViewComputedScale.contained,
                 heroAttributes:
-                    PhotoViewHeroAttributes(tag: files[index].url ?? ''),
+                    PhotoViewHeroAttributes(tag: widget.files[index].url ?? ''),
                 onTapUp: (context, details, controllerValue) {
                   Navigator.pop(context);
                 },
@@ -127,7 +145,7 @@ class YustImageScreen extends StatelessWidget {
             ),
           ),
         if (kIsWeb) _buildCloseButton(context),
-        _buildShareButton(context, files[activeImageIndex ?? 0]),
+        _buildShareButton(context, widget.files[activeImageIndex]),
       ],
     );
   }

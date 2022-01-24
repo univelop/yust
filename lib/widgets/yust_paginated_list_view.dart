@@ -45,6 +45,10 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
       query: query,
       itemsPerPage: 50,
       isLive: true,
+      initialLoader: SingleChildScrollView(
+        controller: scrollController,
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 

@@ -1,20 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+
 import 'package:yust/util/yust_serializable.dart';
 
-import '../yust.dart';
+const NULL_PLACEHOLDER = 'NULL_VALUE';
 
 abstract class YustDoc with YustSerializable {
   @JsonKey()
   String id;
 
-  @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
+  @JsonKey(
+      fromJson: YustDoc.convertTimestamp, toJson: YustDoc.convertToTimestamp)
   DateTime? createdAt;
 
   @JsonKey()
   String? createdBy;
 
-  @JsonKey(fromJson: YustDoc.dateTimeFromJson, toJson: YustDoc.dateTimeToJson)
+  @JsonKey(
+      fromJson: YustDoc.convertTimestamp, toJson: YustDoc.convertToTimestamp)
   DateTime? modifiedAt;
 
   @JsonKey()
@@ -40,8 +43,11 @@ abstract class YustDoc with YustSerializable {
 
   Map<String, dynamic> toJson();
 
-  static List<dynamic> docListToJson(List<dynamic> list) {
-    return list.map((item) => item.toJson()).toList();
+  static String? stringFromJson(String? str) {
+    if (str == NULL_PLACEHOLDER) {
+      return null;
+    }
+    return str;
   }
 
   static Map<String, T?> mapFromJson<T>(Map<String, dynamic>? map) {
@@ -49,12 +55,14 @@ abstract class YustDoc with YustSerializable {
       return {};
     }
     return map.map<String, T?>((key, value) {
-      if (value is FieldValue) {
+      if (value == NULL_PLACEHOLDER) {
+        return MapEntry(key, null);
+      } else if (value is FieldValue) {
         return MapEntry(key, null);
       } else if (value is Timestamp) {
-        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T?);
+        return MapEntry(key, YustDoc.convertTimestamp(value) as T?);
       } else if (value is Map && value['_seconds'] != null) {
-        return MapEntry(key, YustDoc.dateTimeFromJson(value) as T?);
+        return MapEntry(key, YustDoc.convertTimestamp(value) as T?);
       } else if (value is Map<String, dynamic>) {
         return MapEntry(key, YustDoc.mapFromJson(value) as T);
       } else {
@@ -70,68 +78,54 @@ abstract class YustDoc with YustSerializable {
       if (value == null && removeNullValues) {
         return MapEntry(key, FieldValue.delete());
       } else if (value is DateTime) {
-        return MapEntry(key, YustDoc.dateTimeToJson(value));
-      } else if (value is Map<String, dynamic>) {
-        return MapEntry(key, YustDoc.mapToJson(value));
-      } else if (value is List) {
-        return MapEntry(key, YustDoc.listToJson(value));
+        return MapEntry(key, YustDoc.convertToTimestamp(value));
       } else if (value is YustSerializable) {
         return MapEntry(key, (value as dynamic).toJson());
+      } else if (value is Map<String, dynamic>) {
+        return MapEntry(
+            key, YustDoc.mapToJson(value, removeNullValues: removeNullValues));
+      } else if (value is List) {
+        return MapEntry(key, YustDoc.listToJson(value));
       } else {
         return MapEntry(key, value);
       }
     });
   }
 
-  static List<dynamic>? listToJson(List<dynamic>? list,
-      {bool removeNullValues = true}) {
+  static Map<String, dynamic>? mapToPureJson(Map<String, dynamic>? map) {
+    return YustDoc.mapToJson(map, removeNullValues: false);
+  }
+
+  static List<dynamic>? listToJson(List<dynamic>? list) {
     if (list == null) return null;
     return list.map((value) {
-      if (value == null && removeNullValues) {
-        return FieldValue.delete();
-      } else if (value is DateTime) {
-        return YustDoc.dateTimeToJson(value);
-      } else if (value is Map<String, dynamic>) {
-        return YustDoc.mapToJson(value);
-      } else if (value is List) {
-        return YustDoc.listToJson(value);
+      if (value is DateTime) {
+        return YustDoc.convertToTimestamp(value);
       } else if (value is YustSerializable) {
         return (value as dynamic).toJson();
+      } else if (value is Map<String, dynamic>) {
+        return YustDoc.mapToJson(value, removeNullValues: false);
+      } else if (value is List) {
+        return YustDoc.listToJson(value);
       } else {
         return value;
       }
     }).toList();
   }
 
-  // TODO: delete, use convertTimestamp instead
-  static DateTime? dateTimeFromJson(dynamic timestamp) {
-    if (timestamp is Timestamp) {
-      return timestamp.toDate();
-    } else if (timestamp is String &&
-        RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(timestamp)) {
-      return DateTime.parse(timestamp);
-    } else if (timestamp is Map && timestamp['_seconds'] != null) {
-      return Timestamp(timestamp['_seconds'], timestamp['_nanoseconds'])
-          .toDate();
-    } else {
-      return null;
-    }
-  }
-
-  // TODO; delete
-  static dynamic dateTimeToJson(DateTime? dateTime) {
-    if (dateTime == null) {
-      return null;
-    } else if (Yust.useTimestamps) {
-      return Timestamp.fromDate(dateTime);
-    } else {
-      return dateTime.toIso8601String();
-    }
-  }
-
   static dynamic convertTimestamp(dynamic value) {
     if (value is Timestamp) {
       return value.toDate();
+    } else if (value is Map && value['_seconds'] != null) {
+      return Timestamp(value['_seconds'], value['_nanoseconds']).toDate();
+    } else {
+      return value;
+    }
+  }
+
+  static dynamic convertToTimestamp(dynamic value) {
+    if (value is DateTime) {
+      return Timestamp.fromDate(value);
     } else {
       return value;
     }

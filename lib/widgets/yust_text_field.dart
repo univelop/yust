@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:yust/yust.dart';
 
-typedef StringCallback = void Function(String);
-typedef TabCallback = void Function();
+typedef StringCallback = void Function(String?);
+typedef TapCallback = void Function();
+typedef DeleteCallback = Future<void> Function();
 
 class YustTextField extends StatefulWidget {
   final String? label;
   final String? value;
+  final TextStyle? textStyle;
   final StringCallback? onChanged;
 
-  /// if a validator is implemented, onEditingComplete gets only triggerd, if validator is true (true = returns null)
+  /// if a validator is implemented, onEditingComplete gets only triggered, if validator is true (true = returns null)
   final StringCallback? onEditingComplete;
   final TextEditingController? controller;
   final FormFieldValidator<String>? validator;
-  final TabCallback? onTab;
+  final TapCallback? onTap;
+  final DeleteCallback? onDelete;
   final int? maxLines;
   final int? minLines;
   final bool readOnly;
   final bool enabled;
+  final bool showSelected;
   final bool obscureText;
   final TextInputType? keyBoardType;
   final YustInputStyle? style;
@@ -30,18 +34,21 @@ class YustTextField extends StatefulWidget {
       {Key? key,
       this.label,
       this.value,
+      this.textStyle,
       this.onChanged,
       this.onEditingComplete,
       this.controller,
       this.validator,
-      this.onTab,
+      this.onTap,
+      this.onDelete,
       this.maxLines,
       this.minLines,
       this.enabled = true,
+      this.showSelected = true,
       this.readOnly = false,
       this.obscureText = false,
       this.keyBoardType,
-      this.style,
+      this.style = YustInputStyle.normal,
       this.prefixIcon,
       this.suffixIcon,
       this.textCapitalization = TextCapitalization.sentences,
@@ -68,7 +75,8 @@ class _YustTextFieldState extends State<YustTextField> {
     _initValue = widget.value ?? '';
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        var textFieldValue = _controller.value.text.trim();
+        final textFieldText = _controller.value.text.trim();
+        final textFieldValue = textFieldText == '' ? null : textFieldText;
         if (widget.validator == null) {
           widget.onEditingComplete!(textFieldValue);
         } else if (widget.validator!(textFieldValue) == null) {
@@ -95,36 +103,62 @@ class _YustTextFieldState extends State<YustTextField> {
       _controller.text = widget.value!;
       _initValue = widget.value!;
     }
-    return TextFormField(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-        border: widget.style == YustInputStyle.outlineBorder
-            ? OutlineInputBorder()
-            : null,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: widget.suffixIcon,
-      ),
-      maxLines: widget.obscureText ? 1 : widget.maxLines,
-      minLines: widget.minLines,
-      controller: _controller,
-      focusNode: _focusNode,
-      keyboardType: widget.keyBoardType,
-      textInputAction: widget.minLines != null
-          ? TextInputAction.newline
-          : TextInputAction.next,
-      onChanged: widget.onChanged == null
-          ? null
-          : (value) => widget.onChanged!(value.trim()),
-      onTap: widget.onTab,
-      readOnly: widget.readOnly,
-      enabled: widget.enabled,
-      obscureText: widget.obscureText,
-      textCapitalization: widget.textCapitalization,
-      autovalidateMode: widget.autovalidateMode,
-      validator: widget.validator == null
-          ? null
-          : (value) => widget.validator!(value!.trim()),
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                decoration: InputDecoration(
+                  labelText: widget.label,
+                  labelStyle: widget.showSelected
+                      ? null
+                      : TextStyle(
+                          color: Theme.of(context).textTheme.caption?.color ??
+                              Colors.black),
+                  contentPadding: const EdgeInsets.all(20.0),
+                  border: widget.style == YustInputStyle.outlineBorder
+                      ? OutlineInputBorder()
+                      : InputBorder.none,
+                  prefixIcon: widget.prefixIcon,
+                ),
+                style: widget.textStyle,
+                maxLines: widget.obscureText ? 1 : widget.maxLines,
+                minLines: widget.minLines,
+                controller: _controller,
+                focusNode: _focusNode,
+                keyboardType: widget.keyBoardType,
+                textInputAction: widget.minLines != null
+                    ? TextInputAction.newline
+                    : TextInputAction.next,
+                onChanged: widget.onChanged == null
+                    ? null
+                    : (value) =>
+                        widget.onChanged!(value == '' ? null : value.trim()),
+                onTap: widget.onTap,
+                readOnly: widget.readOnly,
+                enabled: widget.enabled,
+                obscureText: widget.obscureText,
+                textCapitalization: widget.textCapitalization,
+                autovalidateMode: widget.autovalidateMode,
+                validator: widget.validator == null
+                    ? null
+                    : (value) => widget.validator!(value!.trim()),
+              ),
+            ),
+            if (widget.onDelete != null && widget.value != '')
+              IconButton(
+                  onPressed: widget.onDelete!,
+                  icon: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).primaryColor,
+                  )),
+            widget.suffixIcon ?? SizedBox(),
+          ],
+        ),
+        if (widget.style == YustInputStyle.normal)
+          Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
+      ],
     );
   }
 }

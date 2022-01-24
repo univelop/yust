@@ -10,7 +10,8 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
   final List<List<dynamic>>? filter;
   final List<String>? orderBy;
-  final bool _doNotWait;
+  final bool showLoadingSpinner;
+  final Widget? loadingIndicator;
 
   /// There will never be a null for the list given.
   final Widget Function(List<T>, YustBuilderInsights) builder;
@@ -21,9 +22,10 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
     this.filter,
     this.orderBy,
     bool? doNotWait,
+    this.showLoadingSpinner = false,
+    this.loadingIndicator,
     required this.builder,
-  })   : _doNotWait = doNotWait ?? false,
-        super(key: key);
+  }) : super(key: key);
 
   @override
   YustDocsBuilderState<T> createState() => YustDocsBuilderState<T>();
@@ -34,24 +36,19 @@ class YustDocsBuilderState<T extends YustDoc>
   late Stream<List<T>> _docStream;
 
   void initStream() {
-    _docStream = Yust.service.getDocs<T>(
+    _docStream = Yust.databaseService.getDocs<T>(
       widget.modelSetup,
       filterList: widget.filter,
       orderByList: widget.orderBy,
     );
   }
 
-  bool updateStreamConditionally(YustDocsBuilder oldWidget) {
-    bool updated = false;
-
+  void updateStreamConditionally(YustDocsBuilder oldWidget) {
     if (widget.modelSetup != oldWidget.modelSetup ||
         !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
         !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
-      updated = true;
       initStream();
     }
-
-    return updated;
   }
 
   @override
@@ -79,8 +76,10 @@ class YustDocsBuilderState<T extends YustDoc>
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        if (opts.waiting! && !widget._doNotWait) {
-          return Center(child: CircularProgressIndicator());
+        if (opts.waiting! && widget.showLoadingSpinner) {
+          return widget.loadingIndicator != null
+              ? widget.loadingIndicator!
+              : Center(child: CircularProgressIndicator());
         }
         return widget.builder(snapshot.data ?? [], opts);
       },

@@ -3,37 +3,31 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yust/screens/reset_password.dart';
+import 'package:yust/screens/yust_reset_password_screen.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 
 import '../util/yust_exception.dart';
 import '../yust.dart';
 import '../yust_store.dart';
-import 'sign_up.dart';
+import 'yust_sign_up_screen.dart';
 
-class SignInScreen extends StatefulWidget {
+class YustSignInScreen extends StatefulWidget {
   static const String routeName = '/signIn';
   static const bool signInRequired = false;
 
   final String? logoAssetName;
-  @Deprecated('Use onSignedIn instead')
-  final String? targetRouteName;
-  @Deprecated('Use onSignedIn instead')
-  final dynamic targetRouteArguments;
 
-  SignInScreen({
+  YustSignInScreen({
     Key? key,
     this.logoAssetName,
-    this.targetRouteName,
-    this.targetRouteArguments,
   }) : super(key: key);
 
   @override
-  _SignInScreenState createState() => _SignInScreenState();
+  _YustSignInScreenState createState() => _YustSignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _YustSignInScreenState extends State<YustSignInScreen> {
   final _formKey = GlobalKey<FormState>();
   String? _email;
   String? _password;
@@ -176,7 +170,8 @@ class _SignInScreenState extends State<SignInScreen> {
                           horizontal: 20.0, vertical: 10.0),
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, SignUpScreen.routeName,
+                          Navigator.pushNamed(
+                              context, YustSignUpScreen.routeName,
                               arguments: arguments);
                         },
                         child: Text('Hier Registrieren',
@@ -191,7 +186,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       child: TextButton(
                         onPressed: () {
                           Navigator.pushNamed(
-                              context, ResetPasswordScreen.routeName);
+                              context, YustResetPasswordScreen.routeName);
                         },
                         child: Text('Passwort vergessen',
                             style: TextStyle(
@@ -226,29 +221,22 @@ class _SignInScreenState extends State<SignInScreen> {
       final prefs = await SharedPreferences.getInstance();
       prefs.setString('email', _email!);
       try {
-        await Yust.service
+        await Yust.authService
             .signIn(context, _email!, _password!)
             .timeout(Duration(seconds: 10));
         if (_onSignedIn != null) _onSignedIn!();
-        if (mounted) {
-          Navigator.popUntil(
-            context,
-            (route) => ![SignUpScreen.routeName, SignInScreen.routeName]
-                .contains(route.settings.name),
-          );
-        }
       } on YustException catch (err) {
-        Yust.service.showAlert(context, 'Fehler', err.message);
+        Yust.alertService.showAlert(context, 'Fehler', err.message);
       } on PlatformException catch (err) {
-        Yust.service.showAlert(context, 'Fehler', err.message!);
+        Yust.alertService.showAlert(context, 'Fehler', err.message!);
       } on TimeoutException catch (_) {
-        Yust.service.showAlert(
+        Yust.alertService.showAlert(
           context,
           'Fehler',
           'Zeitüberschreitung der Anfrage',
         );
       } catch (err) {
-        Yust.service.showAlert(context, 'Fehler', err.toString());
+        Yust.alertService.showAlert(context, 'Fehler', err.toString());
       }
     }
   }

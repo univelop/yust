@@ -5,8 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/util/yust_file_handler.dart';
-import 'package:yust/widgets/yust_input_tile.dart';
-
+import 'package:yust/widgets/yust_list_tile.dart';
 import '../yust.dart';
 
 class YustFilePicker extends StatefulWidget {
@@ -71,15 +70,14 @@ class YustFilePickerState extends State<YustFilePicker> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: _fileHandler.updateFiles(widget.files),
-      builder: (context, snapshot) {
-        return YustInputTile(
-            child: _buildAddButton(context),
-            label: widget.label,
-            prefixIcon: widget.prefixIcon,
-            suffixChild: _buildFiles(context));
-      },
-    );
+        future: _fileHandler.updateFiles(widget.files),
+        builder: (context, snapshot) {
+          return YustListTile(
+              suffixChild: _buildAddButton(context),
+              label: widget.label,
+              prefixIcon: widget.prefixIcon,
+              below: _buildFiles(context));
+        });
   }
 
   _buildAddButton(BuildContext context) {
@@ -87,7 +85,9 @@ class YustFilePickerState extends State<YustFilePicker> {
       return SizedBox.shrink();
     }
     return IconButton(
-      icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
+      iconSize: 40,
+      icon:
+          Icon(Icons.add_circle, color: Theme.of(context).colorScheme.primary),
       onPressed: _enabled ? _pickFiles : null,
     );
   }
@@ -115,7 +115,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       ),
       trailing: _buildDeleteButton(file),
       onTap: () {
-        Yust.service.unfocusCurrent(context);
+        Yust.helperService.unfocusCurrent(context);
         _fileHandler.showFile(context, file);
       },
       contentPadding:
@@ -132,6 +132,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
     return IconButton(
       icon: Icon(Icons.delete),
+      color: Theme.of(context).colorScheme.primary,
       onPressed: _enabled ? () => _deleteFile(file) : null,
     );
   }
@@ -147,14 +148,14 @@ class YustFilePickerState extends State<YustFilePicker> {
       icon: Icon(Icons.cloud_upload_outlined),
       color: Colors.black,
       onPressed: () async {
-        await Yust.service.showAlert(context, 'Lokal gespeicherte Datei',
+        await Yust.alertService.showAlert(context, 'Lokal gespeicherte Datei',
             'Diese Datei ist noch nicht hochgeladen.');
       },
     );
   }
 
   Future<void> _pickFiles() async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     final result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
       for (final platformFile in result.files) {
@@ -182,7 +183,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
 
     if (_fileHandler.getFiles().any((file) => file.name == newYustFile.name)) {
-      Yust.service.showAlert(context, 'Nicht möglich',
+      Yust.alertService.showAlert(context, 'Nicht möglich',
           'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
     } else {
       await _fileHandler.addFile(newYustFile);
@@ -195,8 +196,8 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Future<void> _deleteFile(YustFile yustFile) async {
-    Yust.service.unfocusCurrent(context);
-    final confirmed = await Yust.service
+    Yust.helperService.unfocusCurrent(context);
+    final confirmed = await Yust.alertService
         .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
     if (confirmed == true) {
       try {
@@ -207,7 +208,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           setState(() {});
         }
       } catch (e) {
-        await Yust.service.showAlert(context, 'Ups',
+        await Yust.alertService.showAlert(context, 'Ups',
             'Die Datei kann nicht gelöscht werden. ${e.toString()}');
       }
     }

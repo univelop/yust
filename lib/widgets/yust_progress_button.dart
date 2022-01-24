@@ -60,7 +60,7 @@ class _YustProgressButtonState extends State<YustProgressButton> {
   }
 
   void onPressed() async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     setState(() {
       _inProgressLocal = true;
     });

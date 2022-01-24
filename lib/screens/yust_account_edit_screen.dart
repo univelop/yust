@@ -7,17 +7,17 @@ import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 
 import '../yust_store.dart';
 
-class AccountEditScreen<T extends YustStore> extends StatelessWidget {
+class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
   static const String routeName = '/accountEdit';
   static const bool signInRequired = true;
 
   final bool askForGender;
 
-  AccountEditScreen({Key? key, this.askForGender = false}) : super(key: key);
+  YustAccountEditScreen({Key? key, this.askForGender = false})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +42,8 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 },
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 onEditingComplete: (value) async {
-                  user.firstName = value;
-                  Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+                  user.firstName = value!; // value was checked by validator
+                  Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
                 },
               ),
               YustTextField(
@@ -58,22 +58,22 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                 },
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 onEditingComplete: (value) async {
-                  user.lastName = value;
-                  Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+                  user.lastName = value!; // value was checked by validator
+                  Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
                 },
               ),
               YustTextField(
                 label: 'E-Mail',
                 value: user.email,
                 readOnly: true,
-                onTab: () => _changeEmail(context),
+                onTap: () => _changeEmail(context),
               ),
               YustTextField(
                 label: 'Passwort',
                 value: '*****',
                 obscureText: true,
                 readOnly: true,
-                onTab: () => _changePassword(context),
+                onTap: () => _changePassword(context),
               ),
             ],
           );
@@ -93,7 +93,7 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
       optionLabels: ['Herr', 'Frau'],
       onSelected: (dynamic value) {
         user.gender = value;
-        Yust.service.saveDoc<YustUser>(Yust.userSetup, user);
+        Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
       },
     );
   }
@@ -137,19 +137,21 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                   onPressed: () async {
                     try {
                       EasyLoading.show(status: 'E-Mail wird geändert...');
-                      await Yust.service.changeEmail(email, password);
+                      await Yust.authService.changeEmail(email, password);
                       EasyLoading.dismiss();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'E-Mail geändert',
+                      Yust.alertService.showAlert(context, 'E-Mail geändert',
                           'Deine E-Mail wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
                       EasyLoading.dismiss();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.message!);
+                      Yust.alertService
+                          .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
                       EasyLoading.dismiss();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.toString());
+                      Yust.alertService
+                          .showAlert(context, 'Fehler', err.toString());
                     }
                   },
                 ),
@@ -201,20 +203,22 @@ class AccountEditScreen<T extends YustStore> extends StatelessWidget {
                   onPressed: () async {
                     try {
                       EasyLoading.show(status: 'Passwort wird geändert...');
-                      await Yust.service
+                      await Yust.authService
                           .changePassword(newPassword, oldPassword);
                       EasyLoading.dismiss();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Passwort geändert',
+                      Yust.alertService.showAlert(context, 'Passwort geändert',
                           'Dein Passwort wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
                       EasyLoading.dismiss();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.message!);
+                      Yust.alertService
+                          .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
                       EasyLoading.dismiss();
                       Navigator.of(context).pop();
-                      Yust.service.showAlert(context, 'Fehler', err.toString());
+                      Yust.alertService
+                          .showAlert(context, 'Fehler', err.toString());
                     }
                   },
                 ),

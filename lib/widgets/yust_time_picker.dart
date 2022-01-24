@@ -41,8 +41,8 @@ class _YustTimePickerState extends State<YustTimePicker> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        TextEditingController(text: Yust.service.formatTime(widget.value));
+    _controller = TextEditingController(
+        text: Yust.helperService.formatTime(widget.value));
     _maskFormatter = MaskTextInputFormatter(
       mask: 'H#:M#',
       filter: {
@@ -50,7 +50,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
         'H': RegExp(r'[0-2]'),
         'M': RegExp(r'[0-5]')
       },
-      initialText: Yust.service.formatTime(widget.value),
+      initialText: Yust.helperService.formatTime(widget.value),
     );
   }
 
@@ -66,50 +66,56 @@ class _YustTimePickerState extends State<YustTimePicker> {
     if (widget.value == null) {
       _controller!.text = '';
     }
-    return TextField(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-        border: widget.style == YustInputStyle.outlineBorder
-            ? OutlineInputBorder()
-            : null,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: _buildTrailing(context),
-        hintText: 'HH:MM',
-      ),
-      controller: _controller,
-      inputFormatters: [_maskFormatter!],
-      textInputAction: TextInputAction.next,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      onChanged:
-          widget.onChanged == null ? null : (value) => _setTimeString(value),
-      onEditingComplete: widget.onEditingComplete,
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            decoration: InputDecoration(
+              labelText: widget.label,
+              contentPadding: const EdgeInsets.all(20.0),
+              border: widget.style == YustInputStyle.outlineBorder
+                  ? OutlineInputBorder()
+                  : null,
+              prefixIcon: widget.prefixIcon,
+              suffixIcon: _buildTrailing(context),
+              hintText: 'HH:MM',
+            ),
+            controller: _controller,
+            inputFormatters: [_maskFormatter!],
+            textInputAction: TextInputAction.next,
+            focusNode: widget.focusNode,
+            autofocus: widget.autofocus,
+            onChanged: widget.onChanged == null
+                ? null
+                : (value) => _setTimeString(value),
+            onEditingComplete: widget.onEditingComplete,
+          ),
+        ),
+        if (_controller!.text != '' && !widget.hideClearButton)
+          IconButton(
+              onPressed: widget.onChanged == null ? null : () => _setTime(null),
+              icon: Icon(
+                Icons.delete,
+                color: Theme.of(context).primaryColor,
+              )),
+      ],
     );
   }
 
   /// build the clock- / x-icon
   Widget _buildTrailing(BuildContext context) {
-    if (_controller!.text == '') {
-      return IconButton(
-        icon: Icon(Icons.access_time),
-        onPressed: widget.onChanged == null
-            ? null
-            : () => _pickTime(context, widget.popUpTitle),
-      );
-    } else {
-      if (widget.hideClearButton) {
-        return SizedBox.shrink();
-      }
-      return IconButton(
-        icon: Icon(Icons.clear),
-        onPressed: widget.onChanged == null ? null : () => _setTime(null),
-      );
-    }
+    return (_controller!.text == '')
+        ? IconButton(
+            icon: Icon(Icons.access_time),
+            onPressed: widget.onChanged == null
+                ? null
+                : () => _pickTime(context, widget.popUpTitle),
+          )
+        : SizedBox();
   }
 
   void _pickTime(BuildContext context, String title) async {
-    Yust.service.unfocusCurrent(context);
+    Yust.helperService.unfocusCurrent(context);
     final now = DateTime.now();
     var dateTime = DateTime(1970, 1, 1, now.hour, now.minute, 0, 0, 0);
     final initialTime = TimeOfDay.fromDateTime(dateTime);
@@ -143,7 +149,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
   void _setTime(DateTime? dateTime) {
     setState(() {
       _maskFormatter!.clear();
-      _controller!.text = Yust.service.formatTime(dateTime);
+      _controller!.text = Yust.helperService.formatTime(dateTime);
     });
     widget.onChanged!(dateTime);
   }

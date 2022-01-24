@@ -1,3 +1,11 @@
+## 3.0.0-dev.1 - 2022-01-08
+
+* New widget layout
+* Add pagination for lists
+* Download images
+* Improve routing
+* Fix bugs
+
 ## 2.6.1 - 2021-11-29
 
 * Fix bugs

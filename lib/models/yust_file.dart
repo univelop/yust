@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+typedef YustFileJson = Map<String, String?>;
+typedef YustFilesJson = List<YustFileJson>;
+
 class YustFile {
   String name;
   String? url;
@@ -16,15 +19,15 @@ class YustFile {
     this.processing = false,
   });
 
-  factory YustFile.fromJson(Map<String, dynamic> json) {
+  factory YustFile.fromJson(YustFileJson json) {
     return YustFile(
       name: json['name'] as String,
       url: json['url'] as String,
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
+  YustFileJson toJson() {
+    return <String, String?>{
       'name': name,
       'url': url,
     };

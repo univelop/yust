@@ -56,7 +56,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
   }
 
   bool updateStreamConditionally(YustDocBuilder oldWidget) {
-    bool updated = false;
+    var updated = false;
 
     if (widget.modelSetup != oldWidget.modelSetup ||
         widget.id != oldWidget.id ||

@@ -32,6 +32,7 @@ class YustUser extends YustDoc {
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
 }
 

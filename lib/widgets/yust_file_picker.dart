@@ -14,12 +14,13 @@ import 'package:yust/widgets/yust_list_tile.dart';
 import '../yust.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:yust/models/yust_file.dart';
 
 class YustFilePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
-  final List<Map<String, String>> files;
-  final void Function(List<Map<String, String>> files)? onChanged;
+  final YustFilesJson files;
+  final void Function(YustFilesJson files)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
 
@@ -38,8 +39,8 @@ class YustFilePicker extends StatefulWidget {
 }
 
 class YustFilePickerState extends State<YustFilePicker> {
-  late List<Map<String, String>> _files;
-  Map<String?, bool> _processing = {};
+  late YustFilesJson _files;
+  final Map<String?, bool> _processing = {};
   late bool _enabled;
 
   @override
@@ -58,7 +59,7 @@ class YustFilePickerState extends State<YustFilePicker> {
         below: _buildFiles(context));
   }
 
-  _buildAddButton(BuildContext context) {
+  Widget _buildAddButton(BuildContext context) {
     if (!_enabled) {
       return SizedBox.shrink();
     }
@@ -76,7 +77,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Widget _buildFile(BuildContext context, Map<String, String> file) {
+  Widget _buildFile(BuildContext context, YustFileJson file) {
     if (file['name'] == null) {
       return SizedBox.shrink();
     }
@@ -98,7 +99,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Widget _buildDeleteButton(Map<String, String> file) {
+  Widget _buildDeleteButton(YustFileJson file) {
     if (!_enabled) {
       return SizedBox.shrink();
     }
@@ -113,7 +114,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Future<void> addFile(
-      Map<String, String> fileData, File? file, Uint8List? bytes) async {
+      YustFileJson fileData, File? file, Uint8List? bytes) async {
     setState(() {
       _files.add(fileData);
       _files.sort((a, b) => a['name']!.compareTo(b['name']!));
@@ -129,11 +130,11 @@ class YustFilePickerState extends State<YustFilePicker> {
       );
     } on YustException catch (e) {
       if (mounted) {
-        Yust.alertService.showAlert(context, 'Ups', e.message);
+        await Yust.alertService.showAlert(context, 'Ups', e.message);
       }
     } catch (e) {
       if (mounted) {
-        Yust.alertService.showAlert(
+        await Yust.alertService.showAlert(
             context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
       }
     }
@@ -151,7 +152,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     Yust.helperService.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen einer Datei ist eine Internetverbindung erforderlich.');
     } else {
       final result = await FilePicker.platform.pickFiles(allowMultiple: true);
@@ -162,11 +163,11 @@ class YustFilePickerState extends State<YustFilePicker> {
           if (ext != null && name.split('.').last != ext) {
             name += '.' + ext;
           }
-          Map<String, String> fileData = {
+          YustFileJson fileData = {
             'name': name,
           };
           if (_files.any((file) => file['name'] == fileData['name'])) {
-            Yust.alertService.showAlert(context, 'Nicht möglich',
+            await Yust.alertService.showAlert(context, 'Nicht möglich',
                 'Eine Datei mit dem Namen ${fileData['name']} existiert bereits.');
           } else {
             File? file;
@@ -181,11 +182,11 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  Future<void> _showFile(Map<String, String> file) async {
+  Future<void> _showFile(YustFileJson file) async {
     Yust.helperService.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Anzeigen einer Datei ist eine Internetverbindung erforderlich.');
       // is it a valid file?
     } else if (file['name'] != null && _processing[file['name']] != true) {
@@ -215,7 +216,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  Future<void> _launchBrowser(Map<String, String> file) async {
+  Future<void> _launchBrowser(YustFileJson file) async {
     if (await canLaunch(file['url']!)) {
       await launch(file['url']!);
     } else {
@@ -224,11 +225,11 @@ class YustFilePickerState extends State<YustFilePicker> {
     }
   }
 
-  Future<void> _deleteFile(Map<String, String> file) async {
+  Future<void> _deleteFile(YustFileJson file) async {
     Yust.helperService.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Löschen einer Datei ist eine Internetverbindung erforderlich.');
     } else if (file['name'] != null) {
       final confirmed = await Yust.alertService

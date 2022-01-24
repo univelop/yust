@@ -24,9 +24,9 @@ class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
   final bool multiple;
-  final List<Map<String, dynamic>> images;
+  final YustFilesJson images;
   final bool zoomable;
-  final void Function(List<Map<String, dynamic>> images)? onChanged;
+  final void Function(YustFilesJson images)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
   final String yustQuality;
@@ -46,7 +46,7 @@ class YustImagePicker extends StatefulWidget {
     this.readOnly = false,
     this.yustQuality = 'medium',
     int? imageCount,
-  })  : this.imageCount = imageCount ?? 15,
+  })  : imageCount = imageCount ?? 15,
         super(key: key);
   @override
   YustImagePickerState createState() => YustImagePickerState();
@@ -273,7 +273,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
       if (!kIsWeb) {
@@ -375,7 +375,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {
           _files.remove(newFile);
         });
-        Yust.alertService.showAlert(context, 'Ups', e.toString());
+        await Yust.alertService.showAlert(context, 'Ups', e.toString());
       }
     }
   }
@@ -394,7 +394,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     Yust.helperService.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
     } else {
       final confirmed = await Yust.alertService

@@ -29,6 +29,7 @@ abstract class YustDoc {
 
   YustDoc.fromJson(Map<String, dynamic> json) : this.id = '';
 
+  @override
   Map<String, dynamic> toJson();
 
   static dynamic convertTimestamp(dynamic value) {

@@ -28,5 +28,6 @@ class YustNotification extends YustDoc {
   factory YustNotification.fromJson(Map<String, dynamic> json) =>
       _$YustNotificationFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$YustNotificationToJson(this);
 }

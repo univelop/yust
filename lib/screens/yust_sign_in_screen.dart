@@ -226,17 +226,17 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
             .timeout(Duration(seconds: 10));
         if (_onSignedIn != null) _onSignedIn!();
       } on YustException catch (err) {
-        Yust.alertService.showAlert(context, 'Fehler', err.message);
+        await Yust.alertService.showAlert(context, 'Fehler', err.message);
       } on PlatformException catch (err) {
-        Yust.alertService.showAlert(context, 'Fehler', err.message!);
+        await Yust.alertService.showAlert(context, 'Fehler', err.message!);
       } on TimeoutException catch (_) {
-        Yust.alertService.showAlert(
+        await Yust.alertService.showAlert(
           context,
           'Fehler',
           'Zeitüberschreitung der Anfrage',
         );
       } catch (err) {
-        Yust.alertService.showAlert(context, 'Fehler', err.toString());
+        await Yust.alertService.showAlert(context, 'Fehler', err.toString());
       }
     }
   }

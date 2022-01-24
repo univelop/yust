@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_doc_setup.dart';
 import "package:fake_cloud_firestore/fake_cloud_firestore.dart";
+import 'package:yust/util/traverse_object.dart';
 
 import '../yust.dart';
 
@@ -100,7 +103,15 @@ class YustDatabaseService {
     }
     final data = snapshot.data();
     if (data is Map<String, dynamic>) {
-      return modelSetup.fromJson(data);
+      // Convert Timestamps to ISOStrings
+      final modifiedData = TraverseObject.traverseObject(data, (currentNode) {
+        // Convert Timestamp to Iso8601-String, as this is the format json_serializable expects
+        if (currentNode.value is Timestamp) {
+          return (currentNode.value as Timestamp).toDate().toIso8601String();
+        }
+        return currentNode.value;
+      });
+      return modelSetup.fromJson(modifiedData);
     }
   }
 
@@ -175,6 +186,7 @@ class YustDatabaseService {
     bool merge = true,
     bool trackModification = true,
     bool skipOnSave = false,
+    bool? removeNullValues,
   }) async {
     var collection = fireStore.collection(_getCollectionPath(modelSetup));
     if (trackModification) {
@@ -197,7 +209,38 @@ class YustDatabaseService {
       await modelSetup.onSave!(doc);
     }
     final jsonDoc = doc.toJson();
-    await collection.doc(doc.id).set(jsonDoc, SetOptions(merge: merge));
+
+    final modifiedDoc = prepareJsonForFirebase(
+      jsonDoc,
+      removeNullValues: removeNullValues ?? modelSetup.removeNullValues,
+    );
+    await collection.doc(doc.id).set(modifiedDoc, SetOptions(merge: merge));
+  }
+
+  /// Regex that matches Strings created by DateTime.toIso8601String()
+  final iso8601Regex = RegExp(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.?\d{0,9}');
+
+  /// Converts DateTimes to Timestamps and removes null values (if not in List)
+  Map<String, dynamic> prepareJsonForFirebase(
+    Map<String, dynamic> obj, {
+    bool removeNullValues = true,
+  }) {
+    final modifiedObj = TraverseObject.traverseObject(obj, (currentNode) {
+      if (removeNullValues &&
+          !currentNode.info.isInList &&
+          currentNode.value == null) {
+        return FieldValue.delete();
+      }
+      if (currentNode.value is DateTime) {
+        return Timestamp.fromDate(currentNode.value);
+      }
+      if (currentNode.value is String &&
+          iso8601Regex.hasMatch(currentNode.value)) {
+        return Timestamp.fromDate(DateTime.parse(currentNode.value));
+      }
+      return currentNode.value;
+    });
+    return modifiedObj;
   }
 
   Future<void> deleteDocs<T extends YustDoc>(
@@ -232,6 +275,7 @@ class YustDatabaseService {
     YustDocSetup<T> modelSetup, {
     required T doc,
     Future<void> Function(T)? onInitialised,
+    bool? removeNullValues,
   }) async {
     doc = initDoc<T>(modelSetup, doc);
 
@@ -239,7 +283,11 @@ class YustDatabaseService {
       await onInitialised(doc);
     }
 
-    await saveDoc<T>(modelSetup, doc);
+    await saveDoc<T>(
+      modelSetup,
+      doc,
+      removeNullValues: removeNullValues ?? modelSetup.removeNullValues,
+    );
 
     return doc;
   }

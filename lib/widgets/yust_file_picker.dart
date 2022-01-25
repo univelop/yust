@@ -121,7 +121,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     });
 
     try {
-      fileData.name = await Yust.fileService.uploadFile(
+      fileData.url = await Yust.fileService.uploadFile(
         path: widget.folderPath,
         name: fileData.name!,
         file: file,

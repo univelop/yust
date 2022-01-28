@@ -188,13 +188,13 @@ class YustAlertService {
                               label: getItemLabel(item ?? ''),
                               value: newItemIds.contains(getItemId(item) ?? ''),
                               onChanged: (value) {
-                                if (value == false) {
-                                  setState(() {
-                                    newItemIds.remove(getItemId(item) ?? '');
-                                  });
-                                } else if (value == true) {
+                                if (value) {
                                   setState(() {
                                     newItemIds.add(getItemId(item) ?? '');
+                                  });
+                                } else {
+                                  setState(() {
+                                    newItemIds.remove(getItemId(item) ?? '');
                                   });
                                 }
                               },

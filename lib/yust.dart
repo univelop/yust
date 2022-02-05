@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/yust_doc_setup.dart';
@@ -24,6 +25,7 @@ enum YustInputStyle {
 
 class Yust {
   static late YustStore store;
+  static late FirebaseOptions firebaseOptions;
   static late YustAuthService authService;
   static late final YustDatabaseService databaseService;
   static late final YustFileService fileService;
@@ -53,6 +55,7 @@ class Yust {
 
   static Future<void> initialize({
     YustStore? store,
+    FirebaseOptions? firebaseConfig,
     YustDocSetup? userSetup,
     bool useTimestamps = false,
     bool useSubcollections = false,
@@ -60,8 +63,10 @@ class Yust {
     String? storageUrl,
     String? imagePlaceholderPath,
     String? emulatorAddress,
+    String? appName,
   }) async {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+        name: kIsWeb ? null : appName, options: firebaseConfig);
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {

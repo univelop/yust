@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_select.dart';
+import 'package:yust/widgets/yust_switch.dart';
 
 class YustAlertService {
   final _yustServiceValidationKey = GlobalKey<FormState>();
@@ -155,6 +156,80 @@ class YustAlertService {
         );
       },
     );
+  }
+
+  /// Returns newly selected items (only) after confirmation.
+  Future<List<String>> showCheckListDialog({
+    required BuildContext context,
+    required List<dynamic> choosableItems,
+    required List<String> priorItemIds,
+    required String? Function(dynamic) getItemLabel,
+    required String? Function(dynamic) getItemId,
+  }) async {
+    final newItemIds = List<String>.from(priorItemIds);
+    var isAborted = true;
+    await showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: Text('Pflichtfelder'),
+                content: Container(
+                  width: 300,
+                  height: 500,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: choosableItems
+                          .map(
+                            (item) => YustSwitch(
+                              label: getItemLabel(item ?? ''),
+                              value: newItemIds.contains(getItemId(item) ?? ''),
+                              onChanged: (value) {
+                                if (value) {
+                                  setState(() {
+                                    newItemIds.add(getItemId(item) ?? '');
+                                  });
+                                } else {
+                                  setState(() {
+                                    newItemIds.remove(getItemId(item) ?? '');
+                                  });
+                                }
+                              },
+                              switchRepresentation: 'checkbox',
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      isAborted = false;
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      isAborted = true;
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Abbrechen'),
+                  ),
+                ],
+              );
+            },
+          );
+        });
+    if (isAborted) {
+      return priorItemIds;
+    } else {
+      return newItemIds;
+    }
   }
 
   void showToast(BuildContext context, String message) {

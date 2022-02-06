@@ -46,6 +46,7 @@ class YustAlertService {
               },
             ),
             TextButton(
+              key: Key(action),
               child: Text(action),
               onPressed: () {
                 Navigator.of(context).pop(true);

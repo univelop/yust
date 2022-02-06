@@ -18,7 +18,7 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
   final List<String>? orderBy;
   final bool showLoadingSpinner;
   final bool createIfNull;
-  final Widget Function(T?, YustBuilderInsights) builder;
+  final Widget Function(T?, YustBuilderInsights, BuildContext) builder;
 
   YustDocBuilder({
     Key? key,
@@ -102,7 +102,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        return widget.builder(doc, opts);
+        return widget.builder(doc, opts, context);
       },
     );
   }

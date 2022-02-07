@@ -103,16 +103,17 @@ class TraverseObject {
       // We need to check if not null because of 'typeof null == "object"'
       if (value is List || value is Map || value is Set) {
         // When we are at a leaf node, first call the innerNodeCallback
+        final clonedValue = info.cloneObject ? _shallowClone(value) : value;
         innerNodeCallback(
           TraversalCurrentNode(
             parent: obj,
             key: key,
-            value: info.cloneObject ? _shallowClone(value) : value,
+            value: clonedValue,
             info: newInfo,
           ),
         );
         obj[key] = _traverseRecursive(
-          value,
+          clonedValue,
           leafNodeCallback,
           innerNodeCallback,
           newInfo,

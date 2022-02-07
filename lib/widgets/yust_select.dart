@@ -40,7 +40,7 @@ class YustSelect<T> extends StatelessWidget {
       style: style,
       onTap:
           (onSelected == null || readOnly) ? null : () => _selectValue(context),
-      onDelete: onDelete,
+      onDelete: readOnly ? null : onDelete,
     );
   }
 

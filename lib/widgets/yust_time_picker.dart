@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:yust/widgets/yust_date_picker.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:yust/widgets/yust_date_picker.dart';
 
 import '../yust.dart';
 
@@ -15,6 +15,7 @@ class YustTimePicker extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final String popUpTitle;
+  final bool readOnly;
 
   YustTimePicker({
     Key? key,
@@ -28,6 +29,7 @@ class YustTimePicker extends StatefulWidget {
     this.focusNode,
     this.autofocus = false,
     this.popUpTitle = 'Uhrzeit wählen',
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -89,9 +91,12 @@ class _YustTimePickerState extends State<YustTimePicker> {
                 ? null
                 : (value) => _setTimeString(value),
             onEditingComplete: widget.onEditingComplete,
+            readOnly: widget.readOnly,
           ),
         ),
-        if (_controller!.text != '' && !widget.hideClearButton)
+        if (_controller!.text != '' &&
+            !widget.hideClearButton &&
+            !widget.readOnly)
           IconButton(
               onPressed: widget.onChanged == null ? null : () => _setTime(null),
               icon: Icon(

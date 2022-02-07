@@ -43,6 +43,13 @@ abstract class YustDoc with YustSerializable {
 
   Map<String, dynamic> toJson();
 
+  Map<String, dynamic> toExportJson() {
+    final filteredJson = toJson();
+    ['createdBy', 'modifiedBy', 'userId', 'envId']
+        .forEach((key) => filteredJson.remove(key));
+    return filteredJson;
+  }
+
   static String? stringFromJson(String? str) {
     if (str == NULL_PLACEHOLDER) {
       return null;

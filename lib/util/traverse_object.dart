@@ -2,7 +2,7 @@ import 'dart:collection';
 
 class TraversalInfo {
   final LinkedHashSet<dynamic> visitedNodes;
-  final String? currentPath;
+  final List<String> currentPath;
   final int depth;
   final bool cloneObject;
   final bool isInList;
@@ -51,12 +51,13 @@ class TraverseObject {
 
   static Map<String, dynamic> traverseObject(
     Map<String, dynamic> obj,
-    TraversalCallback callback, {
+    TraversalCallback leafNodeCallback, {
+    TraversalCallback? innerNodeCallback,
     bool cloneObject = true,
   }) {
     final info = TraversalInfo(
-      visitedNodes: new LinkedHashSet<dynamic>(),
-      currentPath: null,
+      visitedNodes: LinkedHashSet<dynamic>(),
+      currentPath: [],
       depth: 0,
       cloneObject: cloneObject,
       isInList: false,
@@ -65,12 +66,17 @@ class TraverseObject {
     if (_isBuiltIn(obj)) return obj;
 
     return Map<String, dynamic>.from(_traverseRecursive(
-        cloneObject ? _shallowClone(obj) : obj, callback, info));
+      cloneObject ? _shallowClone(obj) : obj,
+      leafNodeCallback,
+      innerNodeCallback ?? (currentNode) => currentNode.value,
+      info,
+    ));
   }
 
   static dynamic _traverseRecursive(
     dynamic obj,
-    TraversalCallback callback,
+    TraversalCallback leafNodeCallback,
+    TraversalCallback innerNodeCallback,
     TraversalInfo info,
   ) {
     if (info.visitedNodes.contains(obj)) return obj;
@@ -79,11 +85,10 @@ class TraverseObject {
 
     for (final key in _keys(obj)) {
       final value = (obj)[key];
-      final previousPath = info.currentPath;
-      final currentPath =
-          previousPath == null ? "${key}" : "${previousPath}.${key}";
+      final currentPath = List<String>.from(info.currentPath);
+      currentPath.add(key.toString());
 
-      final newInfo = new TraversalInfo(
+      final newInfo = TraversalInfo(
         currentPath: currentPath,
         visitedNodes: info.visitedNodes,
         depth: info.depth + 1,
@@ -97,12 +102,25 @@ class TraverseObject {
       // Check if we can traverse deeper
       // We need to check if not null because of 'typeof null == "object"'
       if (value is List || value is Map || value is Set) {
+        // When we are at a leaf node, first call the innerNodeCallback
+        innerNodeCallback(
+          TraversalCurrentNode(
+            parent: obj,
+            key: key,
+            value: info.cloneObject ? _shallowClone(value) : value,
+            info: newInfo,
+          ),
+        );
         obj[key] = _traverseRecursive(
-            info.cloneObject ? _shallowClone(value) : value, callback, newInfo);
+          value,
+          leafNodeCallback,
+          innerNodeCallback,
+          newInfo,
+        );
       } else if (value != null) {
-        // When we are at a leaf node, call the callback
-        obj[key] = callback(
-          new TraversalCurrentNode(
+        // When we are at a leaf node, call the leafNodeCallback
+        obj[key] = leafNodeCallback(
+          TraversalCurrentNode(
             parent: obj,
             key: key,
             value: value,

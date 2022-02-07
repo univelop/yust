@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/yust_doc_setup.dart';
@@ -63,10 +62,8 @@ class Yust {
     String? storageUrl,
     String? imagePlaceholderPath,
     String? emulatorAddress,
-    String? appName,
   }) async {
-    await Firebase.initializeApp(
-        name: kIsWeb ? null : appName, options: firebaseConfig);
+    await Firebase.initializeApp(options: firebaseConfig);
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {

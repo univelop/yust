@@ -25,8 +25,8 @@ enum YustInputStyle {
 class Yust {
   static late YustStore store;
   static late YustAuthService authService;
-  static late final YustDatabaseService databaseService;
-  static late final YustFileService fileService;
+  static late YustDatabaseService databaseService;
+  static late YustFileService fileService;
   static final YustAlertService alertService = YustAlertService();
   static final YustHelperService helperService = YustHelperService();
   static late YustDocSetup<YustUser> userSetup;

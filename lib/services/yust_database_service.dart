@@ -258,8 +258,15 @@ class YustDatabaseService {
     if (modelSetup.onDelete != null) {
       await modelSetup.onDelete!(doc);
     }
-    var docRef =
+    final docRef =
         fireStore.collection(_getCollectionPath(modelSetup)).doc(doc.id);
+    await docRef.delete();
+  }
+
+  Future<void> deleteDocbyId<T extends YustDoc>(
+      YustDocSetup<T> modelSetup, String docId) async {
+    final docRef =
+        fireStore.collection(_getCollectionPath(modelSetup)).doc(docId);
     await docRef.delete();
   }
 

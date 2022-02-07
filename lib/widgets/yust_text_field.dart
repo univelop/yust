@@ -146,6 +146,7 @@ class _YustTextFieldState extends State<YustTextField> {
                     : (value) => widget.validator!(value!.trim()),
               ),
             ),
+            widget.suffixIcon ?? SizedBox(),
             if (widget.onDelete != null && widget.value != '')
               IconButton(
                   onPressed: widget.onDelete!,
@@ -153,7 +154,6 @@ class _YustTextFieldState extends State<YustTextField> {
                     Icons.delete,
                     color: Theme.of(context).primaryColor,
                   )),
-            widget.suffixIcon ?? SizedBox(),
           ],
         ),
         if (widget.style == YustInputStyle.normal)

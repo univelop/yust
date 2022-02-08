@@ -133,3 +133,13 @@ class TraverseObject {
     return obj;
   }
 }
+
+class FlatObject {
+  static void removeKeys(Map<String, dynamic> object, List<String> keys) {
+    keys.forEach((key) => object.remove(key));
+  }
+
+  static void preserveKeys(Map<String, dynamic> object, List<String> keys) {
+    object.removeWhere((key, _) => !keys.contains(key));
+  }
+}

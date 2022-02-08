@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:yust/util/object_helper.dart';
 
 const NULL_PLACEHOLDER = 'NULL_VALUE';
 
@@ -31,6 +32,13 @@ abstract class YustDoc {
 
   @override
   Map<String, dynamic> toJson();
+
+  Map<String, dynamic> toExportJson() {
+    final filteredJson = toJson();
+    FlatObject.removeKeys(
+        filteredJson, ['createdBy', 'modifiedBy', 'userId', 'envId']);
+    return filteredJson;
+  }
 
   static dynamic convertTimestamp(dynamic value) {
     if (value is Timestamp) {

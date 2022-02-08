@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yust/util/object_helper.dart';
 
 import 'package:yust/util/yust_serializable.dart';
 
@@ -45,8 +46,8 @@ abstract class YustDoc with YustSerializable {
 
   Map<String, dynamic> toExportJson() {
     final filteredJson = toJson();
-    ['createdBy', 'modifiedBy', 'userId', 'envId']
-        .forEach((key) => filteredJson.remove(key));
+    FlatObject.removeKeys(
+        filteredJson, ['createdBy', 'modifiedBy', 'userId', 'envId']);
     return filteredJson;
   }
 

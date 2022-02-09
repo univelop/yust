@@ -278,7 +278,7 @@ class YustDatabaseService {
   /// An existing document can be given which will instead be initialised.
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    required T doc,
+    T? doc,
     Future<void> Function(T)? onInitialised,
     bool? removeNullValues,
   }) async {

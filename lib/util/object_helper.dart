@@ -29,7 +29,8 @@ class TraversalCurrentNode {
       required this.info});
 }
 
-typedef TraversalCallback = dynamic Function(TraversalCurrentNode currentNode);
+typedef TraversalCallback = Future<dynamic> Function(
+    TraversalCurrentNode currentNode);
 
 class TraverseObject {
   static dynamic _shallowClone(dynamic obj) {
@@ -49,12 +50,12 @@ class TraverseObject {
     return [];
   }
 
-  static Map<String, dynamic> traverseObject(
+  static Future<Map<String, dynamic>> traverseObject(
     Map<String, dynamic> obj,
     TraversalCallback leafNodeCallback, {
     TraversalCallback? innerNodeCallback,
     bool cloneObject = true,
-  }) {
+  }) async {
     final info = TraversalInfo(
       visitedNodes: LinkedHashSet<dynamic>(),
       currentPath: [],
@@ -65,7 +66,7 @@ class TraverseObject {
 
     if (_isBuiltIn(obj)) return obj;
 
-    return Map<String, dynamic>.from(_traverseRecursive(
+    return Map<String, dynamic>.from(await _traverseRecursive(
       cloneObject ? _shallowClone(obj) : obj,
       leafNodeCallback,
       innerNodeCallback ?? (currentNode) => currentNode.value,
@@ -73,12 +74,12 @@ class TraverseObject {
     ));
   }
 
-  static dynamic _traverseRecursive(
+  static Future<dynamic> _traverseRecursive(
     dynamic obj,
     TraversalCallback leafNodeCallback,
     TraversalCallback innerNodeCallback,
     TraversalInfo info,
-  ) {
+  ) async {
     if (info.visitedNodes.contains(obj)) return obj;
 
     info.visitedNodes.add(obj);
@@ -104,15 +105,15 @@ class TraverseObject {
       if (value is List || value is Map || value is Set) {
         // When we are at a leaf node, first call the innerNodeCallback
         final clonedValue = info.cloneObject ? _shallowClone(value) : value;
-        innerNodeCallback(
-          TraversalCurrentNode(
+        await innerNodeCallback(
+          await TraversalCurrentNode(
             parent: obj,
             key: key,
             value: clonedValue,
             info: newInfo,
           ),
         );
-        obj[key] = _traverseRecursive(
+        obj[key] = await _traverseRecursive(
           clonedValue,
           leafNodeCallback,
           innerNodeCallback,
@@ -120,7 +121,7 @@ class TraverseObject {
         );
       } else if (value != null) {
         // When we are at a leaf node, call the leafNodeCallback
-        obj[key] = leafNodeCallback(
+        obj[key] = await leafNodeCallback(
           TraversalCurrentNode(
             parent: obj,
             key: key,

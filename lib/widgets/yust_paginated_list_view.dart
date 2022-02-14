@@ -37,10 +37,10 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
       scrollController: scrollController,
       header: header,
       footer: footer,
-      emptyDisplay: emptyInfo,
+      onEmpty: emptyInfo,
       itemBuilderType: PaginateBuilderType.listView,
-      itemBuilder: (index, context, documentSnapshot) =>
-          _itemBuilder(index, context, documentSnapshot),
+      itemBuilder: (context, documentSnapshot, index) =>
+          _itemBuilder(index, context, documentSnapshot[index]),
       // orderBy is compulsary to enable pagination
       query: query,
       itemsPerPage: 50,

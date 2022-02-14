@@ -24,6 +24,7 @@ enum YustInputStyle {
 
 class Yust {
   static late YustStore store;
+  static late FirebaseOptions firebaseOptions;
   static late YustAuthService authService;
   static late final YustDatabaseService databaseService;
   static late final YustFileService fileService;
@@ -53,6 +54,7 @@ class Yust {
 
   static Future<void> initialize({
     YustStore? store,
+    FirebaseOptions? firebaseConfig,
     YustDocSetup? userSetup,
     bool useTimestamps = false,
     bool useSubcollections = false,
@@ -61,7 +63,7 @@ class Yust {
     String? imagePlaceholderPath,
     String? emulatorAddress,
   }) async {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(options: firebaseConfig);
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {

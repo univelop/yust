@@ -17,7 +17,7 @@ class YustHelperService {
     if (dateTime == null) return '';
 
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
-    return formatter.format(dateTime);
+    return formatter.format(dateTime.toLocal());
   }
 
   /// Does not return null.
@@ -25,7 +25,7 @@ class YustHelperService {
     if (dateTime == null) return '';
 
     var formatter = DateFormat(format ?? 'HH:mm');
-    return formatter.format(dateTime);
+    return formatter.format(dateTime.toLocal());
   }
 
   /// Creates a string formatted just as the [YustDoc.createdAt] property is.

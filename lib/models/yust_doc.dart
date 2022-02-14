@@ -42,9 +42,11 @@ abstract class YustDoc {
 
   static dynamic convertTimestamp(dynamic value) {
     if (value is Timestamp) {
-      return value.toDate();
+      return value.toDate().toLocal();
     } else if (value is Map && value['_seconds'] != null) {
-      return Timestamp(value['_seconds'], value['_nanoseconds']).toDate();
+      return Timestamp(value['_seconds'], value['_nanoseconds'])
+          .toDate()
+          .toLocal();
     } else {
       return value;
     }

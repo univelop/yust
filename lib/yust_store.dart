@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'models/yust_user.dart';
-
-enum AuthState {
-  waiting,
-  signedIn,
-  signedOut,
-}
+import 'services/yust_auth_service.dart';
 
 class YustStore extends ChangeNotifier {
   AuthState authState = AuthState.waiting;

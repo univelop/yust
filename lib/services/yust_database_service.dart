@@ -105,7 +105,10 @@ class YustDatabaseService {
       final modifiedData = TraverseObject.traverseObject(data, (currentNode) {
         // Convert Timestamp to Iso8601-String, as this is the format json_serializable expects
         if (currentNode.value is Timestamp) {
-          return (currentNode.value as Timestamp).toDate().toIso8601String();
+          return (currentNode.value as Timestamp)
+              .toDate()
+              .toLocal()
+              .toIso8601String();
         }
         return currentNode.value;
       });

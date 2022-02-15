@@ -32,13 +32,17 @@ class TraversalCurrentNode {
 typedef TraversalCallback = dynamic Function(TraversalCurrentNode currentNode);
 
 class TraverseObject {
-  static dynamic _shallowClone(dynamic obj) {
+  static bool hasChildren(dynamic value) {
+    return value is List || value is Map || value is Set;
+  }
+
+  static dynamic shallowClone(dynamic obj) {
     if (obj is List || obj is Set) return [...obj];
     if (obj is Map) return {...obj};
     return obj;
   }
 
-  static bool _isBuiltIn(dynamic obj) {
+  static bool isBuiltIn(dynamic obj) {
     return obj is DateTime || obj is Function;
   }
 
@@ -63,10 +67,10 @@ class TraverseObject {
       isInList: false,
     );
 
-    if (_isBuiltIn(obj)) return obj;
+    if (isBuiltIn(obj)) return obj;
 
     return Map<String, dynamic>.from(_traverseRecursive(
-      cloneObject ? _shallowClone(obj) : obj,
+      cloneObject ? shallowClone(obj) : obj,
       leafNodeCallback,
       innerNodeCallback ?? (currentNode) => currentNode.value,
       info,
@@ -97,14 +101,14 @@ class TraverseObject {
       );
 
       // We don't touch functions or built-ins
-      if (_isBuiltIn(value)) continue;
+      if (isBuiltIn(value)) continue;
 
       // Check if we can traverse deeper
       // We need to check if not null because of 'typeof null == "object"'
-      if (value is List || value is Map || value is Set) {
-        // When we are at a leaf node, first call the innerNodeCallback
-        final clonedValue = info.cloneObject ? _shallowClone(value) : value;
-        innerNodeCallback(
+      if (hasChildren(value)) {
+        // When we are at a inner node, first call the innerNodeCallback
+        final clonedValue = info.cloneObject ? shallowClone(value) : value;
+        final callbackValue = innerNodeCallback(
           TraversalCurrentNode(
             parent: obj,
             key: key,
@@ -112,12 +116,18 @@ class TraverseObject {
             info: newInfo,
           ),
         );
-        obj[key] = _traverseRecursive(
-          clonedValue,
-          leafNodeCallback,
-          innerNodeCallback,
-          newInfo,
-        );
+        // Check if the value _still_ is a map (after the callback)
+        if (hasChildren(callbackValue)) {
+          obj[key] = _traverseRecursive(
+            callbackValue,
+            leafNodeCallback,
+            innerNodeCallback,
+            newInfo,
+          );
+        } else {
+          // Else just write the new value in the obj
+          obj[key] = callbackValue;
+        }
       } else if (value != null) {
         // When we are at a leaf node, call the leafNodeCallback
         obj[key] = leafNodeCallback(

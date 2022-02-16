@@ -7,9 +7,9 @@ import 'package:yust/screens/yust_reset_password_screen.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 
+import '../services/yust_auth_service.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
-import '../yust_store.dart';
 import 'yust_sign_up_screen.dart';
 
 class YustSignInScreen extends StatefulWidget {

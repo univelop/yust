@@ -1,16 +1,33 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:flutter/material.dart';
+
 import '../models/yust_user.dart';
 import '../yust.dart';
+
+enum AuthState {
+  waiting,
+  signedIn,
+  signedOut,
+}
 
 class YustAuthService {
   FirebaseAuth fireAuth;
 
   YustAuthService() : fireAuth = FirebaseAuth.instance;
+
   YustAuthService.mocked() : fireAuth = new MockFirebaseAuth();
+
+  Stream<AuthState> listenToAuthState() {
+    return fireAuth.authStateChanges().map<AuthState>(
+        (user) => user == null ? AuthState.signedOut : AuthState.signedIn);
+  }
+
+  String? getUserId() {
+    return fireAuth.currentUser?.uid;
+  }
 
   Future<void> signIn(
     BuildContext context,

@@ -46,10 +46,10 @@ class YustNumberField extends StatefulWidget {
 }
 
 class _YustNumberFieldState extends State<YustNumberField> {
-  late TextEditingController _controller;
-  late FocusNode _focusNode;
+  // late TextEditingController _controller;
+  // late FocusNode _focusNode;
   num? _oldValue;
-  late num _initValue;
+  // late num _initValue;
 
   @override
   void initState() {
@@ -58,40 +58,41 @@ class _YustNumberFieldState extends State<YustNumberField> {
     if (widget.controller != null && value != null) {
       widget.controller!.text = value;
     }
-    _controller = widget.controller ?? TextEditingController(text: value);
-    _initValue = widget.value ?? 0;
-    _focusNode = widget.focusNode ?? FocusNode();
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete!(_valueToNum(_controller.value.text.trim()));
-      }
-    });
+    // _controller = widget.controller ?? TextEditingController(text: value);
+    // _initValue = widget.value ?? 0;
+    // _focusNode = widget.focusNode ?? FocusNode();
+    // _focusNode.addListener(() {
+    //   if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
+    //     widget.onEditingComplete!(_valueToNum(_controller.value.text.trim()));
+    //   }
+    // }
+    // );
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
+  // @override
+  // void dispose() {
+  //   _controller.dispose();
+  //   _focusNode.dispose();
 
-    super.dispose();
-  }
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.value != null &&
-        widget.onChanged == null &&
-        widget.value != _initValue &&
-        widget.value != _valueToNum(_controller.text.trim())) {
-      _controller.text =
-          widget.value!.toString().replaceAll(RegExp(r'\.'), ',');
-      _initValue = widget.value!;
-    }
+    // if (widget.value != null &&
+    //     widget.onChanged == null &&
+    //     widget.value != _initValue &&
+    //     widget.value != _valueToNum(_controller.text.trim())) {
+    //   _controller.text =
+    //       widget.value!.toString().replaceAll(RegExp(r'\.'), ',');
+    //   _initValue = widget.value!;
+    // }
     return YustTextField(
       style: widget.style,
       label: widget.label,
       prefixIcon: widget.prefixIcon,
       suffixIcon: widget.suffixIcon,
-      controller: _controller,
+      // controller: _controller,
       onChanged: widget.onChanged == null
           ? null
           : (value) {

@@ -12,7 +12,7 @@ class YustNumberField extends StatefulWidget {
   final num? value;
   final ChangeCallback? onChanged;
   final ChangeCallback? onEditingComplete;
-  final void Function()? onRealEditingComplete;
+  // final void Function()? onRealEditingComplete;
   final TextEditingController? controller;
   final TabCallback? onTab;
   final bool readOnly;
@@ -29,7 +29,7 @@ class YustNumberField extends StatefulWidget {
     this.value,
     this.onChanged,
     this.onEditingComplete,
-    this.onRealEditingComplete,
+    // this.onRealEditingComplete,
     this.controller,
     this.onTab,
     this.enabled = true,
@@ -104,7 +104,18 @@ class _YustNumberFieldState extends State<YustNumberField> {
                 widget.onChanged!(numValue);
               }
             },
-      onEditingComplete: (value) => widget.onRealEditingComplete,
+      // onEditingComplete: (value) => widget.onEditingComplete,
+      onEditingComplete: widget.onChanged == null
+          ? null
+          : (value) {
+              num? numValue = _valueToNum(value!.trim());
+              if (numValue != _oldValue) {
+                setState(() {
+                  _oldValue = numValue;
+                });
+                widget.onChanged!(numValue);
+              }
+            },
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),

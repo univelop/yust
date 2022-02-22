@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 
 typedef ChangeCallback = void Function(num?);
@@ -20,6 +21,7 @@ class YustNumberField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final FocusNode? focusNode;
+  final FormFieldValidator<String>? validator;
 
   YustNumberField({
     Key? key,
@@ -36,6 +38,7 @@ class YustNumberField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.focusNode,
+    this.validator,
   }) : super(key: key);
 
   @override
@@ -83,22 +86,16 @@ class _YustNumberFieldState extends State<YustNumberField> {
           widget.value!.toString().replaceAll(RegExp(r'\.'), ',');
       _initValue = widget.value!;
     }
-    return TextField(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-        border: widget.style == YustInputStyle.outlineBorder
-            ? OutlineInputBorder()
-            : null,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: widget.suffixIcon,
-      ),
+    return YustTextField(
+      style: widget.style,
+      label: widget.label,
+      prefixIcon: widget.prefixIcon,
+      suffixIcon: widget.suffixIcon,
       controller: _controller,
-      focusNode: _focusNode,
       onChanged: widget.onChanged == null
           ? null
           : (value) {
-              num? numValue = _valueToNum(value.trim());
+              num? numValue = _valueToNum(value!.trim());
               if (numValue != _oldValue) {
                 setState(() {
                   _oldValue = numValue;
@@ -106,7 +103,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
                 widget.onChanged!(numValue);
               }
             },
-      onEditingComplete: widget.onRealEditingComplete,
+      onEditingComplete: (value) => widget.onRealEditingComplete,
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -117,6 +114,11 @@ class _YustNumberFieldState extends State<YustNumberField> {
       onTap: widget.onTab,
       readOnly: widget.readOnly,
       enabled: widget.enabled,
+      autovalidateMode:
+          widget.validator != null ? AutovalidateMode.onUserInteraction : null,
+      validator: widget.validator == null
+          ? null
+          : (value) => widget.validator!(value!.trim()),
     );
   }
 

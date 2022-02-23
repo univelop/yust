@@ -69,7 +69,7 @@ class TraverseObject {
     return Map<String, dynamic>.from(await _traverseRecursive(
       cloneObject ? _shallowClone(obj) : obj,
       leafNodeCallback,
-      innerNodeCallback ?? (currentNode) => currentNode.value,
+      innerNodeCallback ?? (currentNode) async => currentNode.value,
       info,
     ));
   }
@@ -122,7 +122,7 @@ class TraverseObject {
       } else if (value != null) {
         // When we are at a leaf node, call the leafNodeCallback
         obj[key] = await leafNodeCallback(
-          TraversalCurrentNode(
+          await TraversalCurrentNode(
             parent: obj,
             key: key,
             value: value,

@@ -50,9 +50,9 @@ class TraverseObject {
     return [];
   }
 
-  static Future<Map<String, dynamic>> traverseObject(
-    Map<String, dynamic> obj,
-    TraversalCallback leafNodeCallback, {
+  static Future<Map<String, dynamic>> traverseObject({
+    required Map<String, dynamic> obj,
+    required TraversalCallback leafNodeCallback,
     TraversalCallback? innerNodeCallback,
     bool cloneObject = true,
   }) async {

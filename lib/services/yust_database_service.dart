@@ -46,6 +46,17 @@ class YustDatabaseService {
     return query;
   }
 
+
+  Query<Object?> getQueryByKeyValue<T extends YustDoc>(
+      YustDocSetup<T> modelSetup,
+      String key, 
+      String value) {
+    Query query = fireStore.collection(_getCollectionPath(modelSetup));
+    query = query.where(key, isEqualTo: value);
+
+    return query;
+  }
+
   ///[filterList] each entry represents a condition that has to be met.
   ///All of those conditions must be true for each returned entry.
   ///
@@ -63,6 +74,17 @@ class YustDatabaseService {
         orderByList: orderByList,
         filterList: filterList);
 
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))
+          .whereType<T>()
+          .toList();
+    });
+  }
+
+  Stream<List<T>> getDocsByQuery<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, 
+    Query query) {
     return query.snapshots().map((snapshot) {
       return snapshot.docs
           .map((docSnapshot) => transformDoc(modelSetup, docSnapshot))

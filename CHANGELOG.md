@@ -1,3 +1,12 @@
+## 3.0.0-dev.2 - 2022-02-17
+
+* Scrollbars for web
+* Descriptions for alerts
+* Unit test support
+* Improve read only mode
+* Improve timestamp handling
+* Fix bugs
+
 ## 3.0.0-dev.1 - 2022-01-08
 
 * New widget layout

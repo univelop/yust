@@ -50,11 +50,11 @@ class YustDatabaseService {
   Query<Object?> getQueryByKeyValue<T extends YustDoc>(
       YustDocSetup<T> modelSetup,
       String key, 
-      String value) {
+      String value,
+      String operator) {
     Query query = fireStore.collection(_getCollectionPath(modelSetup));
-    query = query.where(key, isEqualTo: value);
 
-    return query;
+    return _executeQuery(query, key, value, operator);
   }
 
   ///[filterList] each entry represents a condition that has to be met.
@@ -312,8 +312,15 @@ class YustDatabaseService {
       for (var filter in filterList) {
         assert(filter.length == 3);
         var operand1 = filter[0], operator = filter[1], operand2 = filter[2];
+        query = _executeQuery(query, operand1, operand2, operator);
+        
+      }
+    }
+    return query;
+  }
 
-        switch (operator) {
+  Query _executeQuery(Query query, dynamic operand1,  dynamic operand2, String operator,){
+    switch (operator) {
           case '==':
             query = query.where(operand1, isEqualTo: operand2);
             break;
@@ -354,9 +361,8 @@ class YustDatabaseService {
           default:
             throw 'The operator "$operator" is not supported.';
         }
-      }
-    }
-    return query;
+
+        return query;
   }
 
   Query _executeOrderByList(Query query, List<String>? orderByList) {

@@ -46,7 +46,7 @@ class YustDatabaseService {
     return query;
   }
 
-
+  // create a query for the model setup and run the where method with the key, value paramters
   Query<Object?> getQueryByKeyValue<T extends YustDoc>(
       YustDocSetup<T> modelSetup,
       String key, 
@@ -82,6 +82,7 @@ class YustDatabaseService {
     });
   }
 
+  // get the docs for the given DocSetup with a pre defined query
   Stream<List<T>> getDocsByQuery<T extends YustDoc>(
     YustDocSetup<T> modelSetup, 
     Query query) {
@@ -319,6 +320,7 @@ class YustDatabaseService {
     return query;
   }
 
+  // run the where method on the query with the parsed parameter (isEqualTo, isLessThan...)
   Query _executeQuery(Query query, dynamic operand1,  dynamic operand2, String operator,){
     switch (operator) {
           case '==':

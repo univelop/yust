@@ -53,13 +53,13 @@ class YustFileService {
   }
 
   Future<Uint8List?> downloadFile(
-      {required String path, required String name}) async {
+      {required String path, required String name, int? maxSize}) async {
     try {
       return await fireStorage
           .ref()
           .child(path)
           .child(name)
-          .getData(5 * 1024 * 1024);
+          .getData(maxSize ?? 5 * 1024 * 1024);
     } catch (e) {}
     return Uint8List(0);
   }

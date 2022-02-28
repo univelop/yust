@@ -7,7 +7,6 @@ import 'package:yust/screens/yust_reset_password_screen.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_progress_button.dart';
 
-import '../services/yust_auth_service.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
 import 'yust_sign_up_screen.dart';
@@ -38,8 +37,6 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
-  late void Function() _storeListener;
-
   @override
   void initState() {
     SharedPreferences.getInstance().then((prefs) {
@@ -48,20 +45,6 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
         _emailController.text = _email!;
       }
     });
-
-    _storeListener = () {
-      if (Yust.store.authState == AuthState.signedIn) {
-        Yust.store.removeListener(_storeListener);
-        if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/',
-            (_) => false,
-          );
-        }
-      }
-    };
-    Yust.store.addListener(_storeListener);
 
     super.initState();
   }

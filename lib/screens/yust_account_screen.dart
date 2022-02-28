@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:yust/widgets/yust_store_builder.dart';
 
+import '../models/yust_user.dart';
+import '../widgets/yust_doc_builder.dart';
 import '../yust.dart';
-import '../yust_store.dart';
 import 'yust_account_edit_screen.dart';
 
-class YustAccountScreen<T extends YustStore> extends StatelessWidget {
+class YustAccountScreen extends StatelessWidget {
   static const String routeName = '/account';
   static const bool signInRequired = true;
 
   @override
   Widget build(BuildContext context) {
-    return YustStoreBuilder<T>(
-      builder: (context, child, store) {
-        if (store.currUser == null) {
+    return YustDocBuilder<YustUser>(
+      modelSetup: Yust.userSetup,
+      id: Yust.authService.currUserId,
+      builder: (user, insights, context) {
+        if (user == null) {
           return Scaffold(
             body: Center(
               child: Text('In Arbeit...'),
@@ -34,10 +36,7 @@ class YustAccountScreen<T extends YustStore> extends StatelessWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       size: 100.0,
                     ),
-                    Text(
-                        (store.currUser!.firstName) +
-                            ' ' +
-                            (Yust.store.currUser!.lastName),
+                    Text((user.firstName) + ' ' + (user.lastName),
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.secondary,
                             fontSize: 20.0)),

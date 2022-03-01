@@ -2,17 +2,15 @@ import 'dart:async';
 
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:yust/models/yust_user.dart';
+import 'package:yust/widgets/yust_doc_builder.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_select.dart';
-import 'package:yust/widgets/yust_store_builder.dart';
 import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../yust_store.dart';
-
-class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
+class YustAccountEditScreen extends StatelessWidget {
   static const String routeName = '/accountEdit';
   static const bool signInRequired = true;
 
@@ -26,60 +24,69 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
     return YustFocusHandler(
       child: Scaffold(
         appBar: AppBar(title: Text('Persönliche Daten')),
-        body: YustStoreBuilder<T>(builder: (context, child, store) {
-          final user = store.currUser!;
-          return ListView(
-            padding: const EdgeInsets.only(top: 20.0),
-            children: <Widget>[
-              _buildGender(context, user),
-              YustTextField(
-                label: 'Vorname',
-                value: user.firstName,
-                validator: (value) {
-                  if (value == null || value == '') {
-                    return 'Es muss ein Vorname angegeben werden.';
-                  } else {
-                    return null;
-                  }
-                },
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onEditingComplete: (value) async {
-                  user.firstName = value!; // value was checked by validator
-                  Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-                },
-              ),
-              YustTextField(
-                label: 'Nachname',
-                value: user.lastName,
-                validator: (value) {
-                  if (value == null || value == '') {
-                    return 'Es muss ein Nachname angegeben werden.';
-                  } else {
-                    return null;
-                  }
-                },
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onEditingComplete: (value) async {
-                  user.lastName = value!; // value was checked by validator
-                  Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-                },
-              ),
-              YustTextField(
-                label: 'E-Mail',
-                value: user.email,
-                readOnly: true,
-                onTap: () => _changeEmail(context),
-              ),
-              YustTextField(
-                label: 'Passwort',
-                value: '*****',
-                obscureText: true,
-                readOnly: true,
-                onTap: () => _changePassword(context),
-              ),
-            ],
-          );
-        }),
+        body: YustDocBuilder<YustUser>(
+            modelSetup: Yust.userSetup,
+            id: Yust.authService.currUserId,
+            builder: (user, insights, context) {
+              if (user == null) {
+                return Center(
+                  child: Text('In Arbeit...'),
+                );
+              }
+              return ListView(
+                padding: const EdgeInsets.only(top: 20.0),
+                children: <Widget>[
+                  _buildGender(context, user),
+                  YustTextField(
+                    label: 'Vorname',
+                    value: user.firstName,
+                    validator: (value) {
+                      if (value == null || value == '') {
+                        return 'Es muss ein Vorname angegeben werden.';
+                      } else {
+                        return null;
+                      }
+                    },
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    onEditingComplete: (value) async {
+                      user.firstName = value!; // value was checked by validator
+                      Yust.databaseService
+                          .saveDoc<YustUser>(Yust.userSetup, user);
+                    },
+                  ),
+                  YustTextField(
+                    label: 'Nachname',
+                    value: user.lastName,
+                    validator: (value) {
+                      if (value == null || value == '') {
+                        return 'Es muss ein Nachname angegeben werden.';
+                      } else {
+                        return null;
+                      }
+                    },
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    onEditingComplete: (value) async {
+                      user.lastName = value!; // value was checked by validator
+                      Yust.databaseService
+                          .saveDoc<YustUser>(Yust.userSetup, user);
+                    },
+                  ),
+                  YustTextField(
+                    label: 'E-Mail',
+                    value: user.email,
+                    readOnly: true,
+                    onTap: () => _changeEmail(context),
+                  ),
+                  YustTextField(
+                    label: 'Passwort',
+                    value: '*****',
+                    obscureText: true,
+                    readOnly: true,
+                    onTap: () => _changePassword(context),
+                  ),
+                ],
+              );
+            }),
       ),
     );
   }

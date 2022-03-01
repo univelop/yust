@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_doc_setup.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:yust/util/object_helper.dart';
 
 import '../yust.dart';
@@ -22,12 +22,12 @@ class YustDatabaseService {
     }
     doc.id = fireStore.collection(_getCollectionPath(modelSetup)).doc().id;
     doc.createdAt = DateTime.now();
-    doc.createdBy = Yust.store.currUser?.id;
+    doc.createdBy = Yust.authService.currUserId;
     if (modelSetup.forEnvironment) {
-      doc.envId = Yust.store.currUser?.currEnvId;
+      doc.envId = Yust.currEnvId;
     }
     if (modelSetup.forUser) {
-      doc.userId = Yust.store.currUser?.id;
+      doc.userId = Yust.authService.currUserId;
     }
     if (modelSetup.onInit != null) {
       modelSetup.onInit!(doc);
@@ -114,6 +114,7 @@ class YustDatabaseService {
       });
       return modelSetup.fromJson(modifiedData);
     }
+    return null;
   }
 
   Stream<T?> getDoc<T extends YustDoc>(
@@ -192,7 +193,7 @@ class YustDatabaseService {
     var collection = fireStore.collection(_getCollectionPath(modelSetup));
     if (trackModification) {
       doc.modifiedAt = DateTime.now();
-      doc.modifiedBy = Yust.store.currUser?.id;
+      doc.modifiedBy = Yust.authService.currUserId;
     }
     if (doc.createdAt == null) {
       doc.createdAt = doc.modifiedAt;
@@ -201,10 +202,10 @@ class YustDatabaseService {
       doc.createdBy = doc.modifiedBy;
     }
     if (doc.userId == null && modelSetup.forUser) {
-      doc.userId = Yust.store.currUser!.id;
+      doc.userId = Yust.authService.currUserId;
     }
     if (doc.envId == null && modelSetup.forEnvironment) {
-      doc.envId = Yust.store.currUser!.currEnvId;
+      doc.envId = Yust.currEnvId;
     }
     if (modelSetup.onSave != null && !skipOnSave) {
       await modelSetup.onSave!(doc);
@@ -305,7 +306,7 @@ class YustDatabaseService {
     if (Yust.useSubcollections && modelSetup.forEnvironment) {
       collectionPath = Yust.envCollectionName +
           '/' +
-          Yust.store.currUser!.currEnvId! +
+          Yust.currEnvId! +
           '/' +
           modelSetup.collectionName;
     }
@@ -313,10 +314,10 @@ class YustDatabaseService {
   }
 
   Query _filterForEnvironment(Query query) =>
-      query.where('envId', isEqualTo: Yust.store.currUser!.currEnvId);
+      query.where('envId', isEqualTo: Yust.currEnvId);
 
   Query _filterForUser(Query query) =>
-      query.where('userId', isEqualTo: Yust.store.currUser!.id);
+      query.where('userId', isEqualTo: Yust.authService.currUserId);
 
   Query _executeStaticFilters<T extends YustDoc>(
     Query query,

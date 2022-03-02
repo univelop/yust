@@ -7,7 +7,7 @@ class YustAlertService {
 
   Future<void> showAlert(
       BuildContext context, String title, String message) async {
-    await showDialog(
+    await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -15,7 +15,7 @@ class YustAlertService {
           content: Text(message),
           actions: <Widget>[
             TextButton(
-              child: Text("OK"),
+              child: Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -89,7 +89,7 @@ class YustAlertService {
             ),
             actions: <Widget>[
               TextButton(
-                child: Text("Abbrechen"),
+                child: Text('Abbrechen'),
                 onPressed: () {
                   Navigator.of(context).pop(null);
                 },
@@ -143,7 +143,7 @@ class YustAlertService {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text("Abbrechen"),
+              child: Text('Abbrechen'),
               onPressed: () {
                 Navigator.of(context).pop(null);
               },

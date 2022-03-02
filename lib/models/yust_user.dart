@@ -5,7 +5,7 @@ import 'yust_doc_setup.dart';
 
 part 'yust_user.g.dart';
 
-@JsonSerializable(anyMap: true)
+@JsonSerializable()
 class YustUser extends YustDoc {
   static final setup = YustDocSetup<YustUser>(
     collectionName: 'users',
@@ -18,7 +18,6 @@ class YustUser extends YustDoc {
   String lastName;
   YustGender? gender;
 
-  @JsonKey(toJson: YustDoc.mapToJson)
   Map<String, bool?> envIds = {};
   String? currEnvId;
   List<String>? deviceIds = [];
@@ -33,6 +32,7 @@ class YustUser extends YustDoc {
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
 }
 

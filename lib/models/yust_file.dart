@@ -1,34 +1,36 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:yust/util/yust_serializable.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-class YustFile with YustSerializable {
-  String name;
+part 'yust_file.g.dart';
+
+typedef YustFileJson = Map<String, dynamic>;
+typedef YustFilesJson = List<YustFileJson>;
+
+@JsonSerializable()
+class YustFile {
+  String? name;
   String? url;
+
+  @JsonKey(ignore: true)
   File? file;
+  @JsonKey(ignore: true)
   Uint8List? bytes;
+  @JsonKey(ignore: true)
   bool processing;
 
   YustFile({
-    required this.name,
+    this.name,
     this.url,
     this.file,
     this.bytes,
     this.processing = false,
   });
 
-  factory YustFile.fromJson(Map<String, dynamic> json) {
-    return YustFile(
-      name: json['name'] as String,
-      url: json['url'] as String,
-    );
-  }
+  factory YustFile.fromJson(Map<String, dynamic> json) =>
+      _$YustFileFromJson(json);
 
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'name': name,
-      'url': url,
-    };
-  }
+  @override
+  Map<String, dynamic> toJson() => _$YustFileToJson(this);
 }

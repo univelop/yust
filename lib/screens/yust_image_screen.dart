@@ -184,7 +184,7 @@ class _YustImageScreenState extends State<YustImageScreen> {
                   color: Colors.white,
                   onPressed: () {
                     Yust.fileService.downloadAndLaunchFile(
-                        context: context, url: file.url!, name: file.name);
+                        context: context, url: file.url!, name: file.name!);
                   },
                   icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
                 );

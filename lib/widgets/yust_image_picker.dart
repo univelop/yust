@@ -24,9 +24,9 @@ class YustImagePicker extends StatefulWidget {
   final String? label;
   final String folderPath;
   final bool multiple;
-  final List<Map<String, dynamic>> images;
+  final List<YustFile> images;
   final bool zoomable;
-  final void Function(List<Map<String, dynamic>> images)? onChanged;
+  final void Function(List<YustFile> images)? onChanged;
   final Widget? prefixIcon;
   final bool readOnly;
   final String yustQuality;
@@ -46,7 +46,7 @@ class YustImagePicker extends StatefulWidget {
     this.readOnly = false,
     this.yustQuality = 'medium',
     int? imageCount,
-  })  : this.imageCount = imageCount ?? 15,
+  })  : imageCount = imageCount ?? 15,
         super(key: key);
   @override
   YustImagePickerState createState() => YustImagePickerState();
@@ -59,9 +59,8 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   void initState() {
-    _files = widget.images
-        .map<YustFile>((image) => YustFile.fromJson(image))
-        .toList();
+    _files = widget.images;
+
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
     super.initState();
@@ -273,7 +272,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
       if (!kIsWeb) {
@@ -366,7 +365,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (mounted) {
         setState(() {});
       }
-      widget.onChanged!(_files.map((file) => file.toJson()).toList());
+      widget.onChanged!(_files);
       if (_currentImageNumber < _files.length) {
         _currentImageNumber += widget.imageCount;
       }
@@ -375,14 +374,14 @@ class YustImagePickerState extends State<YustImagePicker> {
         setState(() {
           _files.remove(newFile);
         });
-        Yust.alertService.showAlert(context, 'Ups', e.toString());
+        await Yust.alertService.showAlert(context, 'Ups', e.toString());
       }
     }
   }
 
   void _showImages(YustFile activeFile) {
     Yust.helperService.unfocusCurrent(context);
-    Navigator.of(context).push(MaterialPageRoute(
+    Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => YustImageScreen(
         files: _files,
         activeImageIndex: _files.indexOf(activeFile),
@@ -394,7 +393,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     Yust.helperService.unfocusCurrent(context);
     final connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
-      Yust.alertService.showAlert(context, 'Kein Internet',
+      await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
     } else {
       final confirmed = await Yust.alertService
@@ -404,13 +403,13 @@ class YustImagePickerState extends State<YustImagePicker> {
           await firebase_storage.FirebaseStorage.instance
               .ref()
               .child(widget.folderPath)
-              .child(file.name)
+              .child(file.name!)
               .delete();
         } catch (e) {}
         setState(() {
           _files.remove(file);
         });
-        widget.onChanged!(_files.map((file) => file.toJson()).toList());
+        widget.onChanged!(_files);
       }
     }
   }

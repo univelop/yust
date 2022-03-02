@@ -66,12 +66,12 @@ class _YustResetPasswordScreenState extends State<YustResetPasswordScreen> {
                               await Yust.authService
                                   .sendPasswordResetEmail(_email!);
                               Navigator.pop(context);
-                              Yust.alertService.showAlert(
+                              await Yust.alertService.showAlert(
                                   context,
                                   'E-Mail verschickt',
                                   'Du erhälst eine E-Mail. Folge den Anweisungen um ein neues Passwort zu erstellen.');
                             } catch (err) {
-                              Yust.alertService
+                              await Yust.alertService
                                   .showAlert(context, 'Fehler', err.toString());
                             }
                           }

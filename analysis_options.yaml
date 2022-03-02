@@ -1,3 +1,10 @@
+include: package:pedantic/analysis_options.yaml
+
 analyzer:
   enable-experiment:
     - non-nullable
+  language:
+    strict-inference: true
+    strict-raw-types: true
+  exclude:
+    - lib/**/*.g.dart

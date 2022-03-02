@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:yust/models/yust_user.dart';
 import 'package:yust/widgets/yust_doc_builder.dart';
@@ -145,19 +147,21 @@ class YustAccountEditScreen extends StatelessWidget {
                     try {
                       EasyLoading.show(status: 'E-Mail wird geändert...');
                       await Yust.authService.changeEmail(email, password);
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService.showAlert(context, 'E-Mail geändert',
+                      await Yust.alertService.showAlert(
+                          context,
+                          'E-Mail geändert',
                           'Deine E-Mail wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.toString());
                     }
                   },
@@ -209,20 +213,23 @@ class YustAccountEditScreen extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      EasyLoading.show(status: 'Passwort wird geändert...');
+                      unawaited(EasyLoading.show(
+                          status: 'Passwort wird geändert...'));
                       await Yust.authService
                           .changePassword(newPassword, oldPassword);
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService.showAlert(context, 'Passwort geändert',
+                      await Yust.alertService.showAlert(
+                          context,
+                          'Passwort geändert',
                           'Dein Passwort wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
                       Yust.alertService
                           .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
                       Yust.alertService
                           .showAlert(context, 'Fehler', err.toString());

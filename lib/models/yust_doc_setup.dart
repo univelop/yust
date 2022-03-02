@@ -16,6 +16,9 @@ class YustDocSetup<T extends YustDoc> {
   ///Should be set to true if this setup is used for an environment.
   bool isEnvironment;
 
+  /// Should null values be removed, before writing the doc to the database
+  bool removeNullValues;
+
   void Function(T doc)? onInit;
 
   Future<void> Function(T doc)? onSave;
@@ -32,5 +35,6 @@ class YustDocSetup<T extends YustDoc> {
     this.onInit,
     this.onSave,
     this.onDelete,
+    this.removeNullValues = true,
   });
 }

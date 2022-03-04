@@ -91,7 +91,7 @@ class YustFileService {
         file.writeAsBytesSync(data);
       }
       if (file != null) {
-        final Size size = MediaQuery.of(context).size;
+        final size = MediaQuery.of(context).size;
         // Get the Location of the widget (e.g. button), that called the method.
         final box = context.findRenderObject() as RenderBox?;
         final buttonLocation = box!.localToGlobal(Offset.zero) & box.size;

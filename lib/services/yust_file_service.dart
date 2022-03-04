@@ -91,11 +91,22 @@ class YustFileService {
         file.writeAsBytesSync(data);
       }
       if (file != null) {
+        final Size size = MediaQuery.of(context).size;
+        // Get the Location of the widget (e.g. button), that called the method.
         final box = context.findRenderObject() as RenderBox?;
+        final buttonLocation = box!.localToGlobal(Offset.zero) & box.size;
+
+        // Alternatively create a Location in the center of the Screen
+        final centerLocation = Rect.fromLTWH(0, 0, size.width, size.height / 2);
+
+        // If we don't have a useful button location, use the center position
+        final sharePositionOrigin = buttonLocation.height >= size.height
+            ? centerLocation
+            : buttonLocation;
         await Share.shareFiles(
           [file.path],
           subject: name,
-          sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+          sharePositionOrigin: sharePositionOrigin,
         );
       }
     }

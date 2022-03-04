@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/screens/yust_image_screen.dart';
+import 'package:yust/util/yust_exception.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
@@ -225,7 +226,7 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: new BoxDecoration(
+      decoration: BoxDecoration(
         color: Colors.black54,
         borderRadius: BorderRadius.all(const Radius.circular(20)),
       ),
@@ -358,7 +359,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         }
       }
 
-      String url = await Yust.fileService.uploadFile(
+      var url = await Yust.fileService.uploadFile(
           path: widget.folderPath, name: imageName, file: file, bytes: bytes);
       newFile.url = url;
       newFile.processing = false;
@@ -405,7 +406,9 @@ class YustImagePickerState extends State<YustImagePicker> {
               .child(widget.folderPath)
               .child(file.name!)
               .delete();
-        } catch (e) {}
+        } catch (e) {
+          YustException(e.toString());
+        }
         setState(() {
           _files.remove(file);
         });

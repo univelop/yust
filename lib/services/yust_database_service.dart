@@ -10,16 +10,14 @@ class YustDatabaseService {
   FirebaseFirestore fireStore;
 
   YustDatabaseService() : fireStore = FirebaseFirestore.instance;
-  YustDatabaseService.mocked() : fireStore = new FakeFirebaseFirestore();
+  YustDatabaseService.mocked() : fireStore = FakeFirebaseFirestore();
 
   /// Initialises a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
   /// assigned a new id becoming a new document if it had an id previously.
   T initDoc<T extends YustDoc>(YustDocSetup<T> modelSetup, [T? doc]) {
-    if (doc == null) {
-      doc = modelSetup.newDoc();
-    }
+    doc ??= modelSetup.newDoc();
     doc.id = fireStore.collection(_getCollectionPath(modelSetup)).doc().id;
     doc.createdAt = DateTime.now();
     doc.createdBy = Yust.authService.currUserId;
@@ -59,7 +57,7 @@ class YustDatabaseService {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
   }) {
-    Query query = getQuery(
+    var query = getQuery(
         modelSetup: modelSetup,
         orderByList: orderByList,
         filterList: filterList);
@@ -77,7 +75,7 @@ class YustDatabaseService {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
   }) {
-    Query query = getQuery(
+    var query = getQuery(
         modelSetup: modelSetup,
         orderByList: orderByList,
         filterList: filterList);
@@ -145,13 +143,13 @@ class YustDatabaseService {
     List<List<dynamic>>? filterList, {
     List<String>? orderByList,
   }) {
-    Query query = getQuery(
+    var query = getQuery(
         modelSetup: modelSetup,
         filterList: filterList,
         orderByList: orderByList);
 
     return query.snapshots().map<T?>((snapshot) {
-      if (snapshot.docs.length > 0) {
+      if (snapshot.docs.isNotEmpty) {
         return transformDoc(modelSetup, snapshot.docs[0]);
       } else {
         return null;
@@ -165,14 +163,14 @@ class YustDatabaseService {
     List<List<dynamic>> filterList, {
     List<String>? orderByList,
   }) async {
-    Query query = getQuery(
+    var query = getQuery(
         modelSetup: modelSetup,
         filterList: filterList,
         orderByList: orderByList);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 
-    if (snapshot.docs.length > 0) {
+    if (snapshot.docs.isNotEmpty) {
       doc = transformDoc(modelSetup, snapshot.docs[0]);
     }
     return doc;
@@ -195,12 +193,8 @@ class YustDatabaseService {
       doc.modifiedAt = DateTime.now();
       doc.modifiedBy = Yust.authService.currUserId;
     }
-    if (doc.createdAt == null) {
-      doc.createdAt = doc.modifiedAt;
-    }
-    if (doc.createdBy == null) {
-      doc.createdBy = doc.modifiedBy;
-    }
+    doc.createdAt ??= doc.modifiedAt;
+    doc.createdBy ??= doc.modifiedBy;
     if (doc.userId == null && modelSetup.forUser) {
       doc.userId = Yust.authService.currUserId;
     }

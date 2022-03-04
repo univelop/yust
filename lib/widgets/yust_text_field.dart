@@ -68,7 +68,7 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
   late TextEditingController _controller;
-  FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusNode();
   late String _initValue;
 
   @override

@@ -47,8 +47,9 @@ class TraverseObject {
   }
 
   static List<dynamic> _keys(dynamic obj) {
-    if (obj is List || obj is Set)
+    if (obj is List || obj is Set) {
       return [for (var i = 0; i < obj.length; i++) i];
+    }
     if (obj is Map) return obj.keys.toList();
     return [];
   }

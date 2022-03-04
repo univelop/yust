@@ -28,9 +28,8 @@ abstract class YustDoc {
     this.envId,
   });
 
-  YustDoc.fromJson(Map<String, dynamic> json) : this.id = '';
+  YustDoc.fromJson(Map<String, dynamic> json) : id = '';
 
-  @override
   Map<String, dynamic> toJson();
 
   Map<String, dynamic> toExportJson() {

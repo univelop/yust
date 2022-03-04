@@ -170,7 +170,7 @@ class YustAlertService {
   }) async {
     final newItemIds = List<String>.from(priorItemIds);
     var isAborted = true;
-    await showDialog(
+    await showDialog<dynamic>(
         context: context,
         builder: (context) {
           return StatefulBuilder(

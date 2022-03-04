@@ -31,6 +31,5 @@ class YustFile {
   factory YustFile.fromJson(Map<String, dynamic> json) =>
       _$YustFileFromJson(json);
 
-  @override
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 }

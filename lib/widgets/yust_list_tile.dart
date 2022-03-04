@@ -49,7 +49,7 @@ class YustListTile extends StatelessWidget {
   }
 
   Widget _buildInner(BuildContext context) {
-    var padding;
+    EdgeInsets padding;
     if (style == YustInputStyle.normal) {
       if (label != null && prefixIcon != null) {
         padding = const EdgeInsets.only(

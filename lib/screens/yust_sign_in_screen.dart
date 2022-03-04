@@ -202,7 +202,7 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
   Future<void> _signIn(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString('email', _email!);
+      await prefs.setString('email', _email!);
       try {
         await Yust.authService
             .signIn(context, _email!, _password!)

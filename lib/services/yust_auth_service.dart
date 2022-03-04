@@ -18,7 +18,7 @@ class YustAuthService {
 
   YustAuthService() : fireAuth = FirebaseAuth.instance;
 
-  YustAuthService.mocked() : fireAuth = new MockFirebaseAuth();
+  YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
 
   Stream<AuthState> get authStateStream {
     return fireAuth.authStateChanges().map<AuthState>(
@@ -47,8 +47,8 @@ class YustAuthService {
     String passwordConfirmation, {
     YustGender? gender,
   }) async {
-    final UserCredential userCredential = await fireAuth
-        .createUserWithEmailAndPassword(email: email, password: password);
+    final userCredential = await fireAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
     final user = Yust.userSetup.newDoc()
       ..email = email
       ..firstName = firstName
@@ -67,8 +67,7 @@ class YustAuthService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final UserCredential userCredential =
-        await fireAuth.signInWithEmailAndPassword(
+    final userCredential = await fireAuth.signInWithEmailAndPassword(
       email: fireAuth.currentUser!.email!,
       password: password,
     );
@@ -80,8 +79,7 @@ class YustAuthService {
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
-    final UserCredential userCredential =
-        await fireAuth.signInWithEmailAndPassword(
+    final userCredential = await fireAuth.signInWithEmailAndPassword(
       email: fireAuth.currentUser!.email!,
       password: oldPassword,
     );

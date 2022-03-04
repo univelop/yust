@@ -98,7 +98,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
       onChanged: widget.onChanged == null
           ? null
           : (value) {
-              num? numValue = _valueToNum(value.trim());
+              var numValue = _valueToNum(value.trim());
               if (numValue != _oldValue) {
                 setState(() {
                   _oldValue = numValue;
@@ -111,7 +111,7 @@ class _YustNumberFieldState extends State<YustNumberField> {
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
       inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp("[0-9\,\.\-]"))
+        FilteringTextInputFormatter.allow(RegExp('[0-9\,\.\-]'))
       ],
       textInputAction: TextInputAction.next,
       onTap: widget.onTab,

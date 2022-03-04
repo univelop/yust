@@ -37,9 +37,9 @@ class YustHelperService {
       DateTime.tryParse(dateTimeString);
 
   String randomString({int length = 8}) {
-    final rnd = new Random();
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    var result = "";
+    final rnd = Random();
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var result = '';
     for (var i = 0; i < length; i++) {
       result += chars[rnd.nextInt(chars.length)];
     }

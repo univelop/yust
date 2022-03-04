@@ -23,8 +23,8 @@ enum YustInputStyle {
 class Yust {
   static late FirebaseOptions firebaseOptions;
   static late YustAuthService authService;
-  static late final YustDatabaseService databaseService;
-  static late final YustFileService fileService;
+  static late YustDatabaseService databaseService;
+  static late YustFileService fileService;
   static final YustAlertService alertService = YustAlertService();
   static final YustHelperService helperService = YustHelperService();
   static late YustDocSetup<YustUser> userSetup;
@@ -36,7 +36,7 @@ class Yust {
   static String? currEnvId;
 
   /// Connnect to the firebase emulator for Firestore and Authentication
-  static Future _connectToFirebaseEmulator(String address) async {
+  static Future<void> _connectToFirebaseEmulator(String address) async {
     FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
 
     await FirebaseAuth.instance.useEmulator('http://$address:9099');

@@ -4,7 +4,7 @@ import 'package:yust/models/yust_doc_setup.dart';
 
 part 'yust_notification.g.dart';
 
-@JsonSerializable(anyMap: true)
+@JsonSerializable()
 class YustNotification extends YustDoc {
   static final setup = YustDocSetup<YustNotification>(
     collectionName: 'notifications',
@@ -28,5 +28,6 @@ class YustNotification extends YustDoc {
   factory YustNotification.fromJson(Map<String, dynamic> json) =>
       _$YustNotificationFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$YustNotificationToJson(this);
 }

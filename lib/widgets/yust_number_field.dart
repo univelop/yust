@@ -1,17 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 
 typedef ChangeCallback = void Function(num?);
 typedef TabCallback = void Function();
 
-class YustNumberField extends StatefulWidget {
+class YustNumberField extends StatelessWidget {
   final String? label;
   final num? value;
   final ChangeCallback? onChanged;
   final ChangeCallback? onEditingComplete;
-  final void Function()? onRealEditingComplete;
   final TextEditingController? controller;
   final TabCallback? onTab;
   final bool readOnly;
@@ -20,6 +20,7 @@ class YustNumberField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final FocusNode? focusNode;
+  final FormFieldValidator<String>? validator;
 
   YustNumberField({
     Key? key,
@@ -27,7 +28,6 @@ class YustNumberField extends StatefulWidget {
     this.value,
     this.onChanged,
     this.onEditingComplete,
-    this.onRealEditingComplete,
     this.controller,
     this.onTab,
     this.enabled = true,
@@ -36,77 +36,27 @@ class YustNumberField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.focusNode,
+    this.validator,
   }) : super(key: key);
 
   @override
-  _YustNumberFieldState createState() => _YustNumberFieldState();
-}
-
-class _YustNumberFieldState extends State<YustNumberField> {
-  late TextEditingController _controller;
-  late FocusNode _focusNode;
-  num? _oldValue;
-  late num _initValue;
-
-  @override
-  void initState() {
-    super.initState();
-    final value = widget.value?.toString().replaceAll(RegExp(r'\.'), ',');
-    if (widget.controller != null && value != null) {
-      widget.controller!.text = value;
-    }
-    _controller = widget.controller ?? TextEditingController(text: value);
-    _initValue = widget.value ?? 0;
-    _focusNode = widget.focusNode ?? FocusNode();
-    _focusNode.addListener(() {
-      if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
-        widget.onEditingComplete!(_valueToNum(_controller.value.text.trim()));
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.value != null &&
-        widget.onChanged == null &&
-        widget.value != _initValue &&
-        widget.value != _valueToNum(_controller.text.trim())) {
-      _controller.text =
-          widget.value!.toString().replaceAll(RegExp(r'\.'), ',');
-      _initValue = widget.value!;
-    }
-    return TextField(
-      decoration: InputDecoration(
-        labelText: widget.label,
-        contentPadding: const EdgeInsets.all(20.0),
-        border: widget.style == YustInputStyle.outlineBorder
-            ? OutlineInputBorder()
-            : null,
-        prefixIcon: widget.prefixIcon,
-        suffixIcon: widget.suffixIcon,
-      ),
-      controller: _controller,
-      focusNode: _focusNode,
-      onChanged: widget.onChanged == null
+    return YustTextField(
+      style: style,
+      label: label,
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      value: value?.toString().replaceAll(RegExp(r'\.'), ','),
+      controller: controller,
+      onChanged: onChanged == null
           ? null
           : (value) {
-              num? numValue = _valueToNum(value.trim());
-              if (numValue != _oldValue) {
-                setState(() {
-                  _oldValue = numValue;
-                });
-                widget.onChanged!(numValue);
-              }
+              num? numValue = _valueToNum(value!.trim());
+              onChanged!(numValue);
             },
-      onEditingComplete: widget.onRealEditingComplete,
+      onEditingComplete: onEditingComplete == null
+          ? null
+          : (value) => onEditingComplete!(_valueToNum(value!.trim())),
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -114,9 +64,13 @@ class _YustNumberFieldState extends State<YustNumberField> {
         FilteringTextInputFormatter.allow(RegExp("[0-9\,\.\-]"))
       ],
       textInputAction: TextInputAction.next,
-      onTap: widget.onTab,
-      readOnly: widget.readOnly,
-      enabled: widget.enabled,
+      onTap: onTab,
+      readOnly: readOnly,
+      enabled: enabled,
+      autovalidateMode:
+          validator != null ? AutovalidateMode.onUserInteraction : null,
+      validator:
+          validator == null ? null : (value) => validator!(value!.trim()),
     );
   }
 

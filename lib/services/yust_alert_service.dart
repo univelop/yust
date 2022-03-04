@@ -66,7 +66,7 @@ class YustAlertService {
     String action, {
     String initialText = '',
 
-    /// if validator is set, action gets only triggerd if the validator returns null (means true)
+    /// if validator is set, action gets only triggered if the validator returns null (means true)
     FormFieldValidator<String>? validator,
   }) {
     final controller = TextEditingController(text: initialText);

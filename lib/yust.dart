@@ -1,6 +1,7 @@
 library yust;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -60,7 +61,12 @@ class Yust {
     String? imagePlaceholderPath,
     String? emulatorAddress,
   }) async {
-    await Firebase.initializeApp(options: firebaseConfig);
+    // For the moment don't initialize iOS
+    if (Platform.isIOS) {
+      await Firebase.initializeApp();
+    } else {
+      await Firebase.initializeApp(options: firebaseConfig);
+    }
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {

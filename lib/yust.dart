@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -60,14 +61,14 @@ class Yust {
     String? storageUrl,
     String? imagePlaceholderPath,
     String? emulatorAddress,
+    bool buildRelease = false,
   }) async {
-    // For the moment don't initialize iOS
-    await Firebase.initializeApp(options: firebaseConfig);
-    // if (Platform.isIOS) {
-    //   await Firebase.initializeApp();
-    // } else {
-    //   await Firebase.initializeApp(options: firebaseConfig);
-    // }
+    // For the moment don't initialize iOS via config for release
+    if (!kIsWeb && buildRelease && Platform.isIOS) {
+      await Firebase.initializeApp();
+    } else {
+      await Firebase.initializeApp(options: firebaseConfig);
+    }
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {

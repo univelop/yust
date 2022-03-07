@@ -1,3 +1,7 @@
+## 3.0.0-dev.5 - 2022-03-07
+
+* Fix iOS App initialization
+
 ## 3.0.0-dev.4 - 2022-03-05
 
 * Fix iOS App initialization

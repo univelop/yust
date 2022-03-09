@@ -27,7 +27,10 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..currEnvId = json['currEnvId'] as String?
       ..deviceIds = (json['deviceIds'] as List<dynamic>?)
           ?.map((e) => e as String)
-          .toList();
+          .toList()
+      ..lastLogin = json['lastLogin'] == null
+          ? null
+          : DateTime.parse(json['lastLogin'] as String);
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'id': instance.id,
@@ -44,6 +47,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'envIds': instance.envIds,
       'currEnvId': instance.currEnvId,
       'deviceIds': instance.deviceIds,
+      'lastLogin': instance.lastLogin?.toIso8601String(),
     };
 
 const _$YustGenderEnumMap = {

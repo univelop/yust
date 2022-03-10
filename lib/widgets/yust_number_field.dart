@@ -51,12 +51,12 @@ class YustNumberField extends StatelessWidget {
       onChanged: onChanged == null
           ? null
           : (value) {
-              var numValue = _valueToNum(value!.trim());
+              var numValue = _valueToNum(value?.trim() ?? '');
               onChanged!(numValue);
             },
       onEditingComplete: onEditingComplete == null
           ? null
-          : (value) => onEditingComplete!(_valueToNum(value!.trim())),
+          : (value) => onEditingComplete!(_valueToNum(value?.trim() ?? '')),
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -70,7 +70,7 @@ class YustNumberField extends StatelessWidget {
       autovalidateMode:
           validator != null ? AutovalidateMode.onUserInteraction : null,
       validator:
-          validator == null ? null : (value) => validator!(value!.trim()),
+          validator == null ? null : (value) => validator!(value?.trim() ?? ''),
     );
   }
 

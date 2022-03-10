@@ -60,8 +60,9 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
 
     if (widget.modelSetup != oldWidget.modelSetup ||
         widget.id != oldWidget.id ||
-        !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
-        !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
+        !ListEquality(ListEquality<dynamic>())
+            .equals(widget.filter, oldWidget.filter) ||
+        !ListEquality<dynamic>().equals(widget.orderBy, oldWidget.orderBy)) {
       updated = true;
       initStream();
     }

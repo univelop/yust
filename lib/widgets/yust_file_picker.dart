@@ -198,7 +198,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           var result = await OpenFile.open('${tempDir.path}/${file.name}');
           // if cant open file type, tries via browser
           if (result.type != ResultType.done) {
-            _launchBrowser(file);
+            await _launchBrowser(file);
           }
 
           await EasyLoading.dismiss();
@@ -209,7 +209,7 @@ class YustFilePickerState extends State<YustFilePicker> {
         }
       } else {
         await EasyLoading.show(status: 'Datei laden...');
-        _launchBrowser(file);
+        await _launchBrowser(file);
         await EasyLoading.dismiss();
       }
     }
@@ -240,7 +240,9 @@ class YustFilePickerState extends State<YustFilePicker> {
               .child(widget.folderPath)
               .child(file.name!)
               .delete();
-        } catch (e) {}
+        } catch (e) {
+          YustException(e.toString());
+        }
 
         setState(() {
           _files.remove(file);

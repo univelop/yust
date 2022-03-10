@@ -47,7 +47,7 @@ class _YustSignUpScreenState extends State<YustSignUpScreen> {
   final _passwordFocus = FocusNode();
   final _passwordConfirmationFocus = FocusNode();
 
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +180,7 @@ class _YustSignUpScreenState extends State<YustSignUpScreen> {
                           _passwordFocus.unfocus();
                           FocusScope.of(context)
                               .requestFocus(_passwordConfirmationFocus);
-                          _scrollController.animateTo(
+                          await _scrollController.animateTo(
                               _scrollController.offset + 80,
                               duration: Duration(milliseconds: 500),
                               curve: Curves.ease);

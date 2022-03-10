@@ -45,8 +45,9 @@ class YustDocsBuilderState<T extends YustDoc>
 
   void updateStreamConditionally(YustDocsBuilder oldWidget) {
     if (widget.modelSetup != oldWidget.modelSetup ||
-        !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
-        !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
+        !ListEquality(ListEquality<dynamic>())
+            .equals(widget.filter, oldWidget.filter) ||
+        !ListEquality<dynamic>().equals(widget.orderBy, oldWidget.orderBy)) {
       initStream();
     }
   }

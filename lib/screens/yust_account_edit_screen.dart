@@ -50,7 +50,7 @@ class YustAccountEditScreen extends StatelessWidget {
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     onEditingComplete: (value) async {
                       user.firstName = value!; // value was checked by validator
-                      Yust.databaseService
+                      await Yust.databaseService
                           .saveDoc<YustUser>(Yust.userSetup, user);
                     },
                   ),
@@ -67,7 +67,7 @@ class YustAccountEditScreen extends StatelessWidget {
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     onEditingComplete: (value) async {
                       user.lastName = value!; // value was checked by validator
-                      Yust.databaseService
+                      await Yust.databaseService
                           .saveDoc<YustUser>(Yust.userSetup, user);
                     },
                   ),
@@ -108,8 +108,8 @@ class YustAccountEditScreen extends StatelessWidget {
   }
 
   void _changeEmail(BuildContext context) {
-    var email;
-    var password;
+    String? email;
+    String? password;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -132,7 +132,7 @@ class YustAccountEditScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 TextButton(
-                  child: Text("Abbrechen"),
+                  child: Text('Abbrechen'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -145,8 +145,12 @@ class YustAccountEditScreen extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      EasyLoading.show(status: 'E-Mail wird geändert...');
-                      await Yust.authService.changeEmail(email, password);
+                      if (email == null || password == null) {
+                        throw Exception(
+                            'E-Mail oder Passwort dürfen nicht leer sein');
+                      }
+                      await EasyLoading.show(status: 'E-Mail wird geändert...');
+                      await Yust.authService.changeEmail(email!, password!);
                       unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
                       await Yust.alertService.showAlert(
@@ -175,8 +179,8 @@ class YustAccountEditScreen extends StatelessWidget {
   }
 
   void _changePassword(BuildContext context) {
-    var newPassword;
-    var oldPassword;
+    String? newPassword;
+    String? oldPassword;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -200,7 +204,7 @@ class YustAccountEditScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 TextButton(
-                  child: Text("Abbrechen"),
+                  child: Text('Abbrechen'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -213,10 +217,14 @@ class YustAccountEditScreen extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      unawaited(EasyLoading.show(
-                          status: 'Passwort wird geändert...'));
+                      if (newPassword == null || oldPassword == null) {
+                        throw Exception(
+                            'Es muss sowohl das alte, als auch das neue Passwort eingegeben werden');
+                      }
+                      await EasyLoading.show(
+                          status: 'Passwort wird geändert...');
                       await Yust.authService
-                          .changePassword(newPassword, oldPassword);
+                          .changePassword(newPassword!, oldPassword!);
                       unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
                       await Yust.alertService.showAlert(
@@ -226,12 +234,12 @@ class YustAccountEditScreen extends StatelessWidget {
                     } on PlatformException catch (err) {
                       unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
                       unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.toString());
                     }
                   },

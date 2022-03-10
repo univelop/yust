@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:http/http.dart' as http;
-import 'package:image/image.dart' as imageLib;
+import 'package:image/image.dart' as image_lib;
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -26,7 +26,7 @@ class YustFileService {
 
   YustFileService() : fireStorage = firebase_storage.FirebaseStorage.instance;
 
-  YustFileService.mocked() : fireStorage = new MockFirebaseStorage();
+  YustFileService.mocked() : fireStorage = MockFirebaseStorage();
 
   Future<String> uploadFile(
       {required String path,
@@ -34,8 +34,7 @@ class YustFileService {
       File? file,
       Uint8List? bytes}) async {
     try {
-      final firebase_storage.Reference storageReference =
-          fireStorage.ref().child(path).child(name);
+      final storageReference = fireStorage.ref().child(path).child(name);
       firebase_storage.UploadTask uploadTask;
       if (file != null) {
         uploadTask = storageReference.putFile(file);
@@ -60,8 +59,9 @@ class YustFileService {
           .child(path)
           .child(name)
           .getData(maxSize ?? 5 * 1024 * 1024);
-    } catch (e) {}
-    return Uint8List(0);
+    } catch (e) {
+      return Uint8List(0);
+    }
   }
 
   /// Shares or downloads a file.
@@ -91,11 +91,22 @@ class YustFileService {
         file.writeAsBytesSync(data);
       }
       if (file != null) {
+        final size = MediaQuery.of(context).size;
+        // Get the Location of the widget (e.g. button), that called the method.
         final box = context.findRenderObject() as RenderBox?;
+        final buttonLocation = box!.localToGlobal(Offset.zero) & box.size;
+
+        // Alternatively create a Location in the center of the Screen
+        final centerLocation = Rect.fromLTWH(0, 0, size.width, size.height / 2);
+
+        // If we don't have a useful button location, use the center position
+        final sharePositionOrigin = buttonLocation.height >= size.height
+            ? centerLocation
+            : buttonLocation;
         await Share.shareFiles(
           [file.path],
           subject: name,
-          sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+          sharePositionOrigin: sharePositionOrigin,
         );
       }
     }
@@ -110,7 +121,7 @@ class YustFileService {
     await EasyLoading.show(status: 'Datei laden...');
     try {
       if (kIsWeb) {
-        final http.Response r = await http.get(
+        final r = await http.get(
           Uri.parse(url),
         );
         final data = r.bodyBytes;
@@ -133,7 +144,9 @@ class YustFileService {
   Future<void> deleteFile({required String path, required String name}) async {
     try {
       await fireStorage.ref().child(path).child(name).delete();
-    } catch (e) {}
+    } catch (e) {
+      throw YustException(e.toString());
+    }
   }
 
   Future<bool> fileExist({required String path, required String name}) async {
@@ -151,8 +164,7 @@ class YustFileService {
   }
 
   Future<File> resizeImage({required File file, int maxWidth = 1024}) async {
-    ImageProperties properties =
-        await FlutterNativeImage.getImageProperties(file.path);
+    var properties = await FlutterNativeImage.getImageProperties(file.path);
     if (properties.width! > properties.height! &&
         properties.width! > maxWidth) {
       file = await FlutterNativeImage.compressImage(
@@ -177,12 +189,12 @@ class YustFileService {
 
   Uint8List? resizeImageBytes(
       {required String name, required Uint8List bytes, int maxWidth = 1024}) {
-    var image = imageLib.decodeNamedImage(bytes, name)!;
+    var image = image_lib.decodeNamedImage(bytes, name)!;
     if (image.width > image.height && image.width > maxWidth) {
-      image = imageLib.copyResize(image, width: maxWidth);
+      image = image_lib.copyResize(image, width: maxWidth);
     } else if (image.height > image.width && image.height > maxWidth) {
-      image = imageLib.copyResize(image, height: maxWidth);
+      image = image_lib.copyResize(image, height: maxWidth);
     }
-    return imageLib.encodeNamedImage(image, name) as Uint8List?;
+    return image_lib.encodeNamedImage(image, name) as Uint8List?;
   }
 }

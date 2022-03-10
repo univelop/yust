@@ -1,3 +1,19 @@
+## 3.0.0-dev.5 - 2022-03-07
+
+* Fix iOS App initialization
+
+## 3.0.0-dev.4 - 2022-03-05
+
+* Fix iOS App initialization
+
+## 3.0.0-dev.3 - 2022-03-04
+
+* Textfield validation
+* Traversal object helper
+* Remove yust store
+* Improve state management
+* Rework json logic
+
 ## 3.0.0-dev.2 - 2022-02-17
 
 * Scrollbars for web

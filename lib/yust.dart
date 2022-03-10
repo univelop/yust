@@ -1,11 +1,13 @@
 library yust;
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -23,8 +25,8 @@ enum YustInputStyle {
 class Yust {
   static late FirebaseOptions firebaseOptions;
   static late YustAuthService authService;
-  static late final YustDatabaseService databaseService;
-  static late final YustFileService fileService;
+  static late YustDatabaseService databaseService;
+  static late YustFileService fileService;
   static final YustAlertService alertService = YustAlertService();
   static final YustHelperService helperService = YustHelperService();
   static late YustDocSetup<YustUser> userSetup;
@@ -39,9 +41,9 @@ class Yust {
   static Future<void> _connectToFirebaseEmulator(String address) async {
     FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
 
-    await FirebaseAuth.instance.useEmulator('http://$address:9099');
+    await FirebaseAuth.instance.useAuthEmulator('http://$address', 9099);
 
-    await FirebaseStorage.instance.useEmulator(host: address, port: 9199);
+    await FirebaseStorage.instance.useStorageEmulator(address, 9199);
   }
 
   static Future<void> initializeMocked() async {
@@ -59,8 +61,14 @@ class Yust {
     String? storageUrl,
     String? imagePlaceholderPath,
     String? emulatorAddress,
+    bool buildRelease = false,
   }) async {
-    await Firebase.initializeApp(options: firebaseConfig);
+    // For the moment don't initialize iOS via config for release
+    if (!kIsWeb && buildRelease && Platform.isIOS) {
+      await Firebase.initializeApp();
+    } else {
+      await Firebase.initializeApp(options: firebaseConfig);
+    }
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {

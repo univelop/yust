@@ -52,15 +52,21 @@ class YustDatabaseService {
   ///Multiple of those entries can be repeated.
   ///
   ///[filterList] may be null.
+  ///
+  ///[docsLimit] can be passed to reduce loading time
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
+    int? docsLimit,
   }) {
     var query = getQuery(
         modelSetup: modelSetup,
         orderByList: orderByList,
         filterList: filterList);
+    if (docsLimit != null) {
+      query = query.limit(docsLimit);
+    }
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs

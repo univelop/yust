@@ -41,7 +41,7 @@ class Yust {
   static Future<void> _connectToFirebaseEmulator(String address) async {
     FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
 
-    await FirebaseAuth.instance.useAuthEmulator('http://$address', 9099);
+    await FirebaseAuth.instance.useAuthEmulator(address, 9099);
 
     await FirebaseStorage.instance.useStorageEmulator(address, 9199);
   }

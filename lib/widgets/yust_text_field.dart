@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/services/text_formatter.dart';
+import 'package:flutter/services.dart';
 import 'package:yust/yust.dart';
 
 typedef StringCallback = void Function(String?);
@@ -24,7 +24,8 @@ class YustTextField extends StatefulWidget {
   final bool enabled;
   final bool showSelected;
   final bool obscureText;
-  final TextInputType? keyBoardType;
+  final bool autofocus;
+  final bool hideKeyboardOnAutofocus;
   final YustInputStyle? style;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
@@ -51,7 +52,8 @@ class YustTextField extends StatefulWidget {
     this.showSelected = true,
     this.readOnly = false,
     this.obscureText = false,
-    this.keyBoardType,
+    this.autofocus = false,
+    this.hideKeyboardOnAutofocus = true,
     this.style = YustInputStyle.normal,
     this.prefixIcon,
     this.suffixIcon,
@@ -90,6 +92,12 @@ class _YustTextFieldState extends State<YustTextField> {
         }
       }
     });
+    if (widget.hideKeyboardOnAutofocus) {
+      Future.delayed(
+        Duration(),
+        () => SystemChannels.textInput.invokeMethod('TextInput.hide'),
+      );
+    }
   }
 
   @override
@@ -155,6 +163,7 @@ class _YustTextFieldState extends State<YustTextField> {
                 validator: widget.validator == null
                     ? null
                     : (value) => widget.validator!(value!.trim()),
+                autofocus: widget.autofocus,
               ),
             ),
             widget.suffixIcon ?? SizedBox(),

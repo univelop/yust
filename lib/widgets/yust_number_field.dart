@@ -20,6 +20,8 @@ class YustNumberField extends StatelessWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final FocusNode? focusNode;
+  final bool autofocus;
+  final bool hideKeyboardOnAutofocus;
   final FormFieldValidator<String>? validator;
 
   YustNumberField({
@@ -36,6 +38,8 @@ class YustNumberField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.focusNode,
+    this.autofocus = false,
+    this.hideKeyboardOnAutofocus = true,
     this.validator,
   }) : super(key: key);
 
@@ -69,6 +73,8 @@ class YustNumberField extends StatelessWidget {
       enabled: enabled,
       autovalidateMode:
           validator != null ? AutovalidateMode.onUserInteraction : null,
+      autofocus: autofocus,
+      hideKeyboardOnAutofocus: hideKeyboardOnAutofocus,
       validator:
           validator == null ? null : (value) => validator!(value?.trim() ?? ''),
     );

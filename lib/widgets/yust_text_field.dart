@@ -27,6 +27,7 @@ class YustTextField extends StatefulWidget {
   final bool autofocus;
   final bool hideKeyboardOnAutofocus;
   final YustInputStyle? style;
+  final bool divider;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final TextCapitalization textCapitalization;
@@ -55,6 +56,7 @@ class YustTextField extends StatefulWidget {
     this.autofocus = false,
     this.hideKeyboardOnAutofocus = true,
     this.style = YustInputStyle.normal,
+    this.divider = true,
     this.prefixIcon,
     this.suffixIcon,
     this.textCapitalization = TextCapitalization.sentences,
@@ -176,7 +178,7 @@ class _YustTextFieldState extends State<YustTextField> {
                   )),
           ],
         ),
-        if (widget.style == YustInputStyle.normal)
+        if (widget.style == YustInputStyle.normal && widget.divider)
           Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
       ],
     );

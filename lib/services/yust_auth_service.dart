@@ -21,8 +21,14 @@ class YustAuthService {
   YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
 
   Stream<AuthState> get authStateStream {
-    return fireAuth.authStateChanges().map<AuthState>(
-        (user) => user == null ? AuthState.signedOut : AuthState.signedIn);
+    return fireAuth.authStateChanges().map<AuthState>((user) {
+      if (user != null) {
+        Yust.databaseService
+            .getDocOnce<YustUser>(Yust.userSetup, user.uid)
+            .then((yustUser) => yustUser?.setLoginTime());
+      }
+      return user == null ? AuthState.signedOut : AuthState.signedIn;
+    });
   }
 
   String? get currUserId => fireAuth.currentUser?.uid;
@@ -74,8 +80,10 @@ class YustAuthService {
     await userCredential.user!.updateEmail(email);
     final user = await Yust.databaseService
         .getDocOnce<YustUser>(Yust.userSetup, currUserId!);
-    user.email = email;
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+    if (user != null) {
+      user.email = email;
+      await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+    }
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {

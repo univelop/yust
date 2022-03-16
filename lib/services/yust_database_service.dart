@@ -137,7 +137,7 @@ class YustDatabaseService {
         .map((docSnapshot) => transformDoc(modelSetup, docSnapshot));
   }
 
-  Future<T> getDocOnce<T extends YustDoc>(
+  Future<T?> getDocOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     String id,
   ) {
@@ -145,7 +145,7 @@ class YustDatabaseService {
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => transformDoc<T>(modelSetup, docSnapshot)!);
+        .then((docSnapshot) => transformDoc<T>(modelSetup, docSnapshot));
   }
 
   /// Emits null events if no document was found.

@@ -12,6 +12,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final List<String>? orderBy;
   final bool showLoadingSpinner;
   final Widget? loadingIndicator;
+  final int? limit;
 
   /// There will never be a null for the list given.
   final Widget Function(List<T>, YustBuilderInsights, BuildContext) builder;
@@ -24,6 +25,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
     bool? doNotWait,
     this.showLoadingSpinner = false,
     this.loadingIndicator,
+    this.limit,
     required this.builder,
   }) : super(key: key);
 
@@ -40,6 +42,7 @@ class YustDocsBuilderState<T extends YustDoc>
       widget.modelSetup,
       filterList: widget.filter,
       orderByList: widget.orderBy,
+      limit: widget.limit,
     );
   }
 

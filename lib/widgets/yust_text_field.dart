@@ -26,6 +26,7 @@ class YustTextField extends StatefulWidget {
   final bool obscureText;
   final bool autofocus;
   final bool hideKeyboardOnAutofocus;
+  final FocusNode? focusNode;
   final YustInputStyle? style;
   final bool divider;
   final Widget? prefixIcon;
@@ -55,6 +56,7 @@ class YustTextField extends StatefulWidget {
     this.obscureText = false,
     this.autofocus = false,
     this.hideKeyboardOnAutofocus = true,
+    this.focusNode,
     this.style = YustInputStyle.normal,
     this.divider = true,
     this.prefixIcon,
@@ -72,7 +74,7 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
   late TextEditingController _controller;
-  final FocusNode _focusNode = FocusNode();
+  late FocusNode _focusNode = FocusNode();
   late String _initValue;
 
   @override
@@ -83,6 +85,7 @@ class _YustTextFieldState extends State<YustTextField> {
     }
     _controller =
         widget.controller ?? TextEditingController(text: widget.value);
+    _focusNode = widget.focusNode ?? FocusNode();
     _initValue = widget.value ?? '';
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {

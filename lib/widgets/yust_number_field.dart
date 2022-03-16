@@ -16,13 +16,14 @@ class YustNumberField extends StatelessWidget {
   final TabCallback? onTab;
   final bool readOnly;
   final bool enabled;
-  final YustInputStyle? style;
+  final YustInputStyle style;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final FocusNode? focusNode;
   final bool autofocus;
   final bool hideKeyboardOnAutofocus;
   final FormFieldValidator<String>? validator;
+  final bool divider;
 
   YustNumberField({
     Key? key,
@@ -34,13 +35,14 @@ class YustNumberField extends StatelessWidget {
     this.onTab,
     this.enabled = true,
     this.readOnly = false,
-    this.style,
+    this.style = YustInputStyle.normal,
     this.prefixIcon,
     this.suffixIcon,
     this.focusNode,
     this.autofocus = false,
     this.hideKeyboardOnAutofocus = true,
     this.validator,
+    this.divider = true,
   }) : super(key: key);
 
   @override
@@ -77,6 +79,7 @@ class YustNumberField extends StatelessWidget {
       hideKeyboardOnAutofocus: hideKeyboardOnAutofocus,
       validator:
           validator == null ? null : (value) => validator!(value?.trim() ?? ''),
+      divider: divider,
     );
   }
 

@@ -5,7 +5,7 @@ import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 
 typedef ChangeCallback = void Function(num?);
-typedef TabCallback = void Function();
+typedef TapCallback = void Function();
 
 class YustNumberField extends StatelessWidget {
   final String? label;
@@ -13,7 +13,7 @@ class YustNumberField extends StatelessWidget {
   final ChangeCallback? onChanged;
   final ChangeCallback? onEditingComplete;
   final TextEditingController? controller;
-  final TabCallback? onTab;
+  final TapCallback? onTap;
   final bool readOnly;
   final bool enabled;
   final YustInputStyle style;
@@ -22,7 +22,7 @@ class YustNumberField extends StatelessWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final bool hideKeyboardOnAutofocus;
-  final FormFieldValidator<String>? validator;
+  final FormFieldValidator<num?>? validator;
   final bool divider;
 
   YustNumberField({
@@ -32,7 +32,7 @@ class YustNumberField extends StatelessWidget {
     this.onChanged,
     this.onEditingComplete,
     this.controller,
-    this.onTab,
+    this.onTap,
     this.enabled = true,
     this.readOnly = false,
     this.style = YustInputStyle.normal,
@@ -52,7 +52,7 @@ class YustNumberField extends StatelessWidget {
       label: label,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
-      value: value?.toString().replaceAll(RegExp(r'\.'), ','),
+      value: _numToString(value),
       controller: controller,
       onChanged: onChanged == null
           ? null
@@ -70,7 +70,7 @@ class YustNumberField extends StatelessWidget {
         FilteringTextInputFormatter.allow(RegExp('[0-9\,\.\-]'))
       ],
       textInputAction: TextInputAction.next,
-      onTap: onTab,
+      onTap: onTap,
       readOnly: readOnly,
       enabled: enabled,
       autovalidateMode:
@@ -78,13 +78,20 @@ class YustNumberField extends StatelessWidget {
       autofocus: autofocus,
       hideKeyboardOnAutofocus: hideKeyboardOnAutofocus,
       validator:
-          validator == null ? null : (value) => validator!(value?.trim() ?? ''),
+          validator == null ? null : (value) => validator!(_valueToNum(value)),
       divider: divider,
     );
   }
 
-  num? _valueToNum(String value) {
-    if (value == '') {
+  String? _numToString(num? value) {
+    if (value?.floorToDouble() == value) {
+      value = value?.toInt();
+    }
+    return value?.toString().replaceAll(RegExp(r'\.'), ',');
+  }
+
+  num? _valueToNum(String? value) {
+    if (value == '' || value == null) {
       return null;
     } else {
       value = value.replaceAll(RegExp(r'\,'), '.');

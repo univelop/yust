@@ -15,6 +15,7 @@ class YustSelect<T> extends StatelessWidget {
   final Widget? prefixIcon;
   final Widget? suffixChild;
   final bool readOnly;
+  final bool showAsButton;
 
   const YustSelect({
     Key? key,
@@ -28,20 +29,30 @@ class YustSelect<T> extends StatelessWidget {
     this.prefixIcon,
     this.suffixChild,
     this.readOnly = false,
+    this.showAsButton = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return YustInputTile(
-      label: label ?? '',
-      text: _valueCaption(value),
-      prefixIcon: prefixIcon,
-      suffixChild: suffixChild,
-      style: style,
-      onTap:
-          (onSelected == null || readOnly) ? null : () => _selectValue(context),
-      onDelete: readOnly ? null : onDelete,
-    );
+    return showAsButton
+        ? IconButton(
+            icon: Icon(Icons.add),
+            color: Theme.of(context).colorScheme.secondary,
+            onPressed: (onSelected == null || readOnly)
+                ? null
+                : () => _selectValue(context),
+          )
+        : YustInputTile(
+            label: label ?? '',
+            text: _valueCaption(value),
+            prefixIcon: prefixIcon,
+            suffixChild: suffixChild,
+            style: style,
+            onTap: (onSelected == null || readOnly)
+                ? null
+                : () => _selectValue(context),
+            onDelete: readOnly ? null : onDelete,
+          );
   }
 
   String _valueCaption(T value) {

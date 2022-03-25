@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yust/yust.dart';
 
 import 'yust_doc.dart';
 import 'yust_doc_setup.dart';
@@ -22,6 +23,8 @@ class YustUser extends YustDoc {
   String? currEnvId;
   List<String>? deviceIds = [];
 
+  DateTime? lastLogin;
+
   YustUser({
     required this.email,
     required this.firstName,
@@ -34,6 +37,11 @@ class YustUser extends YustDoc {
 
   @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
+
+  void setLoginTime() async {
+    lastLogin = DateTime.now();
+    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+  }
 }
 
 enum YustGender {

@@ -343,9 +343,11 @@ class YustImagePickerState extends State<YustImagePicker> {
         path.split('.').last;
     final newFile =
         YustFile(name: imageName, file: file, bytes: bytes, processing: true);
-    setState(() {
-      _files.add(newFile);
-    });
+    _files.add(newFile);
+    if (mounted) {
+      setState(() {});
+    }
+
     try {
       if (resize) {
         final size = YustImageQuality[widget.yustQuality]!['size']!;

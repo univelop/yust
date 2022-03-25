@@ -20,6 +20,7 @@ class YustTextField extends StatefulWidget {
   final DeleteCallback? onDelete;
   final int? maxLines;
   final int? minLines;
+  final bool autocorrect;
   final bool readOnly;
   final bool enabled;
   final bool showSelected;
@@ -52,6 +53,7 @@ class YustTextField extends StatefulWidget {
     this.minLines,
     this.enabled = true,
     this.showSelected = true,
+    this.autocorrect = true,
     this.readOnly = false,
     this.obscureText = false,
     this.autofocus = false,
@@ -156,6 +158,7 @@ class _YustTextFieldState extends State<YustTextField> {
                     : (value) =>
                         widget.onChanged!(value == '' ? null : value.trim()),
                 onTap: widget.onTap,
+                autocorrect: widget.autocorrect,
                 readOnly: widget.readOnly,
                 enabled: widget.enabled,
                 obscureText: widget.obscureText,

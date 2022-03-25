@@ -114,11 +114,12 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Future<void> addFile(YustFile fileData, File? file, Uint8List? bytes) async {
-    setState(() {
-      _files.add(fileData);
-      _files.sort((a, b) => a.name!.compareTo(b.name!));
-      _processing[fileData.name] = true;
-    });
+    _files.add(fileData);
+    _files.sort((a, b) => a.name!.compareTo(b.name!));
+    _processing[fileData.name] = true;
+    if (mounted) {
+      setState(() {});
+    }
 
     try {
       fileData.url = await Yust.fileService.uploadFile(
@@ -175,7 +176,6 @@ class YustFilePickerState extends State<YustFilePicker> {
             }
             await addFile(fileData, file, platformFile.bytes);
           }
-          widget.onChanged!(_files);
         }
       }
     }

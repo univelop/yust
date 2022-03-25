@@ -33,14 +33,19 @@ class YustDatabaseService {
     return doc;
   }
 
-  Query<Object?> getQuery<T extends YustDoc>(
-      {required YustDocSetup<T> modelSetup,
-      List<List<dynamic>>? filterList,
-      List<String>? orderByList}) {
+  Query<Object?> getQuery<T extends YustDoc>({
+    required YustDocSetup<T> modelSetup,
+    List<List<dynamic>>? filterList,
+    List<String>? orderByList,
+    int? limit,
+  }) {
     Query query = fireStore.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
     query = _executeFilterList(query, filterList);
     query = _executeOrderByList(query, orderByList);
+    if (limit != null) {
+      query = query.limit(limit);
+    }
 
     return query;
   }
@@ -52,15 +57,19 @@ class YustDatabaseService {
   ///Multiple of those entries can be repeated.
   ///
   ///[filterList] may be null.
+  ///
+  ///[limit] can be passed to reduce loading time
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
+    int? limit,
   }) {
     var query = getQuery(
         modelSetup: modelSetup,
         orderByList: orderByList,
-        filterList: filterList);
+        filterList: filterList,
+        limit: limit);
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs
@@ -74,11 +83,13 @@ class YustDatabaseService {
     YustDocSetup<T> modelSetup, {
     List<List<dynamic>>? filterList,
     List<String>? orderByList,
+    int? limit,
   }) {
     var query = getQuery(
         modelSetup: modelSetup,
         orderByList: orderByList,
-        filterList: filterList);
+        filterList: filterList,
+        limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
@@ -126,7 +137,7 @@ class YustDatabaseService {
         .map((docSnapshot) => transformDoc(modelSetup, docSnapshot));
   }
 
-  Future<T> getDocOnce<T extends YustDoc>(
+  Future<T?> getDocOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
     String id,
   ) {
@@ -134,7 +145,7 @@ class YustDatabaseService {
         .collection(_getCollectionPath(modelSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => transformDoc<T>(modelSetup, docSnapshot)!);
+        .then((docSnapshot) => transformDoc<T>(modelSetup, docSnapshot));
   }
 
   /// Emits null events if no document was found.
@@ -146,7 +157,8 @@ class YustDatabaseService {
     var query = getQuery(
         modelSetup: modelSetup,
         filterList: filterList,
-        orderByList: orderByList);
+        orderByList: orderByList,
+        limit: 1);
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.isNotEmpty) {
@@ -166,7 +178,8 @@ class YustDatabaseService {
     var query = getQuery(
         modelSetup: modelSetup,
         filterList: filterList,
-        orderByList: orderByList);
+        orderByList: orderByList,
+        limit: 1);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 

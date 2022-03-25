@@ -3,8 +3,6 @@ import 'package:yust/widgets/yust_select.dart';
 import 'package:yust/widgets/yust_switch.dart';
 
 class YustAlertService {
-  final _yustServiceValidationKey = GlobalKey<FormState>();
-
   Future<void> showAlert(
       BuildContext context, String title, String message) async {
     await showDialog<void>(
@@ -70,11 +68,12 @@ class YustAlertService {
     FormFieldValidator<String>? validator,
   }) {
     final controller = TextEditingController(text: initialText);
+    final yustServiceValidationKey = GlobalKey<FormState>();
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return Form(
-          key: _yustServiceValidationKey,
+          key: yustServiceValidationKey,
           child: AlertDialog(
             title: Text(title),
             content: TextFormField(
@@ -99,7 +98,7 @@ class YustAlertService {
                 onPressed: () {
                   if (validator == null) {
                     Navigator.of(context).pop(controller.text);
-                  } else if (_yustServiceValidationKey.currentState!
+                  } else if (yustServiceValidationKey.currentState!
                       .validate()) {
                     //if ( validator(controller.text.trim()) == null
                     Navigator.of(context).pop(controller.text);

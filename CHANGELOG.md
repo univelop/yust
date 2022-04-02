@@ -1,3 +1,8 @@
+## 3.0.0-dev.6 - 2022-04-02
+
+* Track last user login time
+* Fix bugs
+
 ## 3.0.0-dev.5 - 2022-03-07
 
 * Fix iOS App initialization

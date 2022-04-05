@@ -109,7 +109,9 @@ class _YustTextFieldState extends State<YustTextField> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     _focusNode.dispose();
 
     super.dispose();

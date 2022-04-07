@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -187,14 +188,61 @@ class YustFileService {
     return file;
   }
 
-  Uint8List? resizeImageBytes(
-      {required String name, required Uint8List bytes, int maxWidth = 1024}) {
-    var image = image_lib.decodeNamedImage(bytes, name)!;
-    if (image.width > image.height && image.width > maxWidth) {
-      image = image_lib.copyResize(image, width: maxWidth);
-    } else if (image.height > image.width && image.height > maxWidth) {
-      image = image_lib.copyResize(image, height: maxWidth);
+  Future<Uint8List?> resizeImageBytes(
+      {required String name,
+      required Uint8List bytes,
+      int maxWidth = 1024}) async {
+    if (kIsWeb) {
+      var imageOutput = await _resizeImageWeb(bytes, name, maxWidth);
+      return imageOutput;
+    } else {
+      var image = image_lib.decodeNamedImage(bytes, name)!;
+      if (image.width > image.height && image.width > maxWidth) {
+        image = Image.file(await FlutterNativeImage.compressImage(name,
+            targetWidth: maxWidth)) as image_lib.Image;
+      } else if (image.height > image.width && image.height > maxWidth) {
+        image = Image.file(await FlutterNativeImage.compressImage(name,
+            targetHeight: maxWidth)) as image_lib.Image;
+        image = image_lib.copyResize(image, height: maxWidth);
+      }
+      return image_lib.encodeNamedImage(image, name) as Uint8List?;
     }
-    return image_lib.encodeNamedImage(image, name) as Uint8List?;
+  }
+
+  Future<Uint8List?> _resizeImageWeb(
+      Uint8List image, String mimeType, int maxWidth) async {
+    int width, height;
+    var jpg64 = base64Encode(image);
+    var newImg = html.ImageElement();
+    // ignore: unsafe_html
+    newImg.src = 'data:$mimeType;base64,$jpg64';
+
+    await newImg.onLoad.first;
+
+    if (newImg.width! > newImg.height! && newImg.width! > maxWidth) {
+      width = maxWidth;
+      height = (width * newImg.height! / newImg.width!).round();
+    } else if (newImg.height! > newImg.width! && newImg.height! > maxWidth) {
+      height = maxWidth;
+      width = (height * newImg.width! / newImg.height!).round();
+    } else {
+      width = newImg.width!;
+      height = newImg.height!;
+    }
+
+    var canvas = html.CanvasElement(width: width, height: height);
+    var ctx = canvas.context2D;
+
+    ctx.drawImageScaled(newImg, 0, 0, width, height);
+
+    return _getBlobData(await canvas.toBlob(mimeType));
+  }
+
+  Future<Uint8List> _getBlobData(html.Blob blob) {
+    final completer = Completer<Uint8List>();
+    final reader = html.FileReader();
+    reader.readAsArrayBuffer(blob);
+    reader.onLoad.listen((_) => completer.complete(reader.result as Uint8List));
+    return completer.future;
   }
 }

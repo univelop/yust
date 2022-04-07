@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/src/services/text_formatter.dart';
 import 'package:yust/yust.dart';
 
 typedef StringCallback = void Function(String?);
@@ -19,6 +20,7 @@ class YustTextField extends StatefulWidget {
   final DeleteCallback? onDelete;
   final int? maxLines;
   final int? minLines;
+  final bool autocorrect;
   final bool readOnly;
   final bool enabled;
   final bool showSelected;
@@ -29,31 +31,38 @@ class YustTextField extends StatefulWidget {
   final Widget? suffixIcon;
   final TextCapitalization textCapitalization;
   final AutovalidateMode? autovalidateMode;
+  final TextInputType? keyboardType;
+  final List<FilteringTextInputFormatter> inputFormatters;
+  final TextInputAction? textInputAction;
 
-  YustTextField(
-      {Key? key,
-      this.label,
-      this.value,
-      this.textStyle,
-      this.onChanged,
-      this.onEditingComplete,
-      this.controller,
-      this.validator,
-      this.onTap,
-      this.onDelete,
-      this.maxLines,
-      this.minLines,
-      this.enabled = true,
-      this.showSelected = true,
-      this.readOnly = false,
-      this.obscureText = false,
-      this.keyBoardType,
-      this.style = YustInputStyle.normal,
-      this.prefixIcon,
-      this.suffixIcon,
-      this.textCapitalization = TextCapitalization.sentences,
-      this.autovalidateMode})
-      : super(key: key);
+  YustTextField({
+    Key? key,
+    this.label,
+    this.value,
+    this.textStyle,
+    this.onChanged,
+    this.onEditingComplete,
+    this.controller,
+    this.validator,
+    this.onTap,
+    this.onDelete,
+    this.maxLines,
+    this.minLines,
+    this.enabled = true,
+    this.showSelected = true,
+    this.autocorrect = true,
+    this.readOnly = false,
+    this.obscureText = false,
+    this.keyBoardType,
+    this.style = YustInputStyle.normal,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.textCapitalization = TextCapitalization.sentences,
+    this.autovalidateMode,
+    this.inputFormatters = const [],
+    this.keyboardType,
+    this.textInputAction,
+  }) : super(key: key);
 
   @override
   _YustTextFieldState createState() => _YustTextFieldState();
@@ -61,7 +70,7 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
   late TextEditingController _controller;
-  FocusNode _focusNode = FocusNode();
+  final FocusNode _focusNode = FocusNode();
   late String _initValue;
 
   @override
@@ -77,9 +86,8 @@ class _YustTextFieldState extends State<YustTextField> {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
         final textFieldText = _controller.value.text.trim();
         final textFieldValue = textFieldText == '' ? null : textFieldText;
-        if (widget.validator == null) {
-          widget.onEditingComplete!(textFieldValue);
-        } else if (widget.validator!(textFieldValue) == null) {
+        if (widget.validator == null ||
+            widget.validator!(textFieldValue) == null) {
           widget.onEditingComplete!(textFieldValue);
         }
       }
@@ -88,7 +96,9 @@ class _YustTextFieldState extends State<YustTextField> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
     _focusNode.dispose();
 
     super.dispose();
@@ -127,25 +137,32 @@ class _YustTextFieldState extends State<YustTextField> {
                 minLines: widget.minLines,
                 controller: _controller,
                 focusNode: _focusNode,
-                keyboardType: widget.keyBoardType,
-                textInputAction: widget.minLines != null
-                    ? TextInputAction.newline
-                    : TextInputAction.next,
+                keyboardType: widget.keyboardType,
+                textInputAction: widget.textInputAction ??
+                    (widget.minLines != null
+                        ? TextInputAction.newline
+                        : TextInputAction.next),
                 onChanged: widget.onChanged == null
                     ? null
                     : (value) =>
                         widget.onChanged!(value == '' ? null : value.trim()),
                 onTap: widget.onTap,
+                autocorrect: widget.autocorrect,
                 readOnly: widget.readOnly,
                 enabled: widget.enabled,
                 obscureText: widget.obscureText,
                 textCapitalization: widget.textCapitalization,
-                autovalidateMode: widget.autovalidateMode,
+                inputFormatters: widget.inputFormatters,
+                autovalidateMode: widget.autovalidateMode ??
+                    (widget.validator != null
+                        ? AutovalidateMode.onUserInteraction
+                        : null),
                 validator: widget.validator == null
                     ? null
                     : (value) => widget.validator!(value!.trim()),
               ),
             ),
+            widget.suffixIcon ?? SizedBox(),
             if (widget.onDelete != null && widget.value != '')
               IconButton(
                   onPressed: widget.onDelete!,
@@ -153,7 +170,6 @@ class _YustTextFieldState extends State<YustTextField> {
                     Icons.delete,
                     color: Theme.of(context).primaryColor,
                   )),
-            widget.suffixIcon ?? SizedBox(),
           ],
         ),
         if (widget.style == YustInputStyle.normal)

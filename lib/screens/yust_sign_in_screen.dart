@@ -9,7 +9,6 @@ import 'package:yust/widgets/yust_progress_button.dart';
 
 import '../util/yust_exception.dart';
 import '../yust.dart';
-import '../yust_store.dart';
 import 'yust_sign_up_screen.dart';
 
 class YustSignInScreen extends StatefulWidget {
@@ -38,8 +37,6 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
 
-  late void Function() _storeListener;
-
   @override
   void initState() {
     SharedPreferences.getInstance().then((prefs) {
@@ -48,20 +45,6 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
         _emailController.text = _email!;
       }
     });
-
-    _storeListener = () {
-      if (Yust.store.authState == AuthState.signedIn) {
-        Yust.store.removeListener(_storeListener);
-        if (mounted) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/',
-            (_) => false,
-          );
-        }
-      }
-    };
-    Yust.store.addListener(_storeListener);
 
     super.initState();
   }
@@ -219,24 +202,24 @@ class _YustSignInScreenState extends State<YustSignInScreen> {
   Future<void> _signIn(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString('email', _email!);
+      await prefs.setString('email', _email!);
       try {
         await Yust.authService
             .signIn(context, _email!, _password!)
             .timeout(Duration(seconds: 10));
         if (_onSignedIn != null) _onSignedIn!();
       } on YustException catch (err) {
-        Yust.alertService.showAlert(context, 'Fehler', err.message);
+        await Yust.alertService.showAlert(context, 'Fehler', err.message);
       } on PlatformException catch (err) {
-        Yust.alertService.showAlert(context, 'Fehler', err.message!);
+        await Yust.alertService.showAlert(context, 'Fehler', err.message!);
       } on TimeoutException catch (_) {
-        Yust.alertService.showAlert(
+        await Yust.alertService.showAlert(
           context,
           'Fehler',
           'Zeitüberschreitung der Anfrage',
         );
       } catch (err) {
-        Yust.alertService.showAlert(context, 'Fehler', err.toString());
+        await Yust.alertService.showAlert(context, 'Fehler', err.toString());
       }
     }
   }

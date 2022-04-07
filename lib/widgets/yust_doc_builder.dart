@@ -18,7 +18,7 @@ class YustDocBuilder<T extends YustDoc> extends StatefulWidget {
   final List<String>? orderBy;
   final bool showLoadingSpinner;
   final bool createIfNull;
-  final Widget Function(T?, YustBuilderInsights) builder;
+  final Widget Function(T?, YustBuilderInsights, BuildContext) builder;
 
   YustDocBuilder({
     Key? key,
@@ -56,12 +56,13 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
   }
 
   bool updateStreamConditionally(YustDocBuilder oldWidget) {
-    bool updated = false;
+    var updated = false;
 
     if (widget.modelSetup != oldWidget.modelSetup ||
         widget.id != oldWidget.id ||
-        !ListEquality(ListEquality()).equals(widget.filter, oldWidget.filter) ||
-        !ListEquality().equals(widget.orderBy, oldWidget.orderBy)) {
+        !ListEquality(ListEquality<dynamic>())
+            .equals(widget.filter, oldWidget.filter) ||
+        !ListEquality<dynamic>().equals(widget.orderBy, oldWidget.orderBy)) {
       updated = true;
       initStream();
     }
@@ -102,7 +103,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
         final opts = YustBuilderInsights(
           waiting: snapshot.connectionState == ConnectionState.waiting,
         );
-        return widget.builder(doc, opts);
+        return widget.builder(doc, opts, context);
       },
     );
   }

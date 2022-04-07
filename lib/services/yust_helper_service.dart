@@ -17,7 +17,7 @@ class YustHelperService {
     if (dateTime == null) return '';
 
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
-    return formatter.format(dateTime);
+    return formatter.format(dateTime.toLocal());
   }
 
   /// Does not return null.
@@ -25,7 +25,7 @@ class YustHelperService {
     if (dateTime == null) return '';
 
     var formatter = DateFormat(format ?? 'HH:mm');
-    return formatter.format(dateTime);
+    return formatter.format(dateTime.toLocal());
   }
 
   /// Creates a string formatted just as the [YustDoc.createdAt] property is.
@@ -37,9 +37,9 @@ class YustHelperService {
       DateTime.tryParse(dateTimeString);
 
   String randomString({int length = 8}) {
-    final rnd = new Random();
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    var result = "";
+    final rnd = Random();
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var result = '';
     for (var i = 0; i < length; i++) {
       result += chars[rnd.nextInt(chars.length)];
     }

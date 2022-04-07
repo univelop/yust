@@ -1,11 +1,12 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yust/yust.dart';
 
 import 'yust_doc.dart';
 import 'yust_doc_setup.dart';
 
 part 'yust_user.g.dart';
 
-@JsonSerializable(anyMap: true)
+@JsonSerializable()
 class YustUser extends YustDoc {
   static final setup = YustDocSetup<YustUser>(
     collectionName: 'users',
@@ -18,10 +19,11 @@ class YustUser extends YustDoc {
   String lastName;
   YustGender? gender;
 
-  @JsonKey(toJson: YustDoc.mapToJson)
   Map<String, bool?> envIds = {};
   String? currEnvId;
   List<String>? deviceIds = [];
+
+  DateTime? lastLogin;
 
   YustUser({
     required this.email,
@@ -33,7 +35,13 @@ class YustUser extends YustDoc {
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);
 
+  @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
+
+  void setLoginTime() async {
+    lastLogin = DateTime.now();
+    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+  }
 }
 
 enum YustGender {

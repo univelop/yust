@@ -15,6 +15,7 @@ class YustInputTile extends StatelessWidget {
   final TapCallback? onTap;
   final DeleteCallback? onDelete;
   final Widget? suffixChild;
+  final FormFieldValidator<String>? validator;
 
   const YustInputTile({
     Key? key,
@@ -26,6 +27,7 @@ class YustInputTile extends StatelessWidget {
     this.onTap,
     this.onDelete,
     this.suffixChild,
+    this.validator,
   }) : super(key: key);
 
   @override
@@ -46,6 +48,7 @@ class YustInputTile extends StatelessWidget {
               FocusScope.of(context).unfocus();
               await onDelete!();
             },
+      validator: validator,
     );
   }
 }

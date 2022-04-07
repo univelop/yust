@@ -118,7 +118,7 @@ class _YustImageScreenState extends State<YustImageScreen> {
                 ),
                 onPressed: () {
                   _pageController.previousPage(
-                    duration: new Duration(milliseconds: 500),
+                    duration: Duration(milliseconds: 500),
                     curve: Curves.easeOutSine,
                   );
                 },
@@ -138,7 +138,7 @@ class _YustImageScreenState extends State<YustImageScreen> {
                 icon: Icon(Icons.arrow_forward_ios),
                 onPressed: () {
                   _pageController.nextPage(
-                    duration: new Duration(milliseconds: 500),
+                    duration: Duration(milliseconds: 500),
                     curve: Curves.easeOutSine,
                   );
                 },
@@ -185,7 +185,7 @@ class _YustImageScreenState extends State<YustImageScreen> {
                   color: Colors.white,
                   onPressed: () {
                     Yust.fileService.downloadAndLaunchFile(
-                        context: context, url: file.url!, name: file.name);
+                        context: context, url: file.url!, name: file.name!);
                   },
                   icon: kIsWeb ? Icon(Icons.download) : Icon(Icons.share),
                 );

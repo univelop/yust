@@ -1,16 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:yust/models/yust_user.dart';
+import 'package:yust/widgets/yust_doc_builder.dart';
 import 'package:yust/widgets/yust_focus_handler.dart';
 import 'package:yust/widgets/yust_select.dart';
-import 'package:yust/widgets/yust_store_builder.dart';
 import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../yust_store.dart';
-
-class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
+class YustAccountEditScreen extends StatelessWidget {
   static const String routeName = '/accountEdit';
   static const bool signInRequired = true;
 
@@ -24,60 +24,69 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
     return YustFocusHandler(
       child: Scaffold(
         appBar: AppBar(title: Text('Persönliche Daten')),
-        body: YustStoreBuilder<T>(builder: (context, child, store) {
-          final user = store.currUser!;
-          return ListView(
-            padding: const EdgeInsets.only(top: 20.0),
-            children: <Widget>[
-              _buildGender(context, user),
-              YustTextField(
-                label: 'Vorname',
-                value: user.firstName,
-                validator: (value) {
-                  if (value == null || value == '') {
-                    return 'Es muss ein Vorname angegeben werden.';
-                  } else {
-                    return null;
-                  }
-                },
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onEditingComplete: (value) async {
-                  user.firstName = value!; // value was checked by validator
-                  Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-                },
-              ),
-              YustTextField(
-                label: 'Nachname',
-                value: user.lastName,
-                validator: (value) {
-                  if (value == null || value == '') {
-                    return 'Es muss ein Nachname angegeben werden.';
-                  } else {
-                    return null;
-                  }
-                },
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                onEditingComplete: (value) async {
-                  user.lastName = value!; // value was checked by validator
-                  Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-                },
-              ),
-              YustTextField(
-                label: 'E-Mail',
-                value: user.email,
-                readOnly: true,
-                onTap: () => _changeEmail(context),
-              ),
-              YustTextField(
-                label: 'Passwort',
-                value: '*****',
-                obscureText: true,
-                readOnly: true,
-                onTap: () => _changePassword(context),
-              ),
-            ],
-          );
-        }),
+        body: YustDocBuilder<YustUser>(
+            modelSetup: Yust.userSetup,
+            id: Yust.authService.currUserId,
+            builder: (user, insights, context) {
+              if (user == null) {
+                return Center(
+                  child: Text('In Arbeit...'),
+                );
+              }
+              return ListView(
+                padding: const EdgeInsets.only(top: 20.0),
+                children: <Widget>[
+                  _buildGender(context, user),
+                  YustTextField(
+                    label: 'Vorname',
+                    value: user.firstName,
+                    validator: (value) {
+                      if (value == null || value == '') {
+                        return 'Es muss ein Vorname angegeben werden.';
+                      } else {
+                        return null;
+                      }
+                    },
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    onEditingComplete: (value) async {
+                      user.firstName = value!; // value was checked by validator
+                      await Yust.databaseService
+                          .saveDoc<YustUser>(Yust.userSetup, user);
+                    },
+                  ),
+                  YustTextField(
+                    label: 'Nachname',
+                    value: user.lastName,
+                    validator: (value) {
+                      if (value == null || value == '') {
+                        return 'Es muss ein Nachname angegeben werden.';
+                      } else {
+                        return null;
+                      }
+                    },
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
+                    onEditingComplete: (value) async {
+                      user.lastName = value!; // value was checked by validator
+                      await Yust.databaseService
+                          .saveDoc<YustUser>(Yust.userSetup, user);
+                    },
+                  ),
+                  YustTextField(
+                    label: 'E-Mail',
+                    value: user.email,
+                    readOnly: true,
+                    onTap: () => _changeEmail(context),
+                  ),
+                  YustTextField(
+                    label: 'Passwort',
+                    value: '*****',
+                    obscureText: true,
+                    readOnly: true,
+                    onTap: () => _changePassword(context),
+                  ),
+                ],
+              );
+            }),
       ),
     );
   }
@@ -99,8 +108,8 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
   }
 
   void _changeEmail(BuildContext context) {
-    var email;
-    var password;
+    String? email;
+    String? password;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -123,7 +132,7 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 TextButton(
-                  child: Text("Abbrechen"),
+                  child: Text('Abbrechen'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -136,21 +145,27 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      EasyLoading.show(status: 'E-Mail wird geändert...');
-                      await Yust.authService.changeEmail(email, password);
-                      EasyLoading.dismiss();
+                      if (email == null || password == null) {
+                        throw Exception(
+                            'E-Mail oder Passwort dürfen nicht leer sein');
+                      }
+                      await EasyLoading.show(status: 'E-Mail wird geändert...');
+                      await Yust.authService.changeEmail(email!, password!);
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService.showAlert(context, 'E-Mail geändert',
+                      await Yust.alertService.showAlert(
+                          context,
+                          'E-Mail geändert',
                           'Deine E-Mail wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.toString());
                     }
                   },
@@ -164,8 +179,8 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
   }
 
   void _changePassword(BuildContext context) {
-    var newPassword;
-    var oldPassword;
+    String? newPassword;
+    String? oldPassword;
     showDialog<List<String>>(
       context: context,
       builder: (BuildContext context) {
@@ -189,7 +204,7 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: <Widget>[
                 TextButton(
-                  child: Text("Abbrechen"),
+                  child: Text('Abbrechen'),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
@@ -202,22 +217,29 @@ class YustAccountEditScreen<T extends YustStore> extends StatelessWidget {
                   ),
                   onPressed: () async {
                     try {
-                      EasyLoading.show(status: 'Passwort wird geändert...');
+                      if (newPassword == null || oldPassword == null) {
+                        throw Exception(
+                            'Es muss sowohl das alte, als auch das neue Passwort eingegeben werden');
+                      }
+                      await EasyLoading.show(
+                          status: 'Passwort wird geändert...');
                       await Yust.authService
-                          .changePassword(newPassword, oldPassword);
-                      EasyLoading.dismiss();
+                          .changePassword(newPassword!, oldPassword!);
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService.showAlert(context, 'Passwort geändert',
+                      await Yust.alertService.showAlert(
+                          context,
+                          'Passwort geändert',
                           'Dein Passwort wurde erfolgreich geändert.');
                     } on PlatformException catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.message!);
                     } catch (err) {
-                      EasyLoading.dismiss();
+                      unawaited(EasyLoading.dismiss());
                       Navigator.of(context).pop();
-                      Yust.alertService
+                      await Yust.alertService
                           .showAlert(context, 'Fehler', err.toString());
                     }
                   },

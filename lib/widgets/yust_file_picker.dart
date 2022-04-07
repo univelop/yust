@@ -48,7 +48,7 @@ class YustFilePicker extends StatefulWidget {
 
 class YustFilePickerState extends State<YustFilePicker> {
   late YustFileHandler _fileHandler;
-
+  final Map<String?, bool> _processing = {};
   late bool _enabled;
 
   @override
@@ -80,7 +80,7 @@ class YustFilePickerState extends State<YustFilePicker> {
         });
   }
 
-  _buildAddButton(BuildContext context) {
+  Widget _buildAddButton(BuildContext context) {
     if (!_enabled) {
       return SizedBox.shrink();
     }
@@ -101,6 +101,10 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
+    //TODO offline: file.name is never null?
+    // if (file.name == null) {
+    //   return SizedBox.shrink();
+    // }
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -127,7 +131,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (!_enabled) {
       return SizedBox.shrink();
     }
-    if (file.processing == true) {
+    if (_processing[file.name] == true) {
       return CircularProgressIndicator();
     }
     return IconButton(
@@ -181,6 +185,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       linkedDocPath: widget.linkedDocPath,
       linkedDocAttribute: widget.linkedDocAttribute,
     );
+    _processing[newYustFile.name] = true;
 
     if (_fileHandler.getFiles().any((file) => file.name == newYustFile.name)) {
       Yust.alertService.showAlert(context, 'Nicht möglich',
@@ -188,6 +193,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     } else {
       await _fileHandler.addFile(newYustFile);
     }
+    _processing[newYustFile.name] = false;
     if (!newYustFile.cached) {
       widget.onChanged!(_fileHandler.getOnlineFiles());
     } else {

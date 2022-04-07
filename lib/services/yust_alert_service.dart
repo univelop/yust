@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:yust/widgets/yust_select.dart';
+import 'package:yust/widgets/yust_switch.dart';
 
 class YustAlertService {
-  final _yustServiceValidationKey = GlobalKey<FormState>();
-
   Future<void> showAlert(
       BuildContext context, String title, String message) async {
-    await showDialog(
+    await showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -14,7 +13,7 @@ class YustAlertService {
           content: Text(message),
           actions: <Widget>[
             TextButton(
-              child: Text("OK"),
+              child: Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -28,9 +27,10 @@ class YustAlertService {
   Future<bool?> showConfirmation(
     BuildContext context,
     String title,
-    String action, [
+    String action, {
+    String cancelText = 'Abbrechen',
     String? description,
-  ]) {
+  }) {
     return showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -39,12 +39,13 @@ class YustAlertService {
           content: description != null ? Text(description) : null,
           actions: <Widget>[
             TextButton(
-              child: Text("Abbrechen"),
+              child: Text(cancelText),
               onPressed: () {
                 Navigator.of(context).pop(false);
               },
             ),
             TextButton(
+              key: Key(action),
               child: Text(action),
               onPressed: () {
                 Navigator.of(context).pop(true);
@@ -63,15 +64,16 @@ class YustAlertService {
     String action, {
     String initialText = '',
 
-    /// if validator is set, action gets only triggerd if the validator returns null (means true)
+    /// if validator is set, action gets only triggered if the validator returns null (means true)
     FormFieldValidator<String>? validator,
   }) {
     final controller = TextEditingController(text: initialText);
+    final yustServiceValidationKey = GlobalKey<FormState>();
     return showDialog<String>(
       context: context,
       builder: (BuildContext context) {
         return Form(
-          key: _yustServiceValidationKey,
+          key: yustServiceValidationKey,
           child: AlertDialog(
             title: Text(title),
             content: TextFormField(
@@ -86,7 +88,7 @@ class YustAlertService {
             ),
             actions: <Widget>[
               TextButton(
-                child: Text("Abbrechen"),
+                child: Text('Abbrechen'),
                 onPressed: () {
                   Navigator.of(context).pop(null);
                 },
@@ -96,7 +98,7 @@ class YustAlertService {
                 onPressed: () {
                   if (validator == null) {
                     Navigator.of(context).pop(controller.text);
-                  } else if (_yustServiceValidationKey.currentState!
+                  } else if (yustServiceValidationKey.currentState!
                       .validate()) {
                     //if ( validator(controller.text.trim()) == null
                     Navigator.of(context).pop(controller.text);
@@ -140,7 +142,7 @@ class YustAlertService {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text("Abbrechen"),
+              child: Text('Abbrechen'),
               onPressed: () {
                 Navigator.of(context).pop(null);
               },
@@ -155,6 +157,80 @@ class YustAlertService {
         );
       },
     );
+  }
+
+  /// Returns newly selected items (only) after confirmation.
+  Future<List<String>> showCheckListDialog({
+    required BuildContext context,
+    required List<dynamic> choosableItems,
+    required List<String> priorItemIds,
+    required String? Function(dynamic) getItemLabel,
+    required String? Function(dynamic) getItemId,
+  }) async {
+    final newItemIds = List<String>.from(priorItemIds);
+    var isAborted = true;
+    await showDialog<dynamic>(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: Text('Pflichtfelder'),
+                content: Container(
+                  width: 300,
+                  height: 500,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: choosableItems
+                          .map(
+                            (item) => YustSwitch(
+                              label: getItemLabel(item ?? ''),
+                              value: newItemIds.contains(getItemId(item) ?? ''),
+                              onChanged: (value) {
+                                if (value) {
+                                  setState(() {
+                                    newItemIds.add(getItemId(item) ?? '');
+                                  });
+                                } else {
+                                  setState(() {
+                                    newItemIds.remove(getItemId(item) ?? '');
+                                  });
+                                }
+                              },
+                              switchRepresentation: 'checkbox',
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      isAborted = false;
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('OK'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      isAborted = true;
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Abbrechen'),
+                  ),
+                ],
+              );
+            },
+          );
+        });
+    if (isAborted) {
+      return priorItemIds;
+    } else {
+      return newItemIds;
+    }
   }
 
   void showToast(BuildContext context, String message) {

@@ -1,16 +1,37 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:flutter/material.dart';
+
 import '../models/yust_user.dart';
 import '../yust.dart';
+
+enum AuthState {
+  waiting,
+  signedIn,
+  signedOut,
+}
 
 class YustAuthService {
   FirebaseAuth fireAuth;
 
   YustAuthService() : fireAuth = FirebaseAuth.instance;
-  YustAuthService.mocked() : fireAuth = new MockFirebaseAuth();
+
+  YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
+
+  Stream<AuthState> get authStateStream {
+    return fireAuth.authStateChanges().map<AuthState>((user) {
+      if (user != null) {
+        Yust.databaseService
+            .getDocOnce<YustUser>(Yust.userSetup, user.uid)
+            .then((yustUser) => yustUser?.setLoginTime());
+      }
+      return user == null ? AuthState.signedOut : AuthState.signedIn;
+    });
+  }
+
+  String? get currUserId => fireAuth.currentUser?.uid;
 
   Future<void> signIn(
     BuildContext context,
@@ -32,30 +53,19 @@ class YustAuthService {
     String passwordConfirmation, {
     YustGender? gender,
   }) async {
-    final UserCredential userCredential = await fireAuth
-        .createUserWithEmailAndPassword(email: email, password: password);
+    final userCredential = await fireAuth.createUserWithEmailAndPassword(
+        email: email, password: password);
     final user = Yust.userSetup.newDoc()
       ..email = email
       ..firstName = firstName
       ..lastName = lastName
       ..gender = gender
       ..id = userCredential.user!.uid;
-
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
   }
 
   Future<void> signOut(BuildContext context) async {
     await fireAuth.signOut();
-
-    final completer = Completer<void>();
-    void complete() => completer.complete();
-
-    Yust.store.addListener(complete);
-
-    ///Awaits that the listener registered in the [Yust.initialize] method completed its work.
-    ///This also assumes that [fireAuth.signOut] was successfull, of which I do not know how to be certain.
-    await completer.future;
-    Yust.store.removeListener(complete);
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
@@ -63,23 +73,22 @@ class YustAuthService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final UserCredential userCredential =
-        await fireAuth.signInWithEmailAndPassword(
-      email: Yust.store.currUser!.email,
+    final userCredential = await fireAuth.signInWithEmailAndPassword(
+      email: fireAuth.currentUser!.email!,
       password: password,
     );
     await userCredential.user!.updateEmail(email);
-    Yust.store.setState(() {
-      Yust.store.currUser!.email = email;
-    });
-    Yust.databaseService
-        .saveDoc<YustUser>(Yust.userSetup, Yust.store.currUser!);
+    final user = await Yust.databaseService
+        .getDocOnce<YustUser>(Yust.userSetup, currUserId!);
+    if (user != null) {
+      user.email = email;
+      await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+    }
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
-    final UserCredential userCredential =
-        await fireAuth.signInWithEmailAndPassword(
-      email: Yust.store.currUser!.email,
+    final userCredential = await fireAuth.signInWithEmailAndPassword(
+      email: fireAuth.currentUser!.email!,
       password: oldPassword,
     );
     await userCredential.user!.updatePassword(newPassword);

@@ -60,10 +60,6 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
     _enabled = (widget.onChanged != null && !widget.readOnly);
 
-    if (widget.files.isEmpty && _enabled) {
-      widget.onChanged!([]);
-    }
-
     super.initState();
   }
 
@@ -93,18 +89,14 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFiles(BuildContext context) {
-    List<YustFile> _files = _fileHandler.getFiles();
-    _files.sort((a, b) => (a.name).compareTo(b.name));
+    var _files = _fileHandler.getFiles();
+    _files.sort((a, b) => (a.name!).compareTo(b.name!));
     return Column(
       children: _files.map((file) => _buildFile(context, file)).toList(),
     );
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
-    //TODO offline: file.name is never null?
-    // if (file.name == null) {
-    //   return SizedBox.shrink();
-    // }
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -112,7 +104,7 @@ class YustFilePickerState extends State<YustFilePicker> {
           Icon(Icons.insert_drive_file),
           SizedBox(width: 8),
           Expanded(
-            child: Text(file.name, overflow: TextOverflow.ellipsis),
+            child: Text(file.name!, overflow: TextOverflow.ellipsis),
           ),
           _buildCachedIndicator(file),
         ],
@@ -188,7 +180,7 @@ class YustFilePickerState extends State<YustFilePicker> {
     _processing[newYustFile.name] = true;
 
     if (_fileHandler.getFiles().any((file) => file.name == newYustFile.name)) {
-      Yust.alertService.showAlert(context, 'Nicht möglich',
+      await Yust.alertService.showAlert(context, 'Nicht möglich',
           'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
     } else {
       await _fileHandler.addFile(newYustFile);
@@ -230,8 +222,8 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   File? _platformFileToFile(PlatformFile platformFile) {
-    if (!kIsWeb && platformFile.path != null) {
-      return File(platformFile.path!);
-    }
+    return (!kIsWeb && platformFile.path != null)
+        ? File(platformFile.path!)
+        : null;
   }
 }

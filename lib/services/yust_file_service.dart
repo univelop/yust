@@ -144,7 +144,6 @@ class YustFileService {
   }
 
   Future<void> deleteFile({required String path, required String name}) async {
-    //TODO offline: try-catch needed?
     try {
       await fireStorage.ref().child(path).child(name).delete();
     } catch (e) {

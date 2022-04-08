@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:json_annotation/json_annotation.dart';
 
-
 part 'yust_file.g.dart';
 
 typedef YustFileJson = Map<String, dynamic>;
@@ -16,7 +15,7 @@ typedef YustFilesJson = List<YustFileJson>;
 @JsonSerializable()
 class YustFile {
   /// The name of the file with extension.
-  String name;
+  String? name;
 
   /// The URL to download the file.
   String? url;
@@ -73,16 +72,11 @@ class YustFile {
   });
 
   /// Converts the file to JSON for Firebase. Only relevant attributs are converted.
-   factory YustFile.fromJson(Map<String, dynamic> json) =>
+  factory YustFile.fromJson(Map<String, dynamic> json) =>
       _$YustFileFromJson(json);
 
   /// Converts JSON from Firebase to a file. Only relevant attributs are included.
-  Map<String, String?> toJson() {
-    return {
-      'name': name,
-      'url': url,
-    };
-  }
+  Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
   /// Converts the file to JSON for local device. Only relevant attributs are converted.
   factory YustFile.fromLocalJson(Map<String, dynamic> json) {
@@ -107,6 +101,4 @@ class YustFile {
       'lastError': lastError,
     };
   }
-
-  Map<String, dynamic> toJson() => _$YustFileToJson(this);
 }

@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/screens/yust_image_screen.dart';
-import 'package:yust/util/yust_exception.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
@@ -38,8 +37,6 @@ class YustImagePicker extends StatefulWidget {
   final List<YustFile> images;
   final bool zoomable;
   final void Function(List<YustFile> images)? onChanged;
-  //TODO offline onUploaded?
-  // final void Function(String url, YustFile cachedFile)? onUploaded;
   final Widget? prefixIcon;
   final bool readOnly;
   final String yustQuality;
@@ -57,8 +54,6 @@ class YustImagePicker extends StatefulWidget {
     required this.images,
     this.zoomable = false,
     this.onChanged,
-    //TODO offline: onUploaded?
-    // this.onUploaded,
     this.prefixIcon,
     this.readOnly = false,
     this.yustQuality = 'medium',
@@ -84,10 +79,6 @@ class YustImagePickerState extends State<YustImagePicker> {
 
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
-
-    if (widget.images.isEmpty && _enabled) {
-      widget.onChanged!([]);
-    }
 
     super.initState();
   }

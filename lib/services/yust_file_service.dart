@@ -37,6 +37,7 @@ class YustFileService {
       final storageReference = fireStorage.ref().child(path).child(name);
       firebase_storage.FirebaseStorage.instance
           .setMaxUploadRetryTime(Duration(seconds: 30));
+      //TODO offline con: MaxUploadRetryTime. 10 Minutes?
       firebase_storage.UploadTask uploadTask;
       if (file != null) {
         uploadTask = storageReference.putFile(file);

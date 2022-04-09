@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:collection/collection.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +18,9 @@ import 'package:yust/yust.dart';
 import 'yust_exception.dart';
 
 class YustFileHandler {
+  //TODO offline con: record duplication does not work offline, also does not work with offline data - duplicates without cached files
+
+  //TODO offline con: if (all) records gets deleted, the files in the database remain
   /// Path to the storage folder.
   final String storageFolderPath;
 
@@ -73,7 +76,7 @@ class YustFileHandler {
   void _mergeOnlineFiles(List<YustFile> yustFiles, List<YustFile> onlineFiles,
       String storageFolderPath) async {
     onlineFiles.forEach((f) => f.storageFolderPath = storageFolderPath);
-    _mergeIntoYustFiles(_yustFiles, onlineFiles);
+    _mergeIntoYustFiles(yustFiles, onlineFiles);
   }
 
   Future<void> _mergeCachedFiles(List<YustFile> yustFiles,
@@ -105,6 +108,12 @@ class YustFileHandler {
     if (yustFile.cached) {
       await _deleteFileFromCache(yustFile);
     } else {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      if (connectivityResult == ConnectivityResult.none) {
+        throw ('No internet connection.');
+      }
+      //TODO offline con: if online file gets 'deleted' in offline status, operations gets executed after next connection,
+      /// only the file gets deleted, not the database entry
       await _deleteFileFromStorage(yustFile);
     }
     _yustFiles.removeWhere((f) => f.name == yustFile.name);
@@ -165,7 +174,6 @@ class YustFileHandler {
       // saving cachedFiles, to store error log messages
       await _saveCachedFiles(cachedFiles);
 
-      reuploadTime = reuploadTime;
       Future.delayed(reuploadTime, () {
         reuploadTime = _incReuploadTime(reuploadTime);
         _uploadCachedFiles(reuploadTime);
@@ -256,23 +264,22 @@ class YustFileHandler {
   }
 
   Future<void> _uploadFileToStorage(YustFile yustFile) async {
-    // throw YustException('No internet');
     if (yustFile.storageFolderPath == null) {
       throw (YustException(
           'Can not upload file. The storage folder path is missing.'));
     }
+    final connectivityResult = await Connectivity().checkConnectivity();
+    if (connectivityResult == ConnectivityResult.none) {
+      throw ('No internet connection.');
+    }
 
-    // ignore: inference_failure_on_uninitialized_variable
-    // var attribute;
     if (yustFile.cached) {
       if (await _isFileInCache(yustFile)) {
         yustFile.file = File(yustFile.devicePath!);
       } else {
-        //removing file data, because file is missing in cache
-        await _deleteFileFromCache(yustFile);
+        //returns without upload, because file is missing in cache
         return;
       }
-      // attribute = await _getDocAttribute(yustFile);
     }
 
     final url = await Yust.fileService.uploadFile(
@@ -289,7 +296,6 @@ class YustFileHandler {
   Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {
     var attribute = await _getDocAttribute(cachedFile);
 
-    // if (_areAttributesEqual(oldAttribute, newAttribute)) {
     if (attribute is Map) {
       if (attribute['url'] == null) {
         attribute['name'] = cachedFile.name;
@@ -311,21 +317,7 @@ class YustFileHandler {
     await FirebaseFirestore.instance
         .doc(cachedFile.linkedDocPath!)
         .update({cachedFile.linkedDocAttribute!: attribute});
-
-    // else {
-    //   await _updateDocAttribute(newAttribute, cachedFile, url);
-    // }
   }
-
-  // bool _areAttributesEqual(dynamic a1, dynamic a2) {
-  //   if (a1 is Map && a2 is Map) {
-  //     return a1['name'] == a2['name'] && a1['url'] == a2['url'];
-  //   }
-  //   if (a1 is List && a2 is List) {
-  //     return DeepCollectionEquality().equals(a1, a2);
-  //   }
-  //   return false;
-  // }
 
   Future<dynamic> _getDocAttribute(YustFile yustFile) async {
     // ignore: inference_failure_on_uninitialized_variable
@@ -334,6 +326,7 @@ class YustFileHandler {
         .doc(yustFile.linkedDocPath!)
         .get(GetOptions(source: Source.server));
 
+    //TODO offline con: record does not exist, if picture is the first data for the record
     if (doc.exists && doc.data() != null) {
       try {
         attribute = doc.get(yustFile.linkedDocAttribute!);
@@ -411,7 +404,7 @@ class YustFileHandler {
 
   /// Limits [reuploadTime] to 10 minutes
   Duration _incReuploadTime(Duration reuploadTime) {
-    return reuploadTime > Duration(minutes: 10)
+    return (reuploadTime * _reuploadFactor) > Duration(minutes: 10)
         ? Duration(minutes: 10)
         : reuploadTime * _reuploadFactor;
   }

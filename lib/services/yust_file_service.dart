@@ -193,20 +193,24 @@ class YustFileService {
       required Uint8List bytes,
       int maxWidth = 1024}) async {
     if (kIsWeb) {
-      var imageOutput = await _resizeImageWeb(bytes, name, maxWidth);
-      return imageOutput;
+      return await _resizeImageWeb(bytes, name, maxWidth);
     } else {
-      var image = image_lib.decodeNamedImage(bytes, name)!;
-      if (image.width > image.height && image.width > maxWidth) {
-        image = Image.file(await FlutterNativeImage.compressImage(name,
-            targetWidth: maxWidth)) as image_lib.Image;
-      } else if (image.height > image.width && image.height > maxWidth) {
-        image = Image.file(await FlutterNativeImage.compressImage(name,
-            targetHeight: maxWidth)) as image_lib.Image;
-        image = image_lib.copyResize(image, height: maxWidth);
-      }
-      return image_lib.encodeNamedImage(image, name) as Uint8List?;
+      return await _resizeImageMobile(name, bytes, maxWidth);
     }
+  }
+
+  Future<Uint8List?> _resizeImageMobile(
+      String name, Uint8List bytes, int maxWidth) async {
+    var newImg = image_lib.decodeNamedImage(bytes, name)!;
+    if (newImg.width > newImg.height && newImg.width > maxWidth) {
+      newImg = Image.file(await FlutterNativeImage.compressImage(name,
+          targetWidth: maxWidth)) as image_lib.Image;
+    } else if (newImg.height > newImg.width && newImg.height > maxWidth) {
+      newImg = Image.file(await FlutterNativeImage.compressImage(name,
+          targetHeight: maxWidth)) as image_lib.Image;
+      newImg = image_lib.copyResize(newImg, height: maxWidth);
+    }
+    return image_lib.encodeNamedImage(newImg, name) as Uint8List?;
   }
 
   Future<Uint8List?> _resizeImageWeb(

@@ -112,8 +112,9 @@ class _YustTextFieldState extends State<YustTextField> {
     if (widget.controller == null) {
       _controller.dispose();
     }
-    _focusNode.dispose();
-
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
     super.dispose();
   }
 

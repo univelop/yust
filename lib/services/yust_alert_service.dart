@@ -159,6 +159,51 @@ class YustAlertService {
     );
   }
 
+  // typedef InnerBuilder = void Function({})
+
+  Future<String?> showCustomDialog({
+    required BuildContext context,
+    required String title,
+    String? action,
+    required Widget Function({required void Function(String) onChanged})
+        buildInner,
+  }) {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        var returnValue = '';
+        return AlertDialog(
+          title: Text(title),
+          content: StatefulBuilder(
+            builder: (context, setState) {
+              return SizedBox(
+                height: 300,
+                child: buildInner(
+                  onChanged: (String value) => returnValue = value,
+                ),
+              );
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+            ),
+            if (action != null)
+              TextButton(
+                child: Text(action),
+                onPressed: () {
+                  Navigator.of(context).pop(returnValue);
+                },
+              ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Returns newly selected items (only) after confirmation.
   Future<List<String>> showCheckListDialog({
     required BuildContext context,

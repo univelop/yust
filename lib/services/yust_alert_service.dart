@@ -164,7 +164,7 @@ class YustAlertService {
   Future<String?> showCustomDialog({
     required BuildContext context,
     required String title,
-    String? action,
+    String? actionName,
     required Widget Function({required void Function(String) onChanged})
         buildInner,
   }) {
@@ -173,14 +173,12 @@ class YustAlertService {
       builder: (BuildContext context) {
         var returnValue = '';
         return AlertDialog(
+          scrollable: true,
           title: Text(title),
           content: StatefulBuilder(
             builder: (context, setState) {
-              return SizedBox(
-                height: 300,
-                child: buildInner(
-                  onChanged: (String value) => returnValue = value,
-                ),
+              return buildInner(
+                onChanged: (String value) => returnValue = value,
               );
             },
           ),
@@ -191,9 +189,9 @@ class YustAlertService {
                 Navigator.of(context).pop(null);
               },
             ),
-            if (action != null)
+            if (actionName != null)
               TextButton(
-                child: Text(action),
+                child: Text(actionName),
                 onPressed: () {
                   Navigator.of(context).pop(returnValue);
                 },

@@ -199,18 +199,17 @@ class YustFileService {
     }
   }
 
+  //Function uses non-native package image_lib which can work slow
+  //Await package for ios & android which works native
   Future<Uint8List?> _resizeImageMobile(
       String name, Uint8List bytes, int maxWidth) async {
-    var newImg = image_lib.decodeNamedImage(bytes, name)!;
-    if (newImg.width > newImg.height && newImg.width > maxWidth) {
-      newImg = Image.file(await FlutterNativeImage.compressImage(name,
-          targetWidth: maxWidth)) as image_lib.Image;
-    } else if (newImg.height > newImg.width && newImg.height > maxWidth) {
-      newImg = Image.file(await FlutterNativeImage.compressImage(name,
-          targetHeight: maxWidth)) as image_lib.Image;
-      newImg = image_lib.copyResize(newImg, height: maxWidth);
+    var image = image_lib.decodeNamedImage(bytes, name)!;
+    if (image.width > image.height && image.width > maxWidth) {
+      image = image_lib.copyResize(image, width: maxWidth);
+    } else if (image.height > image.width && image.height > maxWidth) {
+      image = image_lib.copyResize(image, height: maxWidth);
     }
-    return image_lib.encodeNamedImage(newImg, name) as Uint8List?;
+    return image_lib.encodeNamedImage(image, name) as Uint8List?;
   }
 
   Future<Uint8List?> _resizeImageWeb(

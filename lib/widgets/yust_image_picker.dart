@@ -75,6 +75,11 @@ class YustImagePickerState extends State<YustImagePicker> {
       storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
+      onFileUploaded: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
     );
 
     _enabled = (widget.onChanged != null && !widget.readOnly);
@@ -212,6 +217,8 @@ class YustImagePickerState extends State<YustImagePicker> {
         placeholder: Yust.imagePlaceholderPath!,
         image: file.url ?? '',
         fit: BoxFit.cover,
+        imageErrorBuilder: (context, _, __) =>
+            Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
       );
     }
     final zoomEnabled = (widget.zoomable);
@@ -290,9 +297,8 @@ class YustImagePickerState extends State<YustImagePicker> {
               await _fileHandler.deleteFile(yustFile);
               if (!yustFile.cached) {
                 widget.onChanged!(_fileHandler.getOnlineFiles());
-              } else {
-                setState(() {});
               }
+              setState(() {});
             } catch (e) {
               await Yust.alertService.showAlert(context, 'Ups',
                   'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
@@ -419,8 +425,6 @@ class YustImagePickerState extends State<YustImagePicker> {
 
     if (!newYustFile.cacheable || kIsWeb) {
       widget.onChanged!(_fileHandler.getOnlineFiles());
-    } else {
-      setState(() {});
     }
   }
 

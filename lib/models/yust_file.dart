@@ -92,6 +92,9 @@ class YustFile {
 
   /// Converts JSON from device to a file. Only relevant attributs are included.
   Map<String, String?> toLocalJson() {
+    if (devicePath == null) {
+      throw ('Error: Device Path has to be a String.');
+    }
     return {
       'name': name,
       'storageFolderPath': storageFolderPath,

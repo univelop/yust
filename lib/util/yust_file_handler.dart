@@ -18,9 +18,6 @@ import 'package:yust/yust.dart';
 import 'yust_exception.dart';
 
 class YustFileHandler {
-  //TODO offline con: record duplication does not work offline, also does not work with offline data - duplicates without cached files
-
-  //TODO offline con: if (all) records gets deleted, the files in the database remain
   /// Path to the storage folder.
   final String storageFolderPath;
 
@@ -42,10 +39,14 @@ class YustFileHandler {
 
   var uploadControllIndex = 0;
 
+  /// gets triggerd after successful upload
+  void Function()? onFileUploaded;
+
   YustFileHandler({
     required this.storageFolderPath,
     this.linkedDocAttribute,
     this.linkedDocPath,
+    this.onFileUploaded,
   });
 
   List<YustFile> getFiles() {
@@ -56,16 +57,20 @@ class YustFileHandler {
     return _yustFiles.where((f) => f.cached == false).toList();
   }
 
+  List<YustFile> getCachedFiles() {
+    return _yustFiles.where((f) => f.cached == true).toList();
+  }
+
   Future<void> updateFiles(List<YustFile> onlineFiles,
       {bool loadFiles = false}) async {
-    _yustFiles = [];
+    // _yustFiles = [];
     _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
     await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
 
-    if (loadFiles) await _loadFiles();
+    if (loadFiles) _loadFiles();
   }
 
-  Future<void> _loadFiles() async {
+  void _loadFiles() {
     for (var yustFile in _yustFiles) {
       if (yustFile.cached) {
         yustFile.file = File(yustFile.devicePath!);
@@ -82,7 +87,7 @@ class YustFileHandler {
   Future<void> _mergeCachedFiles(List<YustFile> yustFiles,
       String? linkedDocPath, String? linkedDocAttribute) async {
     if (linkedDocPath != null && linkedDocAttribute != null) {
-      var cachedFiles = await _getCachedFiles();
+      var cachedFiles = await _loadCachedFiles();
       cachedFiles = cachedFiles
           .where((yustFile) =>
               yustFile.linkedDocPath == linkedDocPath &&
@@ -112,9 +117,10 @@ class YustFileHandler {
       if (connectivityResult == ConnectivityResult.none) {
         throw ('No internet connection.');
       }
-      //TODO offline con: if online file gets 'deleted' in offline status, operations gets executed after next connection,
-      /// only the file gets deleted, not the database entry
-      await _deleteFileFromStorage(yustFile);
+      try {
+        await _deleteFileFromStorage(yustFile);
+        // ignore: empty_catches
+      } catch (e) {}
     }
     _yustFiles.removeWhere((f) => f.name == yustFile.name);
   }
@@ -142,13 +148,17 @@ class YustFileHandler {
 
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
     print('UCI: ' + uploadControllIndex.toString());
-    var cachedFiles = await _getCachedFiles();
+    var cachedFiles = getCachedFiles();
     var uploadError = false;
     for (final yustFile in cachedFiles) {
       yustFile.lastError = null;
       try {
         await _uploadFileToStorage(yustFile);
         await _deleteFileFromCache(yustFile);
+
+        _yustFiles.firstWhere((file) => file.name == yustFile.name).devicePath =
+            null;
+        if (onFileUploaded != null) onFileUploaded!();
       } catch (error) {
         print(error.toString());
         yustFile.lastError = error.toString();
@@ -159,7 +169,7 @@ class YustFileHandler {
       cachedFiles.removeWhere((f) => f.lastError == null);
     }
     var length = cachedFiles.length;
-    _mergeIntoYustFiles(cachedFiles, await _getCachedFiles());
+    _mergeIntoYustFiles(cachedFiles, getCachedFiles());
 
     if (length < cachedFiles.length) {
       // retry upload with reseted uploadTime, because new files where added
@@ -246,9 +256,12 @@ class YustFileHandler {
     yustFile.devicePath = devicePath + '${yustFile.name}';
 
     await yustFile.file!.copy(yustFile.devicePath!);
-    final cachedFileList = await _getCachedFiles();
+    final cachedFileList = getCachedFiles();
     cachedFileList.add(yustFile);
     await _saveCachedFiles(cachedFileList);
+    //TODO offline: _saveCachedFile, takes getCachedFiles, use devicePathAttribute!
+
+    //TODO offline: check if List<YustFile> as attribute are necessary
   }
 
   Future<String> _getDirectory(YustFile yustFile) async {
@@ -291,6 +304,9 @@ class YustFileHandler {
     yustFile.url = url;
 
     if (yustFile.cached) await _updateDocAttribute(yustFile, url);
+    // if (onFileUploaded != null) {
+    //   onFileUploaded!();
+    // }
   }
 
   Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {
@@ -326,7 +342,6 @@ class YustFileHandler {
         .doc(yustFile.linkedDocPath!)
         .get(GetOptions(source: Source.server));
 
-    //TODO offline con: record does not exist, if picture is the first data for the record
     if (doc.exists && doc.data() != null) {
       try {
         attribute = doc.get(yustFile.linkedDocAttribute!);
@@ -346,13 +361,14 @@ class YustFileHandler {
   Future<void> _deleteFileFromStorage(YustFile yustFile) async {
     if (yustFile.storageFolderPath != null) {
       await Yust.fileService
-          .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name!)
-          .timeout(Duration(seconds: 20));
+          .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name!);
+      // .timeout(Duration(seconds: 20));
+      //TODO offline: Testen ohne TimeOut
     }
   }
 
   Future<void> _deleteFileFromCache(YustFile yustFile) async {
-    var cachedFiles = await _getCachedFiles();
+    var cachedFiles = getCachedFiles();
     if (yustFile.devicePath != null &&
         File(yustFile.devicePath!).existsSync()) {
       await File(yustFile.devicePath!).delete();
@@ -363,7 +379,7 @@ class YustFileHandler {
   }
 
   /// Loads a list of all cached [YustFile]s.
-  Future<List<YustFile>> _getCachedFiles() async {
+  Future<List<YustFile>> _loadCachedFiles() async {
     var prefs = await SharedPreferences.getInstance();
     var temporaryJsonFiles = prefs.getString('YustCachedFiles') ?? '[]';
 
@@ -391,7 +407,7 @@ class YustFileHandler {
 
   /// Checks the cached files for corruption and deletes them if necessary.
   Future<void> _validateCachedFiles() async {
-    var cachedFiles = await _getCachedFiles();
+    var cachedFiles = getCachedFiles();
     // Checks if all required database addresses are initialized.
     for (var cachedFile in cachedFiles) {
       final doc =

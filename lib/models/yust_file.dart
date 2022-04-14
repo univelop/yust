@@ -12,6 +12,7 @@ typedef YustFilesJson = List<YustFileJson>;
 class YustFile {
   String? name;
   String? url;
+  String? hash;
 
   @JsonKey(ignore: true)
   File? file;
@@ -23,6 +24,7 @@ class YustFile {
   YustFile({
     this.name,
     this.url,
+    this.hash,
     this.file,
     this.bytes,
     this.processing = false,

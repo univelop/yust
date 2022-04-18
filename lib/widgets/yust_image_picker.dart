@@ -90,22 +90,18 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _fileHandler.updateFiles(widget.images, loadFiles: true),
-      builder: (context, snapshot) {
-        return YustListTile(
-          label: widget.label,
-          suffixChild: _buildPickButtons(context),
-          prefixIcon: widget.prefixIcon,
-          below: widget.multiple
-              ? _buildGallery(context)
-              : Padding(
-                  padding: const EdgeInsets.only(bottom: 2.0),
-                  child: _buildSingleImage(
-                      context, _fileHandler.getFiles().firstOrNull),
-                ),
-        );
-      },
+    _fileHandler.updateFiles(widget.images, loadFiles: true);
+    return YustListTile(
+      label: widget.label,
+      suffixChild: _buildPickButtons(context),
+      prefixIcon: widget.prefixIcon,
+      below: widget.multiple
+          ? _buildGallery(context)
+          : Padding(
+              padding: const EdgeInsets.only(bottom: 2.0),
+              child: _buildSingleImage(
+                  context, _fileHandler.getFiles().firstOrNull),
+            ),
     );
   }
 
@@ -298,7 +294,9 @@ class YustImagePickerState extends State<YustImagePicker> {
               if (!yustFile.cached) {
                 widget.onChanged!(_fileHandler.getOnlineFiles());
               }
-              setState(() {});
+              if (mounted) {
+                setState(() {});
+              }
             } catch (e) {
               await Yust.alertService.showAlert(context, 'Ups',
                   'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
@@ -417,14 +415,21 @@ class YustImagePickerState extends State<YustImagePicker> {
       linkedDocAttribute: widget.linkedDocAttribute,
     );
 
+    // create database entry for upload process
+    if (widget.images.isEmpty) {
+      widget.onChanged!(_fileHandler.getOnlineFiles());
+    }
+
     await _fileHandler.addFile(newYustFile);
 
     if (_currentImageNumber < _fileHandler.getFiles().length) {
       _currentImageNumber += widget.imageCount;
     }
-
-    if (!newYustFile.cacheable || kIsWeb) {
+    if (!newYustFile.cached) {
       widget.onChanged!(_fileHandler.getOnlineFiles());
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 

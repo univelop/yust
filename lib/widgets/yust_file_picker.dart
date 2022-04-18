@@ -57,6 +57,11 @@ class YustFilePickerState extends State<YustFilePicker> {
       storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
+      onFileUploaded: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
     );
     _enabled = (widget.onChanged != null && !widget.readOnly);
 
@@ -65,15 +70,12 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-        future: _fileHandler.updateFiles(widget.files),
-        builder: (context, snapshot) {
-          return YustListTile(
-              suffixChild: _buildAddButton(context),
-              label: widget.label,
-              prefixIcon: widget.prefixIcon,
-              below: _buildFiles(context));
-        });
+    _fileHandler.updateFiles(widget.files);
+    return YustListTile(
+        suffixChild: _buildAddButton(context),
+        label: widget.label,
+        prefixIcon: widget.prefixIcon,
+        below: _buildFiles(context));
   }
 
   Widget _buildAddButton(BuildContext context) {
@@ -183,12 +185,17 @@ class YustFilePickerState extends State<YustFilePicker> {
       await Yust.alertService.showAlert(context, 'Nicht möglich',
           'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
     } else {
+      // create database entry for upload process
+      if (widget.files.isEmpty) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      }
       await _fileHandler.addFile(newYustFile);
     }
     _processing[newYustFile.name] = false;
     if (!newYustFile.cached) {
       widget.onChanged!(_fileHandler.getOnlineFiles());
-    } else {
+    }
+    if (mounted) {
       setState(() {});
     }
   }
@@ -202,7 +209,8 @@ class YustFilePickerState extends State<YustFilePicker> {
         await _fileHandler.deleteFile(yustFile);
         if (!yustFile.cached) {
           widget.onChanged!(_fileHandler.getOnlineFiles());
-        } else {
+        }
+        if (mounted) {
           setState(() {});
         }
       } catch (e) {

@@ -28,14 +28,16 @@ class YustFileHandler {
   final String? linkedDocAttribute;
 
   /// shows if the _uploadFiles-procces is currently running
-  static bool _uploadingCachedFiles = false;
+  bool _uploadingCachedFiles = false;
 
   /// Steadily increasing by the [_reuploadFactor]. Indicates the next upload attempt.
   /// [_reuploadTime] is reset for each upload
   final Duration _reuploadTime = Duration(milliseconds: 250);
   final double _reuploadFactor = 1.25;
 
-  List<YustFile> _yustFiles = [];
+  final List<YustFile> _yustFiles = [];
+
+  final List<YustFile> _recentlyUploadedFiles = [];
 
   var uploadControllIndex = 0;
 
@@ -63,7 +65,20 @@ class YustFileHandler {
 
   Future<void> updateFiles(List<YustFile> onlineFiles,
       {bool loadFiles = false}) async {
-    // _yustFiles = [];
+    // to be up to date with the storage files, onlineFiles get merged which file that are:
+    // 1. cached
+    // 2. recently uploaded and not in the [onlineFiles]
+    // 3. recently added and not cached (devicepath == null)
+    getOnlineFiles().forEach((file) {
+      if (onlineFiles.any((oFile) => oFile.name == file.name)) {
+        _recentlyUploadedFiles.remove(file);
+      } else if (!file.cached &&
+          file.url != null &&
+          !_recentlyUploadedFiles.contains(file)) {
+        _yustFiles.remove(file);
+      }
+    });
+
     _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
     await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
 
@@ -99,19 +114,21 @@ class YustFileHandler {
   }
 
   Future<void> addFile(YustFile yustFile) async {
-    _yustFiles.add(yustFile);
     if (!kIsWeb && yustFile.cacheable) {
+      _yustFiles.add(yustFile);
       await _saveFileOnDevice(yustFile);
       _startUploadingCachedFiles();
     } else {
       await _uploadFileToStorage(yustFile);
+      _yustFiles.add(yustFile);
+      //TODO offline: is this needed?
     }
   }
 
   /// if online files get deleted while the device is offline, error is thrown
   Future<void> deleteFile(YustFile yustFile) async {
     if (yustFile.cached) {
-      await _deleteFileFromCache(yustFile);
+      await _deleteCachedInformations(yustFile);
     } else {
       final connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
@@ -126,13 +143,28 @@ class YustFileHandler {
   }
 
   /// Uploads all cached files. If the upload fails,  a new attempt is made after [_reuploadTime].
-  /// Can be started only once, renewed call only possible after successful upload.
+  /// Should be started only ONCE, renewed call only possible after successful upload.
   static Future<void> uploadCachedFiles() async {
-    if (!_uploadingCachedFiles) {
-      var _filehandler = YustFileHandler(storageFolderPath: '');
-      await _filehandler._validateCachedFiles();
-      _filehandler._startUploadingCachedFiles();
-    }
+    // if (!_uploadingCachedFiles) {
+    var cachedFiles = await _loadCachedFiles();
+    do {
+      print(cachedFiles.length.toString() + ' files in upload queue');
+      var file = cachedFiles.first;
+      var filehandler = YustFileHandler(
+        storageFolderPath: file.storageFolderPath ?? '',
+        linkedDocPath: file.linkedDocPath,
+        linkedDocAttribute: file.linkedDocAttribute,
+      );
+      cachedFiles.removeWhere((f) =>
+          f.linkedDocAttribute == file.linkedDocAttribute &&
+          f.linkedDocPath == file.linkedDocPath);
+      await filehandler.updateFiles([]);
+      //TODO offline: should it be awaited?
+      filehandler._startUploadingCachedFiles();
+      //TODO offline: are their multiple Upload queues or just one?
+
+    } while (cachedFiles.isNotEmpty);
+    // }
   }
 
   void _startUploadingCachedFiles() {
@@ -148,16 +180,16 @@ class YustFileHandler {
 
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
     print('UCI: ' + uploadControllIndex.toString());
+    await _validateCachedFiles();
     var cachedFiles = getCachedFiles();
+    var length = cachedFiles.length;
     var uploadError = false;
     for (final yustFile in cachedFiles) {
       yustFile.lastError = null;
       try {
         await _uploadFileToStorage(yustFile);
-        await _deleteFileFromCache(yustFile);
 
-        _yustFiles.firstWhere((file) => file.name == yustFile.name).devicePath =
-            null;
+        await _deleteCachedInformations(yustFile);
         if (onFileUploaded != null) onFileUploaded!();
       } catch (error) {
         print(error.toString());
@@ -165,13 +197,8 @@ class YustFileHandler {
         uploadError = true;
       }
     }
-    if (cachedFiles.isNotEmpty) {
-      cachedFiles.removeWhere((f) => f.lastError == null);
-    }
-    var length = cachedFiles.length;
-    _mergeIntoYustFiles(cachedFiles, getCachedFiles());
 
-    if (length < cachedFiles.length) {
+    if (length < getCachedFiles().length) {
       // retry upload with reseted uploadTime, because new files where added
       uploadError = true;
       reuploadTime = _reuploadTime;
@@ -182,7 +209,7 @@ class YustFileHandler {
       uploadControllIndex--;
     } else {
       // saving cachedFiles, to store error log messages
-      await _saveCachedFiles(cachedFiles);
+      await _saveCachedFiles();
 
       Future.delayed(reuploadTime, () {
         reuploadTime = _incReuploadTime(reuploadTime);
@@ -229,10 +256,6 @@ class YustFileHandler {
         .toList();
   }
 
-  List<Map<String, dynamic>> yustFilesToJson(List<YustFile> yustFiles) {
-    return yustFiles.map((f) => f.toJson()).toList();
-  }
-
   /// works for cacheable and non-cacheable files
   void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles) {
     for (final newFile in newFiles) {
@@ -256,12 +279,7 @@ class YustFileHandler {
     yustFile.devicePath = devicePath + '${yustFile.name}';
 
     await yustFile.file!.copy(yustFile.devicePath!);
-    final cachedFileList = getCachedFiles();
-    cachedFileList.add(yustFile);
-    await _saveCachedFiles(cachedFileList);
-    //TODO offline: _saveCachedFile, takes getCachedFiles, use devicePathAttribute!
-
-    //TODO offline: check if List<YustFile> as attribute are necessary
+    await _saveCachedFiles();
   }
 
   Future<String> _getDirectory(YustFile yustFile) async {
@@ -304,9 +322,8 @@ class YustFileHandler {
     yustFile.url = url;
 
     if (yustFile.cached) await _updateDocAttribute(yustFile, url);
-    // if (onFileUploaded != null) {
-    //   onFileUploaded!();
-    // }
+    _recentlyUploadedFiles.add(yustFile);
+    print('Sucessful upload');
   }
 
   Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {
@@ -349,11 +366,6 @@ class YustFileHandler {
         // edge case, image picker allows only one image, attribute must be initialized manually
         attribute = {'name': yustFile.name, 'url': null};
       }
-    } else {
-      // It is possible that the upload accesses the database before the searched address is initialized.
-      // If the access adress is corrupt, the process 'validateLocalFiles' removes the file.
-      throw YustException(
-          'Database entry did not exist. Try again in a moment.');
     }
     return attribute;
   }
@@ -362,24 +374,21 @@ class YustFileHandler {
     if (yustFile.storageFolderPath != null) {
       await Yust.fileService
           .deleteFile(path: yustFile.storageFolderPath!, name: yustFile.name!);
-      // .timeout(Duration(seconds: 20));
-      //TODO offline: Testen ohne TimeOut
     }
   }
 
-  Future<void> _deleteFileFromCache(YustFile yustFile) async {
-    var cachedFiles = getCachedFiles();
+  /// deletes cached file and devicepath. File is no longer cached
+  Future<void> _deleteCachedInformations(YustFile yustFile) async {
     if (yustFile.devicePath != null &&
         File(yustFile.devicePath!).existsSync()) {
       await File(yustFile.devicePath!).delete();
     }
-
-    cachedFiles.removeWhere((f) => f.devicePath == yustFile.devicePath);
-    await _saveCachedFiles(cachedFiles);
+    yustFile.devicePath = null;
+    await _saveCachedFiles();
   }
 
   /// Loads a list of all cached [YustFile]s.
-  Future<List<YustFile>> _loadCachedFiles() async {
+  static Future<List<YustFile>> _loadCachedFiles() async {
     var prefs = await SharedPreferences.getInstance();
     var temporaryJsonFiles = prefs.getString('YustCachedFiles') ?? '[]';
 
@@ -391,9 +400,21 @@ class YustFileHandler {
   }
 
   /// Saves all cached [YustFile]s.
-  Future<void> _saveCachedFiles(List<YustFile> yustFiles) async {
+  Future<void> _saveCachedFiles() async {
+    var yustFiles = getCachedFiles();
+    var cachedFiles = await _loadCachedFiles();
+
+    // only change the files from THIS filehandler (identity: linkedDocPath and -Attribute)
+    cachedFiles.removeWhere(((yustFile) =>
+        yustFile.linkedDocPath == linkedDocPath &&
+        yustFile.linkedDocAttribute == linkedDocAttribute));
+    cachedFiles.addAll(yustFiles);
+    //TODO offline: does not work with general upload process!
+
+    var jsonFiles = cachedFiles.map((file) => file.toLocalJson()).toList();
+
+    //TODO offline: prevent, that pictures from other fileHandler gets deleted
     var prefs = await SharedPreferences.getInstance();
-    var jsonFiles = yustFiles.map((file) => file.toLocalJson()).toList();
     await prefs.setString('YustCachedFiles', jsonEncode(jsonFiles));
   }
 
@@ -413,7 +434,7 @@ class YustFileHandler {
       final doc =
           await FirebaseFirestore.instance.doc(cachedFile.linkedDocPath!).get();
       if (!doc.exists || doc.data() == null) {
-        await _deleteFileFromCache(cachedFile);
+        await deleteFile(cachedFile);
       }
     }
   }

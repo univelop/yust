@@ -416,6 +416,7 @@ class YustImagePickerState extends State<YustImagePicker> {
             .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
       }
     }
+
     final newYustFile = YustFile(
       name: imageName,
       file: file,

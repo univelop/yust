@@ -52,17 +52,17 @@ class YustNumberField extends StatelessWidget {
       label: label,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
-      value: _numToString(value),
+      value: numToString(value),
       controller: controller,
       onChanged: onChanged == null
           ? null
           : (value) {
-              var numValue = _valueToNum(value?.trim() ?? '');
+              var numValue = valueToNum(value?.trim() ?? '');
               onChanged!(numValue);
             },
       onEditingComplete: onEditingComplete == null
           ? null
-          : (value) => onEditingComplete!(_valueToNum(value?.trim() ?? '')),
+          : (value) => onEditingComplete!(valueToNum(value?.trim() ?? '')),
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
@@ -78,19 +78,19 @@ class YustNumberField extends StatelessWidget {
       autofocus: autofocus,
       hideKeyboardOnAutofocus: hideKeyboardOnAutofocus,
       validator:
-          validator == null ? null : (value) => validator!(_valueToNum(value)),
+          validator == null ? null : (value) => validator!(valueToNum(value)),
       divider: divider,
     );
   }
 
-  String? _numToString(num? value) {
+  static String? numToString(num? value) {
     if (value?.floorToDouble() == value) {
       value = value?.toInt();
     }
     return value?.toString().replaceAll(RegExp(r'\.'), ',');
   }
 
-  num? _valueToNum(String? value) {
+  static num? valueToNum(String? value) {
     if (value == '' || value == null) {
       return null;
     } else {

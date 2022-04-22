@@ -53,7 +53,7 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   @override
   void initState() {
-    _fileHandler = YustFileHandler(
+    _fileHandler = Yust.fileHandlerManager.createFileHandler(
       storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
@@ -70,12 +70,16 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   @override
   Widget build(BuildContext context) {
-    _fileHandler.updateFiles(widget.files);
-    return YustListTile(
-        suffixChild: _buildAddButton(context),
-        label: widget.label,
-        prefixIcon: widget.prefixIcon,
-        below: _buildFiles(context));
+    return FutureBuilder(
+      future: _fileHandler.updateFiles(widget.files),
+      builder: (context, snapshot) {
+        return YustListTile(
+            suffixChild: _buildAddButton(context),
+            label: widget.label,
+            prefixIcon: widget.prefixIcon,
+            below: _buildFiles(context));
+      },
+    );
   }
 
   Widget _buildAddButton(BuildContext context) {

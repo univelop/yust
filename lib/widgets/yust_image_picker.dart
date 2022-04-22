@@ -71,7 +71,7 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   void initState() {
-    _fileHandler = YustFileHandler(
+    _fileHandler = Yust.fileHandlerManager.createFileHandler(
       storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
@@ -90,18 +90,22 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
-    _fileHandler.updateFiles(widget.images, loadFiles: true);
-    return YustListTile(
-      label: widget.label,
-      suffixChild: _buildPickButtons(context),
-      prefixIcon: widget.prefixIcon,
-      below: widget.multiple
-          ? _buildGallery(context)
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 2.0),
-              child: _buildSingleImage(
-                  context, _fileHandler.getFiles().firstOrNull),
-            ),
+    return FutureBuilder(
+      future: _fileHandler.updateFiles(widget.images, loadFiles: true),
+      builder: (context, snapshot) {
+        return YustListTile(
+          label: widget.label,
+          suffixChild: _buildPickButtons(context),
+          prefixIcon: widget.prefixIcon,
+          below: widget.multiple
+              ? _buildGallery(context)
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: 2.0),
+                  child: _buildSingleImage(
+                      context, _fileHandler.getFiles().firstOrNull),
+                ),
+        );
+      },
     );
   }
 
@@ -289,17 +293,22 @@ class YustImagePickerState extends State<YustImagePicker> {
           icon: Icon(Icons.delete),
           color: Colors.black,
           onPressed: () async {
-            try {
-              await _fileHandler.deleteFile(yustFile);
-              if (!yustFile.cached) {
-                widget.onChanged!(_fileHandler.getOnlineFiles());
+            Yust.helperService.unfocusCurrent(context);
+            final confirmed = await Yust.alertService
+                .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
+            if (confirmed == true) {
+              try {
+                await _fileHandler.deleteFile(yustFile);
+                if (!yustFile.cached) {
+                  widget.onChanged!(_fileHandler.getOnlineFiles());
+                }
+                if (mounted) {
+                  setState(() {});
+                }
+              } catch (e) {
+                await Yust.alertService.showAlert(context, 'Ups',
+                    'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
               }
-              if (mounted) {
-                setState(() {});
-              }
-            } catch (e) {
-              await Yust.alertService.showAlert(context, 'Ups',
-                  'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
             }
           },
         ),
@@ -330,7 +339,8 @@ class YustImagePickerState extends State<YustImagePicker> {
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
+    if (connectivityResult == ConnectivityResult.none &&
+        (widget.linkedDocPath == null || widget.linkedDocAttribute == null)) {
       await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {

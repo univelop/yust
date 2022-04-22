@@ -412,8 +412,8 @@ class YustImagePickerState extends State<YustImagePicker> {
       if (file != null) {
         file = await Yust.fileService.resizeImage(file: file, maxWidth: size);
       } else {
-        bytes = Yust.fileService
-            .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
+        bytes = Yust.fileService.resizeImageBytes(
+            name: path, bytes: bytes!, maxWidth: size) as Uint8List?;
       }
     }
 

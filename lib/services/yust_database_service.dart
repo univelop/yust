@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:yust/models/yust_doc.dart';
 import 'package:yust/models/yust_doc_setup.dart';
+import 'package:yust/models/yust_filter.dart';
 import 'package:yust/util/object_helper.dart';
 
 import '../yust.dart';
@@ -33,9 +34,9 @@ class YustDatabaseService {
     return doc;
   }
 
-  Query<Object?> getQuery<T extends YustDoc>({
-    required YustDocSetup<T> modelSetup,
-    List<List<dynamic>>? filterList,
+  Query<Object?> getQuery<T extends YustDoc>(
+    YustDocSetup<T> modelSetup, {
+    List<YustFilter>? filterList,
     List<String>? orderByList,
     int? limit,
   }) {
@@ -61,15 +62,12 @@ class YustDatabaseService {
   ///[limit] can be passed to reduce loading time
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<List<dynamic>>? filterList,
+    List<YustFilter>? filterList,
     List<String>? orderByList,
     int? limit,
   }) {
-    var query = getQuery(
-        modelSetup: modelSetup,
-        orderByList: orderByList,
-        filterList: filterList,
-        limit: limit);
+    var query = getQuery(modelSetup,
+        orderByList: orderByList, filterList: filterList, limit: limit);
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs
@@ -81,15 +79,12 @@ class YustDatabaseService {
 
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<List<dynamic>>? filterList,
+    List<YustFilter>? filterList,
     List<String>? orderByList,
     int? limit,
   }) {
-    var query = getQuery(
-        modelSetup: modelSetup,
-        orderByList: orderByList,
-        filterList: filterList,
-        limit: limit);
+    var query = getQuery(modelSetup,
+        orderByList: orderByList, filterList: filterList, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
@@ -150,15 +145,12 @@ class YustDatabaseService {
 
   /// Emits null events if no document was found.
   Stream<T?> getFirstDoc<T extends YustDoc>(
-    YustDocSetup<T> modelSetup,
-    List<List<dynamic>>? filterList, {
+    YustDocSetup<T> modelSetup, {
+    List<YustFilter>? filterList,
     List<String>? orderByList,
   }) {
-    var query = getQuery(
-        modelSetup: modelSetup,
-        filterList: filterList,
-        orderByList: orderByList,
-        limit: 1);
+    var query = getQuery(modelSetup,
+        filterList: filterList, orderByList: orderByList, limit: 1);
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.isNotEmpty) {
@@ -172,14 +164,11 @@ class YustDatabaseService {
   /// The result is null if no document was found.
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
-    List<List<dynamic>> filterList, {
+    List<YustFilter> filterList, {
     List<String>? orderByList,
   }) async {
-    var query = getQuery(
-        modelSetup: modelSetup,
-        filterList: filterList,
-        orderByList: orderByList,
-        limit: 1);
+    var query = getQuery(modelSetup,
+        filterList: filterList, orderByList: orderByList, limit: 1);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 
@@ -254,7 +243,7 @@ class YustDatabaseService {
 
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<List<dynamic>>? filterList,
+    List<YustFilter>? filterList,
   }) async {
     final docs = await getDocsOnce<T>(modelSetup, filterList: filterList);
     for (var doc in docs) {
@@ -339,55 +328,50 @@ class YustDatabaseService {
     return query;
   }
 
-  ///[filterList] may be null.
-  ///If it is not each contained list may not be null
-  ///and has to have a length of three.
-  Query _executeFilterList(Query query, List<List<dynamic>>? filterList) {
+  Query _executeFilterList(Query query, List<YustFilter>? filterList) {
     if (filterList != null) {
-      for (var filter in filterList) {
-        assert(filter.length == 3);
-        var operand1 = filter[0], operator = filter[1], operand2 = filter[2];
-
-        switch (operator) {
-          case '==':
-            query = query.where(operand1, isEqualTo: operand2);
-            break;
-          case '<':
-            query = query.where(operand1, isLessThan: operand2);
-            break;
-          case '<=':
-            query = query.where(operand1, isLessThanOrEqualTo: operand2);
-            break;
-          case '>':
-            query = query.where(operand1, isGreaterThan: operand2);
-            break;
-          case '>=':
-            query = query.where(operand1, isGreaterThanOrEqualTo: operand2);
-            break;
-          case 'in':
-            // If null is passed for the filter list, no filter is applied at all.
-            // If an empty list is passed, an error is thrown.
-            // I think that it should behave the same and return no data.
-
-            if (operand2 != null && operand2 is List && operand2.isEmpty) {
-              operand2 = null;
-            }
-
-            query = query.where(operand1, whereIn: operand2);
-
-            // Makes sure that no data is returned.
-            if (operand2 == null) {
-              query = query.where(operand1, isEqualTo: true, isNull: true);
-            }
-            break;
-          case 'arrayContains':
-            query = query.where(operand1, arrayContains: operand2);
-            break;
-          case 'isNull':
-            query = query.where(operand1, isNull: operand2);
-            break;
-          default:
-            throw 'The operator "$operator" is not supported.';
+      for (final filter in filterList) {
+        if (filter.value is List && filter.value.isEmpty) {
+          filter.value = null;
+        }
+        if ((filter.value != null) ||
+            (filter.comparator == YustFilterComparator.isNull)) {
+          switch (filter.comparator) {
+            case YustFilterComparator.equal:
+              query = query.where(filter.field, isEqualTo: filter.value);
+              break;
+            case YustFilterComparator.lessThan:
+              query = query.where(filter.field, isLessThan: filter.value);
+              break;
+            case YustFilterComparator.lessThanEqual:
+              query =
+                  query.where(filter.field, isLessThanOrEqualTo: filter.value);
+              break;
+            case YustFilterComparator.greaterThan:
+              query = query.where(filter.field, isGreaterThan: filter.value);
+              break;
+            case YustFilterComparator.greaterThanEqual:
+              query = query.where(filter.field,
+                  isGreaterThanOrEqualTo: filter.value);
+              break;
+            case YustFilterComparator.arrayContains:
+              query = query.where(filter.field, arrayContains: filter.value);
+              break;
+            case YustFilterComparator.arrayContainsAny:
+              query = query.where(filter.field, arrayContainsAny: filter.value);
+              break;
+            case YustFilterComparator.inList:
+              query = query.where(filter.field, whereIn: filter.value);
+              break;
+            case YustFilterComparator.notInList:
+              query = query.where(filter.field, whereNotIn: filter.value);
+              break;
+            case YustFilterComparator.isNull:
+              query = query.where(filter.field, isNull: true);
+              break;
+            default:
+              throw 'The comparator "${filter.comparator}" is not supported.';
+          }
         }
       }
     }

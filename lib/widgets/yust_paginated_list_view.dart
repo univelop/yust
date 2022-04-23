@@ -9,29 +9,30 @@ import '../yust.dart';
 
 class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
   final YustDocSetup<T> modelSetup;
-
-  final ScrollController? scrollController;
-  final List<String> orderBy;
   final Widget Function(BuildContext, T?, int) listItemBuilder;
-  final Widget? footer;
+  final List<String> orderBy;
+  final bool Function(T doc)? hideItem;
+  final ScrollController? scrollController;
   final Widget? header;
+  final Widget? footer;
   final Widget emptyInfo;
 
   YustPaginatedListView({
     Key? key,
     required this.modelSetup,
     required this.listItemBuilder,
-    this.scrollController,
     required this.orderBy,
+    this.hideItem,
+    this.scrollController,
     this.emptyInfo = const EmptyDisplay(),
-    this.footer,
     this.header,
+    this.footer,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final query = Yust.databaseService
-        .getQuery(modelSetup: modelSetup, orderByList: orderBy);
+    final query =
+        Yust.databaseService.getQuery(modelSetup, orderByList: orderBy);
 
     return PaginateFirestore(
       scrollController: scrollController,
@@ -54,20 +55,14 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
 
   Widget _itemBuilder(
       int index, BuildContext context, DocumentSnapshot documentSnapshot) {
-    final item =
-        Yust.databaseService.transformDoc(modelSetup, documentSnapshot);
-    if (item == null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 100.0),
-        child: Center(
-          child: Text(
-            'Keine Daten vorhanden.\n',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    } else {
-      return listItemBuilder(context, item, index);
+    final doc =
+        Yust.databaseService.transformDoc<T>(modelSetup, documentSnapshot);
+    if (doc == null) {
+      return SizedBox.shrink();
     }
+    if (hideItem != null && hideItem!(doc) == true) {
+      return SizedBox.shrink();
+    }
+    return listItemBuilder(context, doc, index);
   }
 }

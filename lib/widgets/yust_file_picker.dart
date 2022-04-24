@@ -52,6 +52,7 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   @override
   Widget build(BuildContext context) {
+    _files = widget.files;
     return YustListTile(
         suffixChild: _buildAddButton(context),
         label: widget.label,

@@ -62,6 +62,9 @@ class YustFilter {
   ///
   /// Returns true if [fieldValue] is matching or filter is incomplete. Otherwise false.
   bool isFieldMatching(dynamic fieldValue) {
+    if (fieldValue == null && comparator != YustFilterComparator.isNull) {
+      return false;
+    }
     if (value == null) {
       return true;
     }

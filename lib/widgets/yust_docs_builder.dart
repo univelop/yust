@@ -41,7 +41,7 @@ class YustDocsBuilderState<T extends YustDoc>
   void initStream() {
     _docStream = Yust.databaseService.getDocs<T>(
       widget.modelSetup,
-      filterList: widget.filters,
+      filters: widget.filters,
       orderByList: widget.orderBy,
       limit: widget.limit,
     );

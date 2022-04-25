@@ -15,6 +15,9 @@ import '../yust.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dropzone/flutter_dropzone.dart';
+import 'package:dotted_border/dotted_border.dart';
 
 class YustFilePicker extends StatefulWidget {
   final String? label;
@@ -22,6 +25,7 @@ class YustFilePicker extends StatefulWidget {
   final List<YustFile> files;
   final void Function(List<YustFile> files)? onChanged;
   final Widget? prefixIcon;
+  final bool enableDropzone;
   final bool readOnly;
 
   YustFilePicker({
@@ -31,6 +35,7 @@ class YustFilePicker extends StatefulWidget {
     required this.files,
     this.onChanged,
     this.prefixIcon,
+    this.enableDropzone = false,
     this.readOnly = false,
   }) : super(key: key);
 
@@ -42,6 +47,8 @@ class YustFilePickerState extends State<YustFilePicker> {
   late List<YustFile> _files;
   final Map<String?, bool> _processing = {};
   late bool _enabled;
+  late DropzoneViewController controller;
+  var isDragging = false;
 
   @override
   void initState() {
@@ -50,13 +57,45 @@ class YustFilePickerState extends State<YustFilePicker> {
     super.initState();
   }
 
+  /// TODO:
+  ///    - show dropzone when dragging (without chose file)
+  ///    - indicate correct drop-location by changing color of dropzone
+  ///    -
   @override
   Widget build(BuildContext context) {
-    return YustListTile(
-        suffixChild: _buildAddButton(context),
-        label: widget.label,
-        prefixIcon: widget.prefixIcon,
-        below: _buildFiles(context));
+    final showDropzone = kIsWeb && widget.enableDropzone && _files.isEmpty;
+    return Stack(
+      children: [
+        YustListTile(
+          suffixChild: showDropzone ? null : _buildAddButton(context),
+          label: widget.label,
+          prefixIcon: widget.prefixIcon,
+          below: showDropzone ? _buildDropzone() : _buildFiles(context),
+        )
+      ],
+    );
+  }
+
+  Widget _buildDropzone() {
+    return Column(
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(15, 0, 15, 15),
+          child: SizedBox(
+            height: 150, //TODO: How to make this box full width?
+            child: Container(
+              child: Stack(
+                children: [
+                  _buildDropzoneArea(context),
+                  _buildDropzoneInterface()
+                ],
+              ),
+            ),
+          ),
+        ),
+        _buildFiles(context),
+      ],
+    );
   }
 
   Widget _buildAddButton(BuildContext context) {
@@ -113,7 +152,85 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
+  /// This Widget presents the dropzone with the icon
+  Widget _buildDropzoneInterface() {
+    return Center(
+      child: DottedBorder(
+        borderType: BorderType.RRect,
+        radius: Radius.circular(12),
+        padding: EdgeInsets.all(6),
+        dashPattern: [6, 5],
+        strokeWidth: 3,
+        strokeCap: StrokeCap.round,
+        color: Color.fromARGB(255, 116, 116, 116),
+        child: ClipRRect(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          child: Container(
+            height: 300,
+            width: 400,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 40,
+                ),
+                Text(
+                  'Datei(en) hierher ziehen',
+                  style: TextStyle(fontSize: 20),
+                ),
+                Text('oder'),
+                OutlinedButton(
+                    child: Text("Dateien durchsuchen"), onPressed: _pickFiles),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// This widget will accept files from a drag and drop interaction
+  Widget _buildDropzoneArea(BuildContext context) => Builder(
+        builder: (context) => DropzoneView(
+          operation: DragOperation.copy,
+          cursor: CursorType.grab,
+          onCreated: (ctrl) => controller = ctrl,
+          onLoaded: () => null,
+          onError: (ev) => null,
+          onHover: () {
+            setState(() {
+              isDragging = true;
+            });
+          },
+          onLeave: () {
+            setState(() {
+              isDragging = false;
+            });
+          },
+          onDrop: (ev) async {},
+          onDropMultiple: (ev) async {
+            print('Dropzone drop multiple: $ev');
+            for (final file in ev ?? []) {
+              final bytes = await controller.getFileData(file);
+              await addFile(YustFile(name: file.name), null, bytes);
+              if (bytes.length <= 20) {
+                print(bytes);
+              } else {
+                print(bytes.sublist(0, 20));
+              }
+            }
+            ;
+          },
+        ),
+      );
+
   Future<void> addFile(YustFile fileData, File? file, Uint8List? bytes) async {
+    if (_files.any((_file) => _file.name == fileData.name)) {
+      await Yust.alertService.showAlert(context, 'Nicht möglich',
+          'Eine Datei mit dem Namen ${fileData.name} existiert bereits.');
+      return;
+    }
     _files.add(fileData);
     _files.sort((a, b) => a.name!.compareTo(b.name!));
     _processing[fileData.name] = true;
@@ -166,16 +283,11 @@ class YustFilePickerState extends State<YustFilePicker> {
           final fileData = YustFile(
             name: name,
           );
-          if (_files.any((file) => file.name == fileData.name)) {
-            await Yust.alertService.showAlert(context, 'Nicht möglich',
-                'Eine Datei mit dem Namen ${fileData.name} existiert bereits.');
-          } else {
-            File? file;
-            if (!kIsWeb && platformFile.path != null) {
-              file = File(platformFile.path!);
-            }
-            await addFile(fileData, file, platformFile.bytes);
+          File? file;
+          if (!kIsWeb && platformFile.path != null) {
+            file = File(platformFile.path!);
           }
+          await addFile(fileData, file, platformFile.bytes);
         }
       }
     }

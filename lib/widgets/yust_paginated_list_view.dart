@@ -35,7 +35,7 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final query = Yust.databaseService
-        .getQuery(modelSetup, filterList: filters, orderByList: orderBy);
+        .getQuery(modelSetup, filters: filters, orderByList: orderBy);
 
     return PaginateFirestore(
       scrollController: scrollController,

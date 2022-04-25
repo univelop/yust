@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/src/iterable_extensions.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -53,7 +54,7 @@ class YustFilter {
       other is YustFilter &&
       field == other.field &&
       comparator == other.comparator &&
-      value == other.value;
+      _valueEquality(other.value);
 
   @override
   int get hashCode => field.hashCode + comparator.hashCode + value.hashCode;
@@ -108,6 +109,14 @@ class YustFilter {
       return 0;
     } else {
       return value;
+    }
+  }
+
+  bool _valueEquality(dynamic other) {
+    if (value is List && other is List) {
+      return ListEquality<dynamic>().equals(value, other);
+    } else {
+      return value == other;
     }
   }
 

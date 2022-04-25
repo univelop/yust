@@ -36,13 +36,13 @@ class YustDatabaseService {
 
   Query<Object?> getQuery<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<YustFilter>? filterList,
+    List<YustFilter>? filters,
     List<String>? orderByList,
     int? limit,
   }) {
     Query query = fireStore.collection(_getCollectionPath(modelSetup));
     query = _executeStaticFilters(query, modelSetup);
-    query = _executeFilterList(query, filterList);
+    query = _executeFilters(query, filters);
     query = _executeOrderByList(query, orderByList);
     if (limit != null) {
       query = query.limit(limit);
@@ -51,23 +51,23 @@ class YustDatabaseService {
     return query;
   }
 
-  ///[filterList] each entry represents a condition that has to be met.
+  ///[filters] each entry represents a condition that has to be met.
   ///All of those conditions must be true for each returned entry.
   ///
   ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
   ///Multiple of those entries can be repeated.
   ///
-  ///[filterList] may be null.
+  ///[filters] may be null.
   ///
   ///[limit] can be passed to reduce loading time
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<YustFilter>? filterList,
+    List<YustFilter>? filters,
     List<String>? orderByList,
     int? limit,
   }) {
     var query = getQuery(modelSetup,
-        orderByList: orderByList, filterList: filterList, limit: limit);
+        orderByList: orderByList, filters: filters, limit: limit);
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs
@@ -79,12 +79,12 @@ class YustDatabaseService {
 
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<YustFilter>? filterList,
+    List<YustFilter>? filters,
     List<String>? orderByList,
     int? limit,
   }) {
     var query = getQuery(modelSetup,
-        orderByList: orderByList, filterList: filterList, limit: limit);
+        orderByList: orderByList, filters: filters, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${modelSetup.collectionName}');
@@ -146,11 +146,11 @@ class YustDatabaseService {
   /// Emits null events if no document was found.
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<YustFilter>? filterList,
+    List<YustFilter>? filters,
     List<String>? orderByList,
   }) {
     var query = getQuery(modelSetup,
-        filterList: filterList, orderByList: orderByList, limit: 1);
+        filters: filters, orderByList: orderByList, limit: 1);
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.isNotEmpty) {
@@ -164,11 +164,11 @@ class YustDatabaseService {
   /// The result is null if no document was found.
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> modelSetup,
-    List<YustFilter> filterList, {
+    List<YustFilter> filters, {
     List<String>? orderByList,
   }) async {
     var query = getQuery(modelSetup,
-        filterList: filterList, orderByList: orderByList, limit: 1);
+        filters: filters, orderByList: orderByList, limit: 1);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 
@@ -243,9 +243,9 @@ class YustDatabaseService {
 
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> modelSetup, {
-    List<YustFilter>? filterList,
+    List<YustFilter>? filters,
   }) async {
-    final docs = await getDocsOnce<T>(modelSetup, filterList: filterList);
+    final docs = await getDocsOnce<T>(modelSetup, filters: filters);
     for (var doc in docs) {
       await deleteDoc<T>(modelSetup, doc);
     }
@@ -328,9 +328,9 @@ class YustDatabaseService {
     return query;
   }
 
-  Query _executeFilterList(Query query, List<YustFilter>? filterList) {
-    if (filterList != null) {
-      for (final filter in filterList) {
+  Query _executeFilters(Query query, List<YustFilter>? filters) {
+    if (filters != null) {
+      for (final filter in filters) {
         if (filter.value is List && filter.value.isEmpty) {
           filter.value = null;
         }

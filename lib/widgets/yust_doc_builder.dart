@@ -50,7 +50,7 @@ class YustDocBuilderState<T extends YustDoc> extends State<YustDocBuilder<T>> {
     } else {
       _docStream = Yust.databaseService.getFirstDoc<T>(
         widget.modelSetup,
-        filterList: widget.filters,
+        filters: widget.filters,
         orderByList: widget.orderBy,
       );
     }

@@ -27,6 +27,7 @@ YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
       ..envId = json['envId'] as String?
+      ..delivered = json['delivered'] as bool
       ..data = Map<String, dynamic>.from(json['data'] as Map);
 
 Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
@@ -44,5 +45,6 @@ Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
       'title': instance.title,
       'body': instance.body,
       'dispatchAt': instance.dispatchAt?.toIso8601String(),
+      'delivered': instance.delivered,
       'data': instance.data,
     };

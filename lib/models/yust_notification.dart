@@ -18,6 +18,7 @@ class YustNotification extends YustDoc {
   String? title;
   String? body;
   DateTime? dispatchAt;
+  bool delivered = false;
   Map<String, dynamic> data = {};
 
   YustNotification({

@@ -68,7 +68,7 @@ class YustFileHandler {
     // to be up to date with the storage files, onlineFiles get merged which file that are:
     // 1. cached
     // 2. recently uploaded and not in the [onlineFiles]
-    // 3. recently added and not cached (devicepath == null)
+    // 3. recently added and not cached (url == null)
     getOnlineFiles().forEach((file) {
       if (onlineFiles.any((oFile) => oFile.name == file.name)) {
         _recentlyUploadedFiles.remove(file);
@@ -96,7 +96,7 @@ class YustFileHandler {
   void _mergeOnlineFiles(List<YustFile> yustFiles, List<YustFile> onlineFiles,
       String storageFolderPath) async {
     onlineFiles.forEach((f) => f.storageFolderPath = storageFolderPath);
-    _mergeIntoYustFiles(yustFiles, onlineFiles);
+    _mergeIntoYustFiles(yustFiles, onlineFiles, isOnlineMerge: true);
   }
 
   Future<void> _mergeCachedFiles(List<YustFile> yustFiles,
@@ -156,12 +156,13 @@ class YustFileHandler {
     await _validateCachedFiles();
     var cachedFiles = getCachedFiles();
     var length = cachedFiles.length;
+    var uploadedFiles = 0;
     var uploadError = false;
     for (final yustFile in cachedFiles) {
       yustFile.lastError = null;
       try {
         await _uploadFileToStorage(yustFile);
-
+        uploadedFiles++;
         await _deleteCachedInformations(yustFile);
         if (onFileUploaded != null) onFileUploaded!();
       } catch (error) {
@@ -171,7 +172,7 @@ class YustFileHandler {
       }
     }
 
-    if (length < getCachedFiles().length) {
+    if (length < uploadedFiles + getCachedFiles().length) {
       // retry upload with reseted uploadTime, because new files where added
       uploadError = true;
       reuploadTime = _reuploadTime;
@@ -230,20 +231,24 @@ class YustFileHandler {
   }
 
   /// works for cacheable and non-cacheable files
-  void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles) {
+  void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles,
+      {bool isOnlineMerge = false}) {
+    newFiles = isOnlineMerge == true ? newFiles.reversed.toList() : newFiles;
     for (final newFile in newFiles) {
-      if (!yustFiles.any((yustFile) {
-        var nameEQ = yustFile.name == newFile.name;
-        if (yustFile.cacheable && newFile.cacheable) {
-          return nameEQ &&
-              yustFile.linkedDocPath == newFile.linkedDocPath &&
-              yustFile.linkedDocAttribute == newFile.linkedDocAttribute;
-        }
-        return nameEQ;
-      })) {
-        yustFiles.add(newFile);
+      if (!yustFiles.any((yustFile) => _equalFiles(yustFile, newFile))) {
+        isOnlineMerge ? yustFiles.insert(0, newFile) : yustFiles.add(newFile);
       }
     }
+  }
+
+  bool _equalFiles(YustFile yustFile, YustFile newFile) {
+    var nameEQ = yustFile.name == newFile.name;
+    if (yustFile.cacheable && newFile.cacheable) {
+      return nameEQ &&
+          yustFile.linkedDocPath == newFile.linkedDocPath &&
+          yustFile.linkedDocAttribute == newFile.linkedDocAttribute;
+    }
+    return nameEQ;
   }
 
   Future<void> _saveFileOnDevice(YustFile yustFile) async {

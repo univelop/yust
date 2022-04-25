@@ -15,6 +15,7 @@ YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
       dispatchAt: json['dispatchAt'] == null
           ? null
           : DateTime.parse(json['dispatchAt'] as String),
+      delivered: json['delivered'] as bool? ?? false,
     )
       ..id = json['id'] as String
       ..createdAt = json['createdAt'] == null
@@ -27,7 +28,6 @@ YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
       ..envId = json['envId'] as String?
-      ..delivered = json['delivered'] as bool
       ..data = Map<String, dynamic>.from(json['data'] as Map);
 
 Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>

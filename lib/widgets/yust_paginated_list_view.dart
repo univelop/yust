@@ -5,12 +5,14 @@ import 'package:paginate_firestore/widgets/empty_display.dart';
 
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
+import '../models/yust_filter.dart';
 import '../yust.dart';
 
 class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
   final YustDocSetup<T> modelSetup;
   final Widget Function(BuildContext, T?, int) listItemBuilder;
   final List<String> orderBy;
+  final List<YustFilter>? filters;
   final bool Function(T doc)? hideItem;
   final ScrollController? scrollController;
   final Widget? header;
@@ -22,6 +24,7 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
     required this.modelSetup,
     required this.listItemBuilder,
     required this.orderBy,
+    this.filters,
     this.hideItem,
     this.scrollController,
     this.emptyInfo = const EmptyDisplay(),
@@ -31,8 +34,8 @@ class YustPaginatedListView<T extends YustDoc> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final query =
-        Yust.databaseService.getQuery(modelSetup, orderByList: orderBy);
+    final query = Yust.databaseService
+        .getQuery(modelSetup, filterList: filters, orderByList: orderBy);
 
     return PaginateFirestore(
       scrollController: scrollController,

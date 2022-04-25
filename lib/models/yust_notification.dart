@@ -18,7 +18,7 @@ class YustNotification extends YustDoc {
   String? title;
   String? body;
   DateTime? dispatchAt;
-  bool delivered = false;
+  bool delivered;
   Map<String, dynamic> data = {};
 
   YustNotification({
@@ -28,6 +28,7 @@ class YustNotification extends YustDoc {
     this.title,
     this.body,
     this.dispatchAt,
+    this.delivered = false,
   }) : super();
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>

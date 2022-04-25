@@ -14,15 +14,20 @@ class YustNotification extends YustDoc {
 
   String? forCollection;
   String? forDocId;
+  String? deepLink;
   String? title;
   String? body;
+  DateTime? dispatchAt;
+  bool delivered = false;
   Map<String, dynamic> data = {};
 
   YustNotification({
     this.forCollection,
     this.forDocId,
+    this.deepLink,
     this.title,
     this.body,
+    this.dispatchAt,
   }) : super();
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>

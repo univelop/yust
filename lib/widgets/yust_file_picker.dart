@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
@@ -128,6 +129,8 @@ class YustFilePickerState extends State<YustFilePicker> {
         file: file,
         bytes: bytes,
       );
+
+      fileData.hash = (await file?.openRead().transform(md5).first).toString();
     } on YustException catch (e) {
       if (mounted) {
         await Yust.alertService.showAlert(context, 'Ups', e.message);

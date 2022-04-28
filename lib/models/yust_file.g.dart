@@ -9,7 +9,7 @@ part of 'yust_file.dart';
 YustFile _$YustFileFromJson(Map json) => YustFile(
       name: json['name'] as String?,
       url: json['url'] as String?,
-      hash: json['hash'] as String?,
+      hash: json['hash'] as String? ?? '',
     );
 
 Map<String, dynamic> _$YustFileToJson(YustFile instance) => <String, dynamic>{

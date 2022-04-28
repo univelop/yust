@@ -178,12 +178,12 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (file == null) {
       return SizedBox.shrink();
     }
-    Widget preview;
+    Widget? preview;
     if (file.file != null) {
       preview = Image.file(file.file!, fit: BoxFit.cover);
     } else if (file.bytes != null) {
       preview = Image.memory(file.bytes!, fit: BoxFit.cover);
-    } else {
+    } else if (file.url != null) {
       preview = FadeInImage.assetNetwork(
         placeholder: Yust.imagePlaceholderPath!,
         image: file.url ?? '',
@@ -191,6 +191,9 @@ class YustImagePickerState extends State<YustImagePicker> {
       );
     }
     final zoomEnabled = (file.url != null && widget.zoomable);
+
+    if (preview == null) return SizedBox.shrink();
+
     if (widget.multiple) {
       return AspectRatio(
         aspectRatio: 1,

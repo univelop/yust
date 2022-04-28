@@ -66,11 +66,13 @@ class YustFilter {
     if (fieldValue == null && comparator != YustFilterComparator.isNull) {
       return false;
     }
+
+    fieldValue = _handleBoolValue(fieldValue);
+    value = _handleBoolValue(value);
+    value = _handleNumberValue(fieldValue, value);
     if (value == null) {
       return true;
     }
-    fieldValue = _handleBoolValue(fieldValue);
-    value = _handleBoolValue(value);
 
     switch (comparator) {
       case YustFilterComparator.equal:
@@ -110,6 +112,13 @@ class YustFilter {
     } else {
       return value;
     }
+  }
+
+  dynamic _handleNumberValue(dynamic fieldValue, dynamic value) {
+    if (fieldValue is num) {
+      return num.tryParse(value);
+    }
+    return value;
   }
 
   bool _valueEquality(dynamic other) {

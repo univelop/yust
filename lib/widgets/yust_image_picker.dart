@@ -192,7 +192,14 @@ class YustImagePickerState extends State<YustImagePicker> {
     }
     final zoomEnabled = (file.url != null && widget.zoomable);
 
-    if (preview == null) return SizedBox.shrink();
+    if (preview == null) {
+      return Container(
+        height: 150,
+        width: 150,
+        color: Colors.grey,
+        child: Icon(Icons.question_mark),
+      );
+    }
 
     if (widget.multiple) {
       return AspectRatio(
@@ -252,7 +259,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildRemoveButton(BuildContext context, YustFile? file) {
-    if (file == null || !_enabled || file.url == null) {
+    if (file == null || !_enabled) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -406,11 +413,13 @@ class YustImagePickerState extends State<YustImagePicker> {
           .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
       if (confirmed == true) {
         try {
-          await firebase_storage.FirebaseStorage.instance
-              .ref()
-              .child(widget.folderPath)
-              .child(file.name!)
-              .delete();
+          if (file.name != null) {
+            await firebase_storage.FirebaseStorage.instance
+                .ref()
+                .child(widget.folderPath)
+                .child(file.name!)
+                .delete();
+          }
         } catch (e) {
           YustException(e.toString());
         }

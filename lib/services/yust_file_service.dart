@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'dart:typed_data';
 
@@ -36,6 +37,11 @@ class YustFileService {
       Uint8List? bytes}) async {
     try {
       final storageReference = fireStorage.ref().child(path).child(name);
+
+      var size = _calcMaxUploadRetryTime(bytes, file);
+      firebase_storage.FirebaseStorage.instance
+          .setMaxUploadRetryTime(Duration(seconds: size * 30));
+
       firebase_storage.UploadTask uploadTask;
       if (file != null) {
         uploadTask = storageReference.putFile(file);
@@ -50,6 +56,19 @@ class YustFileService {
     } catch (error) {
       throw YustException('Fehler beim Upload: ' + error.toString());
     }
+  }
+
+  int _calcMaxUploadRetryTime(Uint8List? bytes, File? file) {
+    var size = 0;
+    if (bytes != null) {
+      size = bytes.lengthInBytes;
+    }
+    if (file != null) {
+      size = file.lengthSync();
+    }
+
+    // MaxUploadRetryTime is at minimum 30 seconds - therefore '+1'
+    return (size / pow(10, 6)).round() + 1;
   }
 
   Future<Uint8List?> downloadFile(

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -173,18 +172,6 @@ class YustFilePickerState extends State<YustFilePicker> {
           file: _platformFileToFile(platformFile),
           bytes: platformFile.bytes,
         );
-        // try {
-        //   fileData.url = await Yust.fileService.uploadFile(
-        //     path: widget.folderPath,
-        //     name: fileData.name!,
-        //     file: file,
-        //     bytes: bytes,
-        //   );
-
-        //   fileData.hash = (await file?.openRead().transform(md5).first).toString();
-        // } on YustException catch (e) {
-        //   if (mounted) {
-        //     await Yust.alertService.showAlert(context, 'Ups', e.message);
       }
     }
   }
@@ -194,8 +181,10 @@ class YustFilePickerState extends State<YustFilePicker> {
     File? file,
     Uint8List? bytes,
   }) async {
+    final fileHash = (await file?.openRead().transform(md5).first).toString();
     final newYustFile = YustFile(
       name: name,
+      hash: fileHash,
       file: file,
       bytes: bytes,
       storageFolderPath: widget.storageFolderPath,

@@ -1,5 +1,8 @@
 import 'dart:io';
 import 'dart:typed_data';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -103,14 +106,16 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
+    final isBroken = file.name == null || file.url == null;
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.insert_drive_file),
+          Icon(!isBroken ? Icons.insert_drive_file : Icons.dangerous),
           SizedBox(width: 8),
           Expanded(
-            child: Text(file.name!, overflow: TextOverflow.ellipsis),
+            child: Text(isBroken ? 'Fehlerhafte Datei' : file.name!,
+                overflow: TextOverflow.ellipsis),
           ),
           _buildCachedIndicator(file),
         ],
@@ -118,7 +123,9 @@ class YustFilePickerState extends State<YustFilePicker> {
       trailing: _buildDeleteButton(file),
       onTap: () {
         Yust.helperService.unfocusCurrent(context);
-        _fileHandler.showFile(context, file);
+        if (!isBroken) {
+          _fileHandler.showFile(context, file);
+        }
       },
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -166,6 +173,18 @@ class YustFilePickerState extends State<YustFilePicker> {
           file: _platformFileToFile(platformFile),
           bytes: platformFile.bytes,
         );
+        // try {
+        //   fileData.url = await Yust.fileService.uploadFile(
+        //     path: widget.folderPath,
+        //     name: fileData.name!,
+        //     file: file,
+        //     bytes: bytes,
+        //   );
+
+        //   fileData.hash = (await file?.openRead().transform(md5).first).toString();
+        // } on YustException catch (e) {
+        //   if (mounted) {
+        //     await Yust.alertService.showAlert(context, 'Ups', e.message);
       }
     }
   }

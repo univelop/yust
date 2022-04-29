@@ -19,6 +19,7 @@ class YustFile {
 
   /// The URL to download the file.
   String? url;
+  String hash;
 
   /// The binary file. This attibute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(ignore: true)
@@ -61,6 +62,7 @@ class YustFile {
   YustFile({
     this.name,
     this.url,
+    this.hash = '',
     this.file,
     this.bytes,
     this.devicePath,

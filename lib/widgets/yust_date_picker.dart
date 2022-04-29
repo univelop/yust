@@ -33,7 +33,7 @@ class YustDatePicker extends StatelessWidget {
       text: Yust.helperService.formatDate(value),
       style: style,
       prefixIcon: prefixIcon,
-      onTap: (onChanged == null || readOnly) ? null : () => _pickDate(context),
+      onTap: (onChanged == null || readOnly) ? null : () => pickDate(context),
       onDelete: (onChanged == null || hideClearButton || readOnly)
           ? null
           : () async {
@@ -42,7 +42,7 @@ class YustDatePicker extends StatelessWidget {
     );
   }
 
-  void _pickDate(BuildContext context) async {
+  void pickDate(BuildContext context) async {
     Yust.helperService.unfocusCurrent(context);
     var dateTime = value;
     if (dateTime == null) {

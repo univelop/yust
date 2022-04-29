@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
+import '../models/yust_filter.dart';
 import '../yust.dart';
 import 'yust_doc_builder.dart';
 
 class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   final YustDocSetup<T> modelSetup;
-  final List<List<dynamic>>? filter;
+  final List<YustFilter>? filters;
   final List<String>? orderBy;
   final bool showLoadingSpinner;
   final Widget? loadingIndicator;
@@ -20,7 +21,7 @@ class YustDocsBuilder<T extends YustDoc> extends StatefulWidget {
   YustDocsBuilder({
     Key? key,
     required this.modelSetup,
-    this.filter,
+    this.filters,
     this.orderBy,
     bool? doNotWait,
     this.showLoadingSpinner = false,
@@ -40,7 +41,7 @@ class YustDocsBuilderState<T extends YustDoc>
   void initStream() {
     _docStream = Yust.databaseService.getDocs<T>(
       widget.modelSetup,
-      filterList: widget.filter,
+      filters: widget.filters,
       orderByList: widget.orderBy,
       limit: widget.limit,
     );
@@ -48,8 +49,7 @@ class YustDocsBuilderState<T extends YustDoc>
 
   void updateStreamConditionally(YustDocsBuilder oldWidget) {
     if (widget.modelSetup != oldWidget.modelSetup ||
-        !ListEquality(ListEquality<dynamic>())
-            .equals(widget.filter, oldWidget.filter) ||
+        !ListEquality<YustFilter>().equals(widget.filters, oldWidget.filters) ||
         !ListEquality<dynamic>().equals(widget.orderBy, oldWidget.orderBy)) {
       initStream();
     }

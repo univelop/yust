@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/services/text_formatter.dart';
+import 'package:flutter/services.dart';
 import 'package:yust/yust.dart';
 
 typedef StringCallback = void Function(String?);
@@ -25,8 +25,11 @@ class YustTextField extends StatefulWidget {
   final bool enabled;
   final bool showSelected;
   final bool obscureText;
-  final TextInputType? keyBoardType;
+  final bool autofocus;
+  final bool hideKeyboardOnAutofocus;
+  final FocusNode? focusNode;
   final YustInputStyle? style;
+  final bool divider;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final TextCapitalization textCapitalization;
@@ -53,8 +56,11 @@ class YustTextField extends StatefulWidget {
     this.autocorrect = true,
     this.readOnly = false,
     this.obscureText = false,
-    this.keyBoardType,
+    this.autofocus = false,
+    this.hideKeyboardOnAutofocus = true,
+    this.focusNode,
     this.style = YustInputStyle.normal,
+    this.divider = true,
     this.prefixIcon,
     this.suffixIcon,
     this.textCapitalization = TextCapitalization.sentences,
@@ -70,7 +76,7 @@ class YustTextField extends StatefulWidget {
 
 class _YustTextFieldState extends State<YustTextField> {
   late TextEditingController _controller;
-  final FocusNode _focusNode = FocusNode();
+  late FocusNode _focusNode = FocusNode();
   late String _initValue;
 
   @override
@@ -81,6 +87,7 @@ class _YustTextFieldState extends State<YustTextField> {
     }
     _controller =
         widget.controller ?? TextEditingController(text: widget.value);
+    _focusNode = widget.focusNode ?? FocusNode();
     _initValue = widget.value ?? '';
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus && widget.onEditingComplete != null) {
@@ -89,9 +96,17 @@ class _YustTextFieldState extends State<YustTextField> {
         if (widget.validator == null ||
             widget.validator!(textFieldValue) == null) {
           widget.onEditingComplete!(textFieldValue);
+        } else {
+          _controller.text = widget.value ?? '';
         }
       }
     });
+    if (widget.hideKeyboardOnAutofocus) {
+      Future.delayed(
+        Duration(),
+        () => SystemChannels.textInput.invokeMethod('TextInput.hide'),
+      );
+    }
   }
 
   @override
@@ -99,8 +114,9 @@ class _YustTextFieldState extends State<YustTextField> {
     if (widget.controller == null) {
       _controller.dispose();
     }
-    _focusNode.dispose();
-
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
     super.dispose();
   }
 
@@ -160,6 +176,7 @@ class _YustTextFieldState extends State<YustTextField> {
                 validator: widget.validator == null
                     ? null
                     : (value) => widget.validator!(value!.trim()),
+                autofocus: widget.autofocus,
               ),
             ),
             widget.suffixIcon ?? SizedBox(),
@@ -172,7 +189,7 @@ class _YustTextFieldState extends State<YustTextField> {
                   )),
           ],
         ),
-        if (widget.style == YustInputStyle.normal)
+        if (widget.style == YustInputStyle.normal && widget.divider)
           Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
       ],
     );

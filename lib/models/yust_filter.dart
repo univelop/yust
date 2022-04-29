@@ -115,7 +115,7 @@ class YustFilter {
   }
 
   dynamic _handleNumberValue(dynamic fieldValue, dynamic value) {
-    if (fieldValue is num) {
+    if (fieldValue is num && value is String) {
       return num.tryParse(value);
     }
     return value;

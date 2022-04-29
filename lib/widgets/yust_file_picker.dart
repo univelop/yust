@@ -58,20 +58,30 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   /// TODO:
-  ///    - show dropzone when dragging (without chose file)
-  ///    - indicate correct drop-location by changing color of dropzone
   ///    -
   @override
   Widget build(BuildContext context) {
     final showDropzone = kIsWeb && widget.enableDropzone && _files.isEmpty;
     return Stack(
       children: [
+        Positioned.fill(
+          child: _buildDropzoneArea(context),
+        ),
         YustListTile(
           suffixChild: showDropzone ? null : _buildAddButton(context),
           label: widget.label,
           prefixIcon: widget.prefixIcon,
           below: showDropzone ? _buildDropzone() : _buildFiles(context),
-        )
+        ),
+        isDragging
+            ? Positioned.fill(
+                child: Container(
+                  color: Color.fromARGB(
+                      91, 118, 118, 118), //TODO: change Color to defaults
+                  child: _buildDropzoneInterface(),
+                ),
+              )
+            : Container()
       ],
     );
   }
@@ -154,35 +164,43 @@ class YustFilePickerState extends State<YustFilePicker> {
 
   /// This Widget presents the dropzone with the icon
   Widget _buildDropzoneInterface() {
+    final dropZoneColor = isDragging
+        ? Colors.blue
+        : Color.fromARGB(255, 116, 116, 116); //TODO: use accent colors
     return Center(
-      child: DottedBorder(
-        borderType: BorderType.RRect,
-        radius: Radius.circular(12),
-        padding: EdgeInsets.all(6),
-        dashPattern: [6, 5],
-        strokeWidth: 3,
-        strokeCap: StrokeCap.round,
-        color: Color.fromARGB(255, 116, 116, 116),
-        child: ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          child: Container(
-            height: 300,
-            width: 400,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 40,
-                ),
-                Text(
-                  'Datei(en) hierher ziehen',
-                  style: TextStyle(fontSize: 20),
-                ),
-                Text('oder'),
-                OutlinedButton(
-                    child: Text("Dateien durchsuchen"), onPressed: _pickFiles),
-              ],
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: DottedBorder(
+          borderType: BorderType.RRect,
+          radius: Radius.circular(12),
+          padding: EdgeInsets.all(6),
+          dashPattern: [6, 5],
+          strokeWidth: 3,
+          strokeCap: StrokeCap.round,
+          color: dropZoneColor,
+          child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            child: Container(
+              height: 300,
+              width: 400,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.cloud_upload_outlined,
+                      size: 40, color: dropZoneColor),
+                  Text(
+                    'Datei(en) hierher ziehen',
+                    style: TextStyle(fontSize: 20, color: dropZoneColor),
+                  ),
+                  Text(
+                    'oder',
+                    style: TextStyle(color: dropZoneColor),
+                  ),
+                  OutlinedButton(
+                      child: Text("Dateien durchsuchen"),
+                      onPressed: _pickFiles),
+                ],
+              ),
             ),
           ),
         ),
@@ -199,11 +217,13 @@ class YustFilePickerState extends State<YustFilePicker> {
           onLoaded: () => null,
           onError: (ev) => null,
           onHover: () {
+            print("hover");
             setState(() {
               isDragging = true;
             });
           },
           onLeave: () {
+            print("leave");
             setState(() {
               isDragging = false;
             });

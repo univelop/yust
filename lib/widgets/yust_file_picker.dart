@@ -79,22 +79,21 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
-    if (file.name == null) {
-      return SizedBox.shrink();
-    }
+    final isBroken = file.name == null || file.url == null;
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.insert_drive_file),
+          Icon(!isBroken ? Icons.insert_drive_file : Icons.dangerous),
           SizedBox(width: 8),
           Expanded(
-            child: Text(file.name!, overflow: TextOverflow.ellipsis),
+            child: Text(isBroken ? 'Fehlerhafte Datei' : file.name!,
+                overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
       trailing: _buildDeleteButton(file),
-      onTap: () => _showFile(file),
+      onTap: !isBroken ? () => _showFile(file) : () => {},
       contentPadding:
           const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
     );
@@ -233,16 +232,18 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (connectivityResult == ConnectivityResult.none) {
       await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Löschen einer Datei ist eine Internetverbindung erforderlich.');
-    } else if (file.name != null) {
+    } else {
       final confirmed = await Yust.alertService
           .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
       if (confirmed == true) {
         try {
-          await firebase_storage.FirebaseStorage.instance
-              .ref()
-              .child(widget.folderPath)
-              .child(file.name!)
-              .delete();
+          if (file.name != null) {
+            await firebase_storage.FirebaseStorage.instance
+                .ref()
+                .child(widget.folderPath)
+                .child(file.name!)
+                .delete();
+          }
         } catch (e) {
           YustException(e.toString());
         }

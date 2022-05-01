@@ -161,7 +161,8 @@ class YustFilter {
       comparatorString = '=';
     }
     return comparatorStrings.entries
-            .firstWhereOrNull((cs) => cs.value == comparatorString)
+            .firstWhereOrNull((cs) =>
+                cs.value.toLowerCase() == comparatorString.toLowerCase())
             ?.key ??
         YustFilterComparator.equal;
   }

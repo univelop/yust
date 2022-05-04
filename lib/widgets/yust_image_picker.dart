@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -69,6 +70,8 @@ class YustImagePickerState extends State<YustImagePicker> {
   late bool _enabled;
   late int _currentImageNumber;
 
+  ConnectivityResult _connectivity = ConnectivityResult.none;
+
   @override
   void initState() {
     _fileHandler = Yust.fileHandlerManager.createFileHandler(
@@ -90,23 +93,33 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _fileHandler.updateFiles(widget.images, loadFiles: true),
+    return StreamBuilder<ConnectivityResult>(
+      stream: Connectivity().onConnectivityChanged,
       builder: (context, snapshot) {
-        return YustListTile(
-          label: widget.label,
-          suffixChild: _buildPickButtons(context),
-          prefixIcon: widget.prefixIcon,
-          below: widget.multiple
-              ? _buildGallery(context)
-              : Padding(
-                  padding: const EdgeInsets.only(bottom: 2.0),
-                  child: _buildSingleImage(
-                      context, _fileHandler.getFiles().firstOrNull),
-                ),
+        return FutureBuilder(
+          future: _synchronizeImagePicher(),
+          builder: (context, snapshot) {
+            return YustListTile(
+              label: widget.label,
+              suffixChild: _buildPickButtons(context),
+              prefixIcon: widget.prefixIcon,
+              below: widget.multiple
+                  ? _buildGallery(context)
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 2.0),
+                      child: _buildSingleImage(
+                          context, _fileHandler.getFiles().firstOrNull),
+                    ),
+            );
+          },
         );
       },
     );
+  }
+
+  Future<void> _synchronizeImagePicher() async {
+    await _fileHandler.updateFiles(widget.images, loadFiles: true);
+    _connectivity = await Connectivity().checkConnectivity();
   }
 
   Widget _buildPickButtons(BuildContext context) {
@@ -213,12 +226,24 @@ class YustImagePickerState extends State<YustImagePicker> {
     } else if (file.bytes != null) {
       preview = Image.memory(file.bytes!, fit: BoxFit.cover);
     } else if (file.url != null) {
-      preview = FadeInImage.assetNetwork(
-        placeholder: Yust.imagePlaceholderPath!,
-        image: file.url ?? '',
-        fit: BoxFit.cover,
-        imageErrorBuilder: (context, _, __) =>
+      preview = CachedNetworkImage(
+        // placeholder: (context, _) =>
+        //     Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
+        imageUrl: file.url!,
+        imageBuilder: (context, image) {
+          // if (_connectivity == ConnectivityResult.none) {
+          //   return Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover);
+          // }
+          return Image(image: image, fit: BoxFit.cover);
+        },
+        errorWidget: (context, _, __) =>
             Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
+        progressIndicatorBuilder: (context, url, downloadProgress) => Container(
+            margin: EdgeInsets.all(50),
+            child: CircularProgressIndicator(
+              value: downloadProgress.progress,
+            )),
+        fit: BoxFit.cover,
       );
     }
     final zoomEnabled = (file.url != null && widget.zoomable);

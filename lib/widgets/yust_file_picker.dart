@@ -57,53 +57,42 @@ class YustFilePickerState extends State<YustFilePicker> {
     super.initState();
   }
 
-  /// TODO:
-  ///    -
   @override
   Widget build(BuildContext context) {
-    final showDropzone = kIsWeb && widget.enableDropzone && _files.isEmpty;
+    if (kIsWeb && widget.enableDropzone) {
+      return _buildDropzone(context);
+    } else {
+      return YustListTile(
+        suffixChild: _buildAddButton(context),
+        label: widget.label,
+        prefixIcon: widget.prefixIcon,
+        below: _buildFiles(context),
+      );
+    }
+  }
+
+  Widget _buildDropzone(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
           child: _buildDropzoneArea(context),
         ),
         YustListTile(
-          suffixChild: showDropzone ? null : _buildAddButton(context),
+          suffixChild: _files.isEmpty ? null : _buildAddButton(context),
           label: widget.label,
           prefixIcon: widget.prefixIcon,
-          below: showDropzone ? _buildDropzone() : _buildFiles(context),
+          below:
+              _files.isEmpty ? _buildDropzoneInterface() : _buildFiles(context),
         ),
-        isDragging
+        _files.isNotEmpty && isDragging
             ? Positioned.fill(
                 child: Container(
                   color: Color.fromARGB(
-                      91, 118, 118, 118), //TODO: change Color to defaults
-                  child: _buildDropzoneInterface(),
+                      91, 118, 118, 118), //TODO: is a fixed color okay here?
+                  child: _buildDropzoneInterface(showManualUploadButton: false),
                 ),
               )
             : Container()
-      ],
-    );
-  }
-
-  Widget _buildDropzone() {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(15, 0, 15, 15),
-          child: SizedBox(
-            height: 150, //TODO: How to make this box full width?
-            child: Container(
-              child: Stack(
-                children: [
-                  _buildDropzoneArea(context),
-                  _buildDropzoneInterface()
-                ],
-              ),
-            ),
-          ),
-        ),
-        _buildFiles(context),
       ],
     );
   }
@@ -162,8 +151,8 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  /// This Widget presents the dropzone with the icon
-  Widget _buildDropzoneInterface() {
+  /// This Widget is a visual drag and drop indicator. It shows a dotted box, an icon as well as a button to manually upload files
+  Widget _buildDropzoneInterface({bool showManualUploadButton = true}) {
     final dropZoneColor = isDragging
         ? Colors.blue
         : Color.fromARGB(255, 116, 116, 116); //TODO: use accent colors
@@ -181,10 +170,10 @@ class YustFilePickerState extends State<YustFilePicker> {
           child: ClipRRect(
             borderRadius: BorderRadius.all(Radius.circular(12)),
             child: Container(
-              height: 300,
+              height: 200,
               width: 400,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Icon(Icons.cloud_upload_outlined,
                       size: 40, color: dropZoneColor),
@@ -192,13 +181,15 @@ class YustFilePickerState extends State<YustFilePicker> {
                     'Datei(en) hierher ziehen',
                     style: TextStyle(fontSize: 20, color: dropZoneColor),
                   ),
-                  Text(
-                    'oder',
-                    style: TextStyle(color: dropZoneColor),
-                  ),
-                  OutlinedButton(
-                      child: Text("Dateien durchsuchen"),
-                      onPressed: _pickFiles),
+                  if (showManualUploadButton) ...[
+                    Text(
+                      'oder',
+                      style: TextStyle(color: dropZoneColor),
+                    ),
+                    OutlinedButton(
+                        child: Text("Dateien durchsuchen"),
+                        onPressed: _pickFiles),
+                  ]
                 ],
               ),
             ),
@@ -217,19 +208,20 @@ class YustFilePickerState extends State<YustFilePicker> {
           onLoaded: () => null,
           onError: (ev) => null,
           onHover: () {
-            print("hover");
             setState(() {
               isDragging = true;
             });
           },
           onLeave: () {
-            print("leave");
             setState(() {
               isDragging = false;
             });
           },
           onDrop: (ev) async {},
           onDropMultiple: (ev) async {
+            setState(() {
+              isDragging = false;
+            });
             print('Dropzone drop multiple: $ev');
             for (final file in ev ?? []) {
               final bytes = await controller.getFileData(file);

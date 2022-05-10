@@ -39,8 +39,6 @@ class YustFileHandler {
 
   final List<YustFile> _recentlyUploadedFiles = [];
 
-  var uploadControllIndex = 0;
-
   /// gets triggerd after successful upload
   void Function()? onFileUploaded;
 
@@ -143,16 +141,11 @@ class YustFileHandler {
   void startUploadingCachedFiles() {
     if (!_uploadingCachedFiles) {
       _uploadingCachedFiles = true;
-      uploadControllIndex++;
-      if (uploadControllIndex > 1) {
-        print('CRITICAL ERROR');
-      }
       _uploadCachedFiles(_reuploadTime);
     }
   }
 
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
-    print('UCI: ' + uploadControllIndex.toString());
     await _validateCachedFiles();
     var cachedFiles = getCachedFiles();
     var length = cachedFiles.length;
@@ -180,7 +173,6 @@ class YustFileHandler {
 
     if (!uploadError) {
       _uploadingCachedFiles = false;
-      uploadControllIndex--;
     } else {
       // saving cachedFiles, to store error log messages
       await _saveCachedFiles();
@@ -301,7 +293,6 @@ class YustFileHandler {
 
     if (yustFile.cached) await _updateDocAttribute(yustFile, url);
     _recentlyUploadedFiles.add(yustFile);
-    print('Sucessful upload');
   }
 
   Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {

@@ -69,8 +69,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   late YustFileHandler _fileHandler;
   late bool _enabled;
   late int _currentImageNumber;
-
-  ConnectivityResult _connectivity = ConnectivityResult.none;
+  ConnectivityResult _connectivityResult = ConnectivityResult.none;
 
   @override
   void initState() {
@@ -96,8 +95,11 @@ class YustImagePickerState extends State<YustImagePicker> {
     return StreamBuilder<ConnectivityResult>(
       stream: Connectivity().onConnectivityChanged,
       builder: (context, snapshot) {
+        if (snapshot.data != null) {
+          _connectivityResult = snapshot.data!;
+        }
         return FutureBuilder(
-          future: _synchronizeImagePicher(),
+          future: _fileHandler.updateFiles(widget.images, loadFiles: true),
           builder: (context, snapshot) {
             return YustListTile(
               label: widget.label,
@@ -115,11 +117,6 @@ class YustImagePickerState extends State<YustImagePicker> {
         );
       },
     );
-  }
-
-  Future<void> _synchronizeImagePicher() async {
-    await _fileHandler.updateFiles(widget.images, loadFiles: true);
-    _connectivity = await Connectivity().checkConnectivity();
   }
 
   Widget _buildPickButtons(BuildContext context) {
@@ -226,23 +223,26 @@ class YustImagePickerState extends State<YustImagePicker> {
     } else if (file.bytes != null) {
       preview = Image.memory(file.bytes!, fit: BoxFit.cover);
     } else if (file.url != null) {
+      var key = Key(file.url! + _connectivityResult.toString());
       preview = CachedNetworkImage(
-        // placeholder: (context, _) =>
-        //     Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
+        // cacheKey is needed for recognizing switch from offline to online connection
+        cacheKey: file.key != null ? file.key.toString() : key.toString(),
         imageUrl: file.url!,
         imageBuilder: (context, image) {
-          // if (_connectivity == ConnectivityResult.none) {
-          //   return Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover);
-          // }
-          return Image(image: image, fit: BoxFit.cover);
+          file.key ??= key;
+          return Image(
+            image: image,
+            fit: BoxFit.cover,
+          );
         },
         errorWidget: (context, _, __) =>
             Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
         progressIndicatorBuilder: (context, url, downloadProgress) => Container(
-            margin: EdgeInsets.all(50),
-            child: CircularProgressIndicator(
-              value: downloadProgress.progress,
-            )),
+          margin: EdgeInsets.all(50),
+          child: CircularProgressIndicator(
+            value: downloadProgress.progress,
+          ),
+        ),
         fit: BoxFit.cover,
       );
     }

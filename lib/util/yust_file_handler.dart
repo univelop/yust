@@ -39,6 +39,8 @@ class YustFileHandler {
 
   final List<YustFile> _recentlyUploadedFiles = [];
 
+  final List<YustFile> _recentlyDeletedFiles = [];
+
   /// gets triggerd after successful upload
   void Function()? onFileUploaded;
 
@@ -63,6 +65,16 @@ class YustFileHandler {
 
   Future<void> updateFiles(List<YustFile> onlineFiles,
       {bool loadFiles = false}) async {
+    _removeLocalDeletedFiles(onlineFiles);
+    _removeOnlineDeletedFiles(onlineFiles);
+
+    _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
+    await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
+
+    if (loadFiles) _loadFiles();
+  }
+
+  void _removeOnlineDeletedFiles(List<YustFile> onlineFiles) {
     // to be up to date with the storage files, onlineFiles get merged which file that are:
     // 1. cached
     // 2. recently uploaded and not in the [onlineFiles]
@@ -76,11 +88,20 @@ class YustFileHandler {
         _yustFiles.remove(file);
       }
     });
+  }
 
-    _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
-    await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
-
-    if (loadFiles) _loadFiles();
+  void _removeLocalDeletedFiles(List<YustFile> onlineFiles) {
+    var _copyRecentlyDeletedFiles = _recentlyDeletedFiles;
+    onlineFiles.removeWhere((f) {
+      if (_recentlyDeletedFiles
+          .any((deletedFile) => deletedFile.url == f.url)) {
+        _copyRecentlyDeletedFiles.remove(f);
+        return true;
+      }
+      return false;
+    });
+    _recentlyDeletedFiles
+        .removeWhere((f) => !_copyRecentlyDeletedFiles.contains(f));
   }
 
   void _loadFiles() {
@@ -132,6 +153,7 @@ class YustFileHandler {
       }
       try {
         await _deleteFileFromStorage(yustFile);
+        _recentlyDeletedFiles.add(yustFile);
         // ignore: empty_catches
       } catch (e) {}
     }

@@ -115,7 +115,7 @@ class YustFileHandler {
   void _mergeOnlineFiles(List<YustFile> yustFiles, List<YustFile> onlineFiles,
       String storageFolderPath) async {
     onlineFiles.forEach((f) => f.storageFolderPath = storageFolderPath);
-    _mergeIntoYustFiles(yustFiles, onlineFiles, isOnlineMerge: true);
+    _mergeIntoYustFiles(yustFiles, onlineFiles);
   }
 
   Future<void> _mergeCachedFiles(List<YustFile> yustFiles,
@@ -245,12 +245,10 @@ class YustFileHandler {
   }
 
   /// works for cacheable and non-cacheable files
-  void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles,
-      {bool isOnlineMerge = false}) {
-    newFiles = isOnlineMerge == true ? newFiles.reversed.toList() : newFiles;
+  void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles) {
     for (final newFile in newFiles) {
       if (!yustFiles.any((yustFile) => _equalFiles(yustFile, newFile))) {
-        isOnlineMerge ? yustFiles.insert(0, newFile) : yustFiles.add(newFile);
+        yustFiles.add(newFile);
       }
     }
   }

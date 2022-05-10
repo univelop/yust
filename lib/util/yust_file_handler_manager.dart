@@ -25,7 +25,10 @@ class YustFileHandlerManager {
       if (linkedDocAttribute != null && linkedDocPath != null) {
         filehandlers.add(newFileHandler);
       }
+    } else {
+      newFileHandler.onFileUploaded = onFileUploaded ?? () {};
     }
+
     return newFileHandler;
   }
 

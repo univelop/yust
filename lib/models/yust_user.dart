@@ -42,6 +42,10 @@ class YustUser extends YustDoc {
     lastLogin = DateTime.now();
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
   }
+
+  String getName() {
+    return firstName + ' ' + lastName;
+  }
 }
 
 enum YustGender {

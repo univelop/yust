@@ -216,6 +216,7 @@ class YustFilePickerState extends State<YustFilePicker> {
               await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
         widget.onChanged!(_fileHandler.getOnlineFiles());
       }
+      // ignore: empty_catches
     } catch (e) {}
   }
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -68,6 +69,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   late YustFileHandler _fileHandler;
   late bool _enabled;
   late int _currentImageNumber;
+  ConnectivityResult _connectivityResult = ConnectivityResult.none;
 
   @override
   void initState() {
@@ -79,6 +81,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         if (mounted) {
           setState(() {});
         }
+        widget.onChanged!(_fileHandler.getOnlineFiles());
       },
     );
 
@@ -90,20 +93,28 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _fileHandler.updateFiles(widget.images, loadFiles: true),
+    return StreamBuilder<ConnectivityResult>(
+      stream: Connectivity().onConnectivityChanged,
       builder: (context, snapshot) {
-        return YustListTile(
-          label: widget.label,
-          suffixChild: _buildPickButtons(context),
-          prefixIcon: widget.prefixIcon,
-          below: widget.multiple
-              ? _buildGallery(context)
-              : Padding(
-                  padding: const EdgeInsets.only(bottom: 2.0),
-                  child: _buildSingleImage(
-                      context, _fileHandler.getFiles().firstOrNull),
-                ),
+        if (snapshot.data != null) {
+          _connectivityResult = snapshot.data!;
+        }
+        return FutureBuilder(
+          future: _fileHandler.updateFiles(widget.images, loadFiles: true),
+          builder: (context, snapshot) {
+            return YustListTile(
+              label: widget.label,
+              suffixChild: _buildPickButtons(context),
+              prefixIcon: widget.prefixIcon,
+              below: widget.multiple
+                  ? _buildGallery(context)
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 2.0),
+                      child: _buildSingleImage(
+                          context, _fileHandler.getFiles().firstOrNull),
+                    ),
+            );
+          },
         );
       },
     );
@@ -213,12 +224,27 @@ class YustImagePickerState extends State<YustImagePicker> {
     } else if (file.bytes != null) {
       preview = Image.memory(file.bytes!, fit: BoxFit.cover);
     } else if (file.url != null) {
-      preview = FadeInImage.assetNetwork(
-        placeholder: Yust.imagePlaceholderPath!,
-        image: file.url ?? '',
-        fit: BoxFit.cover,
-        imageErrorBuilder: (context, _, __) =>
+      var key = Key(file.url! + _connectivityResult.toString());
+      preview = CachedNetworkImage(
+        // cacheKey is needed for recognizing switch from offline to online connection
+        cacheKey: file.key != null ? file.key.toString() : key.toString(),
+        imageUrl: file.url!,
+        imageBuilder: (context, image) {
+          file.key ??= key;
+          return Image(
+            image: image,
+            fit: BoxFit.cover,
+          );
+        },
+        errorWidget: (context, _, __) =>
             Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
+        progressIndicatorBuilder: (context, url, downloadProgress) => Container(
+          margin: EdgeInsets.all(50),
+          child: CircularProgressIndicator(
+            value: downloadProgress.progress,
+          ),
+        ),
+        fit: BoxFit.cover,
       );
     }
     final zoomEnabled = (file.url != null && widget.zoomable);
@@ -436,11 +462,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       linkedDocAttribute: widget.linkedDocAttribute,
     );
 
-    // create database entry for upload process
-    if (widget.images.isEmpty) {
-      widget.onChanged!(_fileHandler.getOnlineFiles());
-    }
-
+    await _createDatebaseEntry();
     await _fileHandler.addFile(newYustFile);
 
     if (_currentImageNumber < _fileHandler.getFiles().length) {
@@ -452,6 +474,17 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _createDatebaseEntry() async {
+    try {
+      if (widget.linkedDocPath != null &&
+          !_fileHandler.existsDocData(
+              await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   void _showImages(YustFile activeFile) {

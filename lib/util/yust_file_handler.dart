@@ -344,12 +344,11 @@ class YustFileHandler {
   Future<dynamic> _getDocAttribute(YustFile yustFile) async {
     // ignore: inference_failure_on_uninitialized_variable
     var attribute;
-    final doc = await FirebaseFirestore.instance
-        .doc(yustFile.linkedDocPath!)
-        .get(GetOptions(source: Source.server));
+    final doc = await getFirebaseDoc(yustFile.linkedDocPath!);
 
-    if (doc.exists && doc.data() != null) {
+    if (existsDocData(doc)) {
       try {
+        //TODO offline: refactor cause handler manager
         attribute = doc.get(yustFile.linkedDocAttribute!);
       } catch (e) {
         // edge case, image picker allows only one image, attribute must be initialized manually
@@ -357,6 +356,17 @@ class YustFileHandler {
       }
     }
     return attribute;
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> getFirebaseDoc(
+      String linkedDocPath) async {
+    return await FirebaseFirestore.instance
+        .doc(linkedDocPath)
+        .get(GetOptions(source: Source.server));
+  }
+
+  bool existsDocData(DocumentSnapshot<Map<String, dynamic>> doc) {
+    return doc.exists && doc.data() != null;
   }
 
   Future<void> _deleteFileFromStorage(YustFile yustFile) async {

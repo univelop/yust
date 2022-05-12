@@ -81,6 +81,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         if (mounted) {
           setState(() {});
         }
+        widget.onChanged!(_fileHandler.getOnlineFiles());
       },
     );
 
@@ -461,11 +462,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       linkedDocAttribute: widget.linkedDocAttribute,
     );
 
-    // create database entry for upload process
-    if (widget.images.isEmpty) {
-      widget.onChanged!(_fileHandler.getOnlineFiles());
-    }
-
+    await _createDatebaseEntry();
     await _fileHandler.addFile(newYustFile);
 
     if (_currentImageNumber < _fileHandler.getFiles().length) {
@@ -477,6 +474,16 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _createDatebaseEntry() async {
+    try {
+      if (widget.linkedDocPath != null &&
+          !_fileHandler.existsDocData(
+              await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      }
+    } catch (e) {}
   }
 
   void _showImages(YustFile activeFile) {

@@ -348,7 +348,6 @@ class YustFileHandler {
 
     if (existsDocData(doc)) {
       try {
-        //TODO offline: refactor cause handler manager
         attribute = doc.get(yustFile.linkedDocAttribute!);
       } catch (e) {
         // edge case, image picker allows only one image, attribute must be initialized manually

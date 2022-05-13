@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yust/util/object_helper.dart';
 
 part 'yust_file.g.dart';
 
@@ -124,9 +125,24 @@ class YustFile {
       'storageFolderPath': storageFolderPath,
       'linkedDocPath': linkedDocPath,
       'linkedDocAttribute': linkedDocAttribute,
-      'additionalDocAttributeData': jsonEncode(additionalDocAttributeData),
+      'additionalDocAttributeData':
+          jsonEncode(_DateTimeToString(additionalDocAttributeData)),
       'devicePath': devicePath,
       'lastError': lastError,
     };
+  }
+
+  Map<String, dynamic>? _DateTimeToString(Map<String, dynamic>? data) {
+    if (data == null) {
+      return data;
+    }
+    return TraverseObject.traverseObject(
+      data,
+      (currentNode) {
+        return currentNode.value is DateTime
+            ? currentNode.value.toIso8601String()
+            : currentNode.value;
+      },
+    );
   }
 }

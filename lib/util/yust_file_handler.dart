@@ -268,7 +268,13 @@ class YustFileHandler {
 
     yustFile.devicePath = devicePath + '${yustFile.name}';
 
-    await yustFile.file!.copy(yustFile.devicePath!);
+    if (yustFile.bytes != null) {
+      yustFile.file =
+          await File(yustFile.devicePath!).writeAsBytes(yustFile.bytes!);
+    } else if (yustFile.file != null) {
+      await yustFile.file!.copy(yustFile.devicePath!);
+    }
+
     await _saveCachedFiles();
   }
 

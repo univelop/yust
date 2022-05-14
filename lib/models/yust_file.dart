@@ -63,8 +63,9 @@ class YustFile {
   @JsonKey(ignore: true)
   bool processing;
 
-  /// True if image can be stored in cache.
-  bool get cacheable => linkedDocPath != null && linkedDocAttribute != null;
+  /// True if image can be stored in cache. Each cached file needs a name
+  bool get cacheable =>
+      linkedDocPath != null && linkedDocAttribute != null && name != null;
 
   /// True if image is cached locally.
   bool get cached => devicePath != null;

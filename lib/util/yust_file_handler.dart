@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -324,27 +325,49 @@ class YustFileHandler {
   Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {
     var attribute = await _getDocAttribute(cachedFile);
 
+    var fileData = _getFileData(cachedFile.name!, attribute);
+    fileData = Map<String, dynamic>.from(mergeMaps(
+        fileData, cachedFile.additionalDocAttributeData ?? {}, value: (m0, m1) {
+      return m1;
+    }));
+
+    fileData['name'] = cachedFile.name;
+    fileData['url'] = url;
+
     if (attribute is Map) {
       if (attribute['url'] == null) {
-        attribute['name'] = cachedFile.name;
-        attribute['url'] = url;
+        attribute = fileData;
       } else {
         // edge case: image picker changes from single- to multi-image view
-        attribute = [attribute];
+        attribute = [fileData];
       }
     }
     if (attribute is List) {
       attribute.removeWhere((f) => f['name'] == cachedFile.name);
-      attribute.add({'name': cachedFile.name, 'url': url});
+      attribute.add(fileData);
     }
 
-    attribute ??= [
-      {'name': cachedFile.name, 'url': url}
-    ];
+    attribute ??= [fileData];
 
     await FirebaseFirestore.instance
         .doc(cachedFile.linkedDocPath!)
         .update({cachedFile.linkedDocAttribute!: attribute});
+  }
+
+  Map<dynamic, dynamic> _getFileData(String fileName, dynamic attribute) {
+    if (attribute is Map) {
+      return attribute;
+    }
+    if (attribute is List) {
+      var result = attribute.firstWhereOrNull((f) {
+        if (f['name'] == null) {
+          return false;
+        }
+        return f['name'] == fileName;
+      });
+      return result ?? {};
+    }
+    return {};
   }
 
   Future<dynamic> _getDocAttribute(YustFile yustFile) async {

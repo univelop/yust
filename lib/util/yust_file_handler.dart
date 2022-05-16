@@ -134,6 +134,10 @@ class YustFileHandler {
   }
 
   Future<void> addFile(YustFile yustFile) async {
+    if (yustFile.name == null || yustFile.storageFolderPath == null) {
+      throw ('The file needs a name and a storageFolderPath to perform an upload!');
+    }
+
     _yustFiles.add(yustFile);
     if (!kIsWeb && yustFile.cacheable) {
       await _saveFileOnDevice(yustFile);

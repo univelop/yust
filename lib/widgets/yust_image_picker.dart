@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:yust/services/yust_helper_service.dart';
 import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/screens/yust_image_screen.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
@@ -94,7 +95,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<ConnectivityResult>(
-      stream: Connectivity().onConnectivityChanged,
+      stream: YustHelperService.connectivityStream,
       builder: (context, snapshot) {
         if (snapshot.data != null) {
           _connectivityResult = snapshot.data!;

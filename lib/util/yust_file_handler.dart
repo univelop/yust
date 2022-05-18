@@ -330,10 +330,6 @@ class YustFileHandler {
     var attribute = await _getDocAttribute(cachedFile);
 
     var fileData = _getFileData(cachedFile.name!, attribute);
-    fileData = Map<String, dynamic>.from(mergeMaps(
-        fileData, cachedFile.additionalDocAttributeData ?? {}, value: (m0, m1) {
-      return m1;
-    }));
 
     fileData['name'] = cachedFile.name;
     fileData['url'] = url;

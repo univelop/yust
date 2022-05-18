@@ -1,10 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:yust/util/object_helper.dart';
 
 part 'yust_file.g.dart';
 
@@ -51,10 +49,6 @@ class YustFile {
   @JsonKey(ignore: true)
   String? linkedDocAttribute;
 
-  /// when file uploading these data will be added
-  @JsonKey(ignore: true)
-  Map<String, dynamic>? additionalDocAttributeData;
-
   /// stores the last error. Used in offline caching
   @JsonKey(ignore: true)
   String? lastError;
@@ -81,7 +75,6 @@ class YustFile {
     this.storageFolderPath,
     this.linkedDocPath,
     this.linkedDocAttribute,
-    this.additionalDocAttributeData,
     this.processing = false,
     this.lastError,
   });
@@ -101,8 +94,6 @@ class YustFile {
       devicePath: json['devicePath'] as String,
       linkedDocPath: json['linkedDocPath'] as String,
       linkedDocAttribute: json['linkedDocAttribute'] as String,
-      additionalDocAttributeData:
-          jsonDecode(json['additionalDocAttributeData']),
       lastError: json['lastError'] as String?,
     );
   }
@@ -126,24 +117,8 @@ class YustFile {
       'storageFolderPath': storageFolderPath,
       'linkedDocPath': linkedDocPath,
       'linkedDocAttribute': linkedDocAttribute,
-      'additionalDocAttributeData':
-          jsonEncode(_DateTimeToString(additionalDocAttributeData)),
       'devicePath': devicePath,
       'lastError': lastError,
     };
-  }
-
-  Map<String, dynamic>? _DateTimeToString(Map<String, dynamic>? data) {
-    if (data == null) {
-      return data;
-    }
-    return TraverseObject.traverseObject(
-      data,
-      (currentNode) {
-        return currentNode.value is DateTime
-            ? currentNode.value.toIso8601String()
-            : currentNode.value;
-      },
-    );
   }
 }

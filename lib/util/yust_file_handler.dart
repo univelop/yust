@@ -413,6 +413,7 @@ class YustFileHandler {
     }
     yustFile.devicePath = null;
     yustFile.file = null;
+    yustFile.bytes = null;
 
     await _saveCachedFiles();
   }

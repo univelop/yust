@@ -105,7 +105,7 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
-    final isBroken = file.name == null || file.url == null;
+    final isBroken = file.name == null || (!file.cached && file.url == null);
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -197,10 +197,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       await Yust.alertService.showAlert(context, 'Nicht möglich',
           'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
     } else {
-      // create database entry for upload process
-      if (widget.files.isEmpty) {
-        widget.onChanged!(_fileHandler.getOnlineFiles());
-      }
+      await _createDatebaseEntry();
       await _fileHandler.addFile(newYustFile);
     }
     _processing[newYustFile.name] = false;
@@ -210,6 +207,17 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _createDatebaseEntry() async {
+    try {
+      if (widget.linkedDocPath != null &&
+          !_fileHandler.existsDocData(
+              await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   Future<void> _deleteFile(YustFile yustFile) async {

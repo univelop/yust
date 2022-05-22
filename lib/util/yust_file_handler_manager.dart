@@ -25,7 +25,10 @@ class YustFileHandlerManager {
       if (linkedDocAttribute != null && linkedDocPath != null) {
         filehandlers.add(newFileHandler);
       }
+    } else {
+      newFileHandler.onFileUploaded = onFileUploaded ?? () {};
     }
+
     return newFileHandler;
   }
 
@@ -39,8 +42,8 @@ class YustFileHandlerManager {
     return newFileHandler;
   }
 
-  /// Uploads all cached files. If the upload fails,  a new attempt is made after [_reuploadTime].
-  /// Should be started only ONCE, renewed call only possible after successful upload.
+  /// Uploads all cached files. Should be started after device restart
+  /// creates for each unique linkedDocPath + linkedDocAttribute adress a fileHandler
   Future<void> uploadCachedFiles() async {
     var cachedFiles = await YustFileHandler.loadCachedFiles();
     while (cachedFiles.isNotEmpty) {

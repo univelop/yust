@@ -39,7 +39,7 @@ class YustFileHandler {
 
   final List<YustFile> _recentlyUploadedFiles = [];
 
-  var uploadControllIndex = 0;
+  final List<YustFile> _recentlyDeletedFiles = [];
 
   /// gets triggerd after successful upload
   void Function()? onFileUploaded;
@@ -65,6 +65,16 @@ class YustFileHandler {
 
   Future<void> updateFiles(List<YustFile> onlineFiles,
       {bool loadFiles = false}) async {
+    _removeLocalDeletedFiles(onlineFiles);
+    _removeOnlineDeletedFiles(onlineFiles);
+
+    _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
+    await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
+
+    if (loadFiles) _loadFiles();
+  }
+
+  void _removeOnlineDeletedFiles(List<YustFile> onlineFiles) {
     // to be up to date with the storage files, onlineFiles get merged which file that are:
     // 1. cached
     // 2. recently uploaded and not in the [onlineFiles]
@@ -78,11 +88,20 @@ class YustFileHandler {
         _yustFiles.remove(file);
       }
     });
+  }
 
-    _mergeOnlineFiles(_yustFiles, onlineFiles, storageFolderPath);
-    await _mergeCachedFiles(_yustFiles, linkedDocPath, linkedDocAttribute);
-
-    if (loadFiles) _loadFiles();
+  void _removeLocalDeletedFiles(List<YustFile> onlineFiles) {
+    var _copyRecentlyDeletedFiles = _recentlyDeletedFiles;
+    onlineFiles.removeWhere((f) {
+      if (_recentlyDeletedFiles
+          .any((deletedFile) => deletedFile.url == f.url)) {
+        _copyRecentlyDeletedFiles.remove(f);
+        return true;
+      }
+      return false;
+    });
+    _recentlyDeletedFiles
+        .removeWhere((f) => !_copyRecentlyDeletedFiles.contains(f));
   }
 
   void _loadFiles() {
@@ -96,7 +115,7 @@ class YustFileHandler {
   void _mergeOnlineFiles(List<YustFile> yustFiles, List<YustFile> onlineFiles,
       String storageFolderPath) async {
     onlineFiles.forEach((f) => f.storageFolderPath = storageFolderPath);
-    _mergeIntoYustFiles(yustFiles, onlineFiles, isOnlineMerge: true);
+    _mergeIntoYustFiles(yustFiles, onlineFiles);
   }
 
   Future<void> _mergeCachedFiles(List<YustFile> yustFiles,
@@ -134,6 +153,7 @@ class YustFileHandler {
       }
       try {
         await _deleteFileFromStorage(yustFile);
+        _recentlyDeletedFiles.add(yustFile);
         // ignore: empty_catches
       } catch (e) {}
     }
@@ -143,16 +163,11 @@ class YustFileHandler {
   void startUploadingCachedFiles() {
     if (!_uploadingCachedFiles) {
       _uploadingCachedFiles = true;
-      uploadControllIndex++;
-      if (uploadControllIndex > 1) {
-        print('CRITICAL ERROR');
-      }
       _uploadCachedFiles(_reuploadTime);
     }
   }
 
   Future<void> _uploadCachedFiles(Duration reuploadTime) async {
-    print('UCI: ' + uploadControllIndex.toString());
     await _validateCachedFiles();
     var cachedFiles = getCachedFiles();
     var length = cachedFiles.length;
@@ -180,7 +195,6 @@ class YustFileHandler {
 
     if (!uploadError) {
       _uploadingCachedFiles = false;
-      uploadControllIndex--;
     } else {
       // saving cachedFiles, to store error log messages
       await _saveCachedFiles();
@@ -231,12 +245,10 @@ class YustFileHandler {
   }
 
   /// works for cacheable and non-cacheable files
-  void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles,
-      {bool isOnlineMerge = false}) {
-    newFiles = isOnlineMerge == true ? newFiles.reversed.toList() : newFiles;
+  void _mergeIntoYustFiles(List<YustFile> yustFiles, List<YustFile> newFiles) {
     for (final newFile in newFiles) {
       if (!yustFiles.any((yustFile) => _equalFiles(yustFile, newFile))) {
-        isOnlineMerge ? yustFiles.insert(0, newFile) : yustFiles.add(newFile);
+        yustFiles.add(newFile);
       }
     }
   }
@@ -301,7 +313,6 @@ class YustFileHandler {
 
     if (yustFile.cached) await _updateDocAttribute(yustFile, url);
     _recentlyUploadedFiles.add(yustFile);
-    print('Sucessful upload');
   }
 
   Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {
@@ -333,11 +344,9 @@ class YustFileHandler {
   Future<dynamic> _getDocAttribute(YustFile yustFile) async {
     // ignore: inference_failure_on_uninitialized_variable
     var attribute;
-    final doc = await FirebaseFirestore.instance
-        .doc(yustFile.linkedDocPath!)
-        .get(GetOptions(source: Source.server));
+    final doc = await getFirebaseDoc(yustFile.linkedDocPath!);
 
-    if (doc.exists && doc.data() != null) {
+    if (existsDocData(doc)) {
       try {
         attribute = doc.get(yustFile.linkedDocAttribute!);
       } catch (e) {
@@ -346,6 +355,17 @@ class YustFileHandler {
       }
     }
     return attribute;
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>> getFirebaseDoc(
+      String linkedDocPath) async {
+    return await FirebaseFirestore.instance
+        .doc(linkedDocPath)
+        .get(GetOptions(source: Source.server));
+  }
+
+  bool existsDocData(DocumentSnapshot<Map<String, dynamic>> doc) {
+    return doc.exists && doc.data() != null;
   }
 
   Future<void> _deleteFileFromStorage(YustFile yustFile) async {

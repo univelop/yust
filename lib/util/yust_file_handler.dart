@@ -101,6 +101,7 @@ class YustFileHandler {
       }
       return false;
     });
+    //TODO: 481 _recentlyDeltedFiles have to be removed, if service is slower enough
     _recentlyDeletedFiles
         .removeWhere((f) => !_copyRecentlyDeletedFiles.contains(f));
   }
@@ -356,7 +357,7 @@ class YustFileHandler {
 
   Map<dynamic, dynamic> _getFileData(String fileName, dynamic attribute) {
     if (attribute is Map) {
-      return attribute;
+      return Map.from(attribute);
     }
     if (attribute is List) {
       var result = attribute.firstWhereOrNull((f) {
@@ -365,7 +366,7 @@ class YustFileHandler {
         }
         return f['name'] == fileName;
       });
-      return result ?? {};
+      return Map.from(result ?? {});
     }
     return {};
   }

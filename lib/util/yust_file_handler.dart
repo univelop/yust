@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -322,18 +323,32 @@ class YustFileHandler {
       bytes: yustFile.bytes,
     );
     yustFile.url = url;
-
-    if (yustFile.cached) await _updateDocAttribute(yustFile, url);
+    await _addFileHash(yustFile);
+    //TODO: 481 check hash functionality
+    if (yustFile.cached) {
+      await _updateDocAttribute(yustFile, url, yustFile.hash);
+    }
     _recentlyUploadedFiles.add(yustFile);
   }
 
-  Future<void> _updateDocAttribute(YustFile cachedFile, String url) async {
+  Future<void> _addFileHash(YustFile yustFile) async {
+    if (yustFile.file != null) {
+      yustFile.hash =
+          (await yustFile.file?.openRead().transform(md5).first).toString();
+    } else {
+      yustFile.hash = md5.convert(yustFile.bytes!.toList()).toString();
+    }
+  }
+
+  Future<void> _updateDocAttribute(
+      YustFile cachedFile, String url, String hash) async {
     var attribute = await _getDocAttribute(cachedFile);
 
     var fileData = _getFileData(cachedFile.name!, attribute);
 
     fileData['name'] = cachedFile.name;
     fileData['url'] = url;
+    fileData['hash'] = hash;
 
     if (attribute is Map) {
       if (attribute['url'] == null) {

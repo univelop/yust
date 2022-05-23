@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'yust_file.g.dart';
@@ -16,7 +15,7 @@ typedef YustFilesJson = List<YustFileJson>;
 @JsonSerializable()
 class YustFile {
   @JsonKey(ignore: true)
-  Key? key;
+  String? key;
 
   /// The name of the file with extension.
   String? name;

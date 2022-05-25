@@ -30,14 +30,11 @@ class YustCachedImage extends StatelessWidget {
       child: Icon(Icons.question_mark),
     );
 
-    if (file.file != null) {
-      preview = Image.file(
-        file.file!,
-        width: width,
-        height: height,
-        fit: fit,
-      );
-    } else if (file.bytes != null) {
+    if (file.file != null && file.bytes == null) {
+      file.bytes = file.file!.readAsBytesSync();
+    }
+
+    if (file.bytes != null) {
       preview = Image.memory(
         file.bytes!,
         width: width,
@@ -52,14 +49,14 @@ class YustCachedImage extends StatelessWidget {
         cacheKey: cacheKey,
         imageUrl: file.url!,
         imageBuilder: (context, image) {
-          file.key ??= key;
+          file.key ??= cacheKey;
           return Image(
             image: image,
             fit: fit,
           );
         },
         errorWidget: (context, _, __) =>
-            Image.asset(placeholder ?? Yust.imagePlaceholderPath!),
+            Image.asset(placeholder ?? Yust.imagePlaceholderPath!, fit: fit),
         progressIndicatorBuilder: (context, url, downloadProgress) => Container(
           margin: EdgeInsets.all(50),
           child: CircularProgressIndicator(

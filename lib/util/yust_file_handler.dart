@@ -41,7 +41,7 @@ class YustFileHandler {
 
   final List<YustFile> _recentlyUploadedFiles = [];
 
-  final List<YustFile> _recentlyDeletedFiles = [];
+  final List<String> _recentlyDeletedFileurls = [];
 
   /// gets triggerd after successful upload
   void Function()? onFileUploaded;
@@ -93,17 +93,16 @@ class YustFileHandler {
   }
 
   void _removeLocalDeletedFiles(List<YustFile> onlineFiles) {
-    var _copyRecentlyDeletedFiles = _recentlyDeletedFiles;
+    var _copyRecentlyDeletedFiles = _recentlyDeletedFileurls;
     onlineFiles.removeWhere((f) {
-      if (_recentlyDeletedFiles
-          .any((deletedFile) => deletedFile.url == f.url)) {
+      if (_recentlyDeletedFileurls
+          .any((deletedFileurl) => deletedFileurl == f.url)) {
         _copyRecentlyDeletedFiles.remove(f);
         return true;
       }
       return false;
     });
-    //TODO: 481 _recentlyDeltedFiles have to be removed, if service is slow enough
-    _recentlyDeletedFiles
+    _recentlyDeletedFileurls
         .removeWhere((f) => !_copyRecentlyDeletedFiles.contains(f));
   }
 
@@ -160,7 +159,7 @@ class YustFileHandler {
       }
       try {
         await _deleteFileFromStorage(yustFile);
-        _recentlyDeletedFiles.add(yustFile);
+        _recentlyDeletedFileurls.add(yustFile.url!);
         // ignore: empty_catches
       } catch (e) {}
     }

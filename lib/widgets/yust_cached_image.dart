@@ -55,8 +55,9 @@ class YustCachedImage extends StatelessWidget {
             fit: fit,
           );
         },
-        errorWidget: (context, _, __) =>
-            Image.asset(placeholder ?? Yust.imagePlaceholderPath!, fit: fit),
+        errorWidget: (context, _, __) => Image.asset(
+            placeholder ?? Yust.imagePlaceholderPath!,
+            fit: BoxFit.cover),
         progressIndicatorBuilder: (context, url, downloadProgress) => Container(
           margin: EdgeInsets.all(50),
           child: CircularProgressIndicator(

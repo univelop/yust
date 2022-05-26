@@ -102,7 +102,7 @@ class YustFileHandler {
       }
       return false;
     });
-    //TODO: 481 _recentlyDeltedFiles have to be removed, if service is slower enough
+    //TODO: 481 _recentlyDeltedFiles have to be removed, if service is slow enough
     _recentlyDeletedFiles
         .removeWhere((f) => !_copyRecentlyDeletedFiles.contains(f));
   }
@@ -324,7 +324,6 @@ class YustFileHandler {
     );
     yustFile.url = url;
     await _addFileHash(yustFile);
-    //TODO: 481 check hash functionality
     if (yustFile.cached) {
       await _updateDocAttribute(yustFile, url, yustFile.hash);
     }
@@ -355,7 +354,7 @@ class YustFileHandler {
         attribute = fileData;
       } else {
         // edge case: image picker changes from single- to multi-image view
-        attribute = [fileData];
+        attribute = [attribute];
       }
     }
     if (attribute is List) {

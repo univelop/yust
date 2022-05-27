@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'yust_file.g.dart';
@@ -16,7 +15,7 @@ typedef YustFilesJson = List<YustFileJson>;
 @JsonSerializable()
 class YustFile {
   @JsonKey(ignore: true)
-  Key? key;
+  String? key;
 
   /// The name of the file with extension.
   String? name;
@@ -57,8 +56,9 @@ class YustFile {
   @JsonKey(ignore: true)
   bool processing;
 
-  /// True if image can be stored in cache.
-  bool get cacheable => linkedDocPath != null && linkedDocAttribute != null;
+  /// True if image can be stored in cache. Each cached file needs a name
+  bool get cacheable =>
+      linkedDocPath != null && linkedDocAttribute != null && name != null;
 
   /// True if image is cached locally.
   bool get cached => devicePath != null;
@@ -99,8 +99,17 @@ class YustFile {
 
   /// Converts JSON from device to a file. Only relevant attributs are included.
   Map<String, String?> toLocalJson() {
+    if (name == null) {
+      throw ('Error: Each cached file needs a name. Should be unique for each adress!');
+    }
     if (devicePath == null) {
       throw ('Error: Device Path has to be a String.');
+    }
+    if (storageFolderPath == null) {
+      throw ('Error: StorageFolderPath has to be set for a successful upload.');
+    }
+    if (linkedDocPath == null || linkedDocAttribute == null) {
+      throw ('Error: linkedDocPath and linkedDocAttribute have to be set for a successful upload.');
     }
     return {
       'name': name,

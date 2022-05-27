@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -181,10 +180,8 @@ class YustFilePickerState extends State<YustFilePicker> {
     File? file,
     Uint8List? bytes,
   }) async {
-    final fileHash = (await file?.openRead().transform(md5).first).toString();
     final newYustFile = YustFile(
       name: name,
-      hash: fileHash,
       file: file,
       bytes: bytes,
       storageFolderPath: widget.storageFolderPath,

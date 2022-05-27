@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:yust/services/yust_helper_service.dart';
 import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/screens/yust_image_screen.dart';
+import 'package:yust/widgets/yust_cached_image.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
@@ -94,7 +95,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<ConnectivityResult>(
-      stream: Connectivity().onConnectivityChanged,
+      stream: YustHelperService.connectivityStream,
       builder: (context, snapshot) {
         if (snapshot.data != null) {
           _connectivityResult = snapshot.data!;
@@ -218,46 +219,19 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (file == null) {
       return SizedBox.shrink();
     }
-    Widget? preview;
-    if (file.file != null) {
-      preview = Image.file(file.file!, fit: BoxFit.cover);
-    } else if (file.bytes != null) {
-      preview = Image.memory(file.bytes!, fit: BoxFit.cover);
+    // ignore: inference_failure_on_uninitialized_variable
+    var cacheKey;
+    if (file.key != null) {
+      cacheKey = file.key.toString();
     } else if (file.url != null) {
-      var key = Key(file.url! + _connectivityResult.toString());
-      preview = CachedNetworkImage(
-        // cacheKey is needed for recognizing switch from offline to online connection
-        cacheKey: file.key != null ? file.key.toString() : key.toString(),
-        imageUrl: file.url!,
-        imageBuilder: (context, image) {
-          file.key ??= key;
-          return Image(
-            image: image,
-            fit: BoxFit.cover,
-          );
-        },
-        errorWidget: (context, _, __) =>
-            Image.asset(Yust.imagePlaceholderPath!, fit: BoxFit.cover),
-        progressIndicatorBuilder: (context, url, downloadProgress) => Container(
-          margin: EdgeInsets.all(50),
-          child: CircularProgressIndicator(
-            value: downloadProgress.progress,
-          ),
-        ),
-        fit: BoxFit.cover,
-      );
+      cacheKey = Key(file.url! + _connectivityResult.toString()).toString();
     }
+    Widget? preview = YustCachedImage(
+      file: file,
+      cacheKey: cacheKey,
+      fit: BoxFit.cover,
+    );
     final zoomEnabled = (file.url != null && widget.zoomable);
-
-    if (preview == null) {
-      return Container(
-        height: 150,
-        width: 150,
-        color: Colors.grey,
-        child: Icon(Icons.question_mark),
-      );
-    }
-
     if (widget.multiple) {
       return AspectRatio(
         aspectRatio: 1,

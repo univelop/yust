@@ -18,7 +18,7 @@ dependencies:
   provider: ^6.0.2
   intl: ^0.17.0
   shared_preferences: ^2.0.3
-  share_plus: ^3.0.4
+  share_plus: ^4.0.4
   flutter_easyloading: ^3.0.0
   collection: ^1.15.0
   image_picker: ^0.8.4

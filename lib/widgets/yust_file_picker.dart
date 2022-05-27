@@ -104,7 +104,9 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
-    final isBroken = file.name == null || (!file.cached && file.url == null);
+    final isBroken = file.name == null ||
+        (file.cached && file.bytes == null && file.file == null) ||
+        (kIsWeb && file.url == null && file.bytes == null && file.file == null);
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,

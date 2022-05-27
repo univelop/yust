@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
 import 'package:yust/services/yust_helper_service.dart';
@@ -385,6 +386,7 @@ class YustImagePickerState extends State<YustImagePicker> {
           final result = await FilePicker.platform
               .pickFiles(type: FileType.image, allowMultiple: true);
           if (result != null) {
+            await EasyLoading.show(status: 'Bilder werden hinzugefügt...');
             for (final platformFile in result.files) {
               await uploadFile(
                 path: platformFile.name,
@@ -392,16 +394,19 @@ class YustImagePickerState extends State<YustImagePicker> {
                 resize: true,
               );
             }
+            await EasyLoading.dismiss();
           }
         } else {
           final result =
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
+            await EasyLoading.show(status: 'Bild wird hinzugefügt...');
             await uploadFile(
               path: result.files.single.name,
               bytes: result.files.single.bytes,
               resize: true,
             );
+            await EasyLoading.dismiss();
           }
         }
       }

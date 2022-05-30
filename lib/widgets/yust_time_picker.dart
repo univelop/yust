@@ -72,7 +72,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
+          child: TextFormField(
             decoration: InputDecoration(
               labelText: widget.label,
               contentPadding: const EdgeInsets.all(20.0),

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -105,7 +104,9 @@ class YustFilePickerState extends State<YustFilePicker> {
   }
 
   Widget _buildFile(BuildContext context, YustFile file) {
-    final isBroken = file.name == null || file.url == null;
+    final isBroken = file.name == null ||
+        (file.cached && file.bytes == null && file.file == null) ||
+        (kIsWeb && file.url == null && file.bytes == null && file.file == null);
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.min,
@@ -181,10 +182,8 @@ class YustFilePickerState extends State<YustFilePicker> {
     File? file,
     Uint8List? bytes,
   }) async {
-    final fileHash = (await file?.openRead().transform(md5).first).toString();
     final newYustFile = YustFile(
       name: name,
-      hash: fileHash,
       file: file,
       bytes: bytes,
       storageFolderPath: widget.storageFolderPath,
@@ -197,10 +196,7 @@ class YustFilePickerState extends State<YustFilePicker> {
       await Yust.alertService.showAlert(context, 'Nicht möglich',
           'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
     } else {
-      // create database entry for upload process
-      if (widget.files.isEmpty) {
-        widget.onChanged!(_fileHandler.getOnlineFiles());
-      }
+      await _createDatebaseEntry();
       await _fileHandler.addFile(newYustFile);
     }
     _processing[newYustFile.name] = false;
@@ -210,6 +206,17 @@ class YustFilePickerState extends State<YustFilePicker> {
     if (mounted) {
       setState(() {});
     }
+  }
+
+  Future<void> _createDatebaseEntry() async {
+    try {
+      if (widget.linkedDocPath != null &&
+          !_fileHandler.existsDocData(
+              await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   Future<void> _deleteFile(YustFile yustFile) async {

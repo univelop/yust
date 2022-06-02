@@ -1,9 +1,15 @@
 import 'dart:math';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class YustHelperService {
+  /// Under Firefox only one BroadcastStream can be used for the
+  /// connectivity result. Therefore, use this stream instance
+  static final connectivityStream =
+      Connectivity().onConnectivityChanged.asBroadcastStream();
+
   /// Does unfocus the current focus node.
   void unfocusCurrent(BuildContext context) {
     final currentFocus = FocusScope.of(context);

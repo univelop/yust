@@ -209,6 +209,7 @@ class YustAlertService {
     required List<String> priorItemIds,
     required String? Function(dynamic) getItemLabel,
     required String? Function(dynamic) getItemId,
+    String? title,
   }) async {
     final newItemIds = List<String>.from(priorItemIds);
     var isAborted = true;
@@ -218,7 +219,7 @@ class YustAlertService {
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: Text('Pflichtfelder'),
+                title: Text(title ?? 'Pflichtfelder'),
                 content: Container(
                   width: 300,
                   height: 500,

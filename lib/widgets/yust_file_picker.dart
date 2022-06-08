@@ -1,38 +1,47 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:yust/util/yust_exception.dart';
-import 'package:dio/dio.dart';
+import 'package:yust/models/yust_file.dart';
+import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import '../yust.dart';
-import 'package:open_file/open_file.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:yust/models/yust_file.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_dropzone/flutter_dropzone.dart';
 import 'package:dotted_border/dotted_border.dart';
 
 class YustFilePicker extends StatefulWidget {
   final String? label;
-  final String folderPath;
+
   final List<YustFile> files;
+
+  /// Path to folder where the files are stored.
+  final String storageFolderPath;
+
+  /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
+  final String? linkedDocPath;
+
+  /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
+  final String? linkedDocAttribute;
+
   final void Function(List<YustFile> files)? onChanged;
+
   final Widget? prefixIcon;
+
   final bool enableDropzone;
+
   final bool readOnly;
 
   YustFilePicker({
     Key? key,
     this.label,
-    required this.folderPath,
     required this.files,
+    required this.storageFolderPath,
+    this.linkedDocPath,
+    this.linkedDocAttribute,
     this.onChanged,
     this.prefixIcon,
     this.enableDropzone = false,
@@ -44,34 +53,49 @@ class YustFilePicker extends StatefulWidget {
 }
 
 class YustFilePickerState extends State<YustFilePicker> {
-  late List<YustFile> _files;
+  late YustFileHandler _fileHandler;
   final Map<String?, bool> _processing = {};
-  late bool _enabled;
   late DropzoneViewController controller;
   var isDragging = false;
+  late bool _enabled;
 
   @override
   void initState() {
-    _files = widget.files;
+    _fileHandler = Yust.fileHandlerManager.createFileHandler(
+      storageFolderPath: widget.storageFolderPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+      linkedDocPath: widget.linkedDocPath,
+      onFileUploaded: () {
+        if (mounted) {
+          setState(() {});
+        }
+      },
+    );
     _enabled = (widget.onChanged != null && !widget.readOnly);
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb && widget.enableDropzone) {
-      return _buildDropzone(context);
-    } else {
-      return YustListTile(
-        suffixChild: _buildAddButton(context),
-        label: widget.label,
-        prefixIcon: widget.prefixIcon,
-        below: _buildFiles(context),
-      );
-    }
+    return FutureBuilder(
+      future: _fileHandler.updateFiles(widget.files),
+      builder: (context, snapshot) {
+        if (kIsWeb && widget.enableDropzone) {
+          return _buildDropzone(context);
+        } else {
+          return YustListTile(
+              suffixChild: _buildAddButton(context),
+              label: widget.label,
+              prefixIcon: widget.prefixIcon,
+              below: _buildFiles(context));
+        }
+      },
+    );
   }
 
   Widget _buildDropzone(BuildContext context) {
+    final _files = _fileHandler.getFiles();
     return Stack(
       children: [
         Positioned.fill(
@@ -87,8 +111,7 @@ class YustFilePickerState extends State<YustFilePicker> {
         _files.isNotEmpty && isDragging
             ? Positioned.fill(
                 child: Container(
-                  color: Color.fromARGB(
-                      91, 118, 118, 118), //TODO: is a fixed color okay here?
+                  color: Color.fromARGB(91, 118, 118, 118),
                   child: _buildDropzoneInterface(showManualUploadButton: false),
                 ),
               )
@@ -97,65 +120,48 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  Widget _buildAddButton(BuildContext context) {
-    if (!_enabled) {
-      return SizedBox.shrink();
-    }
-    return IconButton(
-      iconSize: 40,
-      icon:
-          Icon(Icons.add_circle, color: Theme.of(context).colorScheme.primary),
-      onPressed: _enabled ? _pickFiles : null,
-    );
-  }
-
-  Widget _buildFiles(BuildContext context) {
-    return Column(
-      children: _files.map((file) => _buildFile(context, file)).toList(),
-    );
-  }
-
-  Widget _buildFile(BuildContext context, YustFile file) {
-    if (file.name == null) {
-      return SizedBox.shrink();
-    }
-    return ListTile(
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.insert_drive_file),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(file.name!, overflow: TextOverflow.ellipsis),
-          ),
-        ],
-      ),
-      trailing: _buildDeleteButton(file),
-      onTap: () => _showFile(file),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-    );
-  }
-
-  Widget _buildDeleteButton(YustFile file) {
-    if (!_enabled) {
-      return SizedBox.shrink();
-    }
-    if (_processing[file.name] == true) {
-      return CircularProgressIndicator();
-    }
-    return IconButton(
-      icon: Icon(Icons.delete),
-      color: Theme.of(context).colorScheme.primary,
-      onPressed: _enabled ? () => _deleteFile(file) : null,
-    );
-  }
+  /// This widget will accept files from a drag and drop interaction
+  Widget _buildDropzoneArea(BuildContext context) => Builder(
+        builder: (context) => DropzoneView(
+          operation: DragOperation.copy,
+          cursor: CursorType.grab,
+          onCreated: (ctrl) => controller = ctrl,
+          onLoaded: () => null,
+          onError: (ev) => null,
+          onHover: () {
+            setState(() {
+              isDragging = true;
+            });
+          },
+          onLeave: () {
+            setState(() {
+              isDragging = false;
+            });
+          },
+          onDrop: (ev) async {},
+          onDropMultiple: (ev) async {
+            setState(() {
+              isDragging = false;
+            });
+            print('Dropzone drop multiple: $ev');
+            for (final file in ev ?? []) {
+              final bytes = await controller.getFileData(file);
+              await _fileHandler.addFile(YustFile(name: file.name));
+              if (bytes.length <= 20) {
+                print(bytes);
+              } else {
+                print(bytes.sublist(0, 20));
+              }
+            }
+            ;
+          },
+        ),
+      );
 
   /// This Widget is a visual drag and drop indicator. It shows a dotted box, an icon as well as a button to manually upload files
   Widget _buildDropzoneInterface({bool showManualUploadButton = true}) {
-    final dropZoneColor = isDragging
-        ? Colors.blue
-        : Color.fromARGB(255, 116, 116, 116); //TODO: use accent colors
+    final dropZoneColor =
+        isDragging ? Colors.blue : Color.fromARGB(255, 116, 116, 116);
     return Center(
       child: Padding(
         padding: EdgeInsets.all(10),
@@ -199,180 +205,174 @@ class YustFilePickerState extends State<YustFilePicker> {
     );
   }
 
-  /// This widget will accept files from a drag and drop interaction
-  Widget _buildDropzoneArea(BuildContext context) => Builder(
-        builder: (context) => DropzoneView(
-          operation: DragOperation.copy,
-          cursor: CursorType.grab,
-          onCreated: (ctrl) => controller = ctrl,
-          onLoaded: () => null,
-          onError: (ev) => null,
-          onHover: () {
-            setState(() {
-              isDragging = true;
-            });
-          },
-          onLeave: () {
-            setState(() {
-              isDragging = false;
-            });
-          },
-          onDrop: (ev) async {},
-          onDropMultiple: (ev) async {
-            setState(() {
-              isDragging = false;
-            });
-            print('Dropzone drop multiple: $ev');
-            for (final file in ev ?? []) {
-              final bytes = await controller.getFileData(file);
-              await addFile(YustFile(name: file.name), null, bytes);
-              if (bytes.length <= 20) {
-                print(bytes);
-              } else {
-                print(bytes.sublist(0, 20));
-              }
-            }
-            ;
-          },
-        ),
-      );
+  Widget _buildAddButton(BuildContext context) {
+    if (!_enabled) {
+      return SizedBox.shrink();
+    }
+    return IconButton(
+      iconSize: 40,
+      icon:
+          Icon(Icons.add_circle, color: Theme.of(context).colorScheme.primary),
+      onPressed: _enabled ? _pickFiles : null,
+    );
+  }
 
-  Future<void> addFile(YustFile fileData, File? file, Uint8List? bytes) async {
-    if (_files.any((_file) => _file.name == fileData.name)) {
-      await Yust.alertService.showAlert(context, 'Nicht möglich',
-          'Eine Datei mit dem Namen ${fileData.name} existiert bereits.');
-      return;
-    }
-    _files.add(fileData);
-    _files.sort((a, b) => a.name!.compareTo(b.name!));
-    _processing[fileData.name] = true;
-    if (mounted) {
-      setState(() {});
-    }
+  Widget _buildFiles(BuildContext context) {
+    var _files = _fileHandler.getFiles();
+    _files.sort((a, b) => (a.name!).compareTo(b.name!));
+    return Column(
+      children: _files.map((file) => _buildFile(context, file)).toList(),
+    );
+  }
 
-    try {
-      fileData.url = await Yust.fileService.uploadFile(
-        path: widget.folderPath,
-        name: fileData.name!,
-        file: file,
-        bytes: bytes,
-      );
-    } on YustException catch (e) {
-      if (mounted) {
-        await Yust.alertService.showAlert(context, 'Ups', e.message);
-      }
-    } catch (e) {
-      if (mounted) {
-        await Yust.alertService.showAlert(
-            context, 'Ups', 'Die Datei konnte nicht hochgeladen werden.');
-      }
+  Widget _buildFile(BuildContext context, YustFile file) {
+    final isBroken = file.name == null ||
+        (file.cached && file.bytes == null && file.file == null) ||
+        (kIsWeb && file.url == null && file.bytes == null && file.file == null);
+    return ListTile(
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(!isBroken ? Icons.insert_drive_file : Icons.dangerous),
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(isBroken ? 'Fehlerhafte Datei' : file.name!,
+                overflow: TextOverflow.ellipsis),
+          ),
+          _buildCachedIndicator(file),
+        ],
+      ),
+      trailing: _buildDeleteButton(file),
+      onTap: () {
+        Yust.helperService.unfocusCurrent(context);
+        if (!isBroken) {
+          _fileHandler.showFile(context, file);
+        }
+      },
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    );
+  }
+
+  Widget _buildDeleteButton(YustFile file) {
+    if (!_enabled) {
+      return SizedBox.shrink();
     }
-    if (fileData.url == null) {
-      _files.remove(fileData);
+    if (_processing[file.name] == true) {
+      return CircularProgressIndicator();
     }
-    _processing[fileData.name] = false;
-    if (mounted) {
-      setState(() {});
+    return IconButton(
+      icon: Icon(Icons.delete),
+      color: Theme.of(context).colorScheme.primary,
+      onPressed: _enabled ? () => _deleteFile(file) : null,
+    );
+  }
+
+  Widget _buildCachedIndicator(YustFile file) {
+    if (!file.cached || !_enabled) {
+      return SizedBox.shrink();
     }
-    widget.onChanged!(_files);
+    if (file.processing == true) {
+      return CircularProgressIndicator();
+    }
+    return IconButton(
+      icon: Icon(Icons.cloud_upload_outlined),
+      color: Colors.black,
+      onPressed: () async {
+        await Yust.alertService.showAlert(context, 'Lokal gespeicherte Datei',
+            'Diese Datei ist noch nicht hochgeladen.');
+      },
+    );
   }
 
   Future<void> _pickFiles() async {
     Yust.helperService.unfocusCurrent(context);
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      await Yust.alertService.showAlert(context, 'Kein Internet',
-          'Für das Hinzufügen einer Datei ist eine Internetverbindung erforderlich.');
+    final result = await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (result != null) {
+      for (final platformFile in result.files) {
+        await uploadFile(
+          name: _getFileName(platformFile),
+          file: _platformFileToFile(platformFile),
+          bytes: platformFile.bytes,
+        );
+      }
+    }
+  }
+
+  Future<void> uploadFile({
+    required String name,
+    File? file,
+    Uint8List? bytes,
+  }) async {
+    final newYustFile = YustFile(
+      name: name,
+      file: file,
+      bytes: bytes,
+      storageFolderPath: widget.storageFolderPath,
+      linkedDocPath: widget.linkedDocPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+    );
+    _processing[newYustFile.name] = true;
+
+    if (_fileHandler.getFiles().any((file) => file.name == newYustFile.name)) {
+      await Yust.alertService.showAlert(context, 'Nicht möglich',
+          'Eine Datei mit dem Namen ${newYustFile.name} existiert bereits.');
     } else {
-      final result = await FilePicker.platform.pickFiles(allowMultiple: true);
-      if (result != null) {
-        for (final platformFile in result.files) {
-          var name = platformFile.name.split('/').last;
-          final ext = platformFile.extension;
-          if (ext != null && name.split('.').last != ext) {
-            name += '.' + ext;
-          }
-          final fileData = YustFile(
-            name: name,
-          );
-          File? file;
-          if (!kIsWeb && platformFile.path != null) {
-            file = File(platformFile.path!);
-          }
-          await addFile(fileData, file, platformFile.bytes);
-        }
-      }
+      await _createDatebaseEntry();
+      await _fileHandler.addFile(newYustFile);
+    }
+    _processing[newYustFile.name] = false;
+    if (!newYustFile.cached) {
+      widget.onChanged!(_fileHandler.getOnlineFiles());
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 
-  Future<void> _showFile(YustFile file) async {
+  Future<void> _createDatebaseEntry() async {
+    try {
+      if (widget.linkedDocPath != null &&
+          !_fileHandler.existsDocData(
+              await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      }
+      // ignore: empty_catches
+    } catch (e) {}
+  }
+
+  Future<void> _deleteFile(YustFile yustFile) async {
     Yust.helperService.unfocusCurrent(context);
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      await Yust.alertService.showAlert(context, 'Kein Internet',
-          'Für das Anzeigen einer Datei ist eine Internetverbindung erforderlich.');
-      // is it a valid file?
-    } else if (file.name != null && _processing[file.name] != true) {
-      // is the process running on mobile?
-      if (!kIsWeb) {
-        await EasyLoading.show(status: 'Datei laden...');
-        try {
-          final tempDir = await getTemporaryDirectory();
-          await Dio().download(file.url!, '${tempDir.path}/${file.name}');
-          var result = await OpenFile.open('${tempDir.path}/${file.name}');
-          // if cant open file type, tries via browser
-          if (result.type != ResultType.done) {
-            await _launchBrowser(file);
-          }
-
-          await EasyLoading.dismiss();
-        } catch (e) {
-          await EasyLoading.dismiss();
-          await Yust.alertService.showAlert(context, 'Ups',
-              'Die Datei kann nicht geöffnet werden. ${e.toString()}');
+    final confirmed = await Yust.alertService
+        .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
+    if (confirmed == true) {
+      try {
+        await _fileHandler.deleteFile(yustFile);
+        if (!yustFile.cached) {
+          widget.onChanged!(_fileHandler.getOnlineFiles());
         }
-      } else {
-        await EasyLoading.show(status: 'Datei laden...');
-        await _launchBrowser(file);
-        await EasyLoading.dismiss();
+        if (mounted) {
+          setState(() {});
+        }
+      } catch (e) {
+        await Yust.alertService.showAlert(context, 'Ups',
+            'Die Datei kann nicht gelöscht werden. ${e.toString()}');
       }
     }
   }
 
-  Future<void> _launchBrowser(YustFile file) async {
-    if (await canLaunch(file.url!)) {
-      await launch(file.url!);
-    } else {
-      await Yust.alertService
-          .showAlert(context, 'Ups', 'Die Datei kann nicht geöffnet werden.');
+  String _getFileName(PlatformFile platformFile) {
+    var name = platformFile.name.split('/').last;
+    final ext = platformFile.extension;
+    if (ext != null && name.split('.').last != ext) {
+      name += '.' + ext;
     }
+    return name;
   }
 
-  Future<void> _deleteFile(YustFile file) async {
-    Yust.helperService.unfocusCurrent(context);
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      await Yust.alertService.showAlert(context, 'Kein Internet',
-          'Für das Löschen einer Datei ist eine Internetverbindung erforderlich.');
-    } else if (file.name != null) {
-      final confirmed = await Yust.alertService
-          .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
-      if (confirmed == true) {
-        try {
-          await firebase_storage.FirebaseStorage.instance
-              .ref()
-              .child(widget.folderPath)
-              .child(file.name!)
-              .delete();
-        } catch (e) {
-          YustException(e.toString());
-        }
-
-        setState(() {
-          _files.remove(file);
-        });
-        widget.onChanged!(_files);
-      }
-    }
+  File? _platformFileToFile(PlatformFile platformFile) {
+    return (!kIsWeb && platformFile.path != null)
+        ? File(platformFile.path!)
+        : null;
   }
 }

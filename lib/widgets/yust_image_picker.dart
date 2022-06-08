@@ -3,13 +3,15 @@ import 'dart:typed_data';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:yust/models/yust_file.dart';
+import 'package:yust/services/yust_helper_service.dart';
+import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/screens/yust_image_screen.dart';
-import 'package:yust/util/yust_exception.dart';
+import 'package:yust/widgets/yust_cached_image.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import 'package:yust/yust.dart';
 import 'package:yust/util/list_extension.dart';
@@ -23,7 +25,17 @@ final Map<String, Map<String, int>> YustImageQuality = {
 
 class YustImagePicker extends StatefulWidget {
   final String? label;
-  final String folderPath;
+
+  /// Path to the storage folder.
+  final String storageFolderPath;
+
+  /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
+  final String? linkedDocPath;
+
+  /// [linkedDocPath] and [linkedDocAttribute] are needed for the offline compatibility.
+  /// If not given, uploads are only possible with internet connection
+  final String? linkedDocAttribute;
   final bool multiple;
   final List<YustFile> images;
   final bool zoomable;
@@ -38,7 +50,9 @@ class YustImagePicker extends StatefulWidget {
   YustImagePicker({
     Key? key,
     this.label,
-    required this.folderPath,
+    required this.storageFolderPath,
+    this.linkedDocPath,
+    this.linkedDocAttribute,
     this.multiple = false,
     required this.images,
     this.zoomable = false,
@@ -54,36 +68,63 @@ class YustImagePicker extends StatefulWidget {
 }
 
 class YustImagePickerState extends State<YustImagePicker> {
-  late List<YustFile> _files;
+  late YustFileHandler _fileHandler;
   late bool _enabled;
   late int _currentImageNumber;
+  ConnectivityResult _connectivityResult = ConnectivityResult.none;
 
   @override
   void initState() {
-    _files = widget.images;
+    _fileHandler = Yust.fileHandlerManager.createFileHandler(
+      storageFolderPath: widget.storageFolderPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+      linkedDocPath: widget.linkedDocPath,
+      onFileUploaded: () {
+        if (mounted) {
+          setState(() {});
+        }
+        widget.onChanged!(_fileHandler.getOnlineFiles());
+      },
+    );
 
     _enabled = (widget.onChanged != null && !widget.readOnly);
     _currentImageNumber = widget.imageCount;
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return YustListTile(
-      label: widget.label,
-      suffixChild: _buildPickButtons(context),
-      prefixIcon: widget.prefixIcon,
-      below: widget.multiple
-          ? _buildGallery(context)
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 2.0),
-              child: _buildSingleImage(context, _files.firstOrNull),
-            ),
+    return StreamBuilder<ConnectivityResult>(
+      stream: YustHelperService.connectivityStream,
+      builder: (context, snapshot) {
+        if (snapshot.data != null) {
+          _connectivityResult = snapshot.data!;
+        }
+        return FutureBuilder(
+          future: _fileHandler.updateFiles(widget.images, loadFiles: true),
+          builder: (context, snapshot) {
+            return YustListTile(
+              label: widget.label,
+              suffixChild: _buildPickButtons(context),
+              prefixIcon: widget.prefixIcon,
+              below: widget.multiple
+                  ? _buildGallery(context)
+                  : Padding(
+                      padding: const EdgeInsets.only(bottom: 2.0),
+                      child: _buildSingleImage(
+                          context, _fileHandler.getFiles().firstOrNull),
+                    ),
+            );
+          },
+        );
+      },
     );
   }
 
   Widget _buildPickButtons(BuildContext context) {
-    if (!_enabled || (!widget.multiple && _files.firstOrNull != null)) {
+    if (!_enabled ||
+        (!widget.multiple && _fileHandler.getFiles().firstOrNull != null)) {
       return SizedBox.shrink();
     }
 
@@ -112,7 +153,7 @@ class YustImagePickerState extends State<YustImagePicker> {
   }
 
   Widget _buildGallery(BuildContext context) {
-    if (_files.isEmpty) {
+    if (_fileHandler.getFiles().isEmpty) {
       return SizedBox.shrink();
     }
 
@@ -121,7 +162,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _buildGalleryView(context),
-        if (_files.length > _currentImageNumber)
+        if (_fileHandler.getFiles().length > _currentImageNumber)
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton.icon(
@@ -147,9 +188,9 @@ class YustImagePickerState extends State<YustImagePicker> {
   GridView _buildGalleryView(
     BuildContext context,
   ) {
-    var pictureFiles = _files.length > _currentImageNumber
-        ? _files.sublist(0, _currentImageNumber)
-        : _files;
+    var pictureFiles = _fileHandler.getFiles().length > _currentImageNumber
+        ? _fileHandler.getFiles().sublist(0, _currentImageNumber)
+        : _fileHandler.getFiles();
 
     return GridView.extent(
       shrinkWrap: true,
@@ -170,6 +211,7 @@ class YustImagePickerState extends State<YustImagePicker> {
         _buildImagePreview(context, file),
         _buildProgressIndicator(context, file),
         _buildRemoveButton(context, file),
+        _buildCachedIndicator(context, file),
       ],
     );
   }
@@ -178,18 +220,18 @@ class YustImagePickerState extends State<YustImagePicker> {
     if (file == null) {
       return SizedBox.shrink();
     }
-    Widget preview;
-    if (file.file != null) {
-      preview = Image.file(file.file!, fit: BoxFit.cover);
-    } else if (file.bytes != null) {
-      preview = Image.memory(file.bytes!, fit: BoxFit.cover);
-    } else {
-      preview = FadeInImage.assetNetwork(
-        placeholder: Yust.imagePlaceholderPath!,
-        image: file.url ?? '',
-        fit: BoxFit.cover,
-      );
+    // ignore: inference_failure_on_uninitialized_variable
+    var cacheKey;
+    if (file.key != null) {
+      cacheKey = file.key.toString();
+    } else if (file.url != null) {
+      cacheKey = Key(file.url! + _connectivityResult.toString()).toString();
     }
+    Widget? preview = YustCachedImage(
+      file: file,
+      cacheKey: cacheKey,
+      fit: BoxFit.cover,
+    );
     final zoomEnabled = (file.url != null && widget.zoomable);
     if (widget.multiple) {
       return AspectRatio(
@@ -248,8 +290,8 @@ class YustImagePickerState extends State<YustImagePicker> {
     );
   }
 
-  Widget _buildRemoveButton(BuildContext context, YustFile? file) {
-    if (file == null || !_enabled || file.url == null) {
+  Widget _buildRemoveButton(BuildContext context, YustFile? yustFile) {
+    if (yustFile == null || !_enabled) {
       return SizedBox.shrink();
     }
     return Positioned(
@@ -261,8 +303,44 @@ class YustImagePickerState extends State<YustImagePicker> {
         child: IconButton(
           icon: Icon(Icons.delete),
           color: Colors.black,
-          onPressed: () => _deleteImage(file),
+          onPressed: () async {
+            Yust.helperService.unfocusCurrent(context);
+            final confirmed = await Yust.alertService
+                .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
+            if (confirmed == true) {
+              try {
+                await _fileHandler.deleteFile(yustFile);
+                if (!yustFile.cached) {
+                  widget.onChanged!(_fileHandler.getOnlineFiles());
+                }
+                if (mounted) {
+                  setState(() {});
+                }
+              } catch (e) {
+                await Yust.alertService.showAlert(context, 'Ups',
+                    'Das Bild kann gerade nicht gelöscht werden: \n${e.toString()}');
+              }
+            }
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _buildCachedIndicator(BuildContext context, YustFile? yustFile) {
+    if (yustFile == null || !yustFile.cached || !_enabled) {
+      return SizedBox.shrink();
+    }
+    return Positioned(
+      bottom: 5,
+      right: 5,
+      child: IconButton(
+        icon: Icon(Icons.cloud_upload_outlined),
+        color: Colors.white,
+        onPressed: () async {
+          await Yust.alertService.showAlert(context, 'Lokal gespeichertes Bild',
+              'Dieses Bild ist noch nicht hochgeladen.');
+        },
       ),
     );
   }
@@ -272,7 +350,8 @@ class YustImagePickerState extends State<YustImagePicker> {
     final size = YustImageQuality[widget.yustQuality]!['size']!.toDouble();
     final quality = YustImageQuality[widget.yustQuality]!['quality']!;
     final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
+    if (connectivityResult == ConnectivityResult.none &&
+        (widget.linkedDocPath == null || widget.linkedDocAttribute == null)) {
       await Yust.alertService.showAlert(context, 'Kein Internet',
           'Für das Hinzufügen von Bildern ist eine Internetverbindung erforderlich.');
     } else {
@@ -284,9 +363,9 @@ class YustImagePickerState extends State<YustImagePicker> {
           if (images != null) {
             for (final image in images) {
               await uploadFile(
-                  path: image.path,
-                  file: File(image.path),
-                  yustQuality: widget.yustQuality);
+                path: image.path,
+                file: File(image.path),
+              );
             }
           }
         } else {
@@ -297,9 +376,9 @@ class YustImagePickerState extends State<YustImagePicker> {
               imageQuality: quality);
           if (image != null) {
             await uploadFile(
-                path: image.path,
-                file: File(image.path),
-                yustQuality: widget.yustQuality);
+              path: image.path,
+              file: File(image.path),
+            );
           }
         }
       } else {
@@ -307,24 +386,27 @@ class YustImagePickerState extends State<YustImagePicker> {
           final result = await FilePicker.platform
               .pickFiles(type: FileType.image, allowMultiple: true);
           if (result != null) {
+            await EasyLoading.show(status: 'Bilder werden hinzugefügt...');
             for (final platformFile in result.files) {
               await uploadFile(
                 path: platformFile.name,
                 bytes: platformFile.bytes,
                 resize: true,
-                yustQuality: widget.yustQuality,
               );
             }
+            await EasyLoading.dismiss();
           }
         } else {
           final result =
               await FilePicker.platform.pickFiles(type: FileType.image);
           if (result != null) {
+            await EasyLoading.show(status: 'Bild wird hinzugefügt...');
             await uploadFile(
-                path: result.files.single.name,
-                bytes: result.files.single.bytes,
-                resize: true,
-                yustQuality: widget.yustQuality);
+              path: result.files.single.name,
+              bytes: result.files.single.bytes,
+              resize: true,
+            );
+            await EasyLoading.dismiss();
           }
         }
       }
@@ -336,86 +418,61 @@ class YustImagePickerState extends State<YustImagePicker> {
     File? file,
     Uint8List? bytes,
     bool resize = false,
-    required String yustQuality,
   }) async {
     final imageName = Yust.helperService.randomString(length: 16) +
         '.' +
         path.split('.').last;
-    final newFile =
-        YustFile(name: imageName, file: file, bytes: bytes, processing: true);
-    _files.add(newFile);
+    if (resize) {
+      final size = YustImageQuality[widget.yustQuality]!['size']!;
+      if (file != null) {
+        file = await Yust.fileService.resizeImage(file: file, maxWidth: size);
+      } else {
+        bytes = await Yust.fileService
+            .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
+      }
+    }
+
+    final newYustFile = YustFile(
+      name: imageName,
+      file: file,
+      bytes: bytes,
+      storageFolderPath: widget.storageFolderPath,
+      linkedDocPath: widget.linkedDocPath,
+      linkedDocAttribute: widget.linkedDocAttribute,
+    );
+
+    await _createDatebaseEntry();
+    await _fileHandler.addFile(newYustFile);
+
+    if (_currentImageNumber < _fileHandler.getFiles().length) {
+      _currentImageNumber += widget.imageCount;
+    }
+    if (!newYustFile.cached) {
+      widget.onChanged!(_fileHandler.getOnlineFiles());
+    }
     if (mounted) {
       setState(() {});
     }
+  }
 
+  Future<void> _createDatebaseEntry() async {
     try {
-      if (resize) {
-        final size = YustImageQuality[widget.yustQuality]!['size']!;
-        if (file != null) {
-          file = await Yust.fileService.resizeImage(file: file, maxWidth: size);
-          newFile.file = file;
-        } else {
-          bytes = await Yust.fileService
-              .resizeImageBytes(name: path, bytes: bytes!, maxWidth: size);
-          newFile.bytes = bytes;
-        }
+      if (widget.linkedDocPath != null &&
+          !_fileHandler.existsDocData(
+              await _fileHandler.getFirebaseDoc(widget.linkedDocPath!))) {
+        widget.onChanged!(_fileHandler.getOnlineFiles());
       }
-
-      var url = await Yust.fileService.uploadFile(
-          path: widget.folderPath, name: imageName, file: file, bytes: bytes);
-      newFile.url = url;
-      newFile.processing = false;
-      if (mounted) {
-        setState(() {});
-      }
-      widget.onChanged!(_files);
-      if (_currentImageNumber < _files.length) {
-        _currentImageNumber += widget.imageCount;
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _files.remove(newFile);
-        });
-        await Yust.alertService.showAlert(context, 'Ups', e.toString());
-      }
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   void _showImages(YustFile activeFile) {
     Yust.helperService.unfocusCurrent(context);
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (context) => YustImageScreen(
-        files: _files,
-        activeImageIndex: _files.indexOf(activeFile),
+        files: _fileHandler.getFiles(),
+        activeImageIndex: _fileHandler.getFiles().indexOf(activeFile),
       ),
     ));
-  }
-
-  Future<void> _deleteImage(YustFile file) async {
-    Yust.helperService.unfocusCurrent(context);
-    final connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      await Yust.alertService.showAlert(context, 'Kein Internet',
-          'Für das Löschen eines Bildes ist eine Internetverbindung erforderlich.');
-    } else {
-      final confirmed = await Yust.alertService
-          .showConfirmation(context, 'Wirklich löschen?', 'Löschen');
-      if (confirmed == true) {
-        try {
-          await firebase_storage.FirebaseStorage.instance
-              .ref()
-              .child(widget.folderPath)
-              .child(file.name!)
-              .delete();
-        } catch (e) {
-          YustException(e.toString());
-        }
-        setState(() {
-          _files.remove(file);
-        });
-        widget.onChanged!(_files);
-      }
-    }
   }
 }

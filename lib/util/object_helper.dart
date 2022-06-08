@@ -101,12 +101,10 @@ class TraverseObject {
         isInList: info.isInList || obj is List || obj is Set,
       );
 
-      // We don't touch functions or built-ins
-      if (isBuiltIn(value)) continue;
-
+      // We don't touch functions or built-ins (isBuiltIn)
       // Check if we can traverse deeper
       // We need to check if not null because of 'typeof null == "object"'
-      if (hasChildren(value)) {
+      if (!isBuiltIn(value) && hasChildren(value)) {
         // When we are at a inner node, first call the innerNodeCallback
         final clonedValue = info.cloneObject ? shallowClone(value) : value;
         final callbackValue = innerNodeCallback(

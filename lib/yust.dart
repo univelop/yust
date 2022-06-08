@@ -8,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:yust/util/yust_file_handler_manager.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -27,6 +28,7 @@ class Yust {
   static late YustAuthService authService;
   static late YustDatabaseService databaseService;
   static late YustFileService fileService;
+  static late YustFileHandlerManager fileHandlerManager;
   static final YustAlertService alertService = YustAlertService();
   static final YustHelperService helperService = YustHelperService();
   static late YustDocSetup<YustUser> userSetup;
@@ -78,6 +80,7 @@ class Yust {
     Yust.authService = YustAuthService();
     Yust.databaseService = YustDatabaseService();
     Yust.fileService = YustFileService();
+    Yust.fileHandlerManager = YustFileHandlerManager();
     Yust.userSetup = userSetup as YustDocSetup<YustUser>? ?? YustUser.setup;
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;

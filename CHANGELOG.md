@@ -1,3 +1,15 @@
+## 3.0.0-dev.8 - 2022-05-12
+
+* Fix bugs
+
+## 3.0.0-dev.7 - 2022-05-01
+
+* Add yust filter
+* Add offline compatibility for image and file picker.
+* Improve notifications
+* Add hash to files
+* Fix bugs
+
 ## 3.0.0-dev.6 - 2022-04-02
 
 * Track last user login time

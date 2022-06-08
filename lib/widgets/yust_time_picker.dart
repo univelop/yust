@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:yust/widgets/yust_date_picker.dart';
@@ -71,7 +72,7 @@ class _YustTimePickerState extends State<YustTimePicker> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
+          child: TextFormField(
             decoration: InputDecoration(
               labelText: widget.label,
               contentPadding: const EdgeInsets.all(20.0),
@@ -92,6 +93,9 @@ class _YustTimePickerState extends State<YustTimePicker> {
                 : (value) => _setTimeString(value),
             onEditingComplete: widget.onEditingComplete,
             readOnly: widget.readOnly,
+            keyboardType: kIsWeb
+                ? null
+                : TextInputType.numberWithOptions(decimal: true, signed: true),
           ),
         ),
         if (_controller!.text != '' &&

@@ -144,15 +144,9 @@ class YustFilePickerState extends State<YustFilePicker> {
             setState(() {
               isDragging = false;
             });
-            print('Dropzone drop multiple: $ev');
             for (final file in ev ?? []) {
               final bytes = await controller.getFileData(file);
               await uploadFile(name: file.name, file: null, bytes: bytes);
-              if (bytes.length <= 20) {
-                print(bytes);
-              } else {
-                print(bytes.sublist(0, 20));
-              }
             }
             ;
           },

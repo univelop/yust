@@ -105,8 +105,9 @@ class YustFilePickerState extends State<YustFilePicker> {
           suffixChild: _files.isEmpty ? null : _buildAddButton(context),
           label: widget.label,
           prefixIcon: widget.prefixIcon,
-          below:
-              _files.isEmpty ? _buildDropzoneInterface() : _buildFiles(context),
+          below: _files.isEmpty
+              ? _buildDropzoneInterface(showManualUploadButton: true)
+              : _buildFiles(context),
         ),
         _files.isNotEmpty && isDragging
             ? Positioned.fill(
@@ -146,7 +147,7 @@ class YustFilePickerState extends State<YustFilePicker> {
             print('Dropzone drop multiple: $ev');
             for (final file in ev ?? []) {
               final bytes = await controller.getFileData(file);
-              await _fileHandler.addFile(YustFile(name: file.name));
+              await uploadFile(name: file.name, file: null, bytes: bytes);
               if (bytes.length <= 20) {
                 print(bytes);
               } else {

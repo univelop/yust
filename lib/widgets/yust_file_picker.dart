@@ -102,21 +102,12 @@ class YustFilePickerState extends State<YustFilePicker> {
           child: _buildDropzoneArea(context),
         ),
         YustListTile(
-          suffixChild: _files.isEmpty ? null : _buildAddButton(context),
+          suffixChild:
+              isDragging ? _buildDropzoneInterface() : _buildAddButton(context),
           label: widget.label,
           prefixIcon: widget.prefixIcon,
-          below: _files.isEmpty
-              ? _buildDropzoneInterface(showManualUploadButton: true)
-              : _buildFiles(context),
+          below: _buildFiles(context),
         ),
-        _files.isNotEmpty && isDragging
-            ? Positioned.fill(
-                child: Container(
-                  color: Color.fromARGB(91, 118, 118, 118),
-                  child: _buildDropzoneInterface(showManualUploadButton: false),
-                ),
-              )
-            : Container()
       ],
     );
   }
@@ -154,12 +145,12 @@ class YustFilePickerState extends State<YustFilePicker> {
       );
 
   /// This Widget is a visual drag and drop indicator. It shows a dotted box, an icon as well as a button to manually upload files
-  Widget _buildDropzoneInterface({bool showManualUploadButton = true}) {
+  Widget _buildDropzoneInterface() {
     final dropZoneColor =
         isDragging ? Colors.blue : Color.fromARGB(255, 116, 116, 116);
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(10),
+        padding: EdgeInsets.fromLTRB(100, 2, 2, 2),
         child: DottedBorder(
           borderType: BorderType.RRect,
           radius: Radius.circular(12),
@@ -173,24 +164,15 @@ class YustFilePickerState extends State<YustFilePicker> {
             child: Container(
               height: 200,
               width: 400,
-              child: Column(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Icon(Icons.cloud_upload_outlined,
-                      size: 40, color: dropZoneColor),
+                      size: 35, color: dropZoneColor),
                   Text(
                     'Datei(en) hierher ziehen',
                     style: TextStyle(fontSize: 20, color: dropZoneColor),
                   ),
-                  if (showManualUploadButton) ...[
-                    Text(
-                      'oder',
-                      style: TextStyle(color: dropZoneColor),
-                    ),
-                    OutlinedButton(
-                        child: Text("Dateien durchsuchen"),
-                        onPressed: _pickFiles),
-                  ]
                 ],
               ),
             ),

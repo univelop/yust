@@ -1,3 +1,10 @@
+## 3.0.0-dev.9 - 2022-06-11
+
+* Add dropzone to file picker
+* Upgrade to Flutter 3
+* Improve image caching
+* Fix bugs
+
 ## 3.0.0-dev.8 - 2022-05-12
 
 * Fix bugs

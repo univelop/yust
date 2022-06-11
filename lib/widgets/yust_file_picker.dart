@@ -8,6 +8,8 @@ import 'package:yust/models/yust_file.dart';
 import 'package:yust/util/yust_file_handler.dart';
 import 'package:yust/widgets/yust_list_tile.dart';
 import '../yust.dart';
+import 'package:flutter_dropzone/flutter_dropzone.dart';
+import 'package:dotted_border/dotted_border.dart';
 
 class YustFilePicker extends StatefulWidget {
   final String? label;
@@ -29,6 +31,8 @@ class YustFilePicker extends StatefulWidget {
 
   final Widget? prefixIcon;
 
+  final bool enableDropzone;
+
   final bool readOnly;
 
   YustFilePicker({
@@ -40,6 +44,7 @@ class YustFilePicker extends StatefulWidget {
     this.linkedDocAttribute,
     this.onChanged,
     this.prefixIcon,
+    this.enableDropzone = false,
     this.readOnly = false,
   }) : super(key: key);
 
@@ -50,6 +55,8 @@ class YustFilePicker extends StatefulWidget {
 class YustFilePickerState extends State<YustFilePicker> {
   late YustFileHandler _fileHandler;
   final Map<String?, bool> _processing = {};
+  late DropzoneViewController controller;
+  var isDragging = false;
   late bool _enabled;
 
   @override
@@ -74,12 +81,104 @@ class YustFilePickerState extends State<YustFilePicker> {
     return FutureBuilder(
       future: _fileHandler.updateFiles(widget.files),
       builder: (context, snapshot) {
-        return YustListTile(
-            suffixChild: _buildAddButton(context),
-            label: widget.label,
-            prefixIcon: widget.prefixIcon,
-            below: _buildFiles(context));
+        if (kIsWeb && widget.enableDropzone) {
+          return _buildDropzone(context);
+        } else {
+          return YustListTile(
+              suffixChild: _buildAddButton(context),
+              label: widget.label,
+              prefixIcon: widget.prefixIcon,
+              below: _buildFiles(context));
+        }
       },
+    );
+  }
+
+  Widget _buildDropzone(BuildContext context) {
+    final _files = _fileHandler.getFiles();
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: _buildDropzoneArea(context),
+        ),
+        YustListTile(
+          suffixChild:
+              isDragging ? _buildDropzoneInterface() : _buildAddButton(context),
+          label: widget.label,
+          prefixIcon: widget.prefixIcon,
+          below: _buildFiles(context),
+        ),
+      ],
+    );
+  }
+
+  /// This widget will accept files from a drag and drop interaction
+  Widget _buildDropzoneArea(BuildContext context) => Builder(
+        builder: (context) => DropzoneView(
+          operation: DragOperation.copy,
+          cursor: CursorType.grab,
+          onCreated: (ctrl) => controller = ctrl,
+          onLoaded: () => null,
+          onError: (ev) => null,
+          onHover: () {
+            setState(() {
+              isDragging = true;
+            });
+          },
+          onLeave: () {
+            setState(() {
+              isDragging = false;
+            });
+          },
+          onDrop: (ev) async {},
+          onDropMultiple: (ev) async {
+            setState(() {
+              isDragging = false;
+            });
+            for (final file in ev ?? []) {
+              final bytes = await controller.getFileData(file);
+              await uploadFile(name: file.name, file: null, bytes: bytes);
+            }
+            ;
+          },
+        ),
+      );
+
+  /// This Widget is a visual drag and drop indicator. It shows a dotted box, an icon as well as a button to manually upload files
+  Widget _buildDropzoneInterface() {
+    final dropZoneColor =
+        isDragging ? Colors.blue : Color.fromARGB(255, 116, 116, 116);
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(100, 2, 2, 2),
+        child: DottedBorder(
+          borderType: BorderType.RRect,
+          radius: Radius.circular(12),
+          padding: EdgeInsets.all(6),
+          dashPattern: [6, 5],
+          strokeWidth: 3,
+          strokeCap: StrokeCap.round,
+          color: dropZoneColor,
+          child: ClipRRect(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            child: Container(
+              height: 200,
+              width: 400,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Icon(Icons.cloud_upload_outlined,
+                      size: 35, color: dropZoneColor),
+                  Text(
+                    'Datei(en) hierher ziehen',
+                    style: TextStyle(fontSize: 20, color: dropZoneColor),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

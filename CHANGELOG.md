@@ -1,3 +1,7 @@
+## 3.0.0-dev.10 - 2022-06-12
+
+* Fix bugs
+
 ## 3.0.0-dev.9 - 2022-06-11
 
 * Add dropzone to file picker

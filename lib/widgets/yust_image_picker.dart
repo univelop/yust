@@ -359,29 +359,42 @@ class YustImagePickerState extends State<YustImagePicker> {
         final picker = ImagePicker();
         if (widget.multiple && imageSource == ImageSource.gallery) {
           final images = await picker.pickMultiImage(
-              maxHeight: size, maxWidth: size, imageQuality: quality);
+            // We don't use maxHeight & maxWidth for now, as there are some
+            // image-orientation problems with iOS when the image is smaller(!),
+            // than maxHeight/-Width
+            imageQuality: quality,
+          );
           if (images != null) {
             for (final image in images) {
               await uploadFile(
                 path: image.path,
                 file: File(image.path),
+                // Because of the reason stated above,
+                // we need to do the resizing ourself
+                resize: true,
               );
             }
           }
         } else {
           final image = await picker.pickImage(
               source: imageSource,
-              maxHeight: size,
-              maxWidth: size,
+              // We don't use maxHeight & maxWidth for now, as there are some
+              // image-orientation problems with iOS when the image is smaller(!),
+              // than maxHeight/-Width
               imageQuality: quality);
           if (image != null) {
             await uploadFile(
               path: image.path,
               file: File(image.path),
+              // Because of the reason stated above,
+              // we need to do the resizing ourself
+              resize: true,
             );
           }
         }
-      } else {
+      }
+      // Else, we are on Web
+      else {
         if (widget.multiple) {
           final result = await FilePicker.platform
               .pickFiles(type: FileType.image, allowMultiple: true);

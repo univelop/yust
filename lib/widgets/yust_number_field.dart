@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:yust/widgets/yust_text_field.dart';
 import 'package:yust/yust.dart';
 
@@ -10,6 +11,7 @@ typedef TapCallback = void Function();
 class YustNumberField extends StatelessWidget {
   final String? label;
   final num? value;
+  final int? decimalCount;
   final ChangeCallback? onChanged;
   final ChangeCallback? onEditingComplete;
   final TextEditingController? controller;
@@ -29,6 +31,7 @@ class YustNumberField extends StatelessWidget {
     Key? key,
     this.label,
     this.value,
+    this.decimalCount,
     this.onChanged,
     this.onEditingComplete,
     this.controller,
@@ -52,7 +55,7 @@ class YustNumberField extends StatelessWidget {
       label: label,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
-      value: numToString(value),
+      value: numToString(value, decimalCount),
       controller: controller,
       onChanged: onChanged == null
           ? null
@@ -83,11 +86,16 @@ class YustNumberField extends StatelessWidget {
     );
   }
 
-  static String? numToString(num? value) {
+  static String? numToString(num? value, [int? decimalCount]) {
     if (value?.floorToDouble() == value) {
       value = value?.toInt();
     }
-    return value?.toString().replaceAll(RegExp(r'\.'), ',');
+    final format = NumberFormat(
+        decimalCount != null
+            ? ('0' + (decimalCount == 0 ? '' : '.') + ('0' * decimalCount))
+            : null,
+        'de-DE');
+    return value != null ? format.format(value) : null;
   }
 
   static num? valueToNum(String? value) {

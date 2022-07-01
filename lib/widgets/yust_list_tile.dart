@@ -8,6 +8,9 @@ class YustListTile extends StatelessWidget {
 
   /// If navigate is set, the SuffixChild will display a Navigation Icon
   final bool navigate;
+  final bool center;
+  final bool heading;
+  final bool largeHeading;
   final Widget? suffixChild;
   final TapCallback? onTap;
   final YustInputStyle style;
@@ -19,6 +22,9 @@ class YustListTile extends StatelessWidget {
     Key? key,
     this.label,
     this.navigate = false,
+    this.center = false,
+    this.heading = false,
+    this.largeHeading = false,
     this.suffixChild,
     this.onTap,
     this.style = YustInputStyle.normal,
@@ -42,7 +48,8 @@ class YustListTile extends StatelessWidget {
         children: <Widget>[
           _buildInner(context),
           below ?? SizedBox(),
-          if (divider) Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
+          if (divider && !(heading || largeHeading))
+            Divider(height: 1.0, thickness: 1.0, color: Colors.grey),
         ],
       );
     }
@@ -60,6 +67,15 @@ class YustListTile extends StatelessWidget {
     } else {
       padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 0);
     }
+    final text = Text(
+      label ?? '',
+      style: (heading || largeHeading)
+          ? TextStyle(
+              fontSize: largeHeading ? 24 : 20,
+              color: Theme.of(context).primaryColor)
+          : null,
+    );
+
     return ListTile(
       title: Row(
         mainAxisSize: MainAxisSize.max,
@@ -70,9 +86,11 @@ class YustListTile extends StatelessWidget {
               child: prefixIcon,
             ),
           Flexible(
-            child: Text(
-              label ?? '',
-            ),
+            child: center
+                ? Center(
+                    child: text,
+                  )
+                : text,
           ),
         ],
       ),

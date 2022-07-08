@@ -95,6 +95,7 @@ class YustImagePickerState extends State<YustImagePicker> {
 
   @override
   Widget build(BuildContext context) {
+    _enabled = widget.onChanged != null && !widget.readOnly;
     return StreamBuilder<ConnectivityResult>(
       stream: YustHelperService.connectivityStream,
       builder: (context, snapshot) {

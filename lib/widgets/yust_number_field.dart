@@ -69,9 +69,7 @@ class YustNumberField extends StatelessWidget {
       keyboardType: kIsWeb
           ? null
           : TextInputType.numberWithOptions(decimal: true, signed: true),
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp('[0-9\,\.\-]'))
-      ],
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9\,\-]'))],
       textInputAction: TextInputAction.next,
       onTap: onTap,
       readOnly: readOnly,
@@ -102,6 +100,7 @@ class YustNumberField extends StatelessWidget {
     if (value == '' || value == null) {
       return null;
     } else {
+      value = value.replaceAll(RegExp(r'\.'), '');
       value = value.replaceAll(RegExp(r'\,'), '.');
       final numValue = num.tryParse(value);
       return numValue;

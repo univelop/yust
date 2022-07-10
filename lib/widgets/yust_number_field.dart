@@ -90,7 +90,7 @@ class YustNumberField extends StatelessWidget {
     }
     final format = NumberFormat(
         decimalCount != null
-            ? ('0' + (decimalCount == 0 ? '' : '.') + ('0' * decimalCount))
+            ? ('#,##0' + (decimalCount == 0 ? '' : '.') + ('0' * decimalCount))
             : null,
         'de-DE');
     return value != null ? format.format(value) : null;
@@ -100,9 +100,8 @@ class YustNumberField extends StatelessWidget {
     if (value == '' || value == null) {
       return null;
     } else {
-      value = value.replaceAll(RegExp(r'\.'), '');
-      value = value.replaceAll(RegExp(r'\,'), '.');
-      final numValue = num.tryParse(value);
+      final format = NumberFormat.decimalPattern('de-DE');
+      final numValue = format.parse(value);
       return numValue;
     }
   }

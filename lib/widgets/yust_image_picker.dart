@@ -41,6 +41,7 @@ class YustImagePicker extends StatefulWidget {
   final bool zoomable;
   final void Function(List<YustFile> images)? onChanged;
   final Widget? prefixIcon;
+  final bool newestFirst;
   final bool readOnly;
   final String yustQuality;
 
@@ -59,6 +60,7 @@ class YustImagePicker extends StatefulWidget {
     this.onChanged,
     this.prefixIcon,
     this.readOnly = false,
+    this.newestFirst = false,
     this.yustQuality = 'medium',
     int? imageCount,
   })  : imageCount = imageCount ?? 15,
@@ -79,6 +81,7 @@ class YustImagePickerState extends State<YustImagePicker> {
       storageFolderPath: widget.storageFolderPath,
       linkedDocAttribute: widget.linkedDocAttribute,
       linkedDocPath: widget.linkedDocPath,
+      newestFirst: widget.newestFirst,
       onFileUploaded: () {
         if (mounted) {
           setState(() {});

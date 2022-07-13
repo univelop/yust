@@ -11,17 +11,18 @@ class YustFileHandlerManager {
     required String storageFolderPath,
     String? linkedDocAttribute,
     String? linkedDocPath,
+    bool newestFirst = false,
     void Function()? onFileUploaded,
   }) {
     var newFileHandler = getFileHandler(linkedDocAttribute, linkedDocPath);
 
     if (newFileHandler == null) {
       newFileHandler = YustFileHandler(
-        storageFolderPath: storageFolderPath,
-        linkedDocAttribute: linkedDocAttribute,
-        linkedDocPath: linkedDocPath,
-        onFileUploaded: onFileUploaded,
-      );
+          storageFolderPath: storageFolderPath,
+          linkedDocAttribute: linkedDocAttribute,
+          linkedDocPath: linkedDocPath,
+          onFileUploaded: onFileUploaded,
+          newestFirst: newestFirst);
       if (linkedDocAttribute != null && linkedDocPath != null) {
         filehandlers.add(newFileHandler);
       }

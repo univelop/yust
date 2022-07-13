@@ -29,6 +29,8 @@ class YustFileHandler {
   /// Attribute of the Firebase document.
   final String? linkedDocAttribute;
 
+  final bool newestFirst;
+
   /// shows if the _uploadFiles-procces is currently running
   bool _uploadingCachedFiles = false;
 
@@ -46,15 +48,15 @@ class YustFileHandler {
   /// gets triggerd after successful upload
   void Function()? onFileUploaded;
 
-  YustFileHandler({
-    required this.storageFolderPath,
-    this.linkedDocAttribute,
-    this.linkedDocPath,
-    this.onFileUploaded,
-  });
+  YustFileHandler(
+      {required this.storageFolderPath,
+      this.linkedDocAttribute,
+      this.linkedDocPath,
+      this.onFileUploaded,
+      this.newestFirst = false});
 
   List<YustFile> getFiles() {
-    return _yustFiles;
+    return _reverseListIfNewestFirst(_yustFiles);
   }
 
   List<YustFile> getOnlineFiles() {
@@ -63,6 +65,10 @@ class YustFileHandler {
 
   List<YustFile> getCachedFiles() {
     return _yustFiles.where((f) => f.cached == true).toList();
+  }
+
+  List<YustFile> _reverseListIfNewestFirst(List<YustFile> list) {
+    return newestFirst ? list.reversed.toList() : list;
   }
 
   Future<void> updateFiles(List<YustFile> onlineFiles,

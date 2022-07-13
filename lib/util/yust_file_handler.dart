@@ -29,7 +29,7 @@ class YustFileHandler {
   /// Attribute of the Firebase document.
   final String? linkedDocAttribute;
 
-  final bool newestFirst;
+  bool newestFirst;
 
   /// shows if the _uploadFiles-procces is currently running
   bool _uploadingCachedFiles = false;

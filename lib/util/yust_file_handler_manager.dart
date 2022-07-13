@@ -28,6 +28,7 @@ class YustFileHandlerManager {
       }
     } else {
       newFileHandler.onFileUploaded = onFileUploaded ?? () {};
+      newFileHandler.newestFirst = newestFirst;
     }
 
     return newFileHandler;

@@ -12,6 +12,7 @@ class YustNumberField extends StatelessWidget {
   final String? label;
   final num? value;
   final int? decimalCount;
+  final bool thousandsSeparator;
   final ChangeCallback? onChanged;
   final ChangeCallback? onEditingComplete;
   final TextEditingController? controller;
@@ -32,6 +33,7 @@ class YustNumberField extends StatelessWidget {
     this.label,
     this.value,
     this.decimalCount,
+    this.thousandsSeparator = false,
     this.onChanged,
     this.onEditingComplete,
     this.controller,
@@ -55,7 +57,8 @@ class YustNumberField extends StatelessWidget {
       label: label,
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
-      value: numToString(value, decimalCount),
+      value: numToString(value,
+          decimalCount: decimalCount, thousandsSeparator: thousandsSeparator),
       controller: controller,
       onChanged: onChanged == null
           ? null
@@ -84,14 +87,16 @@ class YustNumberField extends StatelessWidget {
     );
   }
 
-  static String? numToString(num? value, [int? decimalCount]) {
+  static String? numToString(num? value,
+      {int? decimalCount, bool thousandsSeparator = false}) {
     if (value?.floorToDouble() == value) {
       value = value?.toInt();
     }
+    decimalCount ??= 0;
     final format = NumberFormat(
-        decimalCount != null
-            ? ('#,##0' + (decimalCount == 0 ? '' : '.') + ('0' * decimalCount))
-            : null,
+        (thousandsSeparator ? '#,##0' : '0') +
+            '.' +
+            (decimalCount > 0 ? '0' * decimalCount : '#####'),
         'de-DE');
     return value != null ? format.format(value) : null;
   }

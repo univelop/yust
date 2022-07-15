@@ -123,7 +123,9 @@ class _YustTextFieldState extends State<YustTextField> {
   @override
   Widget build(BuildContext context) {
     final textValue = widget.value ?? '';
-    if (textValue != _initValue && textValue != _controller.text) {
+    if (widget.onChanged == null &&
+        textValue != _initValue &&
+        textValue != _controller.text) {
       _controller.text = textValue;
       _initValue = textValue;
     }

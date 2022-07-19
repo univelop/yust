@@ -128,6 +128,7 @@ class YustFilter {
     }
   }
 
+  /// A map with the [YustFilterComparator] and the string repesentation.
   static Map<YustFilterComparator, String> comparatorStrings = {
     YustFilterComparator.equal: '=',
     YustFilterComparator.notEqual: '!=',

@@ -10,8 +10,15 @@ import 'google_api_helpers.dart';
 import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 
-class FirebaseInitializer {
-  static Future<void> initialize({
+/// Firebase specific helpers used in other modules.
+class FiresbaseHelpers {
+  /// Initializes firebase
+  ///
+  /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
+  /// Use [pathToServiceAccountJson] if you are connecting directly with Dart.
+  /// Set the [emulatorAddress], if you want to emulate Firebase.
+  /// [buildRelease] must be set to true if you want to create an iOS release.
+  static Future<void> initializeFirbase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
     String? emulatorAddress,
@@ -37,5 +44,12 @@ class FirebaseInitializer {
 
     Yust.authService = YustAuthService();
     Yust.databaseService = YustDatabaseService();
+  }
+
+  /// Converts a timestamp to a DateTime.
+  ///
+  /// If the value is not a timestamp the origianal value is returned.
+  static dynamic convertTimestamp(dynamic value) {
+    return value;
   }
 }

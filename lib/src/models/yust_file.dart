@@ -11,7 +11,6 @@ typedef YustFilesJson = List<YustFileJson>;
 /// A binary file handled by database and file storage.
 /// A file is stored in Firebase Storeage and linked to a document in the database.
 /// For offline caching a file can also be stored on the device.
-
 @JsonSerializable()
 class YustFile {
   @JsonKey(ignore: true)

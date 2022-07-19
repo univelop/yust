@@ -10,9 +10,12 @@ import '../util/yust_firestore_api.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
+/// Handels database requests for Cloud Firestore.
+///
+/// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
-  FirestoreApi api = YustFirestoreApi.instance!;
-  String projectId = YustFirestoreApi.projectId!;
+  final FirestoreApi _api = YustFirestoreApi.instance!;
+  final String _projectId = YustFirestoreApi.projectId!;
 
   YustDatabaseService();
   YustDatabaseService.mocked();
@@ -26,15 +29,19 @@ class YustDatabaseService {
     return doInitDoc(docSetup, id, doc);
   }
 
-  ///[filters] each entry represents a condition that has to be met.
-  ///All of those conditions must be true for each returned entry.
+  /// Returns a stram of [YustDoc]s.
   ///
-  ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
-  ///Multiple of those entries can be repeated.
+  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
   ///
-  ///[filters] may be null.
+  /// [docSetup] is used to read the collection path.
   ///
-  ///[limit] can be passed to reduce loading time
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to reduce loading time
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -44,13 +51,26 @@ class YustDatabaseService {
     throw (YustException('Not implemented for server.'));
   }
 
+  /// Returns [YustDoc]s directly from the database.
+  ///
+  /// Be careful with offline fuctionality.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to reduce loading time
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<String>? orderByList,
     int? limit,
   }) async {
-    final response = await api.projects.databases.documents.runQuery(
+    final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: limit),
         _getCollectionPath(docSetup));
@@ -66,6 +86,9 @@ class YustDatabaseService {
         .toList();
   }
 
+  /// Returns a stram of a [YustDoc].
+  ///
+  /// Whenever another user make a chanage, a new version of the document is returned.
   Stream<T?> getDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -73,16 +96,22 @@ class YustDatabaseService {
     throw (YustException('Not implemented for server.'));
   }
 
+  /// Returns a [YustDoc] directly from the server.
+  ///
+  /// Be careful with offline fuctionality.
   Future<T?> getDocOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
   ) async {
-    final response = await api.projects.databases.documents
+    final response = await _api.projects.databases.documents
         .get(_getDocumentPath(docSetup, id));
     return _transformDoc<T>(docSetup, response);
   }
 
-  /// Emits null events if no document was found.
+  /// Returns a stram of the first [YustDoc] in a list.
+  ///
+  /// Whenever another user make a chanage, a new version of the document is returned.
+  /// The result is null if no document was found.
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -91,13 +120,16 @@ class YustDatabaseService {
     throw (YustException('Not implemented for server.'));
   }
 
+  /// Returns a stram of the first [YustDoc] in a list.
+  ///
+  /// Be careful with offline fuctionality.
   /// The result is null if no document was found.
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     List<YustFilter> filters, {
     List<String>? orderByList,
   }) async {
-    final response = await api.projects.databases.documents.runQuery(
+    final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: 1),
         _getCollectionPath(docSetup));
@@ -128,10 +160,11 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))));
 
-    await api.projects.databases.documents
+    await _api.projects.databases.documents
         .patch(dbDoc, _getDocumentPath(docSetup, doc.id));
   }
 
+  /// Delete all [YustDoc]s in the filter.
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -142,21 +175,23 @@ class YustDatabaseService {
     }
   }
 
+  /// Delete a [YustDoc].
   Future<void> deleteDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await api.projects.databases.documents
+    await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, doc.id));
   }
 
+  /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
-    await api.projects.databases.documents
+    await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, docId));
   }
 
-  /// Initialises a document and saves it.
+  /// Initialises a [YustDoc] and saves it.
   ///
   /// If [onInitialised] is provided, it will be called and
   /// waited for after the document is initialised.
@@ -183,6 +218,7 @@ class YustDatabaseService {
     return doc;
   }
 
+  /// Returns a query for specified filter and order.
   dynamic getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -193,6 +229,7 @@ class YustDatabaseService {
         filters: filters, orderByList: orderByList, limit: limit);
   }
 
+  /// Transforms a json to a [YustDoc]
   T? transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     dynamic document,
@@ -201,7 +238,7 @@ class YustDatabaseService {
   }
 
   String _getCollectionPath(YustDocSetup docSetup) {
-    var collectionPath = 'projects/$projectId/databases/(default)/documents/';
+    var collectionPath = 'projects/$_projectId/databases/(default)/documents/';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
       collectionPath += '${Yust.envCollectionName}/${Yust.currEnvId!}/';
     }

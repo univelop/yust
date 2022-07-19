@@ -1,19 +1,27 @@
-import '../util/firestore_helpers.dart';
+import '../util/firebase_helpers.dart';
 import '../yust.dart';
 
+/// A document, what can be saved to the Firestore database.
 abstract class YustDoc {
+  /// The ID of the document.
   String id;
 
+  /// The creation timestamp of the document.
   DateTime? createdAt;
 
+  /// The user ID of the document creator.
   String? createdBy;
 
+  /// The latest modification timestamp of the document.
   DateTime? modifiedAt;
 
+  /// The latest modification user ID.
   String? modifiedBy;
 
+  /// The user ID of the document owner.
   String? userId;
 
+  /// The tennant ID where the document belongs to.
   String? envId;
 
   YustDoc({
@@ -37,7 +45,8 @@ abstract class YustDoc {
     return filteredJson;
   }
 
+  /// Converts a firebase timestamp to a [DateTime].
   static dynamic convertTimestamp(dynamic value) {
-    return FirestoreHelpers.convertTimestamp(value);
+    return FiresbaseHelpers.convertTimestamp(value);
   }
 }

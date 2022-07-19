@@ -5,6 +5,7 @@ import 'yust_doc_setup.dart';
 
 part 'yust_notification.g.dart';
 
+/// A representation of a push notification.
 @JsonSerializable()
 class YustNotification extends YustDoc {
   static final setup = YustDocSetup<YustNotification>(

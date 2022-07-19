@@ -10,8 +10,8 @@ import '../services/yust_database_service.dart';
 import '../yust.dart';
 import 'yust_exception.dart';
 
-class FirebaseInitializer {
-  static Future<void> initialize({
+class FirebaseHelpers {
+  static Future<void> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
     String? emulatorAddress,
@@ -42,5 +42,17 @@ class FirebaseInitializer {
     FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
 
     await FirebaseAuth.instance.useAuthEmulator(address, 9099);
+  }
+
+  static dynamic convertTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate().toLocal();
+    } else if (value is Map && value['_seconds'] != null) {
+      return Timestamp(value['_seconds'], value['_nanoseconds'])
+          .toDate()
+          .toLocal();
+    } else {
+      return value;
+    }
   }
 }

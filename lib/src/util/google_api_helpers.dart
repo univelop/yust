@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+/// GoogleAPI specific helpers
 class GoogleApiHelpers {
   /// Returns the port to listen on from environment variable or uses the default
   /// `8080`.

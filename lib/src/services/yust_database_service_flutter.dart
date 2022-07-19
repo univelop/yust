@@ -10,29 +10,16 @@ import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
 class YustDatabaseService {
-  FirebaseFirestore fireStore;
+  final FirebaseFirestore _fireStore;
 
-  YustDatabaseService() : fireStore = FirebaseFirestore.instance;
-  YustDatabaseService.mocked() : fireStore = FakeFirebaseFirestore();
+  YustDatabaseService() : _fireStore = FirebaseFirestore.instance;
+  YustDatabaseService.mocked() : _fireStore = FakeFirebaseFirestore();
 
-  /// Initialises a document with an id and the time it was created.
-  ///
-  /// Optionally an existing document can be given, which will still be
-  /// assigned a new id becoming a new document if it had an id previously.
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
-    final id = fireStore.collection(_getCollectionPath(docSetup)).doc().id;
+    final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
     return doInitDoc(docSetup, id, doc);
   }
 
-  ///[filters] each entry represents a condition that has to be met.
-  ///All of those conditions must be true for each returned entry.
-  ///
-  ///Consists at first of the column name followed by either 'ASC' or 'DESC'.
-  ///Multiple of those entries can be repeated.
-  ///
-  ///[filters] may be null.
-  ///
-  ///[limit] can be passed to reduce loading time
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -72,7 +59,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) {
-    return fireStore
+    return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .snapshots()
@@ -83,14 +70,13 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) {
-    return fireStore
+    return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
   }
 
-  /// Emits null events if no document was found.
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -108,7 +94,6 @@ class YustDatabaseService {
     });
   }
 
-  /// The result is null if no document was found.
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     List<YustFilter> filters, {
@@ -125,10 +110,6 @@ class YustDatabaseService {
     return doc;
   }
 
-  /// Saves a document.
-  ///
-  /// If [merge] is false a document with the same name
-  /// will be overwritten instead of trying to merge the data.
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -137,7 +118,7 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
-    var collection = fireStore.collection(_getCollectionPath(docSetup));
+    var collection = _fireStore.collection(_getCollectionPath(docSetup));
     await preapareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     final jsonDoc = doc.toJson();
@@ -149,7 +130,6 @@ class YustDatabaseService {
     await collection.doc(doc.id).set(modifiedDoc, SetOptions(merge: merge));
   }
 
-  /// Converts DateTimes to Timestamps and removes null values (if not in List)
   Map<String, dynamic> _prepareJsonForFirebase(
     Map<String, dynamic> obj, {
     bool removeNullValues = true,
@@ -187,23 +167,17 @@ class YustDatabaseService {
     T doc,
   ) async {
     final docRef =
-        fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
+        _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
     await docRef.delete();
   }
 
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
     final docRef =
-        fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
+        _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
     await docRef.delete();
   }
 
-  /// Initialises a document and saves it.
-  ///
-  /// If [onInitialised] is provided, it will be called and
-  /// waited for after the document is initialised.
-  ///
-  /// An existing document can be given which will instead be initialised.
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     required T doc,
@@ -257,7 +231,7 @@ class YustDatabaseService {
     List<String>? orderByList,
     int? limit,
   }) {
-    Query query = fireStore.collection(_getCollectionPath(docSetup));
+    Query query = _fireStore.collection(_getCollectionPath(docSetup));
     query = _executeStaticFilters(query, docSetup);
     query = _executeFilters(query, filters);
     query = _executeOrderByList(query, orderByList);
@@ -353,7 +327,6 @@ class YustDatabaseService {
     return query;
   }
 
-  /// Returns null if no data exists.
   T? _transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     DocumentSnapshot snapshot,

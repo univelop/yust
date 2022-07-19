@@ -6,6 +6,7 @@ import 'yust_doc_setup.dart';
 
 part 'yust_user.g.dart';
 
+/// The user model.
 @JsonSerializable()
 class YustUser extends YustDoc {
   static final setup = YustDocSetup<YustUser>(
@@ -14,15 +15,28 @@ class YustUser extends YustDoc {
     fromJson: (json) => YustUser.fromJson(json),
   );
 
+  /// The email of the user.
   String email;
+
+  /// The first name of the user.
   String firstName;
+
+  /// The last name of the user.
   String lastName;
+
+  /// The gender of the user.
   YustGender? gender;
 
+  /// The tannants the user has access to.
   Map<String, bool?> envIds = {};
+
+  /// The current tannant the user is using.
   String? currEnvId;
+
+  /// ID of devices the user is using.
   List<String>? deviceIds = [];
 
+  /// The timestamp of the last login.
   DateTime? lastLogin;
 
   YustUser({
@@ -38,11 +52,13 @@ class YustUser extends YustDoc {
   @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
 
+  /// Saves the current [DateTime] as the last login.
   void setLoginTime() async {
     lastLogin = DateTime.now();
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
   }
 
+  /// Returns the user name.
   String getName() {
     return '$firstName $lastName';
   }

@@ -11,7 +11,7 @@ import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 
 /// Firebase specific helpers used in other modules.
-class FiresbaseHelpers {
+class FirebaseHelpers {
   /// Initializes firebase
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.

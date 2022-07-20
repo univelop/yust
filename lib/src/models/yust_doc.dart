@@ -47,6 +47,6 @@ abstract class YustDoc {
 
   /// Converts a firebase timestamp to a [DateTime].
   static dynamic convertTimestamp(dynamic value) {
-    return FiresbaseHelpers.convertTimestamp(value);
+    return FirebaseHelpers.convertTimestamp(value);
   }
 }

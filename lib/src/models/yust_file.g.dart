@@ -6,7 +6,7 @@ part of 'yust_file.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustFile _$YustFileFromJson(Map<String, dynamic> json) => YustFile(
+YustFile _$YustFileFromJson(Map json) => YustFile(
       name: json['name'] as String?,
       url: json['url'] as String?,
       hash: json['hash'] as String? ?? '',

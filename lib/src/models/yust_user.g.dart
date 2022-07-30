@@ -6,7 +6,7 @@ part of 'yust_user.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustUser _$YustUserFromJson(Map<String, dynamic> json) => YustUser(
+YustUser _$YustUserFromJson(Map json) => YustUser(
       email: json['email'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,

@@ -5,6 +5,8 @@ import 'yust_doc_setup.dart';
 
 part 'yust_notification.g.dart';
 
+dataFromJson(data) => Map<String, dynamic>.from(data);
+
 /// A representation of a push notification.
 @JsonSerializable()
 class YustNotification extends YustDoc {
@@ -21,7 +23,7 @@ class YustNotification extends YustDoc {
   String? body;
   DateTime? dispatchAt;
   bool delivered;
-  Map<String, dynamic> data = {};
+  Map<String, dynamic> data;
 
   YustNotification({
     this.forCollection,
@@ -31,6 +33,7 @@ class YustNotification extends YustDoc {
     this.body,
     this.dispatchAt,
     this.delivered = false,
+    this.data = const {},
   }) : super();
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>

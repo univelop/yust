@@ -6,7 +6,7 @@ part of 'yust_filter.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustFilter _$YustFilterFromJson(Map<String, dynamic> json) => YustFilter(
+YustFilter _$YustFilterFromJson(Map json) => YustFilter(
       field: json['field'] as String,
       comparator: YustFilter.comparatorFromString(json['comparator'] as String),
       value: json['value'],

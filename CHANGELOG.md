@@ -1,3 +1,8 @@
+## 3.0.0 - 2022-07-30
+
+* Refactoring, move UI components to new package yust_ui.
+* Fix bugs
+
 ## 3.0.0-dev.12 - 2022-07-14
 
 * Fix bugs

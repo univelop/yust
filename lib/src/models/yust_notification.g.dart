@@ -6,8 +6,7 @@ part of 'yust_notification.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustNotification _$YustNotificationFromJson(Map<String, dynamic> json) =>
-    YustNotification(
+YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
       forCollection: json['forCollection'] as String?,
       forDocId: json['forDocId'] as String?,
       deepLink: json['deepLink'] as String?,
@@ -17,6 +16,10 @@ YustNotification _$YustNotificationFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['dispatchAt'] as String),
       delivered: json['delivered'] as bool? ?? false,
+      data: (json['data'] as Map?)?.map(
+            (k, e) => MapEntry(k as String, e),
+          ) ??
+          const {},
     )
       ..id = json['id'] as String
       ..createdAt = json['createdAt'] == null
@@ -28,8 +31,7 @@ YustNotification _$YustNotificationFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['modifiedAt'] as String)
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
-      ..envId = json['envId'] as String?
-      ..data = json['data'] as Map<String, dynamic>;
+      ..envId = json['envId'] as String?;
 
 Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
     <String, dynamic>{

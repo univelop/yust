@@ -18,7 +18,7 @@ class FirebaseHelpers {
   /// Use [pathToServiceAccountJson] if you are connecting directly with Dart.
   /// Set the [emulatorAddress], if you want to emulate Firebase.
   /// [buildRelease] must be set to true if you want to create an iOS release.
-  static Future<void> initializeFirbase({
+  static Future<void> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
     String? emulatorAddress,

@@ -24,7 +24,7 @@ class FirebaseHelpers {
       if (firebaseOptions == null) {
         throw (YustException('firebaseOptions must be provided.'));
       }
-      final options = FirebaseOptions.fromMap(firebaseOptions);
+      final options = fromMap(firebaseOptions);
       await Firebase.initializeApp(options: options);
     }
 
@@ -42,6 +42,26 @@ class FirebaseHelpers {
     FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
 
     await FirebaseAuth.instance.useAuthEmulator(address, 9099);
+  }
+
+  static FirebaseOptions? fromMap(Map<String, String>? map) {
+    if (map == null) return null;
+    return FirebaseOptions(
+      apiKey: map['apiKey']!,
+      appId: map['appId'] ?? map['googleAppID']!,
+      messagingSenderId: map['messagingSenderId'] ?? map['gcmSenderID']!,
+      projectId: map['projectId'] ?? map['projectID']!,
+      authDomain: map['authDomain'],
+      databaseURL: map['databaseURL'],
+      storageBucket: map['storageBucket'],
+      measurementId: map['measurementId'],
+      trackingId: map['trackingId'],
+      deepLinkURLScheme: map['deepLinkURLScheme'],
+      androidClientId: map['androidClientId'],
+      iosClientId: map['iosClientId'],
+      iosBundleId: map['iosBundleId'],
+      appGroupId: map['appGroupId'],
+    );
   }
 
   static dynamic convertTimestamp(dynamic value) {

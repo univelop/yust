@@ -48,7 +48,8 @@ class YustDatabaseService {
     List<String>? orderByList,
     int? limit,
   }) {
-    throw (YustException('Not implemented for server.'));
+    return Stream.fromFuture(getDocsOnce(docSetup,
+        filters: filters, orderByList: orderByList, limit: limit));
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -73,7 +74,7 @@ class YustDatabaseService {
     final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: limit),
-        _getCollectionPath(docSetup));
+        _getParentPath(docSetup));
 
     return response
         .map((e) {
@@ -103,9 +104,13 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) async {
-    final response = await _api.projects.databases.documents
-        .get(_getDocumentPath(docSetup, id));
-    return _transformDoc<T>(docSetup, response);
+    try {
+      final response = await _api.projects.databases.documents
+          .get(_getDocumentPath(docSetup, id));
+      return _transformDoc<T>(docSetup, response);
+    } on ApiRequestError {
+      return null;
+    }
   }
 
   /// Returns a stram of the first [YustDoc] in a list.
@@ -132,7 +137,7 @@ class YustDatabaseService {
     final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: 1),
-        _getCollectionPath(docSetup));
+        _getParentPath(docSetup));
 
     if (response.isEmpty) {
       return null;
@@ -237,17 +242,29 @@ class YustDatabaseService {
     return _transformDoc(docSetup, document as Document);
   }
 
-  String _getCollectionPath(YustDocSetup docSetup) {
-    var collectionPath = 'projects/$_projectId/databases/(default)/documents/';
+  String _getParentPath(YustDocSetup docSetup) {
+    var parentPath = 'projects/$_projectId/databases/(default)/documents';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
-      collectionPath += '${Yust.envCollectionName}/${Yust.currEnvId!}/';
+      parentPath += '/${Yust.envCollectionName}/${Yust.currEnvId!}';
     }
-    collectionPath += docSetup.collectionName;
-    return collectionPath;
+    if (docSetup.collectionName.contains('/')) {
+      final nameParts = docSetup.collectionName.split('/');
+      nameParts.removeLast();
+      parentPath += '/${nameParts.join('/')}';
+    }
+    return parentPath;
+  }
+
+  String _getCollection(YustDocSetup docSetup) {
+    if (docSetup.collectionName.contains('/')) {
+      return docSetup.collectionName.split('/').last;
+    } else {
+      return docSetup.collectionName;
+    }
   }
 
   String _getDocumentPath(YustDocSetup docSetup, String id) {
-    return '${_getCollectionPath(docSetup)}/$id';
+    return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
   }
 
   RunQueryRequest _getQuery<T extends YustDoc>(
@@ -258,10 +275,12 @@ class YustDatabaseService {
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
+          from: [CollectionSelector(collectionId: _getCollection(docSetup))],
           where: Filter(
               compositeFilter: CompositeFilter(
                   filters: _executeStaticFilters(docSetup) +
-                      _executeFilters(filters))),
+                      _executeFilters(filters),
+                  op: 'AND')),
           orderBy: _executeOrderByList(orderByList),
           limit: limit),
     );
@@ -340,7 +359,7 @@ class YustDatabaseService {
 
           result.add(Filter(
               fieldFilter: FieldFilter(
-            field: FieldReference(fieldPath: filter.field),
+            field: FieldReference(fieldPath: '`${filter.field}`'),
             op: op,
             value: _valueToDbValue(filter.value),
           )));
@@ -397,6 +416,8 @@ class YustDatabaseService {
       return Value(booleanValue: value);
     } else if (value is int) {
       return Value(integerValue: value.toString());
+    } else if (value is double) {
+      return Value(doubleValue: value);
     } else if (value == null) {
       return Value(nullValue: 'NULL_VALUE');
     } else if (value is String && value.isIso8601String) {
@@ -411,7 +432,7 @@ class YustDatabaseService {
 
   dynamic _dbValueToValue(Value dbValue) {
     if (dbValue.arrayValue != null) {
-      return dbValue.arrayValue!.values?.map((childValue) {
+      return (dbValue.arrayValue!.values ?? []).map((childValue) {
         return _dbValueToValue(childValue);
       }).toList();
     } else if (dbValue.mapValue != null) {
@@ -421,16 +442,14 @@ class YustDatabaseService {
       return dbValue.booleanValue;
     } else if (dbValue.integerValue != null) {
       return int.parse(dbValue.integerValue!);
+    } else if (dbValue.doubleValue != null) {
+      return dbValue.doubleValue;
     } else if (dbValue.nullValue != null) {
       return null;
     } else if (dbValue.stringValue != null) {
       return dbValue.stringValue;
     } else if (dbValue.timestampValue != null) {
-      if (dbValue.timestampValue!.isIso8601String == true) {
-        return DateTime.parse(dbValue.timestampValue!);
-      } else {
-        return null;
-      }
+      return dbValue.timestampValue;
     } else {
       throw (YustException('Value can not be transformed from Firestore.'));
     }

@@ -1,3 +1,4 @@
+import 'package:yust/src/services/yust_file_service.dart';
 import 'package:yust/src/util/yust_helpers.dart';
 
 import 'models/yust_doc_setup.dart';
@@ -22,6 +23,7 @@ enum AuthState {
 class Yust {
   static late YustAuthService authService;
   static late YustDatabaseService databaseService;
+  static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
 
@@ -68,5 +70,8 @@ class Yust {
     Yust.userSetup = userSetup ?? YustUser.setup;
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;
+    Yust.authService = YustAuthService();
+    Yust.databaseService = YustDatabaseService();
+    Yust.fileService = YustFileService();
   }
 }

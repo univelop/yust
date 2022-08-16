@@ -3,9 +3,6 @@ import 'dart:io';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 
-import '../services/yust_auth_service.dart';
-import '../services/yust_database_service.dart';
-import '../yust.dart';
 import 'google_api_helpers.dart';
 import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
@@ -41,9 +38,6 @@ class FirebaseHelpers {
     );
 
     YustFirestoreApi.initialize(FirestoreApi(authClient), projectId: projectId);
-
-    Yust.authService = YustAuthService();
-    Yust.databaseService = YustDatabaseService();
   }
 
   /// Converts a timestamp to a DateTime.

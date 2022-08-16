@@ -5,9 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-import '../services/yust_auth_service.dart';
-import '../services/yust_database_service.dart';
-import '../yust.dart';
 import 'yust_exception.dart';
 
 class FirebaseHelpers {
@@ -32,9 +29,6 @@ class FirebaseHelpers {
     if (emulatorAddress != null) {
       await _connectToFirebaseEmulator(emulatorAddress);
     }
-
-    Yust.authService = YustAuthService();
-    Yust.databaseService = YustDatabaseService();
   }
 
   /// Connnect to the firebase emulator for Firestore and Authentication

@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:intl/intl.dart';
+
 /// Yust helpers
 class YustHelpers {
   /// Returns a random String with a specific length.
@@ -21,5 +23,21 @@ class YustHelpers {
   /// Clean a map, except of some keys.
   void preserveKeysInMap(Map<String, dynamic> object, List<String> keys) {
     object.removeWhere((key, _) => !keys.contains(key));
+  }
+
+  /// Return a string representing [dateTime] in the German date format or another given [format].
+  String formatDate(DateTime? dateTime, {String? format}) {
+    if (dateTime == null) return '';
+
+    var formatter = DateFormat(format ?? 'dd.MM.yyyy');
+    return formatter.format(dateTime.toLocal());
+  }
+
+  /// Return a string representing [dateTime] in the German time format or another given [format].
+  String formatTime(DateTime? dateTime, {String? format}) {
+    if (dateTime == null) return '';
+
+    var formatter = DateFormat(format ?? 'HH:mm');
+    return formatter.format(dateTime.toLocal());
   }
 }

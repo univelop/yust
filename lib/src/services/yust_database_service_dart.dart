@@ -48,7 +48,7 @@ class YustDatabaseService {
     List<String>? orderByList,
     int? limit,
   }) {
-    return Stream.fromFuture(getDocsOnce(docSetup,
+    return Stream.fromFuture(getDocsOnce<T>(docSetup,
         filters: filters, orderByList: orderByList, limit: limit));
   }
 
@@ -356,10 +356,12 @@ class YustDatabaseService {
             default:
               throw 'The comparator "${filter.comparator}" is not supported.';
           }
+          final quotedFieldPath =
+              filter.field.split('.').map((f) => '`$f`').join('.');
 
           result.add(Filter(
               fieldFilter: FieldFilter(
-            field: FieldReference(fieldPath: '`${filter.field}`'),
+            field: FieldReference(fieldPath: quotedFieldPath),
             op: op,
             value: _valueToDbValue(filter.value),
           )));

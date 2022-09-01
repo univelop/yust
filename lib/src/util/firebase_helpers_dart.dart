@@ -1,9 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 
-import 'google_api_helpers.dart';
 import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 
@@ -25,11 +25,14 @@ class FirebaseHelpers {
       throw (YustException('pathToServiceAccountJson must be provided.'));
     }
 
-    final projectId = await GoogleApiHelpers.currentProjectId();
+    final serviceAccountJson =
+        jsonDecode(await File(pathToServiceAccountJson).readAsString());
+
+    final projectId = serviceAccountJson['project_id'];
     print('Current GCP project id: $projectId');
 
-    final accountCredentials = ServiceAccountCredentials.fromJson(
-        await File(pathToServiceAccountJson).readAsString());
+    final accountCredentials =
+        ServiceAccountCredentials.fromJson(serviceAccountJson);
     final scopes = [FirestoreApi.datastoreScope];
 
     final authClient = await clientViaServiceAccount(

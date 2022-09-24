@@ -94,7 +94,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) {
-    throw (YustException('Not implemented for server.'));
+    return Stream.fromFuture(getDocOnce<T>(docSetup, id));
   }
 
   /// Returns a [YustDoc] directly from the server.
@@ -122,7 +122,8 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<String>? orderByList,
   }) {
-    throw (YustException('Not implemented for server.'));
+    return Stream.fromFuture(
+        getFirstDocOnce<T>(docSetup, filters ?? [], orderByList: orderByList));
   }
 
   /// Returns a stram of the first [YustDoc] in a list.

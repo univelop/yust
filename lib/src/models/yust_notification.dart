@@ -22,7 +22,6 @@ class YustNotification extends YustDoc {
   String? title;
   String? body;
   String? brickId;
-  List<String>? changes;
   DateTime? dispatchAt;
   bool delivered;
   Map<String, dynamic> data;
@@ -34,7 +33,6 @@ class YustNotification extends YustDoc {
     this.title,
     this.body,
     this.brickId,
-    this.changes,
     this.dispatchAt,
     this.delivered = false,
     this.data = const {},

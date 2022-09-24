@@ -40,7 +40,11 @@ class MockDatabase {
     String id,
   ) async {
     final docs = _getCollection<T>(docSetup.collectionName);
-    return docs.firstWhere((doc) => doc.id == id);
+    if (docs.isEmpty) {
+      return null;
+    } else {
+      return docs.firstWhere((doc) => doc.id == id);
+    }
   }
 
   /// Returns a stram of the first [YustDoc] in a list.

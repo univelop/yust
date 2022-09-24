@@ -3,6 +3,10 @@ import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 
 /// A mock database for storing docs.
+///
+/// The database does not store the records in Firestore.
+/// Take care: Filters, sorting and limits are not working in the
+/// first version.
 class MockDatabase {
   final _db = <String, List<dynamic>>{};
 

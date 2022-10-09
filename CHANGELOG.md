@@ -1,3 +1,9 @@
+## 3.2.0 - 2022-10-09
+
+- Add mock database
+- Improve database service
+- Fix bugs
+
 ## 3.1.0 - 2022-08-28
 
 - Add file service.

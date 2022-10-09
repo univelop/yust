@@ -64,7 +64,7 @@ class YustFileService {
           .ref()
           .child(path)
           .child(name)
-          .getData(maxSize ?? 5 * 1024 * 1024);
+          .getData(maxSize ?? 20 * 1024 * 1024);
     } catch (e) {
       return Uint8List(0);
     }

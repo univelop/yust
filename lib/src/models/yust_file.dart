@@ -84,6 +84,12 @@ class YustFile {
   /// Converts JSON from Firebase to a file. Only relevant attributs are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
+  void update(YustFile file) {
+    url = file.url;
+    name = file.name;
+    hash = file.hash;
+  }
+
   /// Converts the file to JSON for local device. Only relevant attributs are converted.
   factory YustFile.fromLocalJson(Map<String, dynamic> json) {
     return YustFile(

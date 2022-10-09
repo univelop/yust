@@ -1,4 +1,5 @@
 import 'package:googleapis/firestore/v1.dart';
+import 'package:yust/src/util/mock_database.dart';
 
 import '../extensions/string_extension.dart';
 import '../extensions/date_time_extension.dart';
@@ -14,11 +15,18 @@ import 'yust_database_service_shared.dart';
 ///
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
-  final FirestoreApi _api = YustFirestoreApi.instance!;
-  final String _projectId = YustFirestoreApi.projectId!;
+  late final FirestoreApi _api;
+  late final String _projectId;
+  late final MockDatabase _mockDb;
+  bool _mocked = false;
 
-  YustDatabaseService();
-  YustDatabaseService.mocked();
+  YustDatabaseService()
+      : _api = YustFirestoreApi.instance!,
+        _projectId = YustFirestoreApi.projectId!;
+
+  YustDatabaseService.mocked()
+      : _mockDb = MockDatabase(),
+        _mocked = true;
 
   /// Initialises a document with an id and the time it was created.
   ///
@@ -71,6 +79,10 @@ class YustDatabaseService {
     List<String>? orderByList,
     int? limit,
   }) async {
+    if (_mocked) {
+      return _mockDb.getDocsOnce<T>(docSetup,
+          filters: filters, orderByList: orderByList, limit: limit);
+    }
     final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: limit),
@@ -94,7 +106,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) {
-    throw (YustException('Not implemented for server.'));
+    return Stream.fromFuture(getDocOnce<T>(docSetup, id));
   }
 
   /// Returns a [YustDoc] directly from the server.
@@ -104,6 +116,9 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) async {
+    if (_mocked) {
+      return _mockDb.getDocOnce<T>(docSetup, id);
+    }
     try {
       final response = await _api.projects.databases.documents
           .get(_getDocumentPath(docSetup, id));
@@ -122,7 +137,8 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<String>? orderByList,
   }) {
-    throw (YustException('Not implemented for server.'));
+    return Stream.fromFuture(
+        getFirstDocOnce<T>(docSetup, filters ?? [], orderByList: orderByList));
   }
 
   /// Returns a stram of the first [YustDoc] in a list.
@@ -134,6 +150,10 @@ class YustDatabaseService {
     List<YustFilter> filters, {
     List<String>? orderByList,
   }) async {
+    if (_mocked) {
+      return _mockDb.getFirstDocOnce(docSetup, filters,
+          orderByList: orderByList);
+    }
     final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: 1),
@@ -160,6 +180,14 @@ class YustDatabaseService {
     await preapareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
 
+    if (_mocked) {
+      return _mockDb.saveDoc<T>(docSetup, doc,
+          merge: merge,
+          trackModification: trackModification,
+          skipOnSave: skipOnSave,
+          removeNullValues: removeNullValues);
+    }
+
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
@@ -185,6 +213,9 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
+    if (_mocked) {
+      return _mockDb.deleteDoc(docSetup, doc);
+    }
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, doc.id));
   }
@@ -192,6 +223,9 @@ class YustDatabaseService {
   /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
+    if (_mocked) {
+      return _mockDb.deleteDocById(docSetup, docId);
+    }
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, docId));
   }

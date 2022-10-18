@@ -1,8 +1,8 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:yust/src/util/mock_database.dart';
 
-import '../extensions/string_extension.dart';
 import '../extensions/date_time_extension.dart';
+import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
@@ -176,9 +176,11 @@ class YustDatabaseService {
     bool trackModification = true,
     bool skipOnSave = false,
     bool? removeNullValues,
+    List<String>? updateMask,
   }) async {
-    await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await preapareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
+    if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
     if (_mocked) {
       return _mockDb.saveDoc<T>(docSetup, doc,
@@ -193,8 +195,9 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))));
 
-    await _api.projects.databases.documents
-        .patch(dbDoc, _getDocumentPath(docSetup, doc.id));
+    await _api.projects.databases.documents.patch(
+        dbDoc, _getDocumentPath(docSetup, doc.id),
+        updateMask_fieldPaths: updateMask);
   }
 
   /// Delete all [YustDoc]s in the filter.

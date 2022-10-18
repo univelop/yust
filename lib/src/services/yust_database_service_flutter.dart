@@ -113,21 +113,29 @@ class YustDatabaseService {
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
-    bool merge = true,
+    bool? merge = true,
     bool trackModification = true,
     bool skipOnSave = false,
     bool? removeNullValues,
+    List<String>? updateMask,
   }) async {
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
-    await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await preapareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
+    if (updateMask != null) {
+      updateMask.addAll(yustUpdateMask);
+      merge = null;
+    }
+
     final jsonDoc = doc.toJson();
 
     final modifiedDoc = _prepareJsonForFirebase(
       jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
-    await collection.doc(doc.id).set(modifiedDoc, SetOptions(merge: merge));
+    await collection
+        .doc(doc.id)
+        .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
   }
 
   Map<String, dynamic> _prepareJsonForFirebase(

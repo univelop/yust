@@ -9,7 +9,12 @@ import '../yust.dart';
 class YustAuthService {
   FirebaseAuth fireAuth;
 
-  YustAuthService() : fireAuth = FirebaseAuth.instance;
+  YustAuthService({String? emulatorAddress})
+      : fireAuth = FirebaseAuth.instance {
+    if (emulatorAddress != null) {
+      fireAuth.useAuthEmulator(emulatorAddress, 9099);
+    }
+  }
 
   YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
 

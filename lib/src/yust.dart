@@ -70,8 +70,9 @@ class Yust {
     Yust.userSetup = userSetup ?? YustUser.setup;
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;
-    Yust.authService = YustAuthService();
+    Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
+    // Note that the data connection for the emulator is handled in [initializeFirebase]
     Yust.databaseService = YustDatabaseService();
-    Yust.fileService = YustFileService();
+    Yust.fileService = YustFileService(emulatorAddress: emulatorAddress);
   }
 }

@@ -40,7 +40,13 @@ class FirebaseHelpers {
       scopes,
     );
 
-    YustFirestoreApi.initialize(FirestoreApi(authClient), projectId: projectId);
+    YustFirestoreApi.initialize(
+      FirestoreApi(authClient,
+          rootUrl: emulatorAddress != null
+              ? "http://$emulatorAddress:8080/"
+              : 'https://firestore.googleapis.com/'),
+      projectId: projectId,
+    );
   }
 
   /// Converts a timestamp to a DateTime.

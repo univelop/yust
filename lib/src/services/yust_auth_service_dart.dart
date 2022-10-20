@@ -4,7 +4,7 @@ import '../yust.dart';
 
 /// Handels auth request for Firebase Auth.
 class YustAuthService {
-  YustAuthService();
+  YustAuthService({String? emulatorAddress});
 
   YustAuthService.mocked();
 

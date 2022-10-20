@@ -10,7 +10,12 @@ import 'package:mime/mime.dart';
 import '../util/yust_exception.dart';
 
 class YustFileService {
-  YustFileService() : _fireStorage = firebase_storage.FirebaseStorage.instance;
+  YustFileService({String? emulatorAddress})
+      : _fireStorage = firebase_storage.FirebaseStorage.instance {
+    if (emulatorAddress != null) {
+      _fireStorage.useStorageEmulator(emulatorAddress, 9199);
+    }
+  }
 
   YustFileService.mocked() : _fireStorage = MockFirebaseStorage();
 

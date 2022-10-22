@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 
-import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 
 /// Firebase specific helpers used in other modules.
@@ -21,30 +20,37 @@ class FirebaseHelpers {
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {
-    if (pathToServiceAccountJson == null) {
-      throw (YustException('pathToServiceAccountJson must be provided.'));
-    }
-
-    final serviceAccountJson =
-        jsonDecode(await File(pathToServiceAccountJson).readAsString());
-
-    final projectId = serviceAccountJson['project_id'];
-    print('Current GCP project id: $projectId');
-
-    final accountCredentials =
-        ServiceAccountCredentials.fromJson(serviceAccountJson);
+    late AutoRefreshingAuthClient authClient;
+    String? projectId;
     final scopes = [FirestoreApi.datastoreScope];
 
-    final authClient = await clientViaServiceAccount(
-      accountCredentials,
-      scopes,
-    );
+    if (pathToServiceAccountJson == null) {
+      authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
+      // TODO Set project Id dynamically
+      projectId = "univelop-dev";
+    } else {
+      final serviceAccountJson =
+          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+
+      projectId = serviceAccountJson['project_id'];
+
+      final accountCredentials =
+          ServiceAccountCredentials.fromJson(serviceAccountJson);
+
+      authClient = await clientViaServiceAccount(
+        accountCredentials,
+        scopes,
+      );
+    }
+    print('Current GCP project id: $projectId');
+
+    final api = FirestoreApi(authClient,
+        rootUrl: emulatorAddress != null
+            ? "http://$emulatorAddress:8080/"
+            : 'https://firestore.googleapis.com/');
 
     YustFirestoreApi.initialize(
-      FirestoreApi(authClient,
-          rootUrl: emulatorAddress != null
-              ? "http://$emulatorAddress:8080/"
-              : 'https://firestore.googleapis.com/'),
+      api,
       projectId: projectId,
     );
   }

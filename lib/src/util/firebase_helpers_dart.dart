@@ -12,6 +12,8 @@ class FirebaseHelpers {
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
   /// Use [pathToServiceAccountJson] if you are connecting directly with Dart.
+  /// If you don't provide a path, the client looks for credentials in common places,
+  /// like environment variables, etc.
   /// Set the [emulatorAddress], if you want to emulate Firebase.
   /// [buildRelease] must be set to true if you want to create an iOS release.
   static Future<void> initializeFirebase({
@@ -26,8 +28,11 @@ class FirebaseHelpers {
 
     if (pathToServiceAccountJson == null) {
       authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
-      // TODO Set project Id dynamically
-      projectId = "univelop-dev";
+      // Default to Dev Environment
+      projectId = Platform.environment["GCP_PROJECT"];
+      if (projectId == null) {
+        throw Exception("No ProjectId found in env variables");
+      }
     } else {
       final serviceAccountJson =
           jsonDecode(await File(pathToServiceAccountJson).readAsString());

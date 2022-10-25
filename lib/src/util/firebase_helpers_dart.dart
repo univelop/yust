@@ -41,8 +41,8 @@ class FirebaseHelpers {
         accountCredentials,
         scopes,
       );
+      print('Current GCP project id: $projectId');
     }
-    print('Current GCP project id: $projectId');
 
     final api = FirestoreApi(authClient,
         rootUrl: emulatorAddress != null

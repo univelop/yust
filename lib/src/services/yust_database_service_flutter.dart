@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:yust/src/util/yust_field_transform.dart';
 
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
@@ -136,6 +137,21 @@ class YustDatabaseService {
     await collection
         .doc(doc.id)
         .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
+  }
+
+  /// Transforms (e.g. increment, decrement) a documents fields.
+  Future<void> updateDocByTransform<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+    List<YustFieldTransform> fieldTransforms, {
+    bool skipOnSave = false,
+    bool? removeNullValues,
+  }) async {
+    var collection = _fireStore.collection(_getCollectionPath(docSetup));
+
+    final update = YustFieldTransform.toFieldValueMap(fieldTransforms);
+
+    await collection.doc(id).update(update);
   }
 
   Map<String, dynamic> _prepareJsonForFirebase(

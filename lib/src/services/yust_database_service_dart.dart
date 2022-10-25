@@ -1,5 +1,6 @@
 import 'package:googleapis/firestore/v1.dart';
 import 'package:yust/src/util/mock_database.dart';
+import 'package:yust/src/util/yust_field_transform.dart';
 
 import '../extensions/date_time_extension.dart';
 import '../extensions/string_extension.dart';
@@ -200,6 +201,34 @@ class YustDatabaseService {
         updateMask_fieldPaths: updateMask);
   }
 
+  /// Transforms (e.g. increment, decrement) a documents fields.
+  Future<void> updateDocByTransform<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+    List<YustFieldTransform> fieldTransforms, {
+    bool skipOnSave = false,
+    bool? removeNullValues,
+  }) async {
+    // TODO: Mocked
+
+    final firebaseFieldTransforms = fieldTransforms
+        .map((t) => t.toFieldTransform())
+        .cast<FieldTransform>()
+        .toList();
+    final documentTransform = DocumentTransform(
+      fieldTransforms: firebaseFieldTransforms,
+      document: _getDocumentPath(docSetup, id),
+    );
+    final write = Write(
+        transform: documentTransform,
+        currentDocument: Precondition(exists: true));
+    final commitRequest = CommitRequest(writes: [write]);
+    await _api.projects.databases.documents.commit(
+      commitRequest,
+      _getDatabasePath(),
+    );
+  }
+
   /// Delete all [YustDoc]s in the filter.
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -279,8 +308,10 @@ class YustDatabaseService {
     return _transformDoc(docSetup, document as Document);
   }
 
+  String _getDatabasePath() => 'projects/$_projectId/databases/(default)';
+
   String _getParentPath(YustDocSetup docSetup) {
-    var parentPath = 'projects/$_projectId/databases/(default)/documents';
+    var parentPath = "${_getDatabasePath()}/documents";
     if (Yust.useSubcollections && docSetup.forEnvironment) {
       parentPath += '/${Yust.envCollectionName}/${Yust.currEnvId!}';
     }

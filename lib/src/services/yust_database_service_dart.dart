@@ -159,7 +159,7 @@ class YustDatabaseService {
             filters: filters, orderByList: orderByList, limit: 1),
         _getParentPath(docSetup));
 
-    if (response.isEmpty) {
+    if (response.isEmpty || response.first.document == null) {
       return null;
     }
     return _transformDoc<T>(docSetup, response.first.document!);

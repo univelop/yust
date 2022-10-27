@@ -11,6 +11,7 @@ class FirebaseHelpers {
   static Future<void> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
+    String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {

@@ -51,9 +51,11 @@ class Yust {
   /// Set the [emulatorAddress], if you want to emulate Firebase. [buildRelease] must be set to true if you want to create an iOS release. [userSetup] let you overwrite the default [UserSetup].
   /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
   /// [envCollectionName] represents the collection name for the tannants.
+  /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
   static Future<void> initialize({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
+    String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
     YustDocSetup<YustUser>? userSetup,
@@ -63,6 +65,7 @@ class Yust {
     await FirebaseHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
+      projectId: projectId,
       emulatorAddress: emulatorAddress,
       buildRelease: buildRelease,
     );

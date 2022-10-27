@@ -196,8 +196,13 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))));
 
-    // To allow for nested paths (foo.bar.x) the path needs to be surrounded by quotes
-    final quotedUpdateMask = updateMask?.map((path) => "`$path`").toList();
+    // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
+    // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
+    final quotedUpdateMask = updateMask
+        ?.map((path) => path.splitMapJoin(RegExp(r'[\w\d\-\_]+'),
+            onMatch: (m) => '`${m[0]}`'))
+        .toList();
+
     await _api.projects.databases.documents.patch(
       dbDoc,
       _getDocumentPath(docSetup, doc.id),

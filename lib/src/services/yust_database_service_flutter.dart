@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
-import 'package:yust/src/util/yust_field_transform.dart';
 
+import '../util/yust_field_transform.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';

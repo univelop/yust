@@ -178,7 +178,7 @@ class YustDatabaseService {
     bool? removeNullValues,
     List<String>? updateMask,
   }) async {
-    final yustUpdateMask = await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
@@ -195,9 +195,18 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))));
 
+    // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
+    // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
+    final quotedUpdateMask = updateMask
+        ?.map((path) => path.splitMapJoin(RegExp(r'[\w\d\-\_]+'),
+            onMatch: (m) => '`${m[0]}`'))
+        .toList();
+
     await _api.projects.databases.documents.patch(
-        dbDoc, _getDocumentPath(docSetup, doc.id),
-        updateMask_fieldPaths: updateMask);
+      dbDoc,
+      _getDocumentPath(docSetup, doc.id),
+      updateMask_fieldPaths: quotedUpdateMask,
+    );
   }
 
   /// Delete all [YustDoc]s in the filter.

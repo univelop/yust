@@ -160,7 +160,7 @@ class YustDatabaseService {
             filters: filters, orderByList: orderByList, limit: 1),
         _getParentPath(docSetup));
 
-    if (response.isEmpty) {
+    if (response.isEmpty || response.first.document == null) {
       return null;
     }
     return _transformDoc<T>(docSetup, response.first.document!);
@@ -179,7 +179,7 @@ class YustDatabaseService {
     bool? removeNullValues,
     List<String>? updateMask,
   }) async {
-    final yustUpdateMask = await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
@@ -196,9 +196,13 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))));
 
+    // To allow for nested paths (foo.bar.x) the path needs to be surrounded by quotes
+    final quotedUpdateMask = updateMask?.map((path) => "`$path`").toList();
     await _api.projects.databases.documents.patch(
-        dbDoc, _getDocumentPath(docSetup, doc.id),
-        updateMask_fieldPaths: updateMask);
+      dbDoc,
+      _getDocumentPath(docSetup, doc.id),
+      updateMask_fieldPaths: quotedUpdateMask,
+    );
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.

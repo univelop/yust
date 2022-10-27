@@ -121,7 +121,7 @@ class YustDatabaseService {
     List<String>? updateMask,
   }) async {
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
-    final yustUpdateMask = await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) {
       updateMask.addAll(yustUpdateMask);

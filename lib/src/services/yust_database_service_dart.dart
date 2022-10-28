@@ -99,7 +99,7 @@ class YustDatabaseService {
         .toList();
   }
 
-  /// Returns a stram of a [YustDoc].
+  /// Returns a stream of a [YustDoc].
   ///
   /// Whenever another user make a chanage, a new version of the document is returned.
   Stream<T?> getDoc<T extends YustDoc>(
@@ -128,9 +128,9 @@ class YustDatabaseService {
     }
   }
 
-  /// Returns a stram of the first [YustDoc] in a list.
+  /// Returns a stream of the first [YustDoc] in a list.
   ///
-  /// Whenever another user make a chanage, a new version of the document is returned.
+  /// Whenever another user make a change, a new version of the document is returned.
   /// The result is null if no document was found.
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -141,7 +141,7 @@ class YustDatabaseService {
         getFirstDocOnce<T>(docSetup, filters ?? [], orderByList: orderByList));
   }
 
-  /// Returns a stram of the first [YustDoc] in a list.
+  /// Returns a stream of the first [YustDoc] in a list.
   ///
   /// Be careful with offline fuctionality.
   /// The result is null if no document was found.

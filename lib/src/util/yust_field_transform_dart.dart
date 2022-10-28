@@ -15,14 +15,10 @@ class YustFieldTransform {
     this.delete,
   });
 
-  static Map<String, dynamic> toFieldValueMap(
-          List<YustFieldTransform> transforms) =>
-      throw UnsupportedError('Not supported. No UI available.');
-
-  dynamic getFieldValue() =>
-      throw UnsupportedError('Not supported. No UI available.');
-
-  dynamic toFieldTransform() {
+  /// Converts this YustFieldTransform to it's platforms native implementation
+  /// For Flutter (cloud_firestore) this it's a [FieldValue]...
+  /// ... and for dart (googleapis/firestore) its a [FieldTransform]
+  dynamic toNativeTransform() {
     return FieldTransform(
       fieldPath: fieldPath,
       increment: increment != null ? Value(doubleValue: increment) : null,

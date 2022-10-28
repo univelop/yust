@@ -149,7 +149,7 @@ class YustDatabaseService {
   }) async {
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
 
-    final update = YustFieldTransform.toFieldValueMap(fieldTransforms);
+    final update = _transformsToFieldValueMap(fieldTransforms);
 
     await collection.doc(id).update(update);
   }
@@ -374,5 +374,16 @@ class YustDatabaseService {
       return docSetup.fromJson(modifiedData);
     }
     return null;
+  }
+
+  static Map<String, dynamic> _transformsToFieldValueMap(
+      List<YustFieldTransform> transforms) {
+    final map = <String, dynamic>{};
+    for (final transform in transforms) {
+      final fieldValue = transform.toNativeTransform();
+      if (fieldValue == null) continue;
+      map[transform.fieldPath] = fieldValue;
+    }
+    return map;
   }
 }

@@ -221,7 +221,7 @@ class YustDatabaseService {
     // TODO: Mocked
 
     final firebaseFieldTransforms = fieldTransforms
-        .map((t) => t.toFieldTransform())
+        .map((t) => t.toNativeTransform())
         .cast<FieldTransform>()
         .toList();
     final documentTransform = DocumentTransform(

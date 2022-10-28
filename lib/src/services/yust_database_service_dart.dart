@@ -99,7 +99,7 @@ class YustDatabaseService {
         .toList();
   }
 
-  /// Returns a stram of a [YustDoc].
+  /// Returns a stream of a [YustDoc].
   ///
   /// Whenever another user make a chanage, a new version of the document is returned.
   Stream<T?> getDoc<T extends YustDoc>(
@@ -128,9 +128,9 @@ class YustDatabaseService {
     }
   }
 
-  /// Returns a stram of the first [YustDoc] in a list.
+  /// Returns a stream of the first [YustDoc] in a list.
   ///
-  /// Whenever another user make a chanage, a new version of the document is returned.
+  /// Whenever another user make a change, a new version of the document is returned.
   /// The result is null if no document was found.
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -141,7 +141,7 @@ class YustDatabaseService {
         getFirstDocOnce<T>(docSetup, filters ?? [], orderByList: orderByList));
   }
 
-  /// Returns a stram of the first [YustDoc] in a list.
+  /// Returns a stream of the first [YustDoc] in a list.
   ///
   /// Be careful with offline fuctionality.
   /// The result is null if no document was found.
@@ -178,7 +178,7 @@ class YustDatabaseService {
     bool? removeNullValues,
     List<String>? updateMask,
   }) async {
-    final yustUpdateMask = await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
@@ -195,9 +195,18 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))));
 
+    // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
+    // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
+    final quotedUpdateMask = updateMask
+        ?.map((path) => path.splitMapJoin(RegExp(r'[\w\d\-\_]+'),
+            onMatch: (m) => '`${m[0]}`'))
+        .toList();
+
     await _api.projects.databases.documents.patch(
-        dbDoc, _getDocumentPath(docSetup, doc.id),
-        updateMask_fieldPaths: updateMask);
+      dbDoc,
+      _getDocumentPath(docSetup, doc.id),
+      updateMask_fieldPaths: quotedUpdateMask,
+    );
   }
 
   /// Delete all [YustDoc]s in the filter.

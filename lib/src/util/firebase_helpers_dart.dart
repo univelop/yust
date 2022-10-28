@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
@@ -31,10 +30,10 @@ class FirebaseHelpers {
       authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
       // Default to Dev Environment
       projectId = projectId ??
-          Platform.environment["GCP_PROJECT"] ??
-          Platform.environment["GCLOUD_PROJECT"];
+          Platform.environment['GCP_PROJECT'] ??
+          Platform.environment['GCLOUD_PROJECT'];
       if (projectId == null) {
-        throw Exception("No ProjectId given or found in env variables");
+        throw Exception('No ProjectId given or found in env variables');
       }
     } else {
       final serviceAccountJson =
@@ -54,7 +53,7 @@ class FirebaseHelpers {
 
     final api = FirestoreApi(authClient,
         rootUrl: emulatorAddress != null
-            ? "http://$emulatorAddress:8080/"
+            ? 'http://$emulatorAddress:8080/'
             : 'https://firestore.googleapis.com/');
 
     YustFirestoreApi.initialize(

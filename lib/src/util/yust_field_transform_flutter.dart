@@ -26,7 +26,7 @@ class YustFieldTransform {
     return map;
   }
 
-  dynamic? getFieldValue() {
+  dynamic getFieldValue() {
     if (increment != null) return FieldValue.increment(increment!);
     if (removeFromArray != null) {
       return FieldValue.arrayRemove(removeFromArray!);

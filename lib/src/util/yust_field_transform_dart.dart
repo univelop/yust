@@ -19,7 +19,7 @@ class YustFieldTransform {
           List<YustFieldTransform> transforms) =>
       throw UnsupportedError('Not supported. No UI available.');
 
-  dynamic? getFieldValue() =>
+  dynamic getFieldValue() =>
       throw UnsupportedError('Not supported. No UI available.');
 
   dynamic toFieldTransform() {
@@ -27,7 +27,7 @@ class YustFieldTransform {
       fieldPath: fieldPath,
       increment: increment != null ? Value(doubleValue: increment) : null,
       removeAllFromArray: removeFromArray != null
-          ? ArrayValue.fromJson(<dynamic, dynamic>{"values": removeFromArray})
+          ? ArrayValue.fromJson(<dynamic, dynamic>{'values': removeFromArray})
           : null,
       setToServerValue: (setToServerTimestamp ?? false) ? 'REQUEST_TIME' : null,
     );

@@ -1,11 +1,10 @@
-import 'package:yust/src/services/yust_file_service.dart';
-import 'package:yust/src/util/yust_helpers.dart';
-
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
 import 'services/yust_auth_service.dart';
 import 'services/yust_database_service.dart';
+import 'services/yust_file_service.dart';
 import 'util/firebase_helpers.dart';
+import 'util/yust_helpers.dart';
 
 /// Represents the state of the user authentication.
 ///

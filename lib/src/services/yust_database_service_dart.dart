@@ -1,13 +1,13 @@
 import 'package:googleapis/firestore/v1.dart';
-import 'package:yust/src/util/mock_database.dart';
-import 'package:yust/src/util/yust_field_transform.dart';
 
 import '../extensions/date_time_extension.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../util/mock_database.dart';
 import '../util/yust_exception.dart';
+import '../util/yust_field_transform.dart';
 import '../util/yust_firestore_api.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
@@ -320,7 +320,7 @@ class YustDatabaseService {
   String _getDatabasePath() => 'projects/$_projectId/databases/(default)';
 
   String _getParentPath(YustDocSetup docSetup) {
-    var parentPath = "${_getDatabasePath()}/documents";
+    var parentPath = '${_getDatabasePath()}/documents';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
       parentPath += '/${Yust.envCollectionName}/${Yust.currEnvId!}';
     }

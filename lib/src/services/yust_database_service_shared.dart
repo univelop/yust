@@ -2,7 +2,7 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
-Future<List<String>> preapareSaveDoc<T extends YustDoc>(
+Future<List<String>> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
   T doc, {
   bool trackModification = true,

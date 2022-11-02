@@ -15,6 +15,23 @@ enum AuthState {
   signedOut,
 }
 
+enum DatabaseLogAction {
+  delete('DELETE'),
+  get('READ'),
+  saveNew('CREATE'),
+  save('UPDATE'),
+  transform('UPDATE');
+
+  const DatabaseLogAction(this.logText);
+  final String logText;
+}
+
+typedef DatabaseLogCallback = void Function(
+  DatabaseLogAction action,
+  YustDocSetup setup,
+  int count,
+);
+
 /// Yust is the easiest way to connect full stack Dart app to Firebase.
 ///
 /// It is supporting Firebase Auth, Cloud Firestore and Cloud Storage.
@@ -51,6 +68,7 @@ class Yust {
   /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
   /// [envCollectionName] represents the collection name for the tannants.
   /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
+  /// Use [dbLogCallback] to provide a function that will get called on each DatabaseCall
   static Future<void> initialize({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
@@ -60,6 +78,7 @@ class Yust {
     YustDocSetup<YustUser>? userSetup,
     bool useSubcollections = false,
     String envCollectionName = 'envs',
+    DatabaseLogCallback? dbLogCallback,
   }) async {
     await FirebaseHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
@@ -74,7 +93,7 @@ class Yust {
     Yust.envCollectionName = envCollectionName;
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
     // Note that the data connection for the emulator is handled in [initializeFirebase]
-    Yust.databaseService = YustDatabaseService();
+    Yust.databaseService = YustDatabaseService(dbLogCallback: dbLogCallback);
     Yust.fileService = YustFileService(emulatorAddress: emulatorAddress);
   }
 }

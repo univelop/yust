@@ -12,9 +12,12 @@ import 'yust_database_service_shared.dart';
 
 class YustDatabaseService {
   final FirebaseFirestore _fireStore;
+  DatabaseLogCallback? dbLogCallback;
 
-  YustDatabaseService() : _fireStore = FirebaseFirestore.instance;
-  YustDatabaseService.mocked() : _fireStore = FakeFirebaseFirestore();
+  YustDatabaseService({this.dbLogCallback})
+      : _fireStore = FirebaseFirestore.instance;
+  YustDatabaseService.mocked({this.dbLogCallback})
+      : _fireStore = FakeFirebaseFirestore();
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;

@@ -387,14 +387,6 @@ class YustDatabaseService {
         value: _valueToDbValue(docSetup.envId),
       )));
     }
-    if (docSetup.forUser) {
-      result.add(Filter(
-          fieldFilter: FieldFilter(
-        field: FieldReference(fieldPath: 'userId'),
-        op: 'EQUAL',
-        value: _valueToDbValue(docSetup.userId),
-      )));
-    }
     return result;
   }
 

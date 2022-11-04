@@ -26,6 +26,8 @@ class YustDocSetup<T extends YustDoc> {
   bool forEnvironment;
 
   /// If true the `userId` of the [YustDoc] will be automatically set when saving.
+  ///
+  /// Note that this, unlike [forEnvironment], doesn't set a filter for the userId
   bool forUser;
 
   /// If true the `createdBy` & `modifiedBy` of the [YustDoc] will be automatically set when saving.

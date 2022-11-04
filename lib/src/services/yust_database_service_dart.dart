@@ -334,7 +334,7 @@ class YustDatabaseService {
   String _getParentPath(YustDocSetup docSetup) {
     var parentPath = '${_getDatabasePath()}/documents';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
-      parentPath += '/${Yust.envCollectionName}/${Yust.currEnvId!}';
+      parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
     }
     if (docSetup.collectionName.contains('/')) {
       final nameParts = docSetup.collectionName.split('/');
@@ -384,7 +384,7 @@ class YustDatabaseService {
           fieldFilter: FieldFilter(
         field: FieldReference(fieldPath: 'envId'),
         op: 'EQUAL',
-        value: _valueToDbValue(Yust.currEnvId),
+        value: _valueToDbValue(docSetup.envId),
       )));
     }
     if (docSetup.forUser) {
@@ -392,7 +392,7 @@ class YustDatabaseService {
           fieldFilter: FieldFilter(
         field: FieldReference(fieldPath: 'userId'),
         op: 'EQUAL',
-        value: _valueToDbValue(Yust.authService.currUserId),
+        value: _valueToDbValue(docSetup.userId),
       )));
     }
     return result;

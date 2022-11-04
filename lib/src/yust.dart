@@ -49,9 +49,6 @@ class Yust {
   /// Represents the collection name for the tannants.
   static String envCollectionName = 'envs';
 
-  /// The ID of the current tannant in use.
-  static String? currEnvId;
-
   /// Initializes [Yust] with mocked services for testing.
   ///
   /// This method should be called before any usage of the yust package.
@@ -88,7 +85,7 @@ class Yust {
       buildRelease: buildRelease,
     );
 
-    Yust.userSetup = userSetup ?? YustUser.setup;
+    Yust.userSetup = userSetup ?? YustUser.setup();
     Yust.useSubcollections = useSubcollections;
     Yust.envCollectionName = envCollectionName;
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);

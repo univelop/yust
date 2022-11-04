@@ -1,6 +1,5 @@
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
-import '../yust.dart';
 
 Future<List<String>> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
@@ -9,27 +8,37 @@ Future<List<String>> prepareSaveDoc<T extends YustDoc>(
   bool skipOnSave = false,
 }) async {
   final updateMask = <String>[];
+
+  if (docSetup.hasAuthor) {
+    updateMask.add('createdBy');
+    doc.createdBy ??= doc.modifiedBy;
+
+    if (doc.userId == null && docSetup.forUser) {
+      updateMask.add('userId');
+      doc.userId = docSetup.userId;
+    }
+
+    if (trackModification) {
+      updateMask.add('modifiedBy');
+      doc.modifiedBy = docSetup.userId;
+    }
+  }
+
   if (trackModification) {
     updateMask.add('modifiedAt');
     doc.modifiedAt = DateTime.now();
-    updateMask.add('modifiedBy');
-    doc.modifiedBy = Yust.authService.currUserId;
   }
+
   updateMask.add('createdAt');
   doc.createdAt ??= doc.modifiedAt;
-  updateMask.add('createdBy');
-  doc.createdBy ??= doc.modifiedBy;
-  if (doc.userId == null && docSetup.forUser) {
-    updateMask.add('userId');
-    doc.userId = Yust.authService.currUserId;
-  }
+
   if (doc.envId == null && docSetup.forEnvironment) {
     updateMask.add('envId');
-    doc.envId = Yust.currEnvId;
+    doc.envId = docSetup.envId;
   }
-  if (docSetup.onSave != null && !skipOnSave) {
-    await docSetup.onSave!(doc);
-  }
+
+  if (!skipOnSave) await docSetup.onSave?.call(doc);
+
   return updateMask;
 }
 
@@ -38,15 +47,17 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
 
   doc.id = id;
   doc.createdAt = DateTime.now();
-  doc.createdBy = Yust.authService.currUserId;
+
+  if (docSetup.hasAuthor) {
+    doc.createdBy = docSetup.userId;
+    if (docSetup.forUser) doc.userId = docSetup.userId;
+  }
+
   if (docSetup.forEnvironment) {
-    doc.envId = Yust.currEnvId;
+    doc.envId = docSetup.envId;
   }
-  if (docSetup.forUser) {
-    doc.userId = Yust.authService.currUserId;
-  }
-  if (docSetup.onInit != null) {
-    docSetup.onInit!(doc);
-  }
+
+  docSetup.onInit?.call(doc);
+
   return doc;
 }

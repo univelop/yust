@@ -13,8 +13,7 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
-  /// Returns the ID of the user signed in.
-  String? get currUserId => null;
+  String? getCurrentUserId() => null;
 
   /// Sign in by email and password.
   Future<void> signIn(

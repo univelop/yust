@@ -24,7 +24,7 @@ class YustAuthService {
     });
   }
 
-  String? get currUserId => fireAuth.currentUser?.uid;
+  String? getCurrentUserId() => fireAuth.currentUser?.uid;
 
   Future<void> signIn(
     String email,
@@ -70,7 +70,7 @@ class YustAuthService {
     );
     await userCredential.user!.updateEmail(email);
     final user = await Yust.databaseService
-        .getDocOnce<YustUser>(Yust.userSetup, currUserId!);
+        .getDocOnce<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
     if (user != null) {
       user.email = email;
       await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);

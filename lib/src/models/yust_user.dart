@@ -9,11 +9,11 @@ part 'yust_user.g.dart';
 /// The user model.
 @JsonSerializable()
 class YustUser extends YustDoc {
-  static final setup = YustDocSetup<YustUser>(
-    collectionName: 'users',
-    newDoc: () => YustUser(email: '', firstName: '', lastName: ''),
-    fromJson: (json) => YustUser.fromJson(json),
-  );
+  static setup() => YustDocSetup<YustUser>(
+        collectionName: 'users',
+        newDoc: () => YustUser(email: '', firstName: '', lastName: ''),
+        fromJson: (json) => YustUser.fromJson(json),
+      );
 
   /// The email of the user.
   String email;

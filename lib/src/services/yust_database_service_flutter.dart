@@ -227,7 +227,7 @@ class YustDatabaseService {
   String _getCollectionPath(YustDocSetup docSetup) {
     var collectionPath = '';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
-      collectionPath += '${Yust.envCollectionName}/${Yust.currEnvId!}/';
+      collectionPath += '${Yust.envCollectionName}/${docSetup.envId}/';
     }
     collectionPath += docSetup.collectionName;
     return collectionPath;
@@ -255,19 +255,14 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
   ) {
     if (!Yust.useSubcollections && docSetup.forEnvironment) {
-      query = _filterForEnvironment(query);
+      query = _filterForEnvironment(query, docSetup.envId!);
     }
-    if (docSetup.forUser) {
-      query = _filterForUser(query);
-    }
+
     return query;
   }
 
-  Query _filterForEnvironment(Query query) =>
-      query.where('envId', isEqualTo: Yust.currEnvId);
-
-  Query _filterForUser(Query query) =>
-      query.where('userId', isEqualTo: Yust.authService.currUserId);
+  Query _filterForEnvironment(Query query, String envId) =>
+      query.where('envId', isEqualTo: envId);
 
   Query _executeFilters(Query query, List<YustFilter>? filters) {
     if (filters != null) {

@@ -2,6 +2,12 @@ import 'yust_doc.dart';
 
 /// The setup for a [YustDoc] is needed to read or save a document to the database.
 class YustDocSetup<T extends YustDoc> {
+  /// The ID of the tenant to use.
+  String? envId;
+
+  /// The id of the YustUser authoring this database action
+  String? userId;
+
   /// The name for the document collection.
   ///
   /// Example: An item should be saved in the collection 'items'.
@@ -13,14 +19,19 @@ class YustDocSetup<T extends YustDoc> {
   /// Callback to create a new document instance.
   T Function() newDoc;
 
-  /// If true the `userId` of the [YustDoc] will be automatically set when saving.
-  bool forUser;
+  ///Should be set to true if this setup is used for an environment.
+  bool isEnvironment;
 
   /// If true the [YustDoc] will be automatically saved in a subcollection under the tannant.
   bool forEnvironment;
 
-  ///Should be set to true if this setup is used for an environment.
-  bool isEnvironment;
+  /// If true the `userId` of the [YustDoc] will be automatically set when saving.
+  bool forUser;
+
+  /// If true the `createdBy` & `modifiedBy` of the [YustDoc] will be automatically set when saving.
+  ///
+  /// Disabling this makes sense, if the document isn't assigned to a user or generally not edited by users directly
+  bool hasAuthor;
 
   /// Should null values be removed, before writing the doc to the database.
   bool removeNullValues;
@@ -35,6 +46,9 @@ class YustDocSetup<T extends YustDoc> {
     required this.collectionName,
     required this.fromJson,
     required this.newDoc,
+    this.envId,
+    this.userId,
+    this.hasAuthor = false,
     this.forUser = false,
     this.forEnvironment = false,
     this.isEnvironment = false,

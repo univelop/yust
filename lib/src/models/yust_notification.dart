@@ -10,11 +10,11 @@ dataFromJson(data) => Map<String, dynamic>.from(data);
 /// A representation of a push notification.
 @JsonSerializable()
 class YustNotification extends YustDoc {
-  static final setup = YustDocSetup<YustNotification>(
-    collectionName: 'notifications',
-    newDoc: () => YustNotification(),
-    fromJson: (json) => YustNotification.fromJson(json),
-  );
+  static setup() => YustDocSetup<YustNotification>(
+        collectionName: 'notifications',
+        newDoc: () => YustNotification(),
+        fromJson: (json) => YustNotification.fromJson(json),
+      );
 
   String? forCollection;
   String? forDocId;

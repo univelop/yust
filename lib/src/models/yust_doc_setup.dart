@@ -56,4 +56,14 @@ class YustDocSetup<T extends YustDoc> {
     this.onSave,
     this.removeNullValues = true,
   });
+
+  @override
+  int get hashCode => Object.hash(collectionName, envId, userId);
+
+  @override
+  bool operator ==(Object other) =>
+      other is YustDocSetup &&
+      collectionName == other.collectionName &&
+      envId == other.envId &&
+      userId == other.userId;
 }

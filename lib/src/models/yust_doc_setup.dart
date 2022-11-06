@@ -38,6 +38,10 @@ class YustDocSetup<T extends YustDoc> {
   /// Should null values be removed, before writing the doc to the database.
   bool removeNullValues;
 
+  /// Should the database actions update the record specified by [hasAuthor] & [hasOwner].
+  /// Can be overriden in the db-calls directly e.g. [saveDoc].
+  bool trackModification;
+
   /// Callback when initialising a new [YustDoc].
   void Function(T doc)? onInit;
 
@@ -57,6 +61,7 @@ class YustDocSetup<T extends YustDoc> {
     this.onInit,
     this.onSave,
     this.removeNullValues = true,
+    this.trackModification = true,
   });
 
   @override

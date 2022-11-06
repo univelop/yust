@@ -28,7 +28,7 @@ class YustDocSetup<T extends YustDoc> {
   /// If true the `userId` of the [YustDoc] will be automatically set when saving.
   ///
   /// Note that this, unlike [forEnvironment], doesn't set a filter for the userId
-  bool forUser;
+  bool hasOwner;
 
   /// If true the `createdBy` & `modifiedBy` of the [YustDoc] will be automatically set when saving.
   ///
@@ -51,7 +51,7 @@ class YustDocSetup<T extends YustDoc> {
     this.envId,
     this.userId,
     this.hasAuthor = false,
-    this.forUser = false,
+    this.hasOwner = false,
     this.forEnvironment = false,
     this.isEnvironment = false,
     this.onInit,

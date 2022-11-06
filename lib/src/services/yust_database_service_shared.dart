@@ -13,7 +13,7 @@ Future<List<String>> prepareSaveDoc<T extends YustDoc>(
     updateMask.add('createdBy');
     doc.createdBy ??= doc.modifiedBy;
 
-    if (doc.userId == null && docSetup.forUser) {
+    if (doc.userId == null && docSetup.hasOwner) {
       updateMask.add('userId');
       doc.userId = docSetup.userId;
     }
@@ -50,7 +50,7 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
 
   if (docSetup.hasAuthor) {
     doc.createdBy = docSetup.userId;
-    if (docSetup.forUser) doc.userId = docSetup.userId;
+    if (docSetup.hasOwner) doc.userId = docSetup.userId;
   }
 
   if (docSetup.forEnvironment) {

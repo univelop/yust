@@ -9,28 +9,28 @@ Future<List<String>> prepareSaveDoc<T extends YustDoc>(
 }) async {
   final updateMask = <String>[];
 
-  if (docSetup.hasAuthor) {
-    updateMask.add('createdBy');
-    doc.createdBy ??= doc.modifiedBy;
+  if (trackModification) {
+    if (docSetup.hasAuthor) {
+      updateMask.add('createdBy');
+      doc.createdBy ??= doc.modifiedBy;
 
-    if (doc.userId == null && docSetup.hasOwner) {
+      updateMask.add('modifiedBy');
+      doc.modifiedBy = docSetup.userId;
+    }
+
+    if (docSetup.hasOwner && doc.userId == null) {
       updateMask.add('userId');
       doc.userId = docSetup.userId;
     }
 
-    if (trackModification) {
-      updateMask.add('modifiedBy');
-      doc.modifiedBy = docSetup.userId;
-    }
-  }
-
-  if (trackModification) {
     updateMask.add('modifiedAt');
     doc.modifiedAt = DateTime.now();
   }
 
-  updateMask.add('createdAt');
-  doc.createdAt ??= doc.modifiedAt;
+  if (doc.createdAt == null) {
+    updateMask.add('createdAt');
+    doc.createdAt ??= doc.modifiedAt;
+  }
 
   if (doc.envId == null && docSetup.forEnvironment) {
     updateMask.add('envId');
@@ -48,14 +48,9 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
   doc.id = id;
   doc.createdAt = DateTime.now();
 
-  if (docSetup.hasAuthor) {
-    doc.createdBy = docSetup.userId;
-    if (docSetup.hasOwner) doc.userId = docSetup.userId;
-  }
-
-  if (docSetup.forEnvironment) {
-    doc.envId = docSetup.envId;
-  }
+  if (docSetup.hasAuthor) doc.createdBy = docSetup.userId;
+  if (docSetup.hasOwner) doc.userId = docSetup.userId;
+  if (docSetup.forEnvironment) doc.envId = docSetup.envId;
 
   docSetup.onInit?.call(doc);
 

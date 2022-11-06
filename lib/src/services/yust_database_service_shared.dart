@@ -4,12 +4,12 @@ import '../models/yust_doc_setup.dart';
 Future<List<String>> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
   T doc, {
-  bool trackModification = true,
+  bool? trackModification,
   bool skipOnSave = false,
 }) async {
   final updateMask = <String>[];
 
-  if (trackModification) {
+  if (trackModification ?? docSetup.trackModification) {
     if (docSetup.hasAuthor) {
       updateMask.add('createdBy');
       doc.createdBy ??= doc.modifiedBy;

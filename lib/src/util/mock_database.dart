@@ -72,7 +72,7 @@ class MockDatabase {
     YustDocSetup<T> docSetup,
     T doc, {
     bool merge = true,
-    bool trackModification = true,
+    bool? trackModification,
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {

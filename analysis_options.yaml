@@ -15,12 +15,42 @@ include: package:lints/recommended.yaml
 # Uncomment the following section to specify additional rules.
 linter:
     rules:
-        # Always await, intentionally not await
-        unawaited_futures: true
-        prefer_single_quotes: true
-        invalid_dependency: false
-        prefer_relative_imports: true
+        always_declare_return_types: true
+        always_put_required_named_parameters_first: true
+        avoid_bool_literals_in_conditional_expressions: true
+        avoid_double_and_int_checks: true
+        avoid_final_parameters: true
+        avoid_private_typedef_functions: true
+        avoid_returning_null: true
+        avoid_types_on_closure_parameters: true
+        avoid_unused_constructor_parameters: true
+        collection_methods_unrelated_type: true
+        combinators_ordering: true
+        conditional_uri_does_not_exist: true
+        deprecated_consistency: true
         directives_ordering: true
+        invalid_dependency: false
+        only_throw_errors: true
+        prefer_constructors_over_static_methods: true
+        # prefer_expression_function_bodies: true
+        prefer_final_in_for_each: true
+        prefer_final_locals: true
+        prefer_if_elements_to_conditional_expressions: true
+        prefer_null_aware_method_calls: true
+        prefer_relative_imports: true
+        prefer_single_quotes: true
+        sort_unnamed_constructors_first: true
+        test_types_in_equals: true
+        throw_in_finally: true
+        unawaited_futures: true
+        unnecessary_lambdas: true
+        unnecessary_parenthesis: true
+        unnecessary_raw_strings: true
+        unnecessary_to_list_in_spreads: true
+        use_is_even_rather_than_modulo: true
+        use_named_constants: true
+        use_raw_strings: true
+        use_to_and_as_if_applicable: true
 # analyzer:
 #   exclude:
 #     - path/to/excluded/files/**

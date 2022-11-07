@@ -30,7 +30,7 @@ class YustDatabaseService {
     List<String>? orderByList,
     int? limit,
   }) {
-    var query = _getQuery(docSetup,
+    final query = _getQuery(docSetup,
         orderByList: orderByList, filters: filters, limit: limit);
 
     return query.snapshots().map((snapshot) {
@@ -47,7 +47,7 @@ class YustDatabaseService {
     List<String>? orderByList,
     int? limit,
   }) {
-    var query = _getQuery(docSetup,
+    final query = _getQuery(docSetup,
         orderByList: orderByList, filters: filters, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
@@ -86,7 +86,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<String>? orderByList,
   }) {
-    var query = _getQuery(docSetup,
+    final query = _getQuery(docSetup,
         filters: filters, orderByList: orderByList, limit: 1);
 
     return query.snapshots().map<T?>((snapshot) {
@@ -103,7 +103,7 @@ class YustDatabaseService {
     List<YustFilter> filters, {
     List<String>? orderByList,
   }) async {
-    var query = _getQuery(docSetup,
+    final query = _getQuery(docSetup,
         filters: filters, orderByList: orderByList, limit: 1);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
@@ -123,7 +123,7 @@ class YustDatabaseService {
     bool? removeNullValues,
     List<String>? updateMask,
   }) async {
-    var collection = _fireStore.collection(_getCollectionPath(docSetup));
+    final collection = _fireStore.collection(_getCollectionPath(docSetup));
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) {
@@ -150,7 +150,7 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
-    var collection = _fireStore.collection(_getCollectionPath(docSetup));
+    final collection = _fireStore.collection(_getCollectionPath(docSetup));
 
     final update = _transformsToFieldValueMap(fieldTransforms);
 
@@ -184,7 +184,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
   }) async {
     final docs = await getDocsOnce<T>(docSetup, filters: filters);
-    for (var doc in docs) {
+    for (final doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
   }
@@ -328,7 +328,8 @@ class YustDatabaseService {
               query = query.where(filter.field, isNull: true);
               break;
             default:
-              throw 'The comparator "${filter.comparator}" is not supported.';
+              throw Exception(
+                  'The comparator "${filter.comparator}" is not supported.');
           }
         }
       }
@@ -340,8 +341,8 @@ class YustDatabaseService {
     if (orderByList != null) {
       orderByList.asMap().forEach((index, orderBy) {
         if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {
-          final desc = (index + 1 < orderByList.length &&
-              orderByList[index + 1].toUpperCase() == 'DESC');
+          final desc = index + 1 < orderByList.length &&
+              orderByList[index + 1].toUpperCase() == 'DESC';
           query = query.orderBy(orderBy, descending: desc);
         }
       });

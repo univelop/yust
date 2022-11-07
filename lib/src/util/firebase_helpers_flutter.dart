@@ -19,7 +19,7 @@ class FirebaseHelpers {
       await Firebase.initializeApp();
     } else {
       if (firebaseOptions == null) {
-        throw (YustException('firebaseOptions must be provided.'));
+        throw YustException('firebaseOptions must be provided.');
       }
       final options = fromMap(firebaseOptions);
       await Firebase.initializeApp(options: options);

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 class YustFileService {
+  // ignore: avoid_unused_constructor_parameters
   YustFileService({String? emulatorAddress});
 
   YustFileService.mocked();

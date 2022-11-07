@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import '../models/yust_user.dart';
 import '../yust.dart';
 
 /// Handels auth request for Firebase Auth.
 class YustAuthService {
+  // ignore: avoid_unused_constructor_parameters
   YustAuthService({String? emulatorAddress});
 
   YustAuthService.mocked();

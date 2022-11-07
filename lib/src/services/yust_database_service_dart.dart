@@ -253,7 +253,7 @@ class YustDatabaseService {
   }) async {
     final docs = await getDocsOnce<T>(docSetup, filters: filters);
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, docs.length);
-    for (var doc in docs) {
+    for (final doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
   }
@@ -435,7 +435,8 @@ class YustDatabaseService {
               op = 'IS_NULL';
               break;
             default:
-              throw 'The comparator "${filter.comparator}" is not supported.';
+              throw Exception(
+                  'The comparator "${filter.comparator}" is not supported.');
           }
           final quotedFieldPath =
               filter.field.split('.').map((f) => '`$f`').join('.');
@@ -457,8 +458,8 @@ class YustDatabaseService {
     if (orderByList != null) {
       orderByList.asMap().forEach((index, orderBy) {
         if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {
-          final desc = (index + 1 < orderByList.length &&
-              orderByList[index + 1].toUpperCase() == 'DESC');
+          final desc = index + 1 < orderByList.length &&
+              orderByList[index + 1].toUpperCase() == 'DESC';
           result.add(Order(
               field: FieldReference(fieldPath: orderBy),
               direction: desc ? 'DESCENDING' : 'ASCENDING'));
@@ -486,10 +487,7 @@ class YustDatabaseService {
   Value _valueToDbValue(dynamic value) {
     if (value is List) {
       return Value(
-          arrayValue: ArrayValue(
-              values: value
-                  .map((childValue) => _valueToDbValue(childValue))
-                  .toList()));
+          arrayValue: ArrayValue(values: value.map(_valueToDbValue).toList()));
     } else if (value is Map) {
       return Value(
           mapValue: MapValue(
@@ -511,15 +509,13 @@ class YustDatabaseService {
     } else if (value is DateTime) {
       return Value(timestampValue: value.toIso8601StringWithOffset());
     } else {
-      throw (YustException('Value can not be transformed for Firestore.'));
+      throw YustException('Value can not be transformed for Firestore.');
     }
   }
 
   dynamic _dbValueToValue(Value dbValue) {
     if (dbValue.arrayValue != null) {
-      return (dbValue.arrayValue!.values ?? []).map((childValue) {
-        return _dbValueToValue(childValue);
-      }).toList();
+      return (dbValue.arrayValue!.values ?? []).map(_dbValueToValue).toList();
     } else if (dbValue.mapValue != null) {
       final map = dbValue.mapValue!.fields;
       if (map?['_seconds'] != null) {
@@ -546,7 +542,7 @@ class YustDatabaseService {
     } else if (dbValue.timestampValue != null) {
       return dbValue.timestampValue;
     } else {
-      throw (YustException('Value can not be transformed from Firestore.'));
+      throw YustException('Value can not be transformed from Firestore.');
     }
   }
 

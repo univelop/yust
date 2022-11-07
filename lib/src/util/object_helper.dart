@@ -89,7 +89,7 @@ class TraverseObject {
     info.visitedNodes.add(obj);
 
     for (final key in _keys(obj)) {
-      final value = (obj)[key];
+      final value = obj[key];
       final currentPath = List<String>.from(info.currentPath);
       currentPath.add(key.toString());
 

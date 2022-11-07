@@ -103,7 +103,7 @@ class YustFilter {
 
   dynamic _handleBoolValue(dynamic value) {
     if (value is List) {
-      return value.map((v) => _handleBoolValue(v)).toList();
+      return value.map(_handleBoolValue).toList();
     } else if (value == true) {
       return 1;
     } else if (value == false) {
@@ -168,9 +168,7 @@ class YustFilter {
   }
 
   /// Create a new filter based on an exiting one
-  static YustFilter from(YustFilter f) {
-    return YustFilter.fromJson(f.toJson());
-  }
+  factory YustFilter.from(YustFilter f) => YustFilter.fromJson(f.toJson());
 
   factory YustFilter.fromJson(Map<String, dynamic> json) =>
       _$YustFilterFromJson(json);

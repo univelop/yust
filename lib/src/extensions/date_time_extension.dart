@@ -1,7 +1,7 @@
 extension DateTimeExtension on DateTime {
   /// Returns an ISO-8601 full-precision extended format representation with an offset.
   String toIso8601StringWithOffset() {
-    var isoDate = toIso8601String();
+    final isoDate = toIso8601String();
     if (isUtc) {
       return isoDate;
     } else {

@@ -5,7 +5,7 @@ import 'yust_doc_setup.dart';
 
 part 'yust_notification.g.dart';
 
-dataFromJson(data) => Map<String, dynamic>.from(data);
+Map<String, dynamic> dataFromJson(data) => Map<String, dynamic>.from(data);
 
 /// A representation of a push notification.
 @JsonSerializable()
@@ -14,8 +14,8 @@ class YustNotification extends YustDoc {
       YustDocSetup<YustNotification>(
         userId: userId,
         collectionName: 'notifications',
-        newDoc: () => YustNotification(),
-        fromJson: (json) => YustNotification.fromJson(json),
+        newDoc: YustNotification.new,
+        fromJson: YustNotification.fromJson,
         hasOwner: true,
       );
 

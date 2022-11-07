@@ -29,7 +29,7 @@ class YustFileService {
     try {
       final storageReference = _fireStorage.ref().child(path).child(name);
 
-      var size = _calcMaxUploadRetryTime(bytes, file);
+      final size = _calcMaxUploadRetryTime(bytes, file);
       firebase_storage.FirebaseStorage.instance
           .setMaxUploadRetryTime(Duration(seconds: size * 30));
 
@@ -37,7 +37,7 @@ class YustFileService {
       if (file != null) {
         uploadTask = storageReference.putFile(file);
       } else {
-        var metadata = firebase_storage.SettableMetadata(
+        final metadata = firebase_storage.SettableMetadata(
           contentType: lookupMimeType(name),
         );
         uploadTask = storageReference.putData(bytes!, metadata);

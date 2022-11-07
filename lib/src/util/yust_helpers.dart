@@ -29,7 +29,7 @@ class YustHelpers {
   String formatDate(DateTime? dateTime, {String? format}) {
     if (dateTime == null) return '';
 
-    var formatter = DateFormat(format ?? 'dd.MM.yyyy');
+    final formatter = DateFormat(format ?? 'dd.MM.yyyy');
     return formatter.format(dateTime.toLocal());
   }
 
@@ -37,7 +37,7 @@ class YustHelpers {
   String formatTime(DateTime? dateTime, {String? format}) {
     if (dateTime == null) return '';
 
-    var formatter = DateFormat(format ?? 'HH:mm');
+    final formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(dateTime.toLocal());
   }
 }

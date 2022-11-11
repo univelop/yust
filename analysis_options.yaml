@@ -12,13 +12,15 @@
 # The core lints are also what is used by pub.dev for scoring packages.
 
 include: package:lints/recommended.yaml
-
 # Uncomment the following section to specify additional rules.
-
-# linter:
-#   rules:
-#     - camel_case_types
-
+linter:
+    rules:
+        # Always await, intentionally not await
+        unawaited_futures: true
+        prefer_single_quotes: true
+        invalid_dependency: false
+        prefer_relative_imports: true
+        directives_ordering: true
 # analyzer:
 #   exclude:
 #     - path/to/excluded/files/**

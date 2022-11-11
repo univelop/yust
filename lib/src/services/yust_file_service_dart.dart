@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 class YustFileService {
-  YustFileService();
+  YustFileService({String? emulatorAddress});
 
   YustFileService.mocked();
 

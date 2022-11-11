@@ -6,14 +6,18 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../util/object_helper.dart';
+import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
 class YustDatabaseService {
   final FirebaseFirestore _fireStore;
+  DatabaseLogCallback? dbLogCallback;
 
-  YustDatabaseService() : _fireStore = FirebaseFirestore.instance;
-  YustDatabaseService.mocked() : _fireStore = FakeFirebaseFirestore();
+  YustDatabaseService({this.dbLogCallback})
+      : _fireStore = FirebaseFirestore.instance;
+  YustDatabaseService.mocked({this.dbLogCallback})
+      : _fireStore = FakeFirebaseFirestore();
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -136,6 +140,21 @@ class YustDatabaseService {
     await collection
         .doc(doc.id)
         .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
+  }
+
+  /// Transforms (e.g. increment, decrement) a documents fields.
+  Future<void> updateDocByTransform<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+    List<YustFieldTransform> fieldTransforms, {
+    bool skipOnSave = false,
+    bool? removeNullValues,
+  }) async {
+    var collection = _fireStore.collection(_getCollectionPath(docSetup));
+
+    final update = _transformsToFieldValueMap(fieldTransforms);
+
+    await collection.doc(id).update(update);
   }
 
   Map<String, dynamic> _prepareJsonForFirebase(
@@ -353,5 +372,16 @@ class YustDatabaseService {
       return docSetup.fromJson(modifiedData);
     }
     return null;
+  }
+
+  static Map<String, dynamic> _transformsToFieldValueMap(
+      List<YustFieldTransform> transforms) {
+    final map = <String, dynamic>{};
+    for (final transform in transforms) {
+      final fieldValue = transform.toNativeTransform();
+      if (fieldValue == null) continue;
+      map[transform.fieldPath] = fieldValue;
+    }
+    return map;
   }
 }

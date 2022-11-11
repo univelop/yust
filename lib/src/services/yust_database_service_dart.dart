@@ -1,12 +1,13 @@
 import 'package:googleapis/firestore/v1.dart';
-import 'package:yust/src/util/mock_database.dart';
 
 import '../extensions/date_time_extension.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../util/mock_database.dart';
 import '../util/yust_exception.dart';
+import '../util/yust_field_transform.dart';
 import '../util/yust_firestore_api.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
@@ -18,13 +19,14 @@ class YustDatabaseService {
   late final FirestoreApi _api;
   late final String _projectId;
   late final MockDatabase _mockDb;
+  DatabaseLogCallback? dbLogCallback;
   bool _mocked = false;
 
-  YustDatabaseService()
+  YustDatabaseService({this.dbLogCallback})
       : _api = YustFirestoreApi.instance!,
         _projectId = YustFirestoreApi.projectId!;
 
-  YustDatabaseService.mocked()
+  YustDatabaseService.mocked({this.dbLogCallback})
       : _mockDb = MockDatabase(),
         _mocked = true;
 
@@ -87,6 +89,7 @@ class YustDatabaseService {
         _getQuery(docSetup,
             filters: filters, orderByList: orderByList, limit: limit),
         _getParentPath(docSetup));
+    dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
 
     return response
         .map((e) {
@@ -119,9 +122,11 @@ class YustDatabaseService {
     if (_mocked) {
       return _mockDb.getDocOnce<T>(docSetup, id);
     }
+    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     try {
       final response = await _api.projects.databases.documents
           .get(_getDocumentPath(docSetup, id));
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
       return _transformDoc<T>(docSetup, response);
     } on ApiRequestError {
       return null;
@@ -162,6 +167,7 @@ class YustDatabaseService {
     if (response.isEmpty || response.first.document == null) {
       return null;
     }
+    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     return _transformDoc<T>(docSetup, response.first.document!);
   }
 
@@ -177,6 +183,7 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
     List<String>? updateMask,
+    bool skipLog = false,
   }) async {
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
@@ -189,7 +196,7 @@ class YustDatabaseService {
           skipOnSave: skipOnSave,
           removeNullValues: removeNullValues);
     }
-
+    if (!skipLog) dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1);
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
@@ -209,12 +216,43 @@ class YustDatabaseService {
     );
   }
 
+  /// Transforms (e.g. increment, decrement) a documents fields.
+  Future<void> updateDocByTransform<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+    List<YustFieldTransform> fieldTransforms, {
+    bool skipOnSave = false,
+    bool? removeNullValues,
+  }) async {
+    // TODO: Mocked
+
+    final firebaseFieldTransforms = fieldTransforms
+        .map((t) => t.toNativeTransform())
+        .cast<FieldTransform>()
+        .toList();
+    final documentTransform = DocumentTransform(
+      fieldTransforms: firebaseFieldTransforms,
+      document: _getDocumentPath(docSetup, id),
+    );
+    final write = Write(
+        transform: documentTransform,
+        currentDocument: Precondition(exists: true));
+    final commitRequest = CommitRequest(writes: [write]);
+    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1);
+
+    await _api.projects.databases.documents.commit(
+      commitRequest,
+      _getDatabasePath(),
+    );
+  }
+
   /// Delete all [YustDoc]s in the filter.
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
     final docs = await getDocsOnce<T>(docSetup, filters: filters);
+    dbLogCallback?.call(DatabaseLogAction.get, docSetup, docs.length);
     for (var doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
@@ -228,6 +266,7 @@ class YustDatabaseService {
     if (_mocked) {
       return _mockDb.deleteDoc(docSetup, doc);
     }
+    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, doc.id));
   }
@@ -238,6 +277,7 @@ class YustDatabaseService {
     if (_mocked) {
       return _mockDb.deleteDocById(docSetup, docId);
     }
+    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, docId));
   }
@@ -259,11 +299,12 @@ class YustDatabaseService {
     if (onInitialised != null) {
       await onInitialised(doc);
     }
-
+    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1);
     await saveDoc<T>(
       docSetup,
       doc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
+      skipLog: true,
     );
 
     return doc;
@@ -288,8 +329,10 @@ class YustDatabaseService {
     return _transformDoc(docSetup, document as Document);
   }
 
+  String _getDatabasePath() => 'projects/$_projectId/databases/(default)';
+
   String _getParentPath(YustDocSetup docSetup) {
-    var parentPath = 'projects/$_projectId/databases/(default)/documents';
+    var parentPath = '${_getDatabasePath()}/documents';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
       parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
     }
@@ -465,6 +508,8 @@ class YustDatabaseService {
       return Value(timestampValue: value);
     } else if (value is String) {
       return Value(stringValue: value);
+    } else if (value is DateTime) {
+      return Value(timestampValue: value.toIso8601StringWithOffset());
     } else {
       throw (YustException('Value can not be transformed for Firestore.'));
     }
@@ -476,7 +521,17 @@ class YustDatabaseService {
         return _dbValueToValue(childValue);
       }).toList();
     } else if (dbValue.mapValue != null) {
-      return dbValue.mapValue!.fields?.map(
+      final map = dbValue.mapValue!.fields;
+      if (map?['_seconds'] != null) {
+        final seconds = int.tryParse(map!['_seconds']?.integerValue ?? '');
+        final nanoseconds =
+            int.tryParse(map['_nanoseconds']?.integerValue ?? '');
+        if (seconds == null || nanoseconds == null) return null;
+        final microseconds = (seconds * 1000000 + nanoseconds / 1000).round();
+        return DateTime.fromMillisecondsSinceEpoch(microseconds)
+            .toIso8601StringWithOffset();
+      }
+      return map?.map(
           (key, childValue) => MapEntry(key, _dbValueToValue(childValue)));
     } else if (dbValue.booleanValue != null) {
       return dbValue.booleanValue;

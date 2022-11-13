@@ -1,3 +1,11 @@
+## 3.3.0 - 2022-11-13
+
+- Add update masks
+- Add hasAuthor and hasOwner to doc setup
+- Improve notifications
+- Remove forUser filter
+- Improve dart database service
+
 ## 3.2.0 - 2022-10-09
 
 - Add mock database

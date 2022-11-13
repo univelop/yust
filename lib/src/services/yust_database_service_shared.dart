@@ -1,28 +1,45 @@
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
-import '../yust.dart';
 
-Future<void> preapareSaveDoc<T extends YustDoc>(
+Future<List<String>> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
   T doc, {
-  bool trackModification = true,
+  bool? trackModification,
   bool skipOnSave = false,
 }) async {
-  if (trackModification) {
+  final updateMask = <String>[];
+
+  if (trackModification ?? docSetup.trackModification) {
+    if (docSetup.hasAuthor) {
+      updateMask.add('createdBy');
+      doc.createdBy ??= doc.modifiedBy;
+
+      updateMask.add('modifiedBy');
+      doc.modifiedBy = docSetup.userId;
+    }
+
+    if (docSetup.hasOwner && doc.userId == null) {
+      updateMask.add('userId');
+      doc.userId = docSetup.userId;
+    }
+
+    updateMask.add('modifiedAt');
     doc.modifiedAt = DateTime.now();
-    doc.modifiedBy = Yust.authService.currUserId;
   }
-  doc.createdAt ??= doc.modifiedAt;
-  doc.createdBy ??= doc.modifiedBy;
-  if (doc.userId == null && docSetup.forUser) {
-    doc.userId = Yust.authService.currUserId;
+
+  if (doc.createdAt == null) {
+    updateMask.add('createdAt');
+    doc.createdAt ??= doc.modifiedAt;
   }
+
   if (doc.envId == null && docSetup.forEnvironment) {
-    doc.envId = Yust.currEnvId;
+    updateMask.add('envId');
+    doc.envId = docSetup.envId;
   }
-  if (docSetup.onSave != null && !skipOnSave) {
-    await docSetup.onSave!(doc);
-  }
+
+  if (!skipOnSave) await docSetup.onSave?.call(doc);
+
+  return updateMask;
 }
 
 T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
@@ -30,15 +47,12 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
 
   doc.id = id;
   doc.createdAt = DateTime.now();
-  doc.createdBy = Yust.authService.currUserId;
-  if (docSetup.forEnvironment) {
-    doc.envId = Yust.currEnvId;
-  }
-  if (docSetup.forUser) {
-    doc.userId = Yust.authService.currUserId;
-  }
-  if (docSetup.onInit != null) {
-    docSetup.onInit!(doc);
-  }
+
+  if (docSetup.hasAuthor) doc.createdBy = docSetup.userId;
+  if (docSetup.hasOwner) doc.userId = docSetup.userId;
+  if (docSetup.forEnvironment) doc.envId = docSetup.envId;
+
+  docSetup.onInit?.call(doc);
+
   return doc;
 }

@@ -6,14 +6,18 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../util/object_helper.dart';
+import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
 class YustDatabaseService {
   final FirebaseFirestore _fireStore;
+  DatabaseLogCallback? dbLogCallback;
 
-  YustDatabaseService() : _fireStore = FirebaseFirestore.instance;
-  YustDatabaseService.mocked() : _fireStore = FakeFirebaseFirestore();
+  YustDatabaseService({this.dbLogCallback})
+      : _fireStore = FirebaseFirestore.instance;
+  YustDatabaseService.mocked({this.dbLogCallback})
+      : _fireStore = FakeFirebaseFirestore();
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -113,21 +117,44 @@ class YustDatabaseService {
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
-    bool merge = true,
-    bool trackModification = true,
+    bool? merge = true,
+    bool? trackModification,
     bool skipOnSave = false,
     bool? removeNullValues,
+    List<String>? updateMask,
   }) async {
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
-    await preapareSaveDoc(docSetup, doc,
+    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
+    if (updateMask != null) {
+      updateMask.addAll(yustUpdateMask);
+      merge = null;
+    }
+
     final jsonDoc = doc.toJson();
 
     final modifiedDoc = _prepareJsonForFirebase(
       jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
-    await collection.doc(doc.id).set(modifiedDoc, SetOptions(merge: merge));
+    await collection
+        .doc(doc.id)
+        .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
+  }
+
+  /// Transforms (e.g. increment, decrement) a documents fields.
+  Future<void> updateDocByTransform<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+    List<YustFieldTransform> fieldTransforms, {
+    bool skipOnSave = false,
+    bool? removeNullValues,
+  }) async {
+    var collection = _fireStore.collection(_getCollectionPath(docSetup));
+
+    final update = _transformsToFieldValueMap(fieldTransforms);
+
+    await collection.doc(id).update(update);
   }
 
   Map<String, dynamic> _prepareJsonForFirebase(
@@ -219,7 +246,7 @@ class YustDatabaseService {
   String _getCollectionPath(YustDocSetup docSetup) {
     var collectionPath = '';
     if (Yust.useSubcollections && docSetup.forEnvironment) {
-      collectionPath += '${Yust.envCollectionName}/${Yust.currEnvId!}/';
+      collectionPath += '${Yust.envCollectionName}/${docSetup.envId}/';
     }
     collectionPath += docSetup.collectionName;
     return collectionPath;
@@ -247,19 +274,14 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
   ) {
     if (!Yust.useSubcollections && docSetup.forEnvironment) {
-      query = _filterForEnvironment(query);
+      query = _filterForEnvironment(query, docSetup.envId!);
     }
-    if (docSetup.forUser) {
-      query = _filterForUser(query);
-    }
+
     return query;
   }
 
-  Query _filterForEnvironment(Query query) =>
-      query.where('envId', isEqualTo: Yust.currEnvId);
-
-  Query _filterForUser(Query query) =>
-      query.where('userId', isEqualTo: Yust.authService.currUserId);
+  Query _filterForEnvironment(Query query, String envId) =>
+      query.where('envId', isEqualTo: envId);
 
   Query _executeFilters(Query query, List<YustFilter>? filters) {
     if (filters != null) {
@@ -350,5 +372,16 @@ class YustDatabaseService {
       return docSetup.fromJson(modifiedData);
     }
     return null;
+  }
+
+  static Map<String, dynamic> _transformsToFieldValueMap(
+      List<YustFieldTransform> transforms) {
+    final map = <String, dynamic>{};
+    for (final transform in transforms) {
+      final fieldValue = transform.toNativeTransform();
+      if (fieldValue == null) continue;
+      map[transform.fieldPath] = fieldValue;
+    }
+    return map;
   }
 }

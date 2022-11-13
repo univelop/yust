@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
@@ -11,6 +10,7 @@ class FirebaseHelpers {
   static Future<void> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
+    String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {
@@ -27,15 +27,8 @@ class FirebaseHelpers {
 
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {
-      await _connectToFirebaseEmulator(emulatorAddress);
+      FirebaseFirestore.instance.useFirestoreEmulator(emulatorAddress, 8080);
     }
-  }
-
-  /// Connnect to the firebase emulator for Firestore and Authentication
-  static Future<void> _connectToFirebaseEmulator(String address) async {
-    FirebaseFirestore.instance.useFirestoreEmulator(address, 8080);
-
-    await FirebaseAuth.instance.useAuthEmulator(address, 9099);
   }
 
   static FirebaseOptions? fromMap(Map<String, String>? map) {

@@ -9,7 +9,12 @@ import '../yust.dart';
 class YustAuthService {
   FirebaseAuth fireAuth;
 
-  YustAuthService() : fireAuth = FirebaseAuth.instance;
+  YustAuthService({String? emulatorAddress})
+      : fireAuth = FirebaseAuth.instance {
+    if (emulatorAddress != null) {
+      fireAuth.useAuthEmulator(emulatorAddress, 9099);
+    }
+  }
 
   YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
 
@@ -24,7 +29,7 @@ class YustAuthService {
     });
   }
 
-  String? get currUserId => fireAuth.currentUser?.uid;
+  String? getCurrentUserId() => fireAuth.currentUser?.uid;
 
   Future<void> signIn(
     String email,
@@ -70,7 +75,7 @@ class YustAuthService {
     );
     await userCredential.user!.updateEmail(email);
     final user = await Yust.databaseService
-        .getDocOnce<YustUser>(Yust.userSetup, currUserId!);
+        .getDocOnce<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
     if (user != null) {
       user.email = email;
       await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);

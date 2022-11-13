@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 class YustFileService {
-  YustFileService();
+  YustFileService({String? emulatorAddress});
 
   YustFileService.mocked();
 
@@ -11,7 +11,7 @@ class YustFileService {
       required String name,
       File? file,
       Uint8List? bytes}) async {
-    return 'url';
+    throw Exception('Uploading Files is currently not supported');
   }
 
   Future<Uint8List?> downloadFile(
@@ -27,6 +27,6 @@ class YustFileService {
 
   Future<String> getFileDownloadUrl(
       {required String path, required String name}) async {
-    return 'url';
+    throw Exception('Getting File URLs is currently not supported');
   }
 }

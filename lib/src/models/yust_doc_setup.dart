@@ -2,6 +2,12 @@ import 'yust_doc.dart';
 
 /// The setup for a [YustDoc] is needed to read or save a document to the database.
 class YustDocSetup<T extends YustDoc> {
+  /// The ID of the tenant to use.
+  String? envId;
+
+  /// The id of the YustUser authoring this database action
+  String? userId;
+
   /// The name for the document collection.
   ///
   /// Example: An item should be saved in the collection 'items'.
@@ -13,17 +19,28 @@ class YustDocSetup<T extends YustDoc> {
   /// Callback to create a new document instance.
   T Function() newDoc;
 
-  /// If true the `userId` of the [YustDoc] will be automatically set when saving.
-  bool forUser;
+  ///Should be set to true if this setup is used for an environment.
+  bool isEnvironment;
 
   /// If true the [YustDoc] will be automatically saved in a subcollection under the tannant.
   bool forEnvironment;
 
-  ///Should be set to true if this setup is used for an environment.
-  bool isEnvironment;
+  /// If true the `userId` of the [YustDoc] will be automatically set when saving.
+  ///
+  /// Note that this, unlike [forEnvironment], doesn't set a filter for the userId
+  bool hasOwner;
+
+  /// If true the `createdBy` & `modifiedBy` of the [YustDoc] will be automatically set when saving.
+  ///
+  /// Disabling this makes sense, if the document isn't assigned to a user or generally not edited by users directly
+  bool hasAuthor;
 
   /// Should null values be removed, before writing the doc to the database.
   bool removeNullValues;
+
+  /// Should the database actions update the record specified by [hasAuthor] & [hasOwner].
+  /// Can be overriden in the db-calls directly e.g. [saveDoc].
+  bool trackModification;
 
   /// Callback when initialising a new [YustDoc].
   void Function(T doc)? onInit;
@@ -35,11 +52,25 @@ class YustDocSetup<T extends YustDoc> {
     required this.collectionName,
     required this.fromJson,
     required this.newDoc,
-    this.forUser = false,
+    this.envId,
+    this.userId,
+    this.hasAuthor = false,
+    this.hasOwner = false,
     this.forEnvironment = false,
     this.isEnvironment = false,
     this.onInit,
     this.onSave,
     this.removeNullValues = true,
+    this.trackModification = true,
   });
+
+  @override
+  int get hashCode => Object.hash(collectionName, envId, userId);
+
+  @override
+  bool operator ==(Object other) =>
+      other is YustDocSetup &&
+      collectionName == other.collectionName &&
+      envId == other.envId &&
+      userId == other.userId;
 }

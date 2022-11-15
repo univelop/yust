@@ -1,3 +1,5 @@
+import 'package:timezone/data/latest.dart';
+
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
 import 'services/yust_auth_service.dart';
@@ -77,6 +79,9 @@ class Yust {
     String envCollectionName = 'envs',
     DatabaseLogCallback? dbLogCallback,
   }) async {
+    // Init timezones
+    initializeTimeZones();
+
     await FirebaseHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,

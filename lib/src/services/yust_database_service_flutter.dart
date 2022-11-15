@@ -366,7 +366,7 @@ class YustDatabaseService {
         if (currentNode.value is Timestamp) {
           return (currentNode.value as Timestamp)
               .toDate()
-              .toLocal()
+              .toUtc()
               .toIso8601String();
         }
         return currentNode.value;

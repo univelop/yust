@@ -54,7 +54,7 @@ class YustUser extends YustDoc {
 
   /// Saves the current [DateTime] as the last login.
   void setLoginTime() async {
-    lastLogin = DateTime.now();
+    lastLogin = DateTime.now().toUtc();
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
   }
 

@@ -1,6 +1,6 @@
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
-import '../util/yust_date_time.dart';
+import '../yust.dart';
 
 Future<List<String>> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
@@ -25,7 +25,7 @@ Future<List<String>> prepareSaveDoc<T extends YustDoc>(
     }
 
     updateMask.add('modifiedAt');
-    doc.modifiedAt = YustDateTime.now();
+    doc.modifiedAt = Yust.helpers.utcNow();
   }
 
   if (doc.createdAt == null) {
@@ -47,7 +47,7 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
   doc ??= docSetup.newDoc();
 
   doc.id = id;
-  doc.createdAt = YustDateTime.now();
+  doc.createdAt = Yust.helpers.utcNow();
 
   if (docSetup.hasAuthor) doc.createdBy = docSetup.userId;
   if (docSetup.hasOwner) doc.userId = docSetup.userId;

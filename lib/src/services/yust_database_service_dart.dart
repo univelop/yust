@@ -175,6 +175,7 @@ class YustDatabaseService {
   ///
   /// If [merge] is false a document with the same name
   /// will be overwritten instead of trying to merge the data.
+  /// Use [doNotCreate] to ensure that no new record is created
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -184,6 +185,7 @@ class YustDatabaseService {
     bool? removeNullValues,
     List<String>? updateMask,
     bool skipLog = false,
+    bool doNotCreate = false,
   }) async {
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
@@ -194,7 +196,8 @@ class YustDatabaseService {
           merge: merge,
           trackModification: trackModification,
           skipOnSave: skipOnSave,
-          removeNullValues: removeNullValues);
+          removeNullValues: removeNullValues,
+          doNotCreate: doNotCreate);
     }
     if (!skipLog) dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1);
     final jsonDoc = doc.toJson();
@@ -213,6 +216,7 @@ class YustDatabaseService {
       dbDoc,
       _getDocumentPath(docSetup, doc.id),
       updateMask_fieldPaths: quotedUpdateMask,
+      currentDocument_exists: doNotCreate ? true : null,
     );
   }
 

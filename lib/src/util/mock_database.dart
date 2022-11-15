@@ -75,9 +75,10 @@ class MockDatabase {
     bool? trackModification,
     bool skipOnSave = false,
     bool? removeNullValues,
+    bool doNotCreate = false,
   }) async {
     final docs = _getCollection<T>(docSetup.collectionName);
-    if (!docs.contains(doc)) {
+    if (!doNotCreate && !docs.contains(doc)) {
       docs.add(doc);
     }
   }

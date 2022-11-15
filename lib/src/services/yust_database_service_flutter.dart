@@ -122,6 +122,7 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
     List<String>? updateMask,
+    bool doNotCreate = false,
   }) async {
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
@@ -137,6 +138,7 @@ class YustDatabaseService {
       jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
+    // TODO: Support doNotCreate
     await collection
         .doc(doc.id)
         .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));

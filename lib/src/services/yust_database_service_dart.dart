@@ -528,7 +528,7 @@ class YustDatabaseService {
             int.tryParse(map['_nanoseconds']?.integerValue ?? '');
         if (seconds == null || nanoseconds == null) return null;
         final microseconds = (seconds * 1000000 + nanoseconds / 1000).round();
-        return DateTime.fromMillisecondsSinceEpoch(microseconds, isUtc: true)
+        return DateTime.fromMicrosecondsSinceEpoch(microseconds, isUtc: true)
             .toIso8601StringWithOffset();
       }
       return map?.map(

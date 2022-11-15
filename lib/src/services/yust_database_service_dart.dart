@@ -480,7 +480,13 @@ class YustDatabaseService {
       return null;
     }
 
-    return docSetup.fromJson(json);
+    try {
+      return docSetup.fromJson(json);
+    } catch (e) {
+      print(
+          '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}: $e ($json)');
+      return null;
+    }
   }
 
   Value _valueToDbValue(dynamic value) {

@@ -369,7 +369,12 @@ class YustDatabaseService {
         }
         return currentNode.value;
       });
-      return docSetup.fromJson(modifiedData);
+      try {
+        return docSetup.fromJson(modifiedData);
+      } catch (e) {
+        print('[[WARNING]] Error Transforming JSON $e');
+        return null;
+      }
     }
     return null;
   }

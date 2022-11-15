@@ -82,4 +82,9 @@ class YustDateTime extends TZDateTime {
   YustDateTime.fromUtc(DateTime other) : super.from(other, UTC);
   YustDateTime.fromLocal(DateTime other)
       : super.from(other, other.isUtc ? UTC : local);
+
+  static tryFromUtc(DateTime? other) =>
+      other == null ? null : YustDateTime.fromUtc(other);
+  static tryFromLocal(DateTime? other) =>
+      other == null ? null : YustDateTime.fromLocal(other);
 }

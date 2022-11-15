@@ -87,12 +87,21 @@ class YustHelpers {
 
   DateTime utcToLocal(DateTime dateTime) =>
       TZDateTime.from(dateTime, UTC).toLocal();
-  DateTime localToUtc(DateTime dateTime) =>
-      TZDateTime.from(dateTime, dateTime.isUtc ? UTC : local).toLocal();
+  DateTime localToUtc(DateTime dateTime) => dateTime.isUtc
+      ? dateTime
+      : TZDateTime.local(
+              dateTime.year,
+              dateTime.month,
+              dateTime.day,
+              dateTime.hour,
+              dateTime.minute,
+              dateTime.second,
+              dateTime.millisecond,
+              dateTime.microsecond)
+          .toUtc();
 
   DateTime? tryUtcToLocal(DateTime? dateTime) =>
-      dateTime == null ? null : TZDateTime.from(dateTime, UTC).toLocal();
-  DateTime? tryLocalToUtc(DateTime? dateTime) => dateTime == null
-      ? null
-      : TZDateTime.from(dateTime, dateTime.isUtc ? UTC : local).toLocal();
+      dateTime == null ? null : utcToLocal(dateTime);
+  DateTime? tryLocalToUtc(DateTime? dateTime) =>
+      dateTime == null ? null : localToUtc(dateTime);
 }

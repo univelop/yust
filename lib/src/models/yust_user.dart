@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../util/yust_date_time.dart';
 import '../yust.dart';
 import 'yust_doc.dart';
 import 'yust_doc_setup.dart';
@@ -55,7 +54,7 @@ class YustUser extends YustDoc {
 
   /// Saves the current [DateTime] as the last login.
   void setLoginTime() async {
-    lastLogin = YustDateTime.now();
+    lastLogin = Yust.helpers.utcNow();
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
   }
 

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart';
 
+import '../../yust.dart';
+
 /// Yust helpers
 class YustHelpers {
   /// Returns a random String with a specific length.
@@ -29,7 +31,7 @@ class YustHelpers {
   /// Return a string representing [dateTime] in the German date format or another given [format].
   String formatDate(DateTime? dateTime, {String? format}) {
     if (dateTime == null) return '';
-    final tzDateTime = TZDateTime.from(dateTime, UTC);
+    final tzDateTime = YustDateTime.fromUtc(dateTime);
 
     var formatter = DateFormat(format ?? 'dd.MM.yyyy');
     return formatter.format(tzDateTime.toLocal());
@@ -38,38 +40,9 @@ class YustHelpers {
   /// Return a string representing [dateTime] in the German time format or another given [format].
   String formatTime(DateTime? dateTime, {String? format}) {
     if (dateTime == null) return '';
-    final tzDateTime = TZDateTime.from(dateTime, UTC);
+    final tzDateTime = YustDateTime.fromUtc(dateTime);
 
     var formatter = DateFormat(format ?? 'HH:mm');
     return formatter.format(tzDateTime.toLocal());
-  }
-
-  /// Convert a DateTime in a Timezone-aware TZDateTime
-  /// We usually interpret parsed dates as local dates. But, if it was specifically set as UTC,
-  /// we respect that as well
-  TZDateTime? localDateToUtc(DateTime? dateTime) {
-    if (dateTime == null) return null;
-    return TZDateTime.from(dateTime, dateTime.isUtc ? UTC : local).toUtc();
-  }
-
-  TZDateTime? utcDateToLocal(DateTime? dateTime) {
-    if (dateTime == null) return null;
-    return TZDateTime.from(dateTime, UTC).toLocal();
-  }
-
-  TZDateTime nowLocal() {
-    return TZDateTime.now(local);
-  }
-
-  TZDateTime createLocalDate(
-      [int month = 1,
-      int day = 1,
-      int hour = 0,
-      int minute = 0,
-      int second = 0,
-      int millisecond = 0,
-      int microsecond = 0]) {
-    return TZDateTime.local(
-        month, day, hour, minute, second, millisecond, microsecond);
   }
 }

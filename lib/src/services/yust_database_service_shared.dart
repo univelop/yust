@@ -24,7 +24,7 @@ Future<List<String>> prepareSaveDoc<T extends YustDoc>(
     }
 
     updateMask.add('modifiedAt');
-    doc.modifiedAt = DateTime.now();
+    doc.modifiedAt = DateTime.now().toUtc();
   }
 
   if (doc.createdAt == null) {
@@ -46,7 +46,7 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
   doc ??= docSetup.newDoc();
 
   doc.id = id;
-  doc.createdAt = DateTime.now();
+  doc.createdAt = DateTime.now().toUtc();
 
   if (docSetup.hasAuthor) doc.createdBy = docSetup.userId;
   if (docSetup.hasOwner) doc.userId = docSetup.userId;

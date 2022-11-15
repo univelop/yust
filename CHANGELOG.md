@@ -1,3 +1,8 @@
+## 3.3.1 - 2022-11-15
+
+- Improve date time handling
+- Add do not create option to save doc
+
 ## 3.3.0 - 2022-11-13
 
 - Add update masks

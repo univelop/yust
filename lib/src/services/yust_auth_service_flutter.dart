@@ -22,7 +22,7 @@ class YustAuthService {
     return fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
         Yust.databaseService
-            .getDocOnce<YustUser>(Yust.userSetup, user.uid)
+            .getFromDB<YustUser>(Yust.userSetup, user.uid)
             .then((yustUser) => yustUser?.setLoginTime());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
@@ -75,7 +75,7 @@ class YustAuthService {
     );
     await userCredential.user!.updateEmail(email);
     final user = await Yust.databaseService
-        .getDocOnce<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
+        .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
     if (user != null) {
       user.email = email;
       await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);

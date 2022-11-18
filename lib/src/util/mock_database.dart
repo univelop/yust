@@ -1,6 +1,7 @@
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
 
 /// A mock database for storing docs.
 ///
@@ -26,7 +27,7 @@ class MockDatabase {
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
     return _getCollection<T>(docSetup.collectionName);
@@ -54,7 +55,7 @@ class MockDatabase {
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     List<YustFilter> filters, {
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
   }) async {
     final docs = _getCollection<T>(docSetup.collectionName);
     if (docs.isEmpty) {

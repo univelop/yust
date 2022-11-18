@@ -5,6 +5,7 @@ import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
 import '../util/object_helper.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
@@ -27,11 +28,11 @@ class YustDatabaseService {
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    var query = _getQuery(docSetup,
-        orderByList: orderByList, filters: filters, limit: limit);
+    var query =
+        _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.snapshots().map((snapshot) {
       return snapshot.docs
@@ -44,11 +45,11 @@ class YustDatabaseService {
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    var query = _getQuery(docSetup,
-        orderByList: orderByList, filters: filters, limit: limit);
+    var query =
+        _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
       // print('Get docs once: ${docSetup.collectionName}');
@@ -84,10 +85,10 @@ class YustDatabaseService {
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
   }) {
-    var query = _getQuery(docSetup,
-        filters: filters, orderByList: orderByList, limit: 1);
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.isNotEmpty) {
@@ -101,10 +102,10 @@ class YustDatabaseService {
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     List<YustFilter> filters, {
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
   }) async {
-    var query = _getQuery(docSetup,
-        filters: filters, orderByList: orderByList, limit: 1);
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
     final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 
@@ -231,11 +232,11 @@ class YustDatabaseService {
   dynamic getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
     return _getQuery<T>(docSetup,
-        filters: filters, orderByList: orderByList, limit: limit);
+        filters: filters, orderBy: orderBy, limit: limit);
   }
 
   T? transformDoc<T extends YustDoc>(
@@ -257,13 +258,13 @@ class YustDatabaseService {
   Query<Object?> _getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
     Query query = _fireStore.collection(_getCollectionPath(docSetup));
     query = _executeStaticFilters(query, docSetup);
     query = _executeFilters(query, filters);
-    query = _executeOrderByList(query, orderByList);
+    query = _executeOrderByList(query, orderBy);
     if (limit != null) {
       query = query.limit(limit);
     }
@@ -338,15 +339,11 @@ class YustDatabaseService {
     return query;
   }
 
-  Query _executeOrderByList(Query query, List<String>? orderByList) {
-    if (orderByList != null) {
-      orderByList.asMap().forEach((index, orderBy) {
-        if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {
-          final desc = (index + 1 < orderByList.length &&
-              orderByList[index + 1].toUpperCase() == 'DESC');
-          query = query.orderBy(orderBy, descending: desc);
-        }
-      });
+  Query _executeOrderByList(Query query, List<YustOrderBy>? orderBy) {
+    if (orderBy != null) {
+      for (final order in orderBy) {
+        query = query.orderBy(order.field, descending: order.descending);
+      }
     }
     return query;
   }

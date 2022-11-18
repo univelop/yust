@@ -11,6 +11,7 @@ export 'src/models/yust_doc_setup.dart';
 export 'src/models/yust_file.dart';
 export 'src/models/yust_filter.dart';
 export 'src/models/yust_notification.dart';
+export 'src/models/yust_order_by.dart';
 export 'src/models/yust_user.dart';
 export 'src/util/object_helper.dart';
 export 'src/util/yust_exception.dart';

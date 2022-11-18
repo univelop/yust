@@ -5,6 +5,7 @@ import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
 import '../util/mock_database.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
@@ -55,11 +56,11 @@ class YustDatabaseService {
   Stream<List<T>> getDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
     return Stream.fromFuture(getDocsOnce<T>(docSetup,
-        filters: filters, orderByList: orderByList, limit: limit));
+        filters: filters, orderBy: orderBy, limit: limit));
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -78,16 +79,15 @@ class YustDatabaseService {
   Future<List<T>> getDocsOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
     if (_mocked) {
       return _mockDb.getDocsOnce<T>(docSetup,
-          filters: filters, orderByList: orderByList, limit: limit);
+          filters: filters, orderBy: orderBy, limit: limit);
     }
     final response = await _api.projects.databases.documents.runQuery(
-        _getQuery(docSetup,
-            filters: filters, orderByList: orderByList, limit: limit),
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
         _getParentPath(docSetup));
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
 
@@ -140,10 +140,10 @@ class YustDatabaseService {
   Stream<T?> getFirstDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
   }) {
     return Stream.fromFuture(
-        getFirstDocOnce<T>(docSetup, filters ?? [], orderByList: orderByList));
+        getFirstDocOnce<T>(docSetup, filters ?? [], orderBy: orderBy));
   }
 
   /// Returns a stream of the first [YustDoc] in a list.
@@ -153,15 +153,13 @@ class YustDatabaseService {
   Future<T?> getFirstDocOnce<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     List<YustFilter> filters, {
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
   }) async {
     if (_mocked) {
-      return _mockDb.getFirstDocOnce(docSetup, filters,
-          orderByList: orderByList);
+      return _mockDb.getFirstDocOnce(docSetup, filters, orderBy: orderBy);
     }
     final response = await _api.projects.databases.documents.runQuery(
-        _getQuery(docSetup,
-            filters: filters, orderByList: orderByList, limit: 1),
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
         _getParentPath(docSetup));
 
     if (response.isEmpty || response.first.document == null) {
@@ -318,11 +316,11 @@ class YustDatabaseService {
   dynamic getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
     return _getQuery<T>(docSetup,
-        filters: filters, orderByList: orderByList, limit: limit);
+        filters: filters, orderBy: orderBy, limit: limit);
   }
 
   /// Transforms a json to a [YustDoc]
@@ -363,7 +361,7 @@ class YustDatabaseService {
   RunQueryRequest _getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
     return RunQueryRequest(
@@ -374,7 +372,7 @@ class YustDatabaseService {
                   filters: _executeStaticFilters(docSetup) +
                       _executeFilters(filters),
                   op: 'AND')),
-          orderBy: _executeOrderByList(orderByList),
+          orderBy: _executeOrderByList(orderBy),
           limit: limit),
     );
   }
@@ -456,20 +454,13 @@ class YustDatabaseService {
     return result;
   }
 
-  List<Order> _executeOrderByList(List<String>? orderByList) {
-    final result = <Order>[];
-    if (orderByList != null) {
-      orderByList.asMap().forEach((index, orderBy) {
-        if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {
-          final desc = (index + 1 < orderByList.length &&
-              orderByList[index + 1].toUpperCase() == 'DESC');
-          result.add(Order(
-              field: FieldReference(fieldPath: orderBy),
-              direction: desc ? 'DESCENDING' : 'ASCENDING'));
-        }
-      });
-    }
-    return result;
+  List<Order> _executeOrderByList(List<YustOrderBy>? orderBy) {
+    return orderBy
+            ?.map((e) => Order(
+                field: FieldReference(fieldPath: e.field),
+                direction: e.descending ? 'DESCENDING' : 'ASCENDING'))
+            .toList() ??
+        <Order>[];
   }
 
   /// Returns null if no data exists.

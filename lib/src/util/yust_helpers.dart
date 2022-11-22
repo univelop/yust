@@ -104,4 +104,13 @@ class YustHelpers {
       dateTime == null ? null : utcToLocal(dateTime);
   DateTime? tryLocalToUtc(DateTime? dateTime) =>
       dateTime == null ? null : localToUtc(dateTime);
+
+  /// Use this function instead of [DateTime.difference]!
+  ///
+  /// We do this be because there is an issue in the dart js sdk see here:
+  /// https://github.com/dart-lang/sdk/blob/main/sdk/lib/_internal/js_dev_runtime/patch/core_patch.dart#L442
+  /// and here: https://github.com/srawlins/timezone/issues/57
+  Duration dateDifference(DateTime? first, DateTime? second) => Duration(
+      milliseconds: (first?.millisecondsSinceEpoch ?? 0) -
+          (second?.millisecondsSinceEpoch ?? 0));
 }

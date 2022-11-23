@@ -93,7 +93,6 @@ class YustDatabaseService {
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
-      // print('Get docs once: ${docSetup.collectionName}');
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()

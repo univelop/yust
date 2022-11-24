@@ -25,6 +25,120 @@ class YustDatabaseService {
     return doInitDoc(docSetup, id, doc);
   }
 
+  Future<T?> get<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    return _fireStore
+        .collection(_getCollectionPath(docSetup))
+        .doc(id)
+        .get(GetOptions(source: Source.serverAndCache))
+        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
+  }
+
+  Future<T?> getFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
+    return doc.get(GetOptions(source: Source.cache)).then((docSnapshot) async {
+      if (docSnapshot.data()?.isEmpty ?? true) {
+        docSnapshot = await doc.get(GetOptions(source: Source.server));
+      }
+      return _transformDoc<T>(docSetup, docSnapshot);
+    });
+  }
+
+  Future<T?> getFromDB<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    return _fireStore
+        .collection(_getCollectionPath(docSetup))
+        .doc(id)
+        .get(GetOptions(source: Source.server))
+        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
+  }
+
+  Stream<T?> getStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    return _fireStore
+        .collection(_getCollectionPath(docSetup))
+        .doc(id)
+        .snapshots()
+        .map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
+  }
+
+  Future<T?> getFirst<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
+    final snapshot = await query.get(GetOptions(source: Source.serverAndCache));
+    T? doc;
+
+    if (snapshot.docs.isNotEmpty) {
+      doc = _transformDoc(docSetup, snapshot.docs[0]);
+    }
+    return doc;
+  }
+
+  Future<T?> getFirstFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
+    var snapshot = await query.get(GetOptions(source: Source.cache));
+    if (snapshot.docs.isEmpty) {
+      snapshot = await query.get(GetOptions(source: Source.server));
+    }
+    T? doc;
+
+    if (snapshot.docs.isNotEmpty) {
+      doc = _transformDoc(docSetup, snapshot.docs[0]);
+    }
+    return doc;
+  }
+
+  Future<T?> getFirstFromDB<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
+    final snapshot = await query.get(GetOptions(source: Source.server));
+    T? doc;
+
+    if (snapshot.docs.isNotEmpty) {
+      doc = _transformDoc(docSetup, snapshot.docs[0]);
+    }
+    return doc;
+  }
+
+  Stream<T?> getFirstStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) {
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
+
+    return query.snapshots().map<T?>((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        return _transformDoc(docSetup, snapshot.docs[0]);
+      } else {
+        return null;
+      }
+    });
+  }
+
   Future<List<T>> getList<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -66,23 +180,6 @@ class YustDatabaseService {
     });
   }
 
-  Stream<List<T>> getListStream<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
-    int? limit,
-  }) {
-    var query =
-        _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
-
-    return query.snapshots().map((snapshot) {
-      return snapshot.docs
-          .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
-          .whereType<T>()
-          .toList();
-    });
-  }
-
   Future<List<T>> getListFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -100,118 +197,21 @@ class YustDatabaseService {
     });
   }
 
-  Stream<T?> getStream<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) {
-    return _fireStore
-        .collection(_getCollectionPath(docSetup))
-        .doc(id)
-        .snapshots()
-        .map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
-  }
-
-  Future<T?> getFromDB<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) {
-    return _fireStore
-        .collection(_getCollectionPath(docSetup))
-        .doc(id)
-        .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
-  }
-
-  Future<T?> get<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) {
-    return _fireStore
-        .collection(_getCollectionPath(docSetup))
-        .doc(id)
-        .get(GetOptions(source: Source.serverAndCache))
-        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
-  }
-
-  Future<T?> getFromCache<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) {
-    final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
-    return doc.get(GetOptions(source: Source.cache)).then((docSnapshot) async {
-      if (docSnapshot.data()?.isEmpty ?? true) {
-        docSnapshot = await doc.get(GetOptions(source: Source.server));
-      }
-      return _transformDoc<T>(docSetup, docSnapshot);
-    });
-  }
-
-  Stream<T?> getFirstStream<T extends YustDoc>(
+  Stream<List<T>> getListStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    int? limit,
   }) {
     var query =
-        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
+        _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
-    return query.snapshots().map<T?>((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        return _transformDoc(docSetup, snapshot.docs[0]);
-      } else {
-        return null;
-      }
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
+          .whereType<T>()
+          .toList();
     });
-  }
-
-  Future<T?> getFirst<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    List<YustFilter> filters, {
-    List<YustOrderBy>? orderBy,
-  }) async {
-    var query =
-        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    final snapshot = await query.get(GetOptions(source: Source.serverAndCache));
-    T? doc;
-
-    if (snapshot.docs.isNotEmpty) {
-      doc = _transformDoc(docSetup, snapshot.docs[0]);
-    }
-    return doc;
-  }
-
-  Future<T?> getFirstFromCache<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    List<YustFilter> filters, {
-    List<YustOrderBy>? orderBy,
-  }) async {
-    var query =
-        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    var snapshot = await query.get(GetOptions(source: Source.cache));
-    if (snapshot.docs.isEmpty) {
-      snapshot = await query.get(GetOptions(source: Source.server));
-    }
-    T? doc;
-
-    if (snapshot.docs.isNotEmpty) {
-      doc = _transformDoc(docSetup, snapshot.docs[0]);
-    }
-    return doc;
-  }
-
-  Future<T?> getFirstFromDB<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    List<YustFilter> filters, {
-    List<YustOrderBy>? orderBy,
-  }) async {
-    var query =
-        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    final snapshot = await query.get(GetOptions(source: Source.server));
-    T? doc;
-
-    if (snapshot.docs.isNotEmpty) {
-      doc = _transformDoc(docSetup, snapshot.docs[0]);
-    }
-    return doc;
   }
 
   Future<void> saveDoc<T extends YustDoc>(

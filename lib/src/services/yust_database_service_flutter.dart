@@ -238,7 +238,7 @@ class YustDatabaseService {
       jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
-    // TODO: Support doNotCreate
+    if (doNotCreate && (await get(docSetup, doc.id)) == null) return;
     await collection
         .doc(doc.id)
         .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));

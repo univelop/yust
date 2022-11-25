@@ -83,11 +83,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool doNotCreate = false,
   }) async {
     // TODO: Use UpdateMasks
-    final docs = _getCollection<T>(docSetup);
-    final hadDoc = docs.any((d) => d.id == doc.id);
-    docs.removeWhere((d) => d.id == doc.id);
-    if (!(doNotCreate && !hadDoc)) {
-      docs.add(doc);
+    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
+    if (index == -1 && !doNotCreate) {
+      jsonDocs.add(doc.toJson());
+    } else {
+      jsonDocs[index] = doc.toJson();
     }
   }
 

@@ -82,13 +82,23 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    // TODO: Use UpdateMasks
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     if (index == -1 && !doNotCreate) {
       jsonDocs.add(doc.toJson());
     } else {
-      jsonDocs[index] = doc.toJson();
+      if (updateMask == null) {
+        jsonDocs[index] = doc.toJson();
+      } else {
+        var jsonDoc = jsonDocs[index];
+        final newJsonDoc = doc.toJson();
+        for (final path in updateMask) {
+          final pointer = JsonPointer(path);
+          final newValue = pointer.read(newJsonDoc);
+          jsonDoc = pointer.write(jsonDoc, newValue) as Map<String, dynamic>;
+        }
+        jsonDocs[index] = jsonDoc;
+      }
     }
   }
 

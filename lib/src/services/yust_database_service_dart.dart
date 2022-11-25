@@ -20,9 +20,14 @@ class YustDatabaseService {
   late final String _projectId;
   DatabaseLogCallback? dbLogCallback;
 
-  YustDatabaseService({this.dbLogCallback})
-      : _api = YustFirestoreApi.instance!,
-        _projectId = YustFirestoreApi.projectId!;
+  YustDatabaseService({this.dbLogCallback}) {
+    if (YustFirestoreApi.instance != null) {
+      _api = YustFirestoreApi.instance!;
+    }
+    if (YustFirestoreApi.projectId != null) {
+      _projectId = YustFirestoreApi.projectId!;
+    }
+  }
 
   /// Initialises a document with an id and the time it was created.
   ///

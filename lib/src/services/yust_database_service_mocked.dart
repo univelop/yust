@@ -1,3 +1,5 @@
+import 'package:rfc_6901/rfc_6901.dart';
+
 import '../../yust.dart';
 import 'yust_database_service_dart.dart';
 
@@ -13,7 +15,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) async {
-    final docs = _getCollection<T>(docSetup.collectionName);
+    final docs = _getCollection<T>(docSetup);
     if (docs.isEmpty) {
       return null;
     } else {
@@ -32,7 +34,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustOrderBy>? orderBy,
   }) async {
     // TODO: Use filter and order by
-    final docs = _getCollection<T>(docSetup.collectionName);
+    final docs = _getCollection<T>(docSetup);
     if (docs.isEmpty) {
       return null;
     } else {
@@ -60,7 +62,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    return _getCollection<T>(docSetup.collectionName);
+    // TODO: Use filter and order by
+    return _getCollection<T>(docSetup);
   }
 
   /// Saves a document.
@@ -79,9 +82,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    // TODO: Change doc
-    final docs = _getCollection<T>(docSetup.collectionName);
-    if (!doNotCreate && !docs.contains(doc)) {
+    // TODO: Use UpdateMasks
+    final docs = _getCollection<T>(docSetup);
+    final hadDoc = docs.any((d) => d.id == doc.id);
+    docs.removeWhere((d) => d.id == doc.id);
+    if (!(doNotCreate && !hadDoc)) {
       docs.add(doc);
     }
   }
@@ -95,7 +100,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
-    // TODO: Mocked
+    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
+    final jsonDoc = jsonDocs[index];
+    for (final t in fieldTransforms) {
+      final pointer = JsonPointer(t.fieldPath);
+      final oldValue = pointer.read(jsonDoc) as double;
+      jsonDocs[index] = pointer.write(jsonDoc, oldValue + (t.increment ?? 0))
+          as Map<String, dynamic>;
+    }
   }
 
   /// Delete a [YustDoc].
@@ -104,7 +117,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    final docs = _getCollection<T>(docSetup.collectionName);
+    final docs = _getCollection<T>(docSetup);
     docs.remove(doc);
   }
 
@@ -112,14 +125,22 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
-    final docs = _getCollection<T>(docSetup.collectionName);
+    final docs = _getCollection<T>(docSetup);
     docs.removeWhere((doc) => doc.id == docId);
   }
 
-  List<T> _getCollection<T extends YustDoc>(String collectionName) {
+  List<Map<String, dynamic>> _getJSONCollection(String collectionName) {
     if (_db[collectionName] == null) {
       _db[collectionName] = [];
     }
-    return List<T>.from(_db[collectionName]!);
+    return _db[collectionName]!;
+  }
+
+  List<T> _getCollection<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+  ) {
+    return _getJSONCollection(docSetup.collectionName)
+        .map<T>((e) => docSetup.fromJson(e))
+        .toList();
   }
 }

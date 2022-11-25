@@ -290,8 +290,6 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
-    // TODO: Mocked
-
     final firebaseFieldTransforms = fieldTransforms
         .map((t) => t.toNativeTransform())
         .cast<FieldTransform>()

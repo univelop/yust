@@ -255,7 +255,7 @@ class YustDatabaseService {
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
-    bool merge = true,
+    bool? merge = true,
     bool? trackModification,
     bool skipOnSave = false,
     bool? removeNullValues,

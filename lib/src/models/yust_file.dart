@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:yust/yust.dart';
 
 part 'yust_file.g.dart';
 
@@ -18,6 +20,9 @@ class YustFile {
 
   /// The name of the file with extension.
   String? name;
+
+  /// The name of the file with extension.
+  DateTime? modifiedAt;
 
   /// The URL to download the file.
   String? url;
@@ -65,6 +70,7 @@ class YustFile {
   YustFile({
     this.key,
     this.name,
+    this.modifiedAt,
     this.url,
     this.hash = '',
     this.file,
@@ -124,5 +130,12 @@ class YustFile {
       'devicePath': devicePath,
       'lastError': lastError,
     };
+  }
+
+  String getModifiedAt() {
+    final DateFormat formatter = DateFormat('dd-MM-yyyy');
+    return modifiedAt == null
+        ? ''
+        : formatter.format(Yust.helpers.utcToLocal(modifiedAt!));
   }
 }

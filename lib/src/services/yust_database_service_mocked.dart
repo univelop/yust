@@ -180,8 +180,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<Map<String, dynamic>> collection,
     List<YustOrderBy>? orderBy,
   ) {
-    // TODO: Implement orderBy
-    for (final o in (orderBy ?? []).reversed) {}
+    for (final o in (orderBy ?? []).reversed) {
+      collection.sort((a, b) {
+        final p = JsonPointer(o.field);
+        final compare =
+            (p.read(a) as Comparable).compareTo(p.read(b) as Comparable);
+        final order = o.descending ? -1 : 1;
+        return order * compare;
+      });
+    }
     return collection;
   }
 }

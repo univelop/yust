@@ -33,8 +33,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
   }) async {
-    // TODO: Use filter and order by
-    final docs = _getCollection<T>(docSetup);
+    var jsonDocs = _getJSONCollection(docSetup.collectionName);
+    jsonDocs = _filter(jsonDocs, filters);
+    jsonDocs = _orderBy(jsonDocs, orderBy);
+    final docs = _jsonListToDocList(jsonDocs, docSetup);
     if (docs.isEmpty) {
       return null;
     } else {
@@ -62,8 +64,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    // TODO: Use filter and order by
-    return _getCollection<T>(docSetup);
+    var jsonDocs = _getJSONCollection(docSetup.collectionName);
+    jsonDocs = _filter(jsonDocs, filters);
+    jsonDocs = _orderBy(jsonDocs, orderBy);
+    final docs = _jsonListToDocList(jsonDocs, docSetup);
+    return docs.sublist(0, limit);
   }
 
   /// Saves a document.
@@ -150,8 +155,33 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   List<T> _getCollection<T extends YustDoc>(
     YustDocSetup<T> docSetup,
   ) {
-    return _getJSONCollection(docSetup.collectionName)
-        .map<T>((e) => docSetup.fromJson(e))
-        .toList();
+    return _jsonListToDocList(
+        _getJSONCollection(docSetup.collectionName), docSetup);
+  }
+
+  List<T> _jsonListToDocList<T extends YustDoc>(
+      List<Map<String, dynamic>> collection, YustDocSetup<T> docSetup) {
+    return collection.map<T>((e) => docSetup.fromJson(e)).toList();
+  }
+
+  List<Map<String, dynamic>> _filter(
+    List<Map<String, dynamic>> collection,
+    List<YustFilter>? filters,
+  ) {
+    for (final f in filters ?? []) {
+      collection = collection
+          .where((e) => f.isFieldMatching(JsonPointer(f.field).read(e)))
+          .toList();
+    }
+    return collection;
+  }
+
+  List<Map<String, dynamic>> _orderBy(
+    List<Map<String, dynamic>> collection,
+    List<YustOrderBy>? orderBy,
+  ) {
+    // TODO: Implement orderBy
+    for (final o in (orderBy ?? []).reversed) {}
+    return collection;
   }
 }

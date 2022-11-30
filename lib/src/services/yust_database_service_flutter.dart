@@ -181,6 +181,18 @@ class YustDatabaseService {
     return modifiedObj;
   }
 
+  /// NOTE: This method has no use in frontend
+  Stream<T> getDocsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<String>? orderByList,
+    int pageSize = 5000,
+  }) {
+    return Stream.fromFuture(
+            getDocsOnce(docSetup, filters: filters, orderByList: orderByList))
+        .expand((e) => e);
+  }
+
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,

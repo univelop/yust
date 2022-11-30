@@ -116,6 +116,9 @@ class YustDatabaseService {
   /// 3. It doesn't use the google_apis package for the request, because that
   ///    has a huge memory leak
   ///
+  /// NOTE: Because this is a Stream you may only iterate over it once,
+  /// listing to it multiple times will result in a runtime-exception!
+  ///
   /// [docSetup] is used to read the collection path.
   ///
   /// [filters] each entry represents a condition that has to be met.

@@ -1,7 +1,7 @@
 import 'package:rfc_6901/rfc_6901.dart';
 
 import '../../yust.dart';
-import 'yust_database_service_dart.dart';
+import 'yust_database_service.dart';
 
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
@@ -79,7 +79,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
-    bool merge = true,
+    bool? merge = true,
     bool? trackModification,
     bool skipOnSave = false,
     bool? removeNullValues,

@@ -299,6 +299,7 @@ class YustDatabaseService {
 
   Query _executeFilters(Query query, List<YustFilter>? filters) {
     if (filters != null) {
+      filters = filters.toSet().toList();
       for (final filter in filters) {
         if (filter.value is List && filter.value.isEmpty) {
           filter.value = null;

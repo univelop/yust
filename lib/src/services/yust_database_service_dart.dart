@@ -266,7 +266,10 @@ class YustDatabaseService {
           removeNullValues: removeNullValues,
           doNotCreate: doNotCreate);
     }
-    if (!skipLog) dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1);
+    if (!skipLog) {
+      dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+          id: doc.id, updateMask: updateMask ?? []);
+    }
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
@@ -309,7 +312,8 @@ class YustDatabaseService {
         transform: documentTransform,
         currentDocument: Precondition(exists: true));
     final commitRequest = CommitRequest(writes: [write]);
-    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1);
+    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+        id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
 
     await _api.projects.databases.documents.commit(
       commitRequest,

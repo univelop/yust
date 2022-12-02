@@ -132,8 +132,8 @@ class YustFile {
     };
   }
 
-  String getModifiedAt() {
-    final DateFormat formatter = DateFormat('dd-MM-yyyy');
+  String getModifiedAt({format = 'HH:mm dd-MM-yyyy'}) {
+    final DateFormat formatter = DateFormat(format);
     return modifiedAt == null
         ? ''
         : formatter.format(Yust.helpers.utcToLocal(modifiedAt!));

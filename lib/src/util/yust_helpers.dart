@@ -113,4 +113,14 @@ class YustHelpers {
   Duration dateDifference(DateTime? first, DateTime? second) => Duration(
       milliseconds: (first?.millisecondsSinceEpoch ?? 0) -
           (second?.millisecondsSinceEpoch ?? 0));
+
+  /// Rounds a number to the given amount of decimal places
+  ///
+  /// NOTE: This does multiply the number by 10^[fractionalDigits], so make sure
+  /// the input number is smaller than 2^(53 - [fractionalDigits]) - 1$,
+  /// e.g. for the default 8 digits: 35,184,372,088,831.
+  /// See https://dart.dev/guides/language/numbers#precision for more details
+  double roundToDecimalPlaces(num value, [int fractionalDigits = 8]) =>
+      (value * pow(10, fractionalDigits + 1)).roundToDouble() /
+      pow(10, fractionalDigits + 1);
 }

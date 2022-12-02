@@ -164,17 +164,24 @@ class YustDatabaseService {
     bool removeNullValues = true,
   }) {
     final modifiedObj = TraverseObject.traverseObject(obj, (currentNode) {
+      // Remove null'ed values from map
       if (removeNullValues &&
           !currentNode.info.isInList &&
           currentNode.value == null) {
         return FieldValue.delete();
       }
+      // Parse dart DateTimes
       if (currentNode.value is DateTime) {
         return Timestamp.fromDate(currentNode.value);
       }
+      // Parse ISO Timestamp Strings
       if (currentNode.value is String &&
           (currentNode.value as String).isIso8601String) {
         return Timestamp.fromDate(DateTime.parse(currentNode.value));
+      }
+      // Round double values
+      if (currentNode.value is double) {
+        return Yust.helpers.roundToDecimalPlaces(currentNode.value);
       }
       return currentNode.value;
     });
@@ -381,6 +388,11 @@ class YustDatabaseService {
               .toDate()
               .toUtc()
               .toIso8601String();
+        }
+
+        // Round double values
+        if (currentNode.value is double) {
+          return Yust.helpers.roundToDecimalPlaces(currentNode.value);
         }
         return currentNode.value;
       });

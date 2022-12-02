@@ -583,7 +583,8 @@ class YustDatabaseService {
     } else if (value is int) {
       return Value(integerValue: value.toString());
     } else if (value is double) {
-      return Value(doubleValue: value);
+      // Round double values
+      return Value(doubleValue: Yust.helpers.roundToDecimalPlaces(value));
     } else if (value == null) {
       return Value(nullValue: 'NULL_VALUE');
     } else if (value is String && value.isIso8601String) {
@@ -621,7 +622,7 @@ class YustDatabaseService {
     } else if (dbValue.integerValue != null) {
       return int.parse(dbValue.integerValue!);
     } else if (dbValue.doubleValue != null) {
-      return dbValue.doubleValue;
+      return Yust.helpers.roundToDecimalPlaces(dbValue.doubleValue!);
     } else if (dbValue.nullValue != null) {
       return null;
     } else if (dbValue.stringValue != null) {

@@ -105,6 +105,9 @@ class YustFile {
       linkedDocPath: json['linkedDocPath'] as String,
       linkedDocAttribute: json['linkedDocAttribute'] as String,
       lastError: json['lastError'] as String?,
+      modifiedAt: json['modifiedAt'] != null
+          ? DateTime.parse(json['modifiedAt'] as String)
+          : null,
     );
   }
 
@@ -129,6 +132,7 @@ class YustFile {
       'linkedDocAttribute': linkedDocAttribute,
       'devicePath': devicePath,
       'lastError': lastError,
+      'modifiedAt': modifiedAt?.toIso8601String(),
     };
   }
 

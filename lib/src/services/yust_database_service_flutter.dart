@@ -289,14 +289,14 @@ class YustDatabaseService {
   }
 
   /// NOTE: This method has no use in frontend
-  Stream<T> getDocsChunked<T extends YustDoc>(
+  Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int pageSize = 5000,
   }) {
     return Stream.fromFuture(
-            getDocsOnce(docSetup, filters: filters, orderByList: orderByList))
+            getList(docSetup, filters: filters, orderBy: orderBy))
         .expand((e) => e);
   }
 

@@ -1,9 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:yust/yust.dart';
 
 part 'yust_file.g.dart';
 
@@ -134,12 +132,5 @@ class YustFile {
       'lastError': lastError,
       'modifiedAt': modifiedAt?.toIso8601String(),
     };
-  }
-
-  String getModifiedAt({format = 'HH:mm dd-MM-yyyy'}) {
-    final DateFormat formatter = DateFormat(format);
-    return modifiedAt == null
-        ? ''
-        : formatter.format(Yust.helpers.utcToLocal(modifiedAt!));
   }
 }

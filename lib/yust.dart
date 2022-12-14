@@ -4,7 +4,6 @@
 library yust;
 
 export 'src/extensions/date_time_extension.dart';
-export 'src/extensions/list_extension.dart';
 export 'src/extensions/string_extension.dart';
 export 'src/models/yust_doc.dart';
 export 'src/models/yust_doc_setup.dart';

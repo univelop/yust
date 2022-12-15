@@ -249,7 +249,7 @@ class YustDatabaseService {
   /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
   /// Multiple of those entries can be repeated.
   ///
-  Stream<T> getDocsChunked<T extends YustDoc>(
+  Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,

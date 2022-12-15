@@ -7,9 +7,6 @@ import 'yust_database_service.dart';
 class YustDatabaseServiceMocked extends YustDatabaseService {
   final _db = <String, List<Map<String, dynamic>>>{};
 
-  /// Returns a [YustDoc] directly from the server.
-  ///
-  /// Be careful with offline fuctionality.
   @override
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
@@ -23,10 +20,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     }
   }
 
-  /// Returns the first [YustDoc] in a list directly from the server.
-  ///
-  /// Be careful with offline fuctionality.
-  /// The result is null if no document was found.
   @override
   Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -44,19 +37,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     }
   }
 
-  /// Returns [YustDoc]s directly from the database.
-  ///
-  /// Be careful with offline fuctionality.
-  ///
-  /// [docSetup] is used to read the collection path.
-  ///
-  /// [filters] each entry represents a condition that has to be met.
-  /// All of those conditions must be true for each returned entry.
-  ///
-  /// [orderBy] orders the returned records.
-  /// Multiple of those entries can be repeated.
-  ///
-  /// [limit] can be passed to only get at most n documents.
   @override
   Future<List<T>> getListFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -71,10 +51,18 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     return docs.sublist(0, limit);
   }
 
-  /// Saves a document.
-  ///
-  /// If [merge] is false a document with the same name
-  /// will be overwritten instead of trying to merge the data.
+  @override
+  Stream<T> getListChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 5000,
+  }) {
+    return Stream.fromFuture(
+            getList(docSetup, filters: filters, orderBy: orderBy))
+        .expand((e) => e);
+  }
+
   @override
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
@@ -107,7 +95,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     }
   }
 
-  /// Transforms (e.g. increment, decrement) a documents fields.
   @override
   Future<void> updateDocByTransform<T extends YustDoc>(
     YustDocSetup<T> docSetup,
@@ -127,7 +114,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     }
   }
 
-  /// Delete a [YustDoc].
   @override
   Future<void> deleteDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
@@ -137,7 +123,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     docs.remove(doc);
   }
 
-  /// Delete a [YustDoc] by the ID.
   @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {

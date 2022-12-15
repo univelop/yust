@@ -54,7 +54,7 @@ class Yust {
   /// This method should be called before any usage of the yust package.
   static Future<void> initializeMocked() async {
     Yust.authService = YustAuthService.mocked();
-    Yust.databaseService = YustDatabaseService.mocked();
+    // Yust.databaseService = YustDatabaseService.mocked();
   }
 
   /// Initializes [Yust].

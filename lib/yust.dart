@@ -16,4 +16,5 @@ export 'src/models/yust_user.dart';
 export 'src/util/object_helper.dart';
 export 'src/util/yust_exception.dart';
 export 'src/util/yust_field_transform.dart';
+export 'src/util/yust_helpers.dart';
 export 'src/yust.dart';

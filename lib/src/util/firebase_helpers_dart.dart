@@ -51,13 +51,11 @@ class FirebaseHelpers {
       print('Current GCP project id: $projectId');
     }
 
-    final api = FirestoreApi(authClient,
-        rootUrl: emulatorAddress != null
-            ? 'http://$emulatorAddress:8080/'
-            : 'https://firestore.googleapis.com/');
-
     YustFirestoreApi.initialize(
-      api,
+      authClient,
+      emulatorAddress != null
+          ? 'http://$emulatorAddress:8080/'
+          : 'https://firestore.googleapis.com/',
       projectId: projectId,
     );
   }

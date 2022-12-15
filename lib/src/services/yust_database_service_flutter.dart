@@ -264,21 +264,40 @@ class YustDatabaseService {
     bool removeNullValues = true,
   }) {
     final modifiedObj = TraverseObject.traverseObject(obj, (currentNode) {
+      // Remove null'ed values from map
       if (removeNullValues &&
           !currentNode.info.isInList &&
           currentNode.value == null) {
         return FieldValue.delete();
       }
+      // Parse dart DateTimes
       if (currentNode.value is DateTime) {
         return Timestamp.fromDate(currentNode.value);
       }
+      // Parse ISO Timestamp Strings
       if (currentNode.value is String &&
           (currentNode.value as String).isIso8601String) {
         return Timestamp.fromDate(DateTime.parse(currentNode.value));
       }
+      // Round double values
+      if (currentNode.value is double) {
+        return Yust.helpers.roundToDecimalPlaces(currentNode.value);
+      }
       return currentNode.value;
     });
     return modifiedObj;
+  }
+
+  /// NOTE: This method has no use in frontend
+  Stream<T> getDocsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<String>? orderByList,
+    int pageSize = 5000,
+  }) {
+    return Stream.fromFuture(
+            getDocsOnce(docSetup, filters: filters, orderByList: orderByList))
+        .expand((e) => e);
   }
 
   Future<void> deleteDocs<T extends YustDoc>(
@@ -387,6 +406,7 @@ class YustDatabaseService {
 
   Query _executeFilters(Query query, List<YustFilter>? filters) {
     if (filters != null) {
+      filters = filters.toSet().toList();
       for (final filter in filters) {
         if (filter.value is List && filter.value.isEmpty) {
           filter.value = null;
@@ -464,6 +484,11 @@ class YustDatabaseService {
               .toDate()
               .toUtc()
               .toIso8601String();
+        }
+
+        // Round double values
+        if (currentNode.value is double) {
+          return Yust.helpers.roundToDecimalPlaces(currentNode.value);
         }
         return currentNode.value;
       });

@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:googleapis/firestore/v1.dart';
+import 'package:stream_transform/stream_transform.dart';
 
 import '../extensions/date_time_extension.dart';
 import '../extensions/string_extension.dart';
@@ -224,7 +227,71 @@ class YustDatabaseService {
         .toList();
   }
 
-  /// Returns a stream of [YustDoc]s.
+  /// Returns [YustDoc]s as a lazy, chunked Stream from the database.
+  ///
+  /// This is much more memory efficient in comparison to other methods,
+  /// because of three reasons:
+  /// 1. It gets the data in multiple requests ([pageSize] each); the raw json
+  ///    strings and raw maps are only in memory while one chunk is processed.
+  /// 2. It loads the records *lazily*, meaning only one chunk is in memory while
+  ///    the records worked with (e.g. via a `await for(...)`)
+  /// 3. It doesn't use the google_apis package for the request, because that
+  ///    has a huge memory leak
+  ///
+  /// NOTE: Because this is a Stream you may only iterate over it once,
+  /// listing to it multiple times will result in a runtime-exception!
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// Multiple of those entries can be repeated.
+  ///
+  Stream<T> getDocsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 5000,
+  }) {
+    final parent = _getParentPath(docSetup);
+    final url =
+        '${YustFirestoreApi.rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
+
+    Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
+      var isDone = false;
+      var lastOffset = 0;
+      while (!isDone) {
+        final request = _getQuery(docSetup,
+            filters: filters,
+            orderBy: orderBy,
+            limit: pageSize,
+            offset: lastOffset);
+        final body = jsonEncode(request);
+        final result = await YustFirestoreApi.httpClient?.post(
+          Uri.parse(url),
+          body: body,
+        );
+        if (result == null) return;
+
+        final response =
+            List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));
+
+        isDone = response.length < pageSize;
+        if (!isDone) lastOffset += pageSize;
+
+        yield* Stream.fromIterable(response);
+      }
+    }
+
+    return lazyPaginationGenerator().map<T?>((e) {
+      if (e['document'] == null) return null;
+      return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
+    }).whereType<T>();
+  }
+
+  /// Returns a stream of a [YustDoc]s.
   ///
   /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
   ///
@@ -266,7 +333,11 @@ class YustDatabaseService {
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
-    if (!skipLog) dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1);
+
+    if (!skipLog) {
+      dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+          id: doc.id, updateMask: updateMask ?? []);
+    }
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
@@ -307,7 +378,8 @@ class YustDatabaseService {
         transform: documentTransform,
         currentDocument: Precondition(exists: true));
     final commitRequest = CommitRequest(writes: [write]);
-    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1);
+    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+        id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
 
     await _api.projects.databases.documents.commit(
       commitRequest,
@@ -424,6 +496,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    int? offset,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -434,7 +507,8 @@ class YustDatabaseService {
                       _executeFilters(filters),
                   op: 'AND')),
           orderBy: _executeOrderByList(orderBy),
-          limit: limit),
+          limit: limit,
+          offset: offset),
     );
   }
 
@@ -562,7 +636,8 @@ class YustDatabaseService {
     } else if (value is int) {
       return Value(integerValue: value.toString());
     } else if (value is double) {
-      return Value(doubleValue: value);
+      // Round double values
+      return Value(doubleValue: Yust.helpers.roundToDecimalPlaces(value));
     } else if (value == null) {
       return Value(nullValue: 'NULL_VALUE');
     } else if (value is String && value.isIso8601String) {
@@ -600,7 +675,7 @@ class YustDatabaseService {
     } else if (dbValue.integerValue != null) {
       return int.parse(dbValue.integerValue!);
     } else if (dbValue.doubleValue != null) {
-      return dbValue.doubleValue;
+      return Yust.helpers.roundToDecimalPlaces(dbValue.doubleValue!);
     } else if (dbValue.nullValue != null) {
       return null;
     } else if (dbValue.stringValue != null) {

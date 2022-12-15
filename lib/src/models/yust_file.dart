@@ -19,6 +19,9 @@ class YustFile {
   /// The name of the file with extension.
   String? name;
 
+  /// The name of the file with extension.
+  DateTime? modifiedAt;
+
   /// The URL to download the file.
   String? url;
   String hash;
@@ -65,6 +68,7 @@ class YustFile {
   YustFile({
     this.key,
     this.name,
+    this.modifiedAt,
     this.url,
     this.hash = '',
     this.file,
@@ -99,6 +103,9 @@ class YustFile {
       linkedDocPath: json['linkedDocPath'] as String,
       linkedDocAttribute: json['linkedDocAttribute'] as String,
       lastError: json['lastError'] as String?,
+      modifiedAt: json['modifiedAt'] != null
+          ? DateTime.parse(json['modifiedAt'] as String)
+          : null,
     );
   }
 
@@ -123,6 +130,7 @@ class YustFile {
       'linkedDocAttribute': linkedDocAttribute,
       'devicePath': devicePath,
       'lastError': lastError,
+      'modifiedAt': modifiedAt?.toIso8601String(),
     };
   }
 }

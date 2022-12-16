@@ -1,3 +1,7 @@
+## 3.3.2 - 2022-11-22
+
+- Fix bugs
+
 ## 3.3.1 - 2022-11-15
 
 - Improve date time handling

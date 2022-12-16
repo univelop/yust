@@ -104,4 +104,23 @@ class YustHelpers {
       dateTime == null ? null : utcToLocal(dateTime);
   DateTime? tryLocalToUtc(DateTime? dateTime) =>
       dateTime == null ? null : localToUtc(dateTime);
+
+  /// Use this function instead of [DateTime.difference]!
+  ///
+  /// We do this be because there is an issue in the dart js sdk see here:
+  /// https://github.com/dart-lang/sdk/blob/main/sdk/lib/_internal/js_dev_runtime/patch/core_patch.dart#L442
+  /// and here: https://github.com/srawlins/timezone/issues/57
+  Duration dateDifference(DateTime? first, DateTime? second) => Duration(
+      milliseconds: (first?.millisecondsSinceEpoch ?? 0) -
+          (second?.millisecondsSinceEpoch ?? 0));
+
+  /// Rounds a number to the given amount of decimal places
+  ///
+  /// NOTE: This does multiply the number by 10^[fractionalDigits], so make sure
+  /// the input number is smaller than 2^(53 - [fractionalDigits]) - 1$,
+  /// e.g. for the default 8 digits: 35,184,372,088,831.
+  /// See https://dart.dev/guides/language/numbers#precision for more details
+  double roundToDecimalPlaces(num value, [int fractionalDigits = 8]) =>
+      (value * pow(10, fractionalDigits + 1)).roundToDouble() /
+      pow(10, fractionalDigits + 1);
 }

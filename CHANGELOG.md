@@ -1,3 +1,11 @@
+## 3.4.0 - 2022-12-16
+
+- Add getDocsChunked
+- Add modifiedAt to YustFile
+- Round doubles
+- Improve filters
+- Fix bugs
+
 ## 3.3.2 - 2022-11-22
 
 - Fix bugs

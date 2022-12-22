@@ -35,7 +35,7 @@ class YustFilter {
       : field = '',
         comparator = YustFilterComparator.equal;
 
-  /// The ID of the brick this filter refeeres to
+  /// The ID of the brick this filter referes to
   String field;
 
   /// The comparator to compare the value of the brick with the [brickId] [value]

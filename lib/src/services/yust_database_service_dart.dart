@@ -8,6 +8,7 @@ import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
 import '../util/mock_database.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
@@ -42,27 +43,162 @@ class YustDatabaseService {
     return doInitDoc(docSetup, id, doc);
   }
 
-  /// Returns a stram of [YustDoc]s.
+  /// Returns a [YustDoc] from the server, if available, otherwise from the cache.
+  /// The cached documents may not be up to date!
   ///
-  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
+  /// Be careful with offline fuctionality.
+  Future<T?> get<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    return getFromDB(docSetup, id);
+  }
+
+  /// Returns a [YustDoc] from the cache, if available, otherwise from the server.
+  /// Be careful: The cached documents may not be up to date!
+  ///
+  /// Be careful with offline fuctionality.
+  Future<T?> getFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    return getFromDB(docSetup, id);
+  }
+
+  /// Returns a [YustDoc] directly from the server.
+  ///
+  /// Be careful with offline fuctionality.
+  Future<T?> getFromDB<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    if (_mocked) {
+      return _mockDb.getFromDB<T>(docSetup, id);
+    }
+    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+    try {
+      final response = await _api.projects.databases.documents
+          .get(_getDocumentPath(docSetup, id));
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      return _transformDoc<T>(docSetup, response);
+    } on ApiRequestError {
+      return null;
+    }
+  }
+
+  /// Returns a stream of a [YustDoc].
+  ///
+  /// Whenever another user makes a change, a new version of the document is returned.
+  Stream<T?> getStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    return Stream.fromFuture(getFromDB<T>(docSetup, id));
+  }
+
+  /// Returns the first [YustDoc] in a list from the server, if available, otherwise from the cache.
+  /// The cached documents may not be up to date!
+  ///
+  /// Be careful with offline fuctionality.
+  /// The result is null if no document was found.
+  Future<T?> getFirst<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  /// Returns the first [YustDoc] in a list from the cache, if available, otherwise from the server.
+  /// Be careful: The cached documents may not be up to date!
+  ///
+  /// Be careful with offline fuctionality.
+  /// The result is null if no document was found.
+  Future<T?> getFirstFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  /// Returns the first [YustDoc] in a list directly from the server.
+  ///
+  /// Be careful with offline fuctionality.
+  /// The result is null if no document was found.
+  Future<T?> getFirstFromDB<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    if (_mocked) {
+      return _mockDb.getFirstFromDB(docSetup,
+          filters: filters, orderBy: orderBy);
+    }
+    final response = await _api.projects.databases.documents.runQuery(
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
+        _getParentPath(docSetup));
+
+    if (response.isEmpty || response.first.document == null) {
+      return null;
+    }
+    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+    return _transformDoc<T>(docSetup, response.first.document!);
+  }
+
+  /// Returns a stream of the first [YustDoc] in a list.
+  ///
+  /// Whenever another user make a change, a new version of the document is returned.
+  /// The result is null if no document was found.
+  Stream<T?> getFirstStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) {
+    return Stream.fromFuture(
+        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
+  }
+
+  /// Returns [YustDoc]s from the server, if available, otherwise from the cache.
+  /// The cached documents may not be up to date!
   ///
   /// [docSetup] is used to read the collection path.
   ///
   /// [filters] each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   ///
-  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// [orderBy] orders the returned records.
   /// Multiple of those entries can be repeated.
   ///
-  /// [limit] can be passed to reduce loading time
-  Stream<List<T>> getDocs<T extends YustDoc>(
+  /// [limit] can be passed to only get at most n documents.
+  Future<List<T>> getList<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    return Stream.fromFuture(getDocsOnce<T>(docSetup,
-        filters: filters, orderByList: orderByList, limit: limit));
+    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  /// Returns [YustDoc]s from the cache, if available, otherwise from the server.
+  /// Be careful: The cached documents may not be up to date!
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [orderBy] orders the returned records.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to only get at most n documents.
+  Future<List<T>> getListFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -74,23 +210,22 @@ class YustDatabaseService {
   /// [filters] each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   ///
-  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// [orderBy] orders the returned records.
   /// Multiple of those entries can be repeated.
   ///
-  /// [limit] can be passed to reduce loading time
-  Future<List<T>> getDocsOnce<T extends YustDoc>(
+  /// [limit] can be passed to only get at most n documents.
+  Future<List<T>> getListFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
     if (_mocked) {
-      return _mockDb.getDocsOnce<T>(docSetup,
-          filters: filters, orderByList: orderByList, limit: limit);
+      return _mockDb.getListFromDB<T>(docSetup,
+          filters: filters, orderBy: orderBy, limit: limit);
     }
     final response = await _api.projects.databases.documents.runQuery(
-        _getQuery(docSetup,
-            filters: filters, orderByList: orderByList, limit: limit),
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
         _getParentPath(docSetup));
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
 
@@ -117,20 +252,20 @@ class YustDatabaseService {
   ///    has a huge memory leak
   ///
   /// NOTE: Because this is a Stream you may only iterate over it once,
-  /// listing to it multiple times will result in a runtime-exception!
+  /// listening to it multiple times will result in a runtime-exception!
   ///
   /// [docSetup] is used to read the collection path.
   ///
   /// [filters] each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   ///
-  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// [orderBy] orders the returned records.
   /// Multiple of those entries can be repeated.
   ///
-  Stream<T> getDocsChunked<T extends YustDoc>(
+  Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int pageSize = 5000,
   }) {
     final parent = _getParentPath(docSetup);
@@ -143,7 +278,7 @@ class YustDatabaseService {
       while (!isDone) {
         final request = _getQuery(docSetup,
             filters: filters,
-            orderByList: orderByList,
+            orderBy: orderBy,
             limit: pageSize,
             offset: lastOffset);
         final body = jsonEncode(request);
@@ -169,73 +304,27 @@ class YustDatabaseService {
     }).whereType<T>();
   }
 
-  /// Returns a stream of a [YustDoc].
+  /// Returns a stream of a [YustDoc]s.
   ///
-  /// Whenever another user make a chanage, a new version of the document is returned.
-  Stream<T?> getDoc<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) {
-    return Stream.fromFuture(getDocOnce<T>(docSetup, id));
-  }
-
-  /// Returns a [YustDoc] directly from the server.
+  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
   ///
-  /// Be careful with offline fuctionality.
-  Future<T?> getDocOnce<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) async {
-    if (_mocked) {
-      return _mockDb.getDocOnce<T>(docSetup, id);
-    }
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
-    try {
-      final response = await _api.projects.databases.documents
-          .get(_getDocumentPath(docSetup, id));
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
-      return _transformDoc<T>(docSetup, response);
-    } on ApiRequestError {
-      return null;
-    }
-  }
-
-  /// Returns a stream of the first [YustDoc] in a list.
+  /// [docSetup] is used to read the collection path.
   ///
-  /// Whenever another user make a change, a new version of the document is returned.
-  /// The result is null if no document was found.
-  Stream<T?> getFirstDoc<T extends YustDoc>(
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [orderBy] orders the returned records.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to only get at most n documents.
+  Stream<List<T>> getListStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
+    int? limit,
   }) {
-    return Stream.fromFuture(
-        getFirstDocOnce<T>(docSetup, filters ?? [], orderByList: orderByList));
-  }
-
-  /// Returns a stream of the first [YustDoc] in a list.
-  ///
-  /// Be careful with offline fuctionality.
-  /// The result is null if no document was found.
-  Future<T?> getFirstDocOnce<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    List<YustFilter> filters, {
-    List<String>? orderByList,
-  }) async {
-    if (_mocked) {
-      return _mockDb.getFirstDocOnce(docSetup, filters,
-          orderByList: orderByList);
-    }
-    final response = await _api.projects.databases.documents.runQuery(
-        _getQuery(docSetup,
-            filters: filters, orderByList: orderByList, limit: 1),
-        _getParentPath(docSetup));
-
-    if (response.isEmpty || response.first.document == null) {
-      return null;
-    }
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
-    return _transformDoc<T>(docSetup, response.first.document!);
+    return Stream.fromFuture(getListFromDB<T>(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit));
   }
 
   /// Saves a document.
@@ -326,7 +415,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
-    final docs = await getDocsOnce<T>(docSetup, filters: filters);
+    final docs = await getListFromDB<T>(docSetup, filters: filters);
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, docs.length);
     for (var doc in docs) {
       await deleteDoc<T>(docSetup, doc);
@@ -389,11 +478,11 @@ class YustDatabaseService {
   dynamic getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) {
     return _getQuery<T>(docSetup,
-        filters: filters, orderByList: orderByList, limit: limit);
+        filters: filters, orderBy: orderBy, limit: limit);
   }
 
   /// Transforms a json to a [YustDoc]
@@ -434,7 +523,7 @@ class YustDatabaseService {
   RunQueryRequest _getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
     int? offset,
   }) {
@@ -446,7 +535,7 @@ class YustDatabaseService {
                   filters: _executeStaticFilters(docSetup) +
                       _executeFilters(filters),
                   op: 'AND')),
-          orderBy: _executeOrderByList(orderByList),
+          orderBy: _executeOrderByList(orderBy),
           limit: limit,
           offset: offset),
     );
@@ -529,20 +618,13 @@ class YustDatabaseService {
     return result;
   }
 
-  List<Order> _executeOrderByList(List<String>? orderByList) {
-    final result = <Order>[];
-    if (orderByList != null) {
-      orderByList.asMap().forEach((index, orderBy) {
-        if (orderBy.toUpperCase() != 'DESC' && orderBy.toUpperCase() != 'ASC') {
-          final desc = (index + 1 < orderByList.length &&
-              orderByList[index + 1].toUpperCase() == 'DESC');
-          result.add(Order(
-              field: FieldReference(fieldPath: orderBy),
-              direction: desc ? 'DESCENDING' : 'ASCENDING'));
-        }
-      });
-    }
-    return result;
+  List<Order> _executeOrderByList(List<YustOrderBy>? orderBy) {
+    return orderBy
+            ?.map((e) => Order(
+                field: FieldReference(fieldPath: e.field),
+                direction: e.descending ? 'DESCENDING' : 'ASCENDING'))
+            .toList() ??
+        <Order>[];
   }
 
   /// Returns null if no data exists.

@@ -1,6 +1,7 @@
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
 
 /// A mock database for storing docs.
 ///
@@ -23,10 +24,10 @@ class MockDatabase {
   /// Multiple of those entries can be repeated.
   ///
   /// [limit] can be passed to reduce loading time
-  Future<List<T>> getDocsOnce<T extends YustDoc>(
+  Future<List<T>> getListFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<String>? orderByList,
+    List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
     return _getCollection<T>(docSetup.collectionName);
@@ -35,7 +36,7 @@ class MockDatabase {
   /// Returns a [YustDoc] directly from the server.
   ///
   /// Be careful with offline fuctionality.
-  Future<T?> getDocOnce<T extends YustDoc>(
+  Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
   ) async {
@@ -51,10 +52,10 @@ class MockDatabase {
   ///
   /// Be careful with offline fuctionality.
   /// The result is null if no document was found.
-  Future<T?> getFirstDocOnce<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    List<YustFilter> filters, {
-    List<String>? orderByList,
+  Future<T?> getFirstFromDB<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
   }) async {
     final docs = _getCollection<T>(docSetup.collectionName);
     if (docs.isEmpty) {

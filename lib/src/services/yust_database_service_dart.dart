@@ -9,7 +9,6 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
-import '../util/mock_database.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../util/yust_firestore_api.dart';
@@ -22,17 +21,16 @@ import 'yust_database_service_shared.dart';
 class YustDatabaseService {
   late final FirestoreApi _api;
   late final String _projectId;
-  late final MockDatabase _mockDb;
   DatabaseLogCallback? dbLogCallback;
-  bool _mocked = false;
 
-  YustDatabaseService({this.dbLogCallback})
-      : _api = YustFirestoreApi.instance!,
-        _projectId = YustFirestoreApi.projectId!;
-
-  YustDatabaseService.mocked({this.dbLogCallback})
-      : _mockDb = MockDatabase(),
-        _mocked = true;
+  YustDatabaseService({this.dbLogCallback}) {
+    if (YustFirestoreApi.instance != null) {
+      _api = YustFirestoreApi.instance!;
+    }
+    if (YustFirestoreApi.projectId != null) {
+      _projectId = YustFirestoreApi.projectId!;
+    }
+  }
 
   /// Initialises a document with an id and the time it was created.
   ///
@@ -72,9 +70,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) async {
-    if (_mocked) {
-      return _mockDb.getFromDB<T>(docSetup, id);
-    }
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     try {
       final response = await _api.projects.databases.documents
@@ -131,10 +126,6 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
   }) async {
-    if (_mocked) {
-      return _mockDb.getFirstFromDB(docSetup,
-          filters: filters, orderBy: orderBy);
-    }
     final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
         _getParentPath(docSetup));
@@ -220,10 +211,6 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    if (_mocked) {
-      return _mockDb.getListFromDB<T>(docSetup,
-          filters: filters, orderBy: orderBy, limit: limit);
-    }
     final response = await _api.projects.databases.documents.runQuery(
         _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
         _getParentPath(docSetup));
@@ -335,7 +322,7 @@ class YustDatabaseService {
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
-    bool merge = true,
+    bool? merge = true,
     bool? trackModification,
     bool skipOnSave = false,
     bool? removeNullValues,
@@ -347,14 +334,6 @@ class YustDatabaseService {
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
-    if (_mocked) {
-      return _mockDb.saveDoc<T>(docSetup, doc,
-          merge: merge,
-          trackModification: trackModification,
-          skipOnSave: skipOnSave,
-          removeNullValues: removeNullValues,
-          doNotCreate: doNotCreate);
-    }
     if (!skipLog) {
       dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
           id: doc.id, updateMask: updateMask ?? []);
@@ -387,8 +366,6 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
-    // TODO: Mocked
-
     final firebaseFieldTransforms = fieldTransforms
         .map((t) => t.toNativeTransform())
         .cast<FieldTransform>()
@@ -427,9 +404,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    if (_mocked) {
-      return _mockDb.deleteDoc(docSetup, doc);
-    }
     dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, doc.id));
@@ -438,9 +412,6 @@ class YustDatabaseService {
   /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
-    if (_mocked) {
-      return _mockDb.deleteDocById(docSetup, docId);
-    }
     dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, docId));

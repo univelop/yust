@@ -4,6 +4,7 @@ import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
 import 'services/yust_auth_service.dart';
 import 'services/yust_database_service.dart';
+import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
 import 'util/firebase_helpers.dart';
 import 'util/yust_helpers.dart';
@@ -53,8 +54,9 @@ class Yust {
   ///
   /// This method should be called before any usage of the yust package.
   static Future<void> initializeMocked() async {
+    initializeTimeZones();
     Yust.authService = YustAuthService.mocked();
-    // Yust.databaseService = YustDatabaseService.mocked();
+    Yust.databaseService = YustDatabaseServiceMocked();
   }
 
   /// Initializes [Yust].

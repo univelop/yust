@@ -239,14 +239,14 @@ class YustDatabaseService {
   ///    has a huge memory leak
   ///
   /// NOTE: Because this is a Stream you may only iterate over it once,
-  /// listing to it multiple times will result in a runtime-exception!
+  /// listening to it multiple times will result in a runtime-exception!
   ///
   /// [docSetup] is used to read the collection path.
   ///
   /// [filters] each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   ///
-  /// Consists at first of the column name followed by either 'ASC' or 'DESC'.
+  /// [orderBy] orders the returned records.
   /// Multiple of those entries can be repeated.
   ///
   Stream<T> getListChunked<T extends YustDoc>(

@@ -86,9 +86,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         var jsonDoc = jsonDocs[index];
         final newJsonDoc = doc.toJson();
         for (final path in updateMask) {
-          final pointer = JsonPointer(path);
-          final newValue = pointer.read(newJsonDoc);
-          jsonDoc = pointer.write(jsonDoc, newValue) as Map<String, dynamic>;
+          _changeValueInJsonDoc(jsonDoc, newJsonDoc, path);
         }
         jsonDocs[index] = jsonDoc;
       }
@@ -175,5 +173,20 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       });
     }
     return collection;
+  }
+
+  void _changeValueInJsonDoc(
+    Map<String, dynamic> jsonDoc,
+    Map<String, dynamic> newJsonDoc,
+    String path,
+  ) {
+    final segements = path.split('/');
+    var subDoc = jsonDoc;
+    var newSubDoc = newJsonDoc;
+    for (final segment in segements.sublist(0, segements.length - 1)) {
+      subDoc = subDoc[segment];
+      newSubDoc = newSubDoc[segment];
+    }
+    subDoc[segements.last] = newSubDoc[segements.last];
   }
 }

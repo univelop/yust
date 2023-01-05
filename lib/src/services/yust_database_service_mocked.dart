@@ -1,11 +1,41 @@
 import 'package:rfc_6901/rfc_6901.dart';
 
-import '../../yust.dart';
+import '../models/yust_doc.dart';
+import '../models/yust_doc_setup.dart';
+import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
+import '../util/yust_field_transform.dart';
+import '../yust.dart';
 import 'yust_database_service.dart';
+import 'yust_database_service_shared.dart';
 
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
+  YustDatabaseServiceMocked.mocked() : super.mocked();
+
   final _db = <String, List<Map<String, dynamic>>>{};
+
+  @override
+  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
+    final id = _createDocumentId();
+    return doInitDoc(docSetup, id, doc);
+  }
+
+  @override
+  Future<T?> get<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    return getFromDB(docSetup, id);
+  }
+
+  @override
+  Future<T?> getFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    return getFromDB(docSetup, id);
+  }
 
   @override
   Future<T?> getFromDB<T extends YustDoc>(
@@ -18,6 +48,32 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     } else {
       return docs.firstWhere((doc) => doc.id == id);
     }
+  }
+
+  @override
+  Stream<T?> getStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    return Stream.fromFuture(getFromDB<T>(docSetup, id));
+  }
+
+  @override
+  Future<T?> getFirst<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  @override
+  Future<T?> getFirstFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
 
   @override
@@ -35,6 +91,36 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     } else {
       return docs.first;
     }
+  }
+
+  @override
+  Stream<T?> getFirstStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) {
+    return Stream.fromFuture(
+        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
+  }
+
+  @override
+  Future<List<T>> getList<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  @override
+  Future<List<T>> getListFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
 
   @override
@@ -61,6 +147,17 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     return Stream.fromFuture(
             getList(docSetup, filters: filters, orderBy: orderBy))
         .expand((e) => e);
+  }
+
+  @override
+  Stream<List<T>> getListStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return Stream.fromFuture(getListFromDB<T>(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit));
   }
 
   @override
@@ -188,5 +285,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       newSubDoc = newSubDoc[segment];
     }
     subDoc[segements.last] = newSubDoc[segements.last];
+  }
+
+  String _createDocumentId() {
+    return Yust.helpers.randomString(length: 20);
   }
 }

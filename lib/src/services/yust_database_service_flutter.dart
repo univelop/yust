@@ -17,6 +17,7 @@ class YustDatabaseService {
 
   YustDatabaseService({this.dbLogCallback})
       : _fireStore = FirebaseFirestore.instance;
+
   YustDatabaseService.mocked({this.dbLogCallback})
       : _fireStore = FakeFirebaseFirestore();
 

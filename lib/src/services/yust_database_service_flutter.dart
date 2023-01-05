@@ -39,14 +39,21 @@ class YustDatabaseService {
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
-  ) {
+  ) async {
     final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
-    return doc.get(GetOptions(source: Source.cache)).then((docSnapshot) async {
-      if (docSnapshot.data()?.isEmpty ?? true) {
-        docSnapshot = await doc.get(GetOptions(source: Source.server));
-      }
-      return _transformDoc<T>(docSetup, docSnapshot);
-    });
+    DocumentSnapshot<Map<String, dynamic>>? docSnapshot;
+
+    try {
+      docSnapshot = await doc.get(GetOptions(source: Source.cache));
+      // Check if we got a hit
+      if (docSnapshot.data()?.isEmpty ?? true) throw Exception('Not in Cache!');
+    }
+    // Handle a missing cache entry or other firebase errors by retrying against server
+    catch (_) {
+      docSnapshot = await doc.get(GetOptions(source: Source.server));
+    }
+    if (docSnapshot == null) return null;
+    return _transformDoc<T>(docSetup, docSnapshot);
   }
 
   Future<T?> getFromDB<T extends YustDoc>(
@@ -94,10 +101,18 @@ class YustDatabaseService {
   }) async {
     var query =
         _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    var snapshot = await query.get(GetOptions(source: Source.cache));
-    if (snapshot.docs.isEmpty) {
+
+    QuerySnapshot<Object?>? snapshot;
+    try {
+      snapshot = await query.get(GetOptions(source: Source.cache));
+      // Check if we got a hit
+      if (snapshot.docs.isEmpty) throw Exception('Not in Cache');
+    }
+    // Handle a missing cache entry or other firebase errors by retrying against server
+    catch (_) {
       snapshot = await query.get(GetOptions(source: Source.server));
     }
+
     T? doc;
 
     if (snapshot.docs.isNotEmpty) {
@@ -164,20 +179,26 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-  }) {
+  }) async {
     var query =
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
-    return query.get(GetOptions(source: Source.cache)).then((snapshot) async {
-      if (snapshot.docs.isEmpty) {
-        snapshot = await query.get(GetOptions(source: Source.server));
-      }
-      // print('Get docs once: ${docSetup.collectionName}');
-      return snapshot.docs
-          .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
-          .whereType<T>()
-          .toList();
-    });
+    QuerySnapshot<Object?>? snapshot;
+
+    try {
+      snapshot = await query.get(GetOptions(source: Source.cache));
+      // Check if we got a hit
+      if (snapshot.docs.isEmpty) throw Exception('Not in Cache');
+    }
+    // Handle a missing cache entry or other firebase errors by retrying against server
+    catch (_) {
+      snapshot = await query.get(GetOptions(source: Source.server));
+    }
+
+    return snapshot.docs
+        .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
+        .whereType<T>()
+        .toList();
   }
 
   Future<List<T>> getListFromDB<T extends YustDoc>(

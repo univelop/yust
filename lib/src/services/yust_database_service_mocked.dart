@@ -1,5 +1,3 @@
-import 'package:rfc_6901/rfc_6901.dart';
-
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
@@ -183,7 +181,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         var jsonDoc = jsonDocs[index];
         final newJsonDoc = doc.toJson();
         for (final path in updateMask) {
-          _changeValueInJsonDoc(jsonDoc, newJsonDoc, path);
+          final newValue = _readValueInJsonDoc(newJsonDoc, path);
+          _changeValueInJsonDoc(jsonDoc, newValue, path);
         }
         jsonDocs[index] = jsonDoc;
       }
@@ -202,10 +201,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
     final jsonDoc = jsonDocs[index];
     for (final t in fieldTransforms) {
-      final pointer = JsonPointer(t.fieldPath);
-      final oldValue = pointer.read(jsonDoc) as double;
-      jsonDocs[index] = pointer.write(jsonDoc, oldValue + (t.increment ?? 0))
-          as Map<String, dynamic>;
+      final oldValue = _readValueInJsonDoc(jsonDoc, t.fieldPath) as double;
+      _changeValueInJsonDoc(
+          jsonDoc, oldValue + (t.increment ?? 0), t.fieldPath);
     }
   }
 
@@ -250,7 +248,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   ) {
     for (final f in filters ?? []) {
       collection = collection
-          .where((e) => f.isFieldMatching(JsonPointer(f.field).read(e)))
+          .where((e) => f.isFieldMatching(_readValueInJsonDoc(e, f.field)))
           .toList();
     }
     return collection;
@@ -262,9 +260,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   ) {
     for (final o in (orderBy ?? []).reversed) {
       collection.sort((a, b) {
-        final p = JsonPointer(o.field);
-        final compare =
-            (p.read(a) as Comparable).compareTo(p.read(b) as Comparable);
+        final compare = (_readValueInJsonDoc(a, o.field) as Comparable)
+            .compareTo(_readValueInJsonDoc(b, o.field) as Comparable);
         final order = o.descending ? -1 : 1;
         return order * compare;
       });
@@ -274,17 +271,24 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   void _changeValueInJsonDoc(
     Map<String, dynamic> jsonDoc,
-    Map<String, dynamic> newJsonDoc,
+    dynamic newValue,
     String path,
   ) {
-    final segements = path.split('/');
+    final segments = path.split('/');
     var subDoc = jsonDoc;
-    var newSubDoc = newJsonDoc;
-    for (final segment in segements.sublist(0, segements.length - 1)) {
+    for (final segment in segments.sublist(0, segments.length - 1)) {
       subDoc = subDoc[segment];
-      newSubDoc = newSubDoc[segment];
     }
-    subDoc[segements.last] = newSubDoc[segements.last];
+    subDoc[segments.last] = newValue;
+  }
+
+  dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
+    final segments = path.split('/');
+    var subDoc = jsonDoc;
+    for (final segment in segments) {
+      subDoc = subDoc[segment];
+    }
+    return subDoc;
   }
 
   String _createDocumentId() {

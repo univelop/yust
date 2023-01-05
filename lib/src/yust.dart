@@ -56,7 +56,7 @@ class Yust {
   static Future<void> initializeMocked() async {
     initializeTimeZones();
     Yust.authService = YustAuthService.mocked();
-    Yust.databaseService = YustDatabaseServiceMocked();
+    Yust.databaseService = YustDatabaseServiceMocked.mocked();
   }
 
   /// Initializes [Yust].

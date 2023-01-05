@@ -32,6 +32,8 @@ class YustDatabaseService {
     }
   }
 
+  YustDatabaseService.mocked({this.dbLogCallback});
+
   /// Initialises a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be

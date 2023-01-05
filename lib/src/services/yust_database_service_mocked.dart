@@ -1,11 +1,39 @@
-import 'package:rfc_6901/rfc_6901.dart';
-
-import '../../yust.dart';
+import '../models/yust_doc.dart';
+import '../models/yust_doc_setup.dart';
+import '../models/yust_filter.dart';
+import '../models/yust_order_by.dart';
+import '../util/yust_field_transform.dart';
+import '../yust.dart';
 import 'yust_database_service.dart';
+import 'yust_database_service_shared.dart';
 
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
+  YustDatabaseServiceMocked.mocked() : super.mocked();
+
   final _db = <String, List<Map<String, dynamic>>>{};
+
+  @override
+  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
+    final id = _createDocumentId();
+    return doInitDoc(docSetup, id, doc);
+  }
+
+  @override
+  Future<T?> get<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    return getFromDB(docSetup, id);
+  }
+
+  @override
+  Future<T?> getFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
+    return getFromDB(docSetup, id);
+  }
 
   @override
   Future<T?> getFromDB<T extends YustDoc>(
@@ -18,6 +46,32 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     } else {
       return docs.firstWhere((doc) => doc.id == id);
     }
+  }
+
+  @override
+  Stream<T?> getStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String id,
+  ) {
+    return Stream.fromFuture(getFromDB<T>(docSetup, id));
+  }
+
+  @override
+  Future<T?> getFirst<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  @override
+  Future<T?> getFirstFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) async {
+    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
 
   @override
@@ -35,6 +89,36 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     } else {
       return docs.first;
     }
+  }
+
+  @override
+  Stream<T?> getFirstStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+  }) {
+    return Stream.fromFuture(
+        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
+  }
+
+  @override
+  Future<List<T>> getList<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+  }
+
+  @override
+  Future<List<T>> getListFromCache<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
 
   @override
@@ -64,6 +148,17 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
+  Stream<List<T>> getListStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return Stream.fromFuture(getListFromDB<T>(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit));
+  }
+
+  @override
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -86,9 +181,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         var jsonDoc = jsonDocs[index];
         final newJsonDoc = doc.toJson();
         for (final path in updateMask) {
-          final pointer = JsonPointer(path);
-          final newValue = pointer.read(newJsonDoc);
-          jsonDoc = pointer.write(jsonDoc, newValue) as Map<String, dynamic>;
+          final newValue = _readValueInJsonDoc(newJsonDoc, path);
+          _changeValueInJsonDoc(jsonDoc, newValue, path);
         }
         jsonDocs[index] = jsonDoc;
       }
@@ -107,10 +201,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
     final jsonDoc = jsonDocs[index];
     for (final t in fieldTransforms) {
-      final pointer = JsonPointer(t.fieldPath);
-      final oldValue = pointer.read(jsonDoc) as double;
-      jsonDocs[index] = pointer.write(jsonDoc, oldValue + (t.increment ?? 0))
-          as Map<String, dynamic>;
+      final oldValue = _readValueInJsonDoc(jsonDoc, t.fieldPath) as double;
+      _changeValueInJsonDoc(
+          jsonDoc, oldValue + (t.increment ?? 0), t.fieldPath);
     }
   }
 
@@ -155,7 +248,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   ) {
     for (final f in filters ?? []) {
       collection = collection
-          .where((e) => f.isFieldMatching(JsonPointer(f.field).read(e)))
+          .where((e) => f.isFieldMatching(_readValueInJsonDoc(e, f.field)))
           .toList();
     }
     return collection;
@@ -167,13 +260,38 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   ) {
     for (final o in (orderBy ?? []).reversed) {
       collection.sort((a, b) {
-        final p = JsonPointer(o.field);
-        final compare =
-            (p.read(a) as Comparable).compareTo(p.read(b) as Comparable);
+        final compare = (_readValueInJsonDoc(a, o.field) as Comparable)
+            .compareTo(_readValueInJsonDoc(b, o.field) as Comparable);
         final order = o.descending ? -1 : 1;
         return order * compare;
       });
     }
     return collection;
+  }
+
+  void _changeValueInJsonDoc(
+    Map<String, dynamic> jsonDoc,
+    dynamic newValue,
+    String path,
+  ) {
+    final segments = path.split('/');
+    var subDoc = jsonDoc;
+    for (final segment in segments.sublist(0, segments.length - 1)) {
+      subDoc = subDoc[segment];
+    }
+    subDoc[segments.last] = newValue;
+  }
+
+  dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
+    final segments = path.split('/');
+    var subDoc = jsonDoc;
+    for (final segment in segments) {
+      subDoc = subDoc[segment];
+    }
+    return subDoc;
+  }
+
+  String _createDocumentId() {
+    return Yust.helpers.randomString(length: 20);
   }
 }

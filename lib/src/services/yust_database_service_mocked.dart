@@ -285,10 +285,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
     final segments = path.split('/');
     var subDoc = jsonDoc;
-    for (final segment in segments) {
+    for (final segment in segments.sublist(0, segments.length - 1)) {
       subDoc = subDoc[segment];
     }
-    return subDoc;
+    return subDoc[segments.last];
   }
 
   String _createDocumentId() {

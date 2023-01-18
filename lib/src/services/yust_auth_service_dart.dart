@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import '../models/yust_user.dart';
 import '../yust.dart';
 
@@ -20,6 +21,11 @@ class YustAuthService {
     String email,
     String password,
   ) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign in with Microsoft.
+  Future<void> signInWithMicrosoft() async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 

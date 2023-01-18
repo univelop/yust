@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/yust_user.dart';
 import '../yust.dart';
@@ -39,6 +40,15 @@ class YustAuthService {
       email: email,
       password: password,
     );
+  }
+
+  Future<void> signInWithMicrosoft() async {
+    final microsoftProvider = MicrosoftAuthProvider();
+    if (kIsWeb) {
+      await FirebaseAuth.instance.signInWithPopup(microsoftProvider);
+    } else {
+      await FirebaseAuth.instance.signInWithProvider(microsoftProvider);
+    }
   }
 
   Future<void> signUp(

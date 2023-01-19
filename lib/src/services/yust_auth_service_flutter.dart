@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/yust_user.dart';
@@ -42,32 +43,89 @@ class YustAuthService {
     );
   }
 
-  Future<void> signInWithMicrosoft() async {
+  Future<YustUser?> signInWithMicrosoft() async {
     final microsoftProvider = MicrosoftAuthProvider();
-    if (kIsWeb) {
-      await FirebaseAuth.instance.signInWithPopup(microsoftProvider);
-    } else {
-      await FirebaseAuth.instance.signInWithProvider(microsoftProvider);
-    }
+    return _signInWithProvider(
+        microsoftProvider, YustAuthenticationMethod.microsoft);
   }
 
-  Future<void> signUp(
+  Future<YustUser?> signInWithGithub() async {
+    final githubProvider = GithubAuthProvider();
+    return _signInWithProvider(githubProvider, YustAuthenticationMethod.github);
+  }
+
+  Future<YustUser?> signInWithGoogle() async {
+    final googleProvider = GoogleAuthProvider();
+    return _signInWithProvider(googleProvider, YustAuthenticationMethod.google);
+  }
+
+  Future<YustUser?> _signInWithProvider(
+    AuthProvider provider,
+    YustAuthenticationMethod? method,
+  ) async {
+    if (kIsWeb) {
+      final userCredential = await fireAuth.signInWithPopup(provider);
+      if (userCredential.user == null) {
+        return null;
+      }
+      if (await Yust.databaseService
+              .get<YustUser>(Yust.userSetup, userCredential.user!.uid) ==
+          null) {
+        final nameParts = userCredential.user!.displayName?.split(' ') ?? [];
+        final lastName = nameParts.removeLast();
+        final firstName = nameParts.join(' ');
+        return await _createUser(
+          firstName: firstName,
+          email: userCredential.user!.email ?? '',
+          lastName: lastName,
+          id: userCredential.user!.uid,
+          authenticationMethod: YustAuthenticationMethod.microsoft,
+        );
+      }
+    } else {
+      await FirebaseAuth.instance.signInWithProvider(provider);
+    }
+    return null;
+  }
+
+  Future<YustUser> signUp(
     String firstName,
     String lastName,
     String email,
-    String password,
-    String passwordConfirmation, {
+    String password, {
     YustGender? gender,
   }) async {
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
+    return await _createUser(
+      firstName: firstName,
+      email: email,
+      lastName: lastName,
+      id: userCredential.user!.uid,
+      gender: gender,
+      authenticationMethod: YustAuthenticationMethod.mail,
+    );
+  }
+
+  Future<YustUser> _createUser({
+    required String firstName,
+    required String email,
+    required String lastName,
+    required String id,
+    YustAuthenticationMethod? authenticationMethod,
+    String? domain,
+    YustGender? gender,
+  }) async {
     final user = Yust.userSetup.newDoc()
       ..email = email
       ..firstName = firstName
       ..lastName = lastName
-      ..gender = gender
-      ..id = userCredential.user!.uid;
+      ..id = id
+      ..authenticationMethod = authenticationMethod
+      ..domain = domain ?? email.split('@').last
+      ..gender = gender;
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+    return user;
   }
 
   Future<void> signOut() async {

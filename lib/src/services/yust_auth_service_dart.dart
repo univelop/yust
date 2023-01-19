@@ -24,18 +24,30 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
-  /// Sign in with Microsoft.
-  Future<void> signInWithMicrosoft() async {
+  /// Sign in with Microsoft. If a new user was created, return the user.
+  /// A Microsoft app must be registered in the Firebase console.
+  Future<YustUser?> signInWithMicrosoft() async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
-  /// Sign up a new user.
-  Future<void> signUp(
+  /// Sign in with GitHub. If a new user was created, return the user.
+  /// A GitHub app must be registered in the Firebase console.
+  Future<YustUser?> signInWithGithub() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign in with Google. If a new user was created, return the user.
+  /// The Google Authentication method must be activated in the Firebase console.
+  Future<YustUser?> signInWithGoogle() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign up a new user. Returns the new user.
+  Future<YustUser> signUp(
     String firstName,
     String lastName,
     String email,
-    String password,
-    String passwordConfirmation, {
+    String password, {
     YustGender? gender,
   }) async {
     throw UnsupportedError('Not supported. No UI available.');

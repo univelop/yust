@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
@@ -9,7 +10,10 @@ import 'yust_database_service_shared.dart';
 
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
-  YustDatabaseServiceMocked.mocked() : super.mocked();
+  final Future<void> Function(
+      String docPath, dynamic oldDocument, dynamic newDocument)? onChange;
+
+  YustDatabaseServiceMocked.mocked({this.onChange}) : super.mocked();
 
   final _db = <String, List<Map<String, dynamic>>>{};
 
@@ -172,19 +176,36 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }) async {
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
+    final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
     if (index == -1 && !doNotCreate) {
-      jsonDocs.add(doc.toJson());
+      jsonDocs.add(docJsonClone);
+      await onChange?.call(
+        _getParentPath(docSetup, doc: doc),
+        null,
+        docJsonClone,
+      );
     } else {
+      final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
       if (updateMask == null) {
-        jsonDocs[index] = doc.toJson();
+        jsonDocs[index] = docJsonClone;
+        await onChange?.call(
+          _getParentPath(docSetup, doc: doc),
+          oldDoc,
+          docJsonClone,
+        );
       } else {
         var jsonDoc = jsonDocs[index];
-        final newJsonDoc = doc.toJson();
+        final newJsonDoc = docJsonClone;
         for (final path in updateMask) {
           final newValue = _readValueInJsonDoc(newJsonDoc, path);
           _changeValueInJsonDoc(jsonDoc, newValue, path);
         }
         jsonDocs[index] = jsonDoc;
+        await onChange?.call(
+          _getParentPath(docSetup, doc: doc),
+          oldDoc,
+          jsonDoc,
+        );
       }
     }
   }
@@ -199,11 +220,21 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }) async {
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
-    final jsonDoc = jsonDocs[index];
+    final jsonDocClone = jsonDecode(jsonEncode(jsonDocs[index]));
+    final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
+
     for (final t in fieldTransforms) {
-      final oldValue = _readValueInJsonDoc(jsonDoc, t.fieldPath) as double;
+      final unescapedPath = t.fieldPath.replaceAll('`', '');
+      final oldValue =
+          (_readValueInJsonDoc(jsonDocClone, unescapedPath) ?? 0) as num;
       _changeValueInJsonDoc(
-          jsonDoc, oldValue + (t.increment ?? 0), t.fieldPath);
+          jsonDocClone, oldValue + (t.increment ?? 0), unescapedPath);
+      jsonDocs[index] = jsonDocClone;
+      await onChange?.call(
+        _getParentPath(docSetup, id: id),
+        oldDoc,
+        jsonDocClone,
+      );
     }
   }
 
@@ -214,13 +245,24 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   ) async {
     final docs = _getCollection<T>(docSetup);
     docs.remove(doc);
+    await onChange?.call(
+      _getParentPath(docSetup, doc: doc),
+      doc,
+      null,
+    );
   }
 
   @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
     final docs = _getCollection<T>(docSetup);
-    docs.removeWhere((doc) => doc.id == docId);
+    final doc = docs.firstWhere((doc) => doc.id == docId);
+    docs.remove(doc);
+    await onChange?.call(
+      _getParentPath(docSetup, doc: doc),
+      doc,
+      null,
+    );
   }
 
   List<Map<String, dynamic>> _getJSONCollection(String collectionName) {
@@ -239,7 +281,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   List<T> _jsonListToDocList<T extends YustDoc>(
       List<Map<String, dynamic>> collection, YustDocSetup<T> docSetup) {
-    return collection.map<T>((e) => docSetup.fromJson(e)).toList();
+    return collection
+        // We clone the maps here by using jsonDecode/jsonEncode
+        .map<T>((e) => docSetup.fromJson(jsonDecode(jsonEncode(e))))
+        .toList();
   }
 
   List<Map<String, dynamic>> _filter(
@@ -274,7 +319,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     dynamic newValue,
     String path,
   ) {
-    final segments = path.split('/');
+    final segments = path.split('.');
     var subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
       subDoc = subDoc[segment];
@@ -283,7 +328,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
-    final segments = path.split('/');
+    final segments = path.split('.');
     var subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
       subDoc = subDoc[segment];
@@ -293,5 +338,14 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   String _createDocumentId() {
     return Yust.helpers.randomString(length: 20);
+  }
+
+  String _getParentPath(YustDocSetup docSetup, {YustDoc? doc, String? id}) {
+    var parentPath = '/documents';
+    if (Yust.useSubcollections && docSetup.forEnvironment) {
+      parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
+    }
+
+    return '$parentPath/${docSetup.collectionName}/${doc?.id ?? id ?? ''}';
   }
 }

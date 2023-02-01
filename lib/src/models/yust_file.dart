@@ -13,7 +13,7 @@ typedef YustFilesJson = List<YustFileJson>;
 /// For offline caching a file can also be stored on the device.
 @JsonSerializable()
 class YustFile {
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? key;
 
   /// The name of the file with extension.
@@ -27,35 +27,35 @@ class YustFile {
   String hash;
 
   /// The binary file. This attibute is used for iOS and Android. For web [bytes] is used instead.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   File? file;
 
   /// The binary file for web. For iOS and Android [file] is used instead.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   Uint8List? bytes;
 
   /// Path to the storage folder. Used for offline caching.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? storageFolderPath;
 
   /// Path to the file on the device. Used for offline caching.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? devicePath;
 
   /// Path to the Firebase document. Used for offline caching.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? linkedDocPath;
 
   /// Attribute of the Firebase document. Used for offline caching.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? linkedDocAttribute;
 
   /// stores the last error. Used in offline caching
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   String? lastError;
 
   /// Is true while uploading the file.
-  @JsonKey(ignore: true)
+  @JsonKey(includeFromJson: false, includeToJson: false)
   bool processing;
 
   /// True if image can be stored in cache. Each cached file needs a name

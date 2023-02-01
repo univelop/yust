@@ -57,8 +57,8 @@ class Yust {
     String envCollectionName = 'envs',
     Future<void> Function(
       String docPath,
-      dynamic oldDocument,
-      dynamic newDocument,
+      Map<String, dynamic>? oldDocument,
+      Map<String, dynamic>? newDocument,
     )?
         onChange,
   }) async {

@@ -78,7 +78,7 @@ enum YustGender {
 enum YustAuthenticationMethod {
   mail('Email'),
   microsoft('Microsoft'),
-  github('GitHub'),
+  // github('GitHub'),
   google('Google'),
   ;
 

@@ -49,10 +49,10 @@ class YustAuthService {
         microsoftProvider, YustAuthenticationMethod.microsoft);
   }
 
-  Future<YustUser?> signInWithGithub() async {
-    final githubProvider = GithubAuthProvider();
-    return _signInWithProvider(githubProvider, YustAuthenticationMethod.github);
-  }
+  // Future<YustUser?> signInWithGithub() async {
+  //   final githubProvider = GithubAuthProvider();
+  //   return _signInWithProvider(githubProvider, YustAuthenticationMethod.github);
+  // }
 
   Future<YustUser?> signInWithGoogle() async {
     final googleProvider = GoogleAuthProvider();

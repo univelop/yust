@@ -64,6 +64,5 @@ const _$YustGenderEnumMap = {
 const _$YustAuthenticationMethodEnumMap = {
   YustAuthenticationMethod.mail: 'mail',
   YustAuthenticationMethod.microsoft: 'microsoft',
-  YustAuthenticationMethod.github: 'github',
   YustAuthenticationMethod.google: 'google',
 };

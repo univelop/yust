@@ -18,7 +18,6 @@ linter:
         # Always await, intentionally not await
         unawaited_futures: true
         prefer_single_quotes: true
-        invalid_dependency: false
         prefer_relative_imports: true
         directives_ordering: true
 # analyzer:

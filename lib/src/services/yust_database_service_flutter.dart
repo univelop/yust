@@ -53,7 +53,6 @@ class YustDatabaseService {
     catch (_) {
       docSnapshot = await doc.get(GetOptions(source: Source.server));
     }
-    if (docSnapshot == null) return null;
     return _transformDoc<T>(docSetup, docSnapshot);
   }
 

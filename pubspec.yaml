@@ -16,6 +16,7 @@ dependencies:
   cloud_firestore: ^4.3.1
   googleapis: ^8.1.0
   googleapis_auth: ^1.1.0
+  firebase_auth_mocks: ^0.10.3
   collection: ^1.16.0
   http: ^0.13.4
   intl: ^0.17.0

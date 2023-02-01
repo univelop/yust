@@ -4,7 +4,6 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
@@ -16,8 +15,6 @@ class YustFileService {
       _fireStorage.useStorageEmulator(emulatorAddress, 9199);
     }
   }
-
-  YustFileService.mocked() : _fireStorage = MockFirebaseStorage();
 
   final firebase_storage.FirebaseStorage _fireStorage;
 

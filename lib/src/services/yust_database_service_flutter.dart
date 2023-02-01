@@ -245,6 +245,7 @@ class YustDatabaseService {
     List<String>? updateMask,
     bool doNotCreate = false,
   }) async {
+    await doc.onSave();
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
@@ -335,6 +336,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
+    await doc.onDelete();
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
     await docRef.delete();
@@ -342,6 +344,7 @@ class YustDatabaseService {
 
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
+    await (await get(docSetup, docId))?.onDelete();
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
     await docRef.delete();

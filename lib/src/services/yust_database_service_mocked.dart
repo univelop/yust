@@ -174,6 +174,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
+    await doc.onSave();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
@@ -243,6 +244,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
+    await doc.onDelete();
     final docs = _getCollection<T>(docSetup);
     docs.remove(doc);
     await onChange?.call(
@@ -255,6 +257,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
+    await (await get(docSetup, docId))?.onDelete();
     final docs = _getCollection<T>(docSetup);
     final doc = docs.firstWhere((doc) => doc.id == docId);
     docs.remove(doc);

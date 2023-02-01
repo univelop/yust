@@ -10,8 +10,8 @@ import 'yust_database_service_shared.dart';
 
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
-  final Future<void> Function(
-      String docPath, dynamic oldDocument, dynamic newDocument)? onChange;
+  final Future<void> Function(String docPath, Map<String, dynamic>? oldDocument,
+      Map<String, dynamic>? newDocument)? onChange;
 
   YustDatabaseServiceMocked.mocked({this.onChange}) : super.mocked();
 
@@ -247,7 +247,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     docs.remove(doc);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
-      doc,
+      doc.toJson(),
       null,
     );
   }
@@ -260,7 +260,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     docs.remove(doc);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
-      doc,
+      doc.toJson(),
       null,
     );
   }

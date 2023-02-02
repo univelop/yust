@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
@@ -12,14 +11,16 @@ import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
 class YustDatabaseService {
-  final FirebaseFirestore _fireStore;
+  // The _fireStore is late because we don't want to init if, if initialized mocked.
+  // (in this case the _firsStore is not used in in the mocked service and a
+  // exception is a good indicator for the developer )
+  late final FirebaseFirestore _fireStore;
   DatabaseLogCallback? dbLogCallback;
 
   YustDatabaseService({this.dbLogCallback})
       : _fireStore = FirebaseFirestore.instance;
 
-  YustDatabaseService.mocked({this.dbLogCallback})
-      : _fireStore = FakeFirebaseFirestore();
+  YustDatabaseService.mocked({this.dbLogCallback});
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -53,7 +54,6 @@ class YustDatabaseService {
     catch (_) {
       docSnapshot = await doc.get(GetOptions(source: Source.server));
     }
-    if (docSnapshot == null) return null;
     return _transformDoc<T>(docSetup, docSnapshot);
   }
 

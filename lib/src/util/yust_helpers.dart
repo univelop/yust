@@ -5,6 +5,9 @@ import 'package:timezone/timezone.dart';
 
 /// Yust helpers
 class YustHelpers {
+  /// Mock the current time in UTC. Only use this in tests!!!
+  static TZDateTime? mockNowUTC;
+
   /// Returns a random String with a specific length.
   String randomString({int length = 8}) {
     final rnd = Random();
@@ -50,6 +53,7 @@ class YustHelpers {
       int? second,
       int? millisecond,
       int? microsecond}) {
+    if (mockNowUTC != null) return utcToLocal(mockNowUTC!);
     final now = TZDateTime.now(local);
     return TZDateTime.local(
       year ?? now.year,
@@ -72,6 +76,7 @@ class YustHelpers {
       int? second,
       int? millisecond,
       int? microsecond}) {
+    if (mockNowUTC != null) return mockNowUTC!;
     final now = TZDateTime.now(UTC);
     return TZDateTime.utc(
       year ?? now.year,

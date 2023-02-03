@@ -32,6 +32,8 @@ class YustDatabaseService {
     }
   }
 
+  YustDatabaseService.mocked({this.dbLogCallback});
+
   /// Initialises a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
@@ -330,6 +332,7 @@ class YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
+    await doc.onSave();
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
@@ -404,6 +407,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
+    await doc.onDelete();
     dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, doc.id));
@@ -412,6 +416,7 @@ class YustDatabaseService {
   /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
+    await (await get(docSetup, docId))?.onDelete();
     dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     await _api.projects.databases.documents
         .delete(_getDocumentPath(docSetup, docId));

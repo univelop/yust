@@ -1,3 +1,8 @@
+## 3.5.0 - 2023-01-16
+
+- Improve mocked database service
+- Fix bugs
+
 ## 3.4.0 - 2022-12-16
 
 - Add getDocsChunked

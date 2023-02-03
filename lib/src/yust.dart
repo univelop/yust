@@ -53,10 +53,19 @@ class Yust {
   /// Initializes [Yust] with mocked services for testing.
   ///
   /// This method should be called before any usage of the yust package.
-  static Future<void> initializeMocked() async {
+  static Future<void> initializeMocked({
+    String envCollectionName = 'envs',
+    Future<void> Function(
+      String docPath,
+      Map<String, dynamic>? oldDocument,
+      Map<String, dynamic>? newDocument,
+    )?
+        onChange,
+  }) async {
     initializeTimeZones();
+    Yust.envCollectionName = envCollectionName;
     Yust.authService = YustAuthService.mocked();
-    Yust.databaseService = YustDatabaseServiceMocked();
+    Yust.databaseService = YustDatabaseServiceMocked.mocked(onChange: onChange);
   }
 
   /// Initializes [Yust].

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
@@ -12,13 +11,16 @@ import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
 class YustDatabaseService {
-  final FirebaseFirestore _fireStore;
+  // The _fireStore is late because we don't want to init if, if initialized mocked.
+  // (in this case the _firsStore is not used in in the mocked service and a
+  // exception is a good indicator for the developer )
+  late final FirebaseFirestore _fireStore;
   DatabaseLogCallback? dbLogCallback;
 
   YustDatabaseService({this.dbLogCallback})
       : _fireStore = FirebaseFirestore.instance;
-  YustDatabaseService.mocked({this.dbLogCallback})
-      : _fireStore = FakeFirebaseFirestore();
+
+  YustDatabaseService.mocked({this.dbLogCallback});
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -39,14 +41,20 @@ class YustDatabaseService {
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
-  ) {
+  ) async {
     final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
-    return doc.get(GetOptions(source: Source.cache)).then((docSnapshot) async {
-      if (docSnapshot.data()?.isEmpty ?? true) {
-        docSnapshot = await doc.get(GetOptions(source: Source.server));
-      }
-      return _transformDoc<T>(docSetup, docSnapshot);
-    });
+    DocumentSnapshot<Map<String, dynamic>>? docSnapshot;
+
+    try {
+      docSnapshot = await doc.get(GetOptions(source: Source.cache));
+      // Check if we got a hit
+      if (docSnapshot.data()?.isEmpty ?? true) throw Exception('Not in Cache!');
+    }
+    // Handle a missing cache entry or other firebase errors by retrying against server
+    catch (_) {
+      docSnapshot = await doc.get(GetOptions(source: Source.server));
+    }
+    return _transformDoc<T>(docSetup, docSnapshot);
   }
 
   Future<T?> getFromDB<T extends YustDoc>(
@@ -94,10 +102,18 @@ class YustDatabaseService {
   }) async {
     var query =
         _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    var snapshot = await query.get(GetOptions(source: Source.cache));
-    if (snapshot.docs.isEmpty) {
+
+    QuerySnapshot<Object?>? snapshot;
+    try {
+      snapshot = await query.get(GetOptions(source: Source.cache));
+      // Check if we got a hit
+      if (snapshot.docs.isEmpty) throw Exception('Not in Cache');
+    }
+    // Handle a missing cache entry or other firebase errors by retrying against server
+    catch (_) {
       snapshot = await query.get(GetOptions(source: Source.server));
     }
+
     T? doc;
 
     if (snapshot.docs.isNotEmpty) {
@@ -164,20 +180,26 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-  }) {
+  }) async {
     var query =
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
-    return query.get(GetOptions(source: Source.cache)).then((snapshot) async {
-      if (snapshot.docs.isEmpty) {
-        snapshot = await query.get(GetOptions(source: Source.server));
-      }
-      // print('Get docs once: ${docSetup.collectionName}');
-      return snapshot.docs
-          .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
-          .whereType<T>()
-          .toList();
-    });
+    QuerySnapshot<Object?>? snapshot;
+
+    try {
+      snapshot = await query.get(GetOptions(source: Source.cache));
+      // Check if we got a hit
+      if (snapshot.docs.isEmpty) throw Exception('Not in Cache');
+    }
+    // Handle a missing cache entry or other firebase errors by retrying against server
+    catch (_) {
+      snapshot = await query.get(GetOptions(source: Source.server));
+    }
+
+    return snapshot.docs
+        .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
+        .whereType<T>()
+        .toList();
   }
 
   Future<List<T>> getListFromDB<T extends YustDoc>(
@@ -224,6 +246,7 @@ class YustDatabaseService {
     List<String>? updateMask,
     bool doNotCreate = false,
   }) async {
+    await doc.onSave();
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
     final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
@@ -314,6 +337,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
+    await doc.onDelete();
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
     await docRef.delete();
@@ -321,6 +345,7 @@ class YustDatabaseService {
 
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
+    await (await get(docSetup, docId))?.onDelete();
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
     await docRef.delete();

@@ -49,4 +49,10 @@ abstract class YustDoc {
   static dynamic convertTimestamp(dynamic value) {
     return FirebaseHelpers.convertTimestamp(value);
   }
+
+  /// is triggerd when the document is saved
+  Future<void> onSave() async {}
+
+  /// is triggerd when the document is removed
+  Future<void> onDelete() async {}
 }

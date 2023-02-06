@@ -2,7 +2,6 @@ import '../models/yust_doc.dart';
 
 enum SnapshotState { noData, loading, loaded, error }
 
-/// A document, what can be saved to the Firestore database.
 class YustSnapshot<T extends YustDoc> {
   T? document;
 

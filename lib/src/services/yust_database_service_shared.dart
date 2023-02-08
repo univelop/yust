@@ -2,45 +2,31 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
-Future<List<String>> prepareSaveDoc<T extends YustDoc>(
+Future<void> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
   T doc, {
   bool? trackModification,
   bool skipOnSave = false,
 }) async {
-  final updateMask = <String>[];
-
   if (trackModification ?? docSetup.trackModification) {
     if (docSetup.hasAuthor) {
-      updateMask.add('createdBy');
       doc.createdBy ??= doc.modifiedBy;
 
-      updateMask.add('modifiedBy');
       doc.modifiedBy = docSetup.userId;
     }
 
     if (docSetup.hasOwner && doc.userId == null) {
-      updateMask.add('userId');
       doc.userId = docSetup.userId;
     }
 
-    updateMask.add('modifiedAt');
     doc.modifiedAt = Yust.helpers.utcNow();
   }
 
-  if (doc.createdAt == null) {
-    updateMask.add('createdAt');
-    doc.createdAt ??= doc.modifiedAt;
-  }
+  doc.createdAt ??= doc.modifiedAt;
 
-  if (doc.envId == null && docSetup.forEnvironment) {
-    updateMask.add('envId');
-    doc.envId = docSetup.envId;
-  }
+  if (doc.envId == null && docSetup.forEnvironment) doc.envId = docSetup.envId;
 
   if (!skipOnSave) await docSetup.onSave?.call(doc);
-
-  return updateMask;
 }
 
 T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {

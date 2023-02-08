@@ -333,8 +333,9 @@ class YustDatabaseService {
     bool doNotCreate = false,
   }) async {
     await doc.onSave();
-    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
+    await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
+    final yustUpdateMask = doc.updateMask;
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
     if (!skipLog) {

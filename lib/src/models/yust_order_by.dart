@@ -24,4 +24,14 @@ class YustOrderBy {
       _$YustOrderByFromJson(json);
 
   Map<String, dynamic> toJson() => _$YustOrderByToJson(this);
+
+  // Define that two filters are equal if the field, comparator and value is equal
+  @override
+  bool operator ==(Object other) =>
+      other is YustOrderBy &&
+      field == other.field &&
+      descending == other.descending;
+
+  @override
+  int get hashCode => Object.hash(field, descending);
 }

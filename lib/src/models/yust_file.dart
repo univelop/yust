@@ -135,6 +135,6 @@ class YustFile {
   }
 
   bool isValid() {
-    return name != null && url != null && url != '';
+    return name != null && name != '' && url != null && url != '';
   }
 }

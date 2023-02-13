@@ -157,4 +157,22 @@ class YustAuthService {
     );
     await userCredential.user!.updatePassword(newPassword);
   }
+
+  Future<void> deleteAccount([String? password]) async {
+    try {
+      final user = fireAuth.currentUser;
+      await user?.delete();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login' && password != null) {
+        final user = (await fireAuth.signInWithEmailAndPassword(
+          email: fireAuth.currentUser!.email!,
+          password: password,
+        ))
+            .user;
+        await user?.delete();
+      } else {
+        rethrow;
+      }
+    }
+  }
 }

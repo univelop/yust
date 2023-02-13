@@ -72,4 +72,8 @@ class YustAuthService {
   Future<void> changePassword(String newPassword, String oldPassword) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
+
+  Future<void> deleteAccount([String? password]) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
 }

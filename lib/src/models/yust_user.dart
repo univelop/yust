@@ -68,6 +68,12 @@ class YustUser extends YustDoc {
   String getName() {
     return '$firstName $lastName';
   }
+
+  /// Deletes the user.
+  Future<void> delete([String? password]) async {
+    await Yust.authService.deleteAccount(password);
+    await Yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
+  }
 }
 
 enum YustGender {

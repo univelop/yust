@@ -73,6 +73,12 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
+  /// Checks if the password is valid.
+  /// Throws an error if the password is invalid or the user does not exist / has no email.
+  Future<void> checkPassword(String password) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
   Future<void> deleteAccount([String? password]) async {
     throw UnsupportedError('Not supported. No UI available.');
   }

@@ -63,27 +63,25 @@ class YustAuthService {
     AuthProvider provider,
     YustAuthenticationMethod? method,
   ) async {
-    if (kIsWeb) {
-      final userCredential = await fireAuth.signInWithPopup(provider);
-      if (userCredential.user == null) {
-        return null;
-      }
-      if (await Yust.databaseService
-              .get<YustUser>(Yust.userSetup, userCredential.user!.uid) ==
-          null) {
-        final nameParts = userCredential.user!.displayName?.split(' ') ?? [];
-        final lastName = nameParts.removeLast();
-        final firstName = nameParts.join(' ');
-        return await _createUser(
-          firstName: firstName,
-          email: userCredential.user!.email ?? '',
-          lastName: lastName,
-          id: userCredential.user!.uid,
-          authenticationMethod: YustAuthenticationMethod.microsoft,
-        );
-      }
-    } else {
-      await FirebaseAuth.instance.signInWithProvider(provider);
+    final userCredential = kIsWeb
+        ? await fireAuth.signInWithPopup(provider)
+        : await FirebaseAuth.instance.signInWithProvider(provider);
+    if (userCredential.user == null) {
+      return null;
+    }
+    if (await Yust.databaseService
+            .get<YustUser>(Yust.userSetup, userCredential.user!.uid) ==
+        null) {
+      final nameParts = userCredential.user!.displayName?.split(' ') ?? [];
+      final lastName = nameParts.removeLast();
+      final firstName = nameParts.join(' ');
+      return await _createUser(
+        firstName: firstName,
+        email: userCredential.user!.email ?? '',
+        lastName: lastName,
+        id: userCredential.user!.uid,
+        authenticationMethod: YustAuthenticationMethod.microsoft,
+      );
     }
     return null;
   }
@@ -156,6 +154,14 @@ class YustAuthService {
       password: oldPassword,
     );
     await userCredential.user!.updatePassword(newPassword);
+  }
+
+  Future<void> checkPassword(String password) async {
+    await fireAuth.currentUser!
+        .reauthenticateWithCredential(EmailAuthProvider.credential(
+      email: fireAuth.currentUser!.email!,
+      password: password,
+    ));
   }
 
   Future<void> deleteAccount([String? password]) async {

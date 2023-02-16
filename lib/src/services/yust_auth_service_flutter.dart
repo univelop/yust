@@ -45,8 +45,7 @@ class YustAuthService {
     String firstName,
     String lastName,
     String email,
-    String password,
-    String passwordConfirmation, {
+    String password, {
     YustGender? gender,
   }) async {
     final userCredential = await fireAuth.createUserWithEmailAndPassword(

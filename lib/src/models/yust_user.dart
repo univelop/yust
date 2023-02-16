@@ -39,6 +39,12 @@ class YustUser extends YustDoc {
   /// The timestamp of the last login.
   DateTime? lastLogin;
 
+  /// The authentication method.
+  YustAuthenticationMethod? authenticationMethod;
+
+  /// The domain of the user mail.
+  String? domain;
+
   YustUser({
     required this.email,
     required this.firstName,
@@ -62,9 +68,27 @@ class YustUser extends YustDoc {
   String getName() {
     return '$firstName $lastName';
   }
+
+  /// Deletes the user.
+  Future<void> delete([String? password]) async {
+    await Yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
+    await Yust.authService.deleteAccount(password);
+  }
 }
 
 enum YustGender {
   male,
   female,
+}
+
+enum YustAuthenticationMethod {
+  mail('Email'),
+  microsoft('Microsoft'),
+  // github('GitHub'),
+  google('Google'),
+  ;
+
+  const YustAuthenticationMethod(this.label);
+
+  final String label;
 }

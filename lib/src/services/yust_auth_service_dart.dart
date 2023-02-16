@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import '../models/yust_user.dart';
 import '../yust.dart';
 
@@ -23,8 +24,26 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
-  /// Sign up a new user.
-  Future<void> signUp(
+  /// Sign in with Microsoft. If a new user was created, return the user.
+  /// A Microsoft app must be registered in the Firebase console.
+  Future<YustUser?> signInWithMicrosoft() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign in with GitHub. If a new user was created, return the user.
+  /// A GitHub app must be registered in the Firebase console.
+  Future<YustUser?> signInWithGithub() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign in with Google. If a new user was created, return the user.
+  /// The Google Authentication method must be activated in the Firebase console.
+  Future<YustUser?> signInWithGoogle() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign up a new user. Returns the new user.
+  Future<YustUser> signUp(
     String firstName,
     String lastName,
     String email,
@@ -51,6 +70,16 @@ class YustAuthService {
 
   /// Change the user password.
   Future<void> changePassword(String newPassword, String oldPassword) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Checks if the password is valid.
+  /// Throws an error if the password is invalid or the user does not exist / has no email.
+  Future<void> checkPassword(String password) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  Future<void> deleteAccount([String? password]) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 }

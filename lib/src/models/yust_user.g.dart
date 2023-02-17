@@ -23,7 +23,10 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
       ..envId = json['envId'] as String?
-      ..envIds = Map<String, bool?>.from(json['envIds'] as Map)
+      ..envIds = (json['envIds'] as Map?)?.map(
+            (k, e) => MapEntry(k as String, e as bool?),
+          ) ??
+          {}
       ..currEnvId = json['currEnvId'] as String?
       ..deviceIds = (json['deviceIds'] as List<dynamic>?)
           ?.map((e) => e as String)

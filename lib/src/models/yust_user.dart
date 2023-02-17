@@ -28,6 +28,7 @@ class YustUser extends YustDoc {
   YustGender? gender;
 
   /// The tannants the user has access to.
+  @JsonKey(defaultValue: {})
   Map<String, bool?> envIds = {};
 
   /// The current tannant the user is using.

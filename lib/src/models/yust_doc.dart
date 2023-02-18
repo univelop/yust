@@ -61,11 +61,9 @@ abstract class YustDoc {
     _envId = s;
   }
 
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  final Set<String> _updateMask;
+  final Set<String> _updateMask = {};
 
   /// The fields that should be updated.
-  @JsonKey(includeFromJson: false, includeToJson: false)
   Set<String> get updateMask => _updateMask;
 
   /// are there changes to be saved?
@@ -80,28 +78,15 @@ abstract class YustDoc {
     String? modifiedBy,
     String? userId,
     String? envId,
-    Set<String>? updateMask,
   })  : _id = id,
         _createdAt = createdAt,
         _createdBy = createdBy,
         _modifiedAt = modifiedAt,
         _modifiedBy = modifiedBy,
         _userId = userId,
-        _envId = envId,
-        _updateMask = updateMask ??
-            <String>{
-              'id',
-              'createdAt',
-              'createdBy',
-              'modifiedAt',
-              'modifiedBy',
-              'userId',
-              'envId'
-            };
+        _envId = envId;
 
-  YustDoc.fromJson(Map<String, dynamic> json)
-      : _id = '',
-        _updateMask = <String>{};
+  YustDoc.fromJson(Map<String, dynamic> json) : _id = '';
 
   Map<String, dynamic> toJson();
 

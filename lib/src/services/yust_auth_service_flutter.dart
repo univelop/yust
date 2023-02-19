@@ -80,7 +80,7 @@ class YustAuthService {
         email: userCredential.user!.email ?? '',
         lastName: lastName,
         id: userCredential.user!.uid,
-        authenticationMethod: YustAuthenticationMethod.microsoft,
+        authenticationMethod: method,
       );
     }
     return null;

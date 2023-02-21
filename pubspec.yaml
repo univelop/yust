@@ -1,6 +1,6 @@
 name: yust
 description: Build awesome apps with Flutter and Firebase.
-version: 3.5.0
+version: 3.6.0
 homepage: https://github.com/univelop/yust
 
 environment:
@@ -12,7 +12,9 @@ dependencies:
   json_annotation: ^4.4.0
   firebase_core: ^2.4.1
   firebase_auth: ^4.2.5
+  firebase_auth_platform_interface: ^6.11.7
   firebase_storage: ^11.0.10
+  # firebase_storage_mocks: ^0.5.1
   cloud_firestore: ^4.3.1
   googleapis: ^8.1.0
   googleapis_auth: ^1.1.0

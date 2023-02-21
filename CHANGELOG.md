@@ -1,3 +1,12 @@
+## 3.6.0 - 2023-02-19
+
+- Add OAuth authentication
+- Add update mask to YustDoc
+- Add YustSnapshot
+- Update firebase packages
+- Improvements
+- Fix bugs
+
 ## 3.5.0 - 2023-01-16
 
 - Improve mocked database service

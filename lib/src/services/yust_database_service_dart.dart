@@ -170,7 +170,8 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getListFromDB(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit);
   }
 
   /// Returns [YustDoc]s from the cache, if available, otherwise from the server.
@@ -191,7 +192,8 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getListFromDB(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit);
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -333,8 +335,9 @@ class YustDatabaseService {
     bool doNotCreate = false,
   }) async {
     await doc.onSave();
-    final yustUpdateMask = await prepareSaveDoc(docSetup, doc,
+    await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
+    final yustUpdateMask = doc.updateMask;
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
     if (!skipLog) {

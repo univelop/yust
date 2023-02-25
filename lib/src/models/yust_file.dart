@@ -133,4 +133,8 @@ class YustFile {
       'modifiedAt': modifiedAt?.toIso8601String(),
     };
   }
+
+  bool isValid() {
+    return name != null && name != '' && url != null && url != '';
+  }
 }

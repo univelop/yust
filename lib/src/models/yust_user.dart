@@ -71,9 +71,9 @@ class YustUser extends YustDoc {
   }
 
   /// Deletes the user.
-  Future<void> delete([String? password]) async {
+  Future<void> delete({String? password, bool deleteAuth = true}) async {
     await Yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
-    await Yust.authService.deleteAccount(password);
+    if (deleteAuth) await Yust.authService.deleteAccount(password);
   }
 }
 

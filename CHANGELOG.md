@@ -1,3 +1,8 @@
+## 3.6.1 - 2023-02-27
+
+- Little improvements
+- Fix bugs
+
 ## 3.6.0 - 2023-02-19
 
 - Add OAuth authentication

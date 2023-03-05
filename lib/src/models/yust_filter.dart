@@ -1,5 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:timezone/timezone.dart';
+
+import '../util/yust_helpers.dart';
 
 part 'yust_filter.g.dart';
 
@@ -67,7 +70,9 @@ class YustFilter {
     }
 
     fieldValue = _handleBoolValue(fieldValue);
+    fieldValue = _handleTZDateTimeValue(fieldValue);
     value = _handleBoolValue(value);
+    value = _handleTZDateTimeValue(value);
     value = _handleNumberValue(fieldValue, value);
     if (value == null) {
       return true;
@@ -99,6 +104,19 @@ class YustFilter {
       default:
         return false;
     }
+  }
+
+  dynamic _handleTZDateTimeValue(dynamic value) {
+    YustHelpers helpers = YustHelpers();
+    if (value is List) {
+      return value.map((v) => _handleTZDateTimeValue(v)).toList();
+    } else if (value is TZDateTime || value is DateTime) {
+      final date = helpers.localToUtc(value);
+      // needs to be parsed to DateTime, beacuse TZDateTime is not comparable with DateTime
+      return DateTime.utc(date.year, date.month, date.day, date.hour,
+          date.minute, date.second, date.millisecond, date.microsecond);
+    }
+    return value;
   }
 
   dynamic _handleBoolValue(dynamic value) {

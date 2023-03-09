@@ -42,6 +42,12 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
+  /// Sign in with a configured OpenID. If a new user was created, return the user.
+  /// The Authentication method must be configured in the Firebase console.
+  Future<YustUser?> signInWithOpenId(String providerId) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
   /// Sign up a new user. Returns the new user.
   Future<YustUser> signUp(
     String firstName,

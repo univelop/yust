@@ -1,3 +1,8 @@
+## 3.7.0 - 2023-03-27
+
+- Improve datetime handling
+- Fix bugs
+
 ## 3.6.1 - 2023-02-27
 
 - Little improvements

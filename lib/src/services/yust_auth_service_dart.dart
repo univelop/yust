@@ -49,7 +49,7 @@ class YustAuthService {
   }
 
   /// Sign up a new user. Returns the new user.
-  Future<YustUser> signUp(
+  Future<YustUser?> signUp(
     String firstName,
     String lastName,
     String email,

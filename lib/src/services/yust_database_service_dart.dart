@@ -282,6 +282,8 @@ class YustDatabaseService {
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));
 
+        dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
+
         isDone = response.length < pageSize;
         if (!isDone) lastOffset += pageSize;
 

@@ -46,11 +46,15 @@ class YustUser extends YustDoc {
   /// The domain of the user mail.
   String? domain;
 
+  /// The link to the authentication user uid.
+  String? authId;
+
   YustUser({
     required this.email,
     required this.firstName,
     required this.lastName,
     this.gender,
+    this.authId,
   });
 
   factory YustUser.fromJson(Map<String, dynamic> json) =>
@@ -75,6 +79,12 @@ class YustUser extends YustDoc {
     await Yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
     if (deleteAuth) await Yust.authService.deleteAccount(password);
   }
+
+  Future<void> linkAuth(String uid, YustAuthenticationMethod? method) async {
+    authId = uid;
+    authenticationMethod = method;
+    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+  }
 }
 
 enum YustGender {
@@ -87,8 +97,7 @@ enum YustAuthenticationMethod {
   microsoft('Microsoft'),
   // github('GitHub'),
   google('Google'),
-  openId('OpenID'),
-  ;
+  openId('OpenID');
 
   const YustAuthenticationMethod(this.label);
 

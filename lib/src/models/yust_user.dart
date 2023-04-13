@@ -97,8 +97,7 @@ enum YustAuthenticationMethod {
   microsoft('Microsoft'),
   // github('GitHub'),
   google('Google'),
-  openId('OpenID'),
-  ;
+  openId('OpenID');
 
   const YustAuthenticationMethod(this.label);
 

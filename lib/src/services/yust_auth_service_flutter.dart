@@ -5,6 +5,7 @@ import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:firebase_auth_platform_interface/firebase_auth_platform_interface.dart';
 import 'package:flutter/foundation.dart';
 
+import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
 import '../yust.dart';
 
@@ -68,30 +69,77 @@ class YustAuthService {
     AuthProvider provider,
     YustAuthenticationMethod? method,
   ) async {
-    final userCredential = kIsWeb
-        ? await fireAuth.signInWithPopup(provider)
-        : await FirebaseAuth.instance.signInWithProvider(provider);
-    if (userCredential.user == null) {
-      return null;
-    }
-    if (await Yust.databaseService
-            .get<YustUser>(Yust.userSetup, userCredential.user!.uid) ==
-        null) {
-      final nameParts = userCredential.user!.displayName?.split(' ') ?? [];
-      final lastName = nameParts.removeLast();
-      final firstName = nameParts.join(' ');
-      return await _createUser(
-        firstName: firstName,
-        email: userCredential.user!.email ?? '',
-        lastName: lastName,
-        id: userCredential.user!.uid,
-        authenticationMethod: method,
-      );
-    }
-    return null;
+    final userCredential = await _signInAndGetUserCredential(provider);
+    if (_signInFailed(userCredential)) return null;
+    final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
+    if (_yustUserWasLinked(connectedYustUser)) return null;
+    final successfullyLinked = await _tryLinkYustUser(userCredential, method);
+    if (successfullyLinked) return null;
+
+    final nameParts = _extractNameParts(userCredential);
+    final lastName = _getLastName(nameParts);
+    final firstName = _getFirstName(nameParts);
+
+    return await _createUser(
+      firstName: firstName,
+      lastName: lastName,
+      email: _getEmail(userCredential),
+      id: _getId(userCredential),
+      authId: _getId(userCredential),
+      authenticationMethod: method,
+    );
   }
 
-  Future<YustUser> signUp(
+  String _getId(UserCredential userCredential) => userCredential.user!.uid;
+
+  String _getEmail(UserCredential userCredential) =>
+      userCredential.user!.email ?? '';
+
+  String _getFirstName(List<String> nameParts) => nameParts.join(' ');
+
+  String _getLastName(List<String> nameParts) => nameParts.removeLast();
+
+  List<String> _extractNameParts(UserCredential userCredential) =>
+      userCredential.user!.displayName?.split(' ') ?? [];
+
+  bool _yustUserWasLinked(YustUser? connectedYustUser) =>
+      connectedYustUser != null;
+
+  bool _signInFailed(UserCredential userCredential) =>
+      userCredential.user == null;
+
+  Future<UserCredential> _signInAndGetUserCredential(
+          AuthProvider provider) async =>
+      kIsWeb
+          ? await fireAuth.signInWithPopup(provider)
+          : await FirebaseAuth.instance.signInWithProvider(provider);
+
+  Future<YustUser?> _maybeGetConnectedYustUser(
+          UserCredential userCredential) async =>
+      await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
+        YustFilter(
+            field: 'authId',
+            comparator: YustFilterComparator.equal,
+            value: userCredential.user!.uid)
+      ]);
+
+  Future<bool> _tryLinkYustUser(
+    UserCredential userCredential,
+    YustAuthenticationMethod? method,
+  ) async {
+    final user =
+        await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
+      YustFilter(
+          field: 'email',
+          comparator: YustFilterComparator.equal,
+          value: userCredential.user!.email)
+    ]);
+    if (user == null) return false;
+    await user.linkAuth(userCredential.user!.uid, method);
+    return true;
+  }
+
+  Future<YustUser?> signUp(
     String firstName,
     String lastName,
     String email,
@@ -100,6 +148,10 @@ class YustAuthService {
   }) async {
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
+    final successfullyLinked =
+        await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
+    if (successfullyLinked) return null;
+
     return await _createUser(
       firstName: firstName,
       email: email,
@@ -112,9 +164,10 @@ class YustAuthService {
 
   Future<YustUser> _createUser({
     required String firstName,
-    required String email,
     required String lastName,
+    required String email,
     required String id,
+    String? authId,
     YustAuthenticationMethod? authenticationMethod,
     String? domain,
     YustGender? gender,
@@ -124,6 +177,7 @@ class YustAuthService {
       ..firstName = firstName
       ..lastName = lastName
       ..id = id
+      ..authId = authId
       ..authenticationMethod = authenticationMethod
       ..domain = domain ?? email.split('@').last
       ..gender = gender;

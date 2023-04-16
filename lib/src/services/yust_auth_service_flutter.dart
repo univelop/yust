@@ -157,6 +157,7 @@ class YustAuthService {
       email: email,
       lastName: lastName,
       id: userCredential.user!.uid,
+      authId: userCredential.user!.uid,
       gender: gender,
       authenticationMethod: YustAuthenticationMethod.mail,
     );
@@ -167,7 +168,7 @@ class YustAuthService {
     required String lastName,
     required String email,
     required String id,
-    String? authId,
+    required String authId,
     YustAuthenticationMethod? authenticationMethod,
     String? domain,
     YustGender? gender,

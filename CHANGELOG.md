@@ -1,3 +1,7 @@
+## 3.8.3 - 2023-04-21
+
+- Fix greater filters
+
 ## 3.8.2 - 2023-04-20
 
 - Fix bugs

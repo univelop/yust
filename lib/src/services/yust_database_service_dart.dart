@@ -561,10 +561,10 @@ class YustDatabaseService {
               op = 'LESS_THAN_OR_EQUAL';
               break;
             case YustFilterComparator.greaterThan:
-              op = 'GREATHER_THAN';
+              op = 'GREATER_THAN';
               break;
             case YustFilterComparator.greaterThanEqual:
-              op = 'GREATHER_THAN_OR_EQUAL';
+              op = 'GREATER_THAN_OR_EQUAL';
               break;
             case YustFilterComparator.arrayContains:
               op = 'ARRAY_CONTAINS';

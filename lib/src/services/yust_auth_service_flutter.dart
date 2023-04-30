@@ -62,14 +62,17 @@ class YustAuthService {
 
   Future<YustUser?> signInWithOpenId(String providerId) async {
     final provider = OAuthProvider(providerId);
-    return _signInWithProvider(provider, YustAuthenticationMethod.openId);
+    return _signInWithProvider(provider, YustAuthenticationMethod.openId,
+        redirect: true);
   }
 
   Future<YustUser?> _signInWithProvider(
     AuthProvider provider,
-    YustAuthenticationMethod? method,
-  ) async {
-    final userCredential = await _signInAndGetUserCredential(provider);
+    YustAuthenticationMethod? method, {
+    bool redirect = false,
+  }) async {
+    final userCredential =
+        await _signInAndGetUserCredential(provider, redirect: redirect);
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
@@ -108,10 +111,14 @@ class YustAuthService {
   bool _signInFailed(UserCredential userCredential) =>
       userCredential.user == null;
 
-  Future<UserCredential> _signInAndGetUserCredential(
-          AuthProvider provider) async =>
+  Future<UserCredential> _signInAndGetUserCredential(AuthProvider provider,
+          {bool redirect = false}) async =>
       kIsWeb
-          ? await fireAuth.signInWithPopup(provider)
+          ? redirect
+              ? await fireAuth
+                  .signInWithRedirect(provider)
+                  .then((value) => fireAuth.getRedirectResult())
+              : await fireAuth.signInWithPopup(provider)
           : await FirebaseAuth.instance.signInWithProvider(provider);
 
   Future<YustUser?> _maybeGetConnectedYustUser(

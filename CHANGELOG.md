@@ -1,3 +1,7 @@
+## 3.8.4 - 2023-05-01
+
+- Improve authentication
+
 ## 3.8.3 - 2023-04-21
 
 - Fix greater filters

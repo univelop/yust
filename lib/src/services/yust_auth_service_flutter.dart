@@ -62,8 +62,7 @@ class YustAuthService {
 
   Future<YustUser?> signInWithOpenId(String providerId) async {
     final provider = OAuthProvider(providerId);
-    return _signInWithProvider(provider, YustAuthenticationMethod.openId,
-        redirect: true);
+    return _signInWithProvider(provider, YustAuthenticationMethod.openId);
   }
 
   Future<YustUser?> _signInWithProvider(

@@ -1,3 +1,7 @@
+## 3.8.5 - 2023-05-02
+
+- Improve authentication
+
 ## 3.8.4 - 2023-05-01
 
 - Improve authentication

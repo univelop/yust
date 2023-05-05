@@ -45,10 +45,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     String id,
   ) async {
     final docs = _getCollection<T>(docSetup);
-    if (docs.isEmpty) {
-      return null;
-    } else {
+    try {
       return docs.firstWhere((doc) => doc.id == id);
+    } catch (e) {
+      return null;
     }
   }
 

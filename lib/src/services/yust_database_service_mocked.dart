@@ -245,8 +245,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     T doc,
   ) async {
     await doc.onDelete();
-    final docs = _getCollection<T>(docSetup);
-    docs.remove(doc);
+    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    jsonDocs.removeWhere((d) => d['id'] == doc.id);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
       doc.toJson(),
@@ -257,10 +257,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
-    await (await get(docSetup, docId))?.onDelete();
-    final docs = _getCollection<T>(docSetup);
-    final doc = docs.firstWhere((doc) => doc.id == docId);
-    docs.remove(doc);
+    final doc = await get(docSetup, docId);
+    if (doc == null) return;
+    await doc.onDelete();
+    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    jsonDocs.removeWhere((d) => d['id'] == docId);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
       doc.toJson(),

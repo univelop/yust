@@ -1,3 +1,7 @@
+## 3.9.0 - 2023-05-14
+
+- Small improvements
+
 ## 3.8.5 - 2023-05-02
 
 - Improve authentication

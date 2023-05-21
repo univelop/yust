@@ -1,3 +1,33 @@
+## 3.9.0 - 2023-05-14
+
+- Small improvements
+
+## 3.8.5 - 2023-05-02
+
+- Improve authentication
+
+## 3.8.4 - 2023-05-01
+
+- Improve authentication
+
+## 3.8.3 - 2023-04-21
+
+- Fix greater filters
+
+## 3.8.2 - 2023-04-20
+
+- Fix bugs
+
+## 3.8.1 - 2023-04-16
+
+- Fix bugs
+
+## 3.8.0 - 2023-04-16
+
+- Add user auth id
+- Upgrade firebase packages
+- Fix bugs
+
 ## 3.7.0 - 2023-03-27
 
 - Improve datetime handling

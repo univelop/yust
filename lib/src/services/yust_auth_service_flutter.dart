@@ -67,9 +67,11 @@ class YustAuthService {
 
   Future<YustUser?> _signInWithProvider(
     AuthProvider provider,
-    YustAuthenticationMethod? method,
-  ) async {
-    final userCredential = await _signInAndGetUserCredential(provider);
+    YustAuthenticationMethod? method, {
+    bool redirect = false,
+  }) async {
+    final userCredential =
+        await _signInAndGetUserCredential(provider, redirect: redirect);
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
@@ -108,10 +110,14 @@ class YustAuthService {
   bool _signInFailed(UserCredential userCredential) =>
       userCredential.user == null;
 
-  Future<UserCredential> _signInAndGetUserCredential(
-          AuthProvider provider) async =>
+  Future<UserCredential> _signInAndGetUserCredential(AuthProvider provider,
+          {bool redirect = false}) async =>
       kIsWeb
-          ? await fireAuth.signInWithPopup(provider)
+          ? redirect
+              ? await fireAuth
+                  .signInWithRedirect(provider)
+                  .then((value) => fireAuth.getRedirectResult())
+              : await fireAuth.signInWithPopup(provider)
           : await FirebaseAuth.instance.signInWithProvider(provider);
 
   Future<YustUser?> _maybeGetConnectedYustUser(
@@ -157,6 +163,7 @@ class YustAuthService {
       email: email,
       lastName: lastName,
       id: userCredential.user!.uid,
+      authId: userCredential.user!.uid,
       gender: gender,
       authenticationMethod: YustAuthenticationMethod.mail,
     );
@@ -167,7 +174,7 @@ class YustAuthService {
     required String lastName,
     required String email,
     required String id,
-    String? authId,
+    required String authId,
     YustAuthenticationMethod? authenticationMethod,
     String? domain,
     YustGender? gender,

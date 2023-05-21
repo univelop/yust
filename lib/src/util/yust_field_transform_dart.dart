@@ -1,5 +1,7 @@
 import 'package:googleapis/firestore/v1.dart';
 
+import '../../yust.dart';
+
 class YustFieldTransform {
   String fieldPath;
   double? increment;
@@ -20,7 +22,7 @@ class YustFieldTransform {
   /// ... and for dart (googleapis/firestore) its a [FieldTransform]
   dynamic toNativeTransform() {
     return FieldTransform(
-      fieldPath: fieldPath,
+      fieldPath: YustHelpers().toQuotedFieldPath(fieldPath),
       increment: increment != null ? Value(doubleValue: increment) : null,
       removeAllFromArray: removeFromArray != null
           ? ArrayValue.fromJson(<dynamic, dynamic>{'values': removeFromArray})

@@ -12,6 +12,7 @@ import '../models/yust_order_by.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../util/yust_firestore_api.dart';
+import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
@@ -354,8 +355,7 @@ class YustDatabaseService {
     // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
     // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
     final quotedUpdateMask = updateMask
-        ?.map((path) => path.splitMapJoin(RegExp(r'[\w\d\-\_]+'),
-            onMatch: (m) => '`${m[0]}`'))
+        ?.map((path) => YustHelpers().toQuotedFieldPath(path))
         .toList();
 
     await _api.projects.databases.documents.patch(
@@ -562,10 +562,10 @@ class YustDatabaseService {
               op = 'LESS_THAN_OR_EQUAL';
               break;
             case YustFilterComparator.greaterThan:
-              op = 'GREATHER_THAN';
+              op = 'GREATER_THAN';
               break;
             case YustFilterComparator.greaterThanEqual:
-              op = 'GREATHER_THAN_OR_EQUAL';
+              op = 'GREATER_THAN_OR_EQUAL';
               break;
             case YustFilterComparator.arrayContains:
               op = 'ARRAY_CONTAINS';
@@ -588,8 +588,7 @@ class YustDatabaseService {
             default:
               throw 'The comparator "${filter.comparator}" is not supported.';
           }
-          final quotedFieldPath =
-              filter.field.split('.').map((f) => '`$f`').join('.');
+          final quotedFieldPath = YustHelpers().toQuotedFieldPath(filter.field);
 
           result.add(Filter(
               fieldFilter: FieldFilter(

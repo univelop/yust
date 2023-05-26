@@ -68,12 +68,6 @@ class YustFilter {
     if (fieldValue == null && comparator != YustFilterComparator.isNull) {
       return false;
     }
-
-    fieldValue = _handleBoolValue(fieldValue);
-    fieldValue = _handleTZDateTimeValue(fieldValue);
-    value = _handleBoolValue(value);
-    value = _handleTZDateTimeValue(value);
-    value = _handleNumberValue(fieldValue, value);
     if (value == null) {
       return true;
     }

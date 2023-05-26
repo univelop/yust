@@ -100,38 +100,6 @@ class YustFilter {
     }
   }
 
-  dynamic _handleTZDateTimeValue(dynamic value) {
-    YustHelpers helpers = YustHelpers();
-    if (value is List) {
-      return value.map((v) => _handleTZDateTimeValue(v)).toList();
-    } else if (value is TZDateTime || value is DateTime) {
-      final date = helpers.localToUtc(value);
-      // needs to be parsed to DateTime, beacuse TZDateTime is not comparable with DateTime
-      return DateTime.utc(date.year, date.month, date.day, date.hour,
-          date.minute, date.second, date.millisecond, date.microsecond);
-    }
-    return value;
-  }
-
-  dynamic _handleBoolValue(dynamic value) {
-    if (value is List) {
-      return value.map((v) => _handleBoolValue(v)).toList();
-    } else if (value == true) {
-      return 1;
-    } else if (value == false) {
-      return 0;
-    } else {
-      return value;
-    }
-  }
-
-  dynamic _handleNumberValue(dynamic fieldValue, dynamic value) {
-    if (fieldValue is num && value is String) {
-      return num.tryParse(value);
-    }
-    return value;
-  }
-
   bool _valueEquality(dynamic other) {
     if (value is List && other is List) {
       return ListEquality<dynamic>().equals(value, other);

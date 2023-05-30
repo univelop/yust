@@ -19,6 +19,7 @@ enum YustFilterComparator {
   inList,
   notInList,
   isNull,
+  isNotNull,
 }
 
 /// The Filter class represents a document filter
@@ -74,7 +75,9 @@ class YustFilter {
     value = _handleBoolValue(value);
     value = _handleTZDateTimeValue(value);
     value = _handleNumberValue(fieldValue, value);
-    if (value == null) {
+    if (value == null &&
+        ![YustFilterComparator.isNull, YustFilterComparator.isNotNull]
+            .contains(comparator)) {
       return true;
     }
 
@@ -101,6 +104,8 @@ class YustFilter {
         return !(value as List).contains(fieldValue);
       case YustFilterComparator.isNull:
         return fieldValue == null;
+      case YustFilterComparator.isNotNull:
+        return fieldValue != null;
       default:
         return false;
     }
@@ -159,6 +164,7 @@ class YustFilter {
     YustFilterComparator.inList: 'in',
     YustFilterComparator.notInList: 'notIn',
     YustFilterComparator.isNull: 'isNull',
+    YustFilterComparator.isNotNull: 'isNotNull',
   };
 
   /// Return the String representation for a comparator (e.g. [YustFilterComparator.equal] => '=')

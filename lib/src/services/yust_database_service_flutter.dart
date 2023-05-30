@@ -438,7 +438,8 @@ class YustDatabaseService {
           filter.value = null;
         }
         if ((filter.value != null) ||
-            (filter.comparator == YustFilterComparator.isNull)) {
+            ([YustFilterComparator.isNull, YustFilterComparator.isNotNull]
+                .contains(filter.comparator))) {
           switch (filter.comparator) {
             case YustFilterComparator.equal:
               query = query.where(filter.field, isEqualTo: filter.value);
@@ -474,6 +475,9 @@ class YustDatabaseService {
               break;
             case YustFilterComparator.isNull:
               query = query.where(filter.field, isNull: true);
+              break;
+            case YustFilterComparator.isNotNull:
+              query = query.where(filter.field, isNull: false);
               break;
             default:
               throw 'The comparator "${filter.comparator}" is not supported.';

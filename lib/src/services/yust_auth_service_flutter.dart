@@ -133,14 +133,17 @@ class YustAuthService {
     UserCredential userCredential,
     YustAuthenticationMethod? method,
   ) async {
-    final user =
-        await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
-      YustFilter(
+    final user = await Yust.databaseService.getFirst<YustUser>(
+      Yust.userSetup,
+      filters: [
+        YustFilter(
           field: 'email',
           comparator: YustFilterComparator.equal,
-          value: userCredential.user!.email)
-    ]);
-    if (user == null) return false;
+          value: userCredential.user!.email,
+        ),
+      ],
+    );
+    if (user == null || user.authId != null) return false;
     await user.linkAuth(userCredential.user!.uid, method);
     return true;
   }

@@ -545,7 +545,8 @@ class YustDatabaseService {
           filter.value = null;
         }
         if ((filter.value != null) ||
-            (filter.comparator == YustFilterComparator.isNull)) {
+            ([YustFilterComparator.isNull, YustFilterComparator.isNotNull]
+                .contains(filter.comparator))) {
           String op;
           switch (filter.comparator) {
             case YustFilterComparator.equal:
@@ -580,6 +581,9 @@ class YustDatabaseService {
               break;
             case YustFilterComparator.isNull:
               op = 'IS_NULL';
+              break;
+            case YustFilterComparator.isNotNull:
+              op = 'IS_NOT_NULL';
               break;
             default:
               throw 'The comparator "${filter.comparator}" is not supported.';

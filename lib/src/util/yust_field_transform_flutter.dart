@@ -8,12 +8,13 @@ class YustFieldTransform {
   bool? delete;
 
   YustFieldTransform({
-    required this.fieldPath,
+    required String fieldPath,
     this.increment,
     this.removeFromArray,
     this.setToServerTimestamp,
     this.delete,
-  });
+  }) : fieldPath =
+            fieldPath.splitMapJoin(r'[\w\d\-\_]+', onMatch: (m) => '`${m[0]}`');
 
   /// Converts this YustFieldTransform to it's platforms native implementation
   /// For Flutter (cloud_firestore) this it's a [FieldValue]...

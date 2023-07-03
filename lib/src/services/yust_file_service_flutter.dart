@@ -3,20 +3,20 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
 
 class YustFileService {
   YustFileService({String? emulatorAddress})
-      : _fireStorage = firebase_storage.FirebaseStorage.instance {
+      : _fireStorage = FirebaseStorage.instance {
     if (emulatorAddress != null) {
       _fireStorage.useStorageEmulator(emulatorAddress, 9199);
     }
   }
 
-  final firebase_storage.FirebaseStorage _fireStorage;
+  final FirebaseStorage _fireStorage;
 
   Future<String> uploadFile(
       {required String path,
@@ -27,14 +27,14 @@ class YustFileService {
       final storageReference = _fireStorage.ref().child(path).child(name);
 
       var size = _calcMaxUploadRetryTime(bytes, file);
-      firebase_storage.FirebaseStorage.instance
+      FirebaseStorage.instance
           .setMaxUploadRetryTime(Duration(seconds: size * 30));
 
-      firebase_storage.UploadTask uploadTask;
+      UploadTask uploadTask;
       if (file != null) {
         uploadTask = storageReference.putFile(file);
       } else {
-        var metadata = firebase_storage.SettableMetadata(
+        var metadata = SettableMetadata(
           contentType: lookupMimeType(name),
         );
         uploadTask = storageReference.putData(bytes!, metadata);
@@ -60,13 +60,11 @@ class YustFileService {
   }
 
   Future<Uint8List?> downloadFile(
-      {required String path, required String name, int maxSize = 20 * 1024 * 1024}) async {
+      {required String path,
+      required String name,
+      int maxSize = 20 * 1024 * 1024}) async {
     try {
-      return await _fireStorage
-          .ref()
-          .child(path)
-          .child(name)
-          .getData(maxSize);
+      return await _fireStorage.ref().child(path).child(name).getData(maxSize);
     } catch (e) {
       return Uint8List(0);
     }
@@ -84,7 +82,7 @@ class YustFileService {
   Future<bool> fileExist({required String path, required String name}) async {
     try {
       await _fireStorage.ref().child(path).child(name).getDownloadURL();
-    } on firebase_storage.FirebaseException catch (_) {
+    } on FirebaseException catch (_) {
       return false;
     }
     return true;

@@ -8,12 +8,20 @@ import 'package:uuid/uuid.dart';
 
 import '../util/yust_storage_api.dart';
 
+/// Handels Filestorage requests for Google Cloud Storage.
+///
+/// Uses the GoogleApi for Flutter Platforms (Android, iOS, Web)
+/// and GoogleAPIs for **Dart-only environments**.
 class YustFileService {
   final StorageApi _storageApi;
 
   YustFileService({String? emulatorAddress})
       : _storageApi = YustStorageApi.instance!;
 
+  /// Uploads a file from either a [File] or [Uint8List]
+  /// to the given [path] and [name].
+  /// 
+  /// It returns the download url of the uploaded file.
   Future<String> uploadFile(
       {required String path,
       required String name,
@@ -42,6 +50,8 @@ class YustFileService {
     return _createDownloadUrl(path, name, token);
   }
 
+  /// Downloads a file from a given [path] and [name] and returns it as [Uint8List].
+  /// The [maxSize] parameter can be used to limit the size of the downloaded file.
   Future<Uint8List?> downloadFile(
       {required String path,
       required String name,
@@ -79,10 +89,12 @@ class YustFileService {
     throw Exception('Unknown response Object');
   }
 
+  /// Deletes a existing file at [path] and filename [name].
   Future<void> deleteFile({required String path, String? name}) async {
     await _storageApi.objects.delete(YustStorageApi.bucketName!, '$path/$name');
   }
 
+  /// Checks if a file exists at a given [path] and [name].
   Future<bool> fileExist({required String path, required String name}) async {
     try {
       await _storageApi.objects.get(YustStorageApi.bucketName!, '$path/$name');
@@ -95,6 +107,7 @@ class YustFileService {
     }
   }
 
+  /// Returns the download url of a existing file at [path] and [name].
   Future<String> getFileDownloadUrl(
       {required String path, required String name}) async {
     final object = await _storageApi.objects

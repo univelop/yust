@@ -321,6 +321,23 @@ class YustDatabaseService {
         filters: filters, orderBy: orderBy, limit: limit));
   }
 
+  /// Counts the number of documents in a collection.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  Future<int> count<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+  }) async {
+    final response = await _api.projects.databases.documents
+        .runAggregationQuery(_getAggregationQuery(docSetup, filters: filters),
+            _getParentPath(docSetup));
+    return int.parse(
+        response[0].result?.aggregateFields?['count']?.integerValue ?? '0');
+  }
+
   /// Saves a document.
   ///
   /// If [merge] is false a document with the same name
@@ -519,6 +536,25 @@ class YustDatabaseService {
           orderBy: _executeOrderByList(orderBy),
           limit: limit,
           offset: offset),
+    );
+  }
+
+  RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+  }) {
+    return RunAggregationQueryRequest(
+      structuredAggregationQuery: StructuredAggregationQuery(
+        aggregations: [Aggregation(alias: 'count', count: Count())],
+        structuredQuery: StructuredQuery(
+          from: [CollectionSelector(collectionId: _getCollection(docSetup))],
+          where: Filter(
+              compositeFilter: CompositeFilter(
+                  filters: _executeStaticFilters(docSetup) +
+                      _executeFilters(filters),
+                  op: 'AND')),
+        ),
+      ),
     );
   }
 

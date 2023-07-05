@@ -236,6 +236,15 @@ class YustDatabaseService {
     });
   }
 
+  Future<int> count<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+  }) async {
+    var query = _getQuery(docSetup, filters: filters);
+    final snapshot = await query.count().get();
+    return snapshot.count;
+  }
+
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {

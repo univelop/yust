@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:googleapis/firestore/v1.dart';
+import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 
 import 'yust_firestore_api.dart';
+import 'yust_storage_api.dart';
 
 /// Firebase specific helpers used in other modules.
 class FirebaseHelpers {
@@ -24,7 +26,10 @@ class FirebaseHelpers {
     bool buildRelease = false,
   }) async {
     late AutoRefreshingAuthClient authClient;
-    final scopes = [FirestoreApi.datastoreScope];
+    final scopes = [
+      FirestoreApi.datastoreScope,
+      StorageApi.devstorageReadWriteScope,
+    ];
 
     if (pathToServiceAccountJson == null) {
       authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
@@ -56,6 +61,14 @@ class FirebaseHelpers {
       emulatorAddress != null
           ? 'http://$emulatorAddress:8080/'
           : 'https://firestore.googleapis.com/',
+      projectId: projectId,
+    );
+
+    YustStorageApi.initialize(
+      authClient,
+      emulatorAddress != null
+          ? 'http://$emulatorAddress:9199/'
+          : 'https://storage.googleapis.com/',
       projectId: projectId,
     );
   }

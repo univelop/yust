@@ -1,3 +1,7 @@
+## 3.11.1 - 2023-07-28
+
+- Improve file service
+
 ## 3.11.0 - 2023-07-16
 
 - Add count to database service

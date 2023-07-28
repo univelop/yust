@@ -374,13 +374,18 @@ class YustDatabaseService {
     final quotedUpdateMask = updateMask
         ?.map((path) => YustHelpers().toQuotedFieldPath(path))
         .toList();
-
-    await _api.projects.databases.documents.patch(
-      dbDoc,
-      _getDocumentPath(docSetup, doc.id),
-      updateMask_fieldPaths: quotedUpdateMask,
-      currentDocument_exists: doNotCreate ? true : null,
-    );
+    final docPath = _getDocumentPath(docSetup, doc.id);
+    try {
+      await _api.projects.databases.documents.patch(
+        dbDoc,
+        docPath,
+        updateMask_fieldPaths: quotedUpdateMask,
+        currentDocument_exists: doNotCreate ? true : null,
+      );
+    } on DetailedApiRequestError catch (e) {
+      throw YustException(
+          'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+    }
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -395,9 +400,10 @@ class YustDatabaseService {
         .map((t) => t.toNativeTransform())
         .cast<FieldTransform>()
         .toList();
+    final docPath = _getDocumentPath(docSetup, id);
     final documentTransform = DocumentTransform(
       fieldTransforms: firebaseFieldTransforms,
-      document: _getDocumentPath(docSetup, id),
+      document: docPath,
     );
     final write = Write(
         transform: documentTransform,
@@ -406,10 +412,15 @@ class YustDatabaseService {
     dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
         id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
 
-    await _api.projects.databases.documents.commit(
-      commitRequest,
-      _getDatabasePath(),
-    );
+    try {
+      await _api.projects.databases.documents.commit(
+        commitRequest,
+        _getDatabasePath(),
+      );
+    } on DetailedApiRequestError catch (e) {
+      throw YustException(
+          'Can not update the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+    }
   }
 
   /// Delete all [YustDoc]s in the filter.
@@ -431,8 +442,13 @@ class YustDatabaseService {
   ) async {
     await doc.onDelete();
     dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
-    await _api.projects.databases.documents
-        .delete(_getDocumentPath(docSetup, doc.id));
+    final docPath = _getDocumentPath(docSetup, doc.id);
+    try {
+      await _api.projects.databases.documents.delete(docPath);
+    } on DetailedApiRequestError catch (e) {
+      throw YustException(
+          'Can not delete the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+    }
   }
 
   /// Delete a [YustDoc] by the ID.
@@ -440,8 +456,13 @@ class YustDatabaseService {
       YustDocSetup<T> docSetup, String docId) async {
     await (await get(docSetup, docId))?.onDelete();
     dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
-    await _api.projects.databases.documents
-        .delete(_getDocumentPath(docSetup, docId));
+    final docPath = _getDocumentPath(docSetup, docId);
+    try {
+      await _api.projects.databases.documents.delete(docPath);
+    } on DetailedApiRequestError catch (e) {
+      throw YustException(
+          'Can not delete the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+    }
   }
 
   /// Initialises a [YustDoc] and saves it.
@@ -738,5 +759,10 @@ class YustDatabaseService {
 
   String _createDocumentId() {
     return Yust.helpers.randomString(length: 20);
+  }
+
+  String _detailedApiRequestErrorToString(DetailedApiRequestError e) {
+    return 'Message: ${e.message}, Status: ${e.status}, '
+        'Response: ${jsonEncode(e.jsonResponse)}';
   }
 }

@@ -27,11 +27,11 @@ class YustUser extends YustDoc {
   /// The gender of the user.
   YustGender? gender;
 
-  /// The tannants the user has access to.
+  /// The tenant the user has access to.
   @JsonKey(defaultValue: {})
   Map<String, bool?> envIds = {};
 
-  /// The current tannant the user is using.
+  /// The current tenant the user is using.
   String? currEnvId;
 
   /// ID of devices the user is using.
@@ -97,6 +97,7 @@ enum YustAuthenticationMethod {
   microsoft('Microsoft'),
   // github('GitHub'),
   google('Google'),
+  apple('Apple'),
   openId('OpenID');
 
   const YustAuthenticationMethod(this.label);

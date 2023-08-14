@@ -79,9 +79,15 @@ class YustAuthService {
         await _signInAndGetUserCredential(provider, redirect: redirect);
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
-    if (_yustUserWasLinked(connectedYustUser)) return null;
+    if (_yustUserWasLinked(connectedYustUser)) {
+      _updateUserData(connectedYustUser, userCredential);
+      await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, connectedYustUser!);
+      return null;
+    }
     final successfullyLinked = await _tryLinkYustUser(userCredential, method);
-    if (successfullyLinked) return null;
+    if (successfullyLinked) {
+      return null;
+    }
 
     final nameParts = _extractNameParts(userCredential);
     final lastName = _getLastName(nameParts);
@@ -95,6 +101,20 @@ class YustAuthService {
       authId: _getId(userCredential),
       authenticationMethod: method,
     );
+  }
+
+  void _updateUserData(YustUser? user, UserCredential userCredential) {
+    if(user == null) {
+      throw ArgumentError('user is null');
+    }
+
+    final nameParts = _extractNameParts(userCredential);
+    final lastName = _getLastName(nameParts);
+    final firstName = _getFirstName(nameParts);
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = _getEmail(userCredential);
   }
 
   String _getId(UserCredential userCredential) => userCredential.user!.uid;
@@ -153,6 +173,7 @@ class YustAuthService {
       ],
     );
     if (user == null || user.authId != null) return false;
+    _updateUserData(user, userCredential);
     await user.linkAuth(userCredential.user!.uid, method);
     return true;
   }

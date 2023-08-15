@@ -34,10 +34,8 @@ class YustAuthService {
 
   String? getCurrentUserId() => fireAuth.currentUser?.uid;
 
-  Future<void> signIn(
-    String email,
-    String password,
-  ) async {
+  Future<void> signIn(String email,
+      String password,) async {
     await fireAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
@@ -70,18 +68,20 @@ class YustAuthService {
     return _signInWithProvider(provider, YustAuthenticationMethod.openId);
   }
 
-  Future<YustUser?> _signInWithProvider(
-    AuthProvider provider,
-    YustAuthenticationMethod? method, {
-    bool redirect = false,
-  }) async {
+  Future<YustUser?> _signInWithProvider(AuthProvider provider,
+      YustAuthenticationMethod? method, {
+        bool redirect = false,
+      }) async {
     final userCredential =
-        await _signInAndGetUserCredential(provider, redirect: redirect);
+    await _signInAndGetUserCredential(provider, redirect: redirect);
+    await fireAuth.currentUser?.reload();
+
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) {
       _updateUserData(connectedYustUser, userCredential);
-      await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, connectedYustUser!);
+      await Yust.databaseService.saveDoc<YustUser>(
+          Yust.userSetup, connectedYustUser!);
       return null;
     }
     final successfullyLinked = await _tryLinkYustUser(userCredential, method);
@@ -104,7 +104,7 @@ class YustAuthService {
   }
 
   void _updateUserData(YustUser? user, UserCredential userCredential) {
-    if(user == null) {
+    if (user == null) {
       throw ArgumentError('user is null');
     }
 
@@ -140,17 +140,17 @@ class YustAuthService {
       userCredential.user == null;
 
   Future<UserCredential> _signInAndGetUserCredential(AuthProvider provider,
-          {bool redirect = false}) async =>
+      {bool redirect = false}) async =>
       kIsWeb
           ? redirect
-              ? await fireAuth
-                  .signInWithRedirect(provider)
-                  .then((value) => fireAuth.getRedirectResult())
-              : await fireAuth.signInWithPopup(provider)
+          ? await fireAuth
+          .signInWithRedirect(provider)
+          .then((value) => fireAuth.getRedirectResult())
+          : await fireAuth.signInWithPopup(provider)
           : await FirebaseAuth.instance.signInWithProvider(provider);
 
   Future<YustUser?> _maybeGetConnectedYustUser(
-          UserCredential userCredential) async =>
+      UserCredential userCredential) async =>
       await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',
@@ -158,10 +158,8 @@ class YustAuthService {
             value: userCredential.user!.uid)
       ]);
 
-  Future<bool> _tryLinkYustUser(
-    UserCredential userCredential,
-    YustAuthenticationMethod? method,
-  ) async {
+  Future<bool> _tryLinkYustUser(UserCredential userCredential,
+      YustAuthenticationMethod? method,) async {
     final user = await Yust.databaseService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
@@ -172,112 +170,115 @@ class YustAuthService {
         ),
       ],
     );
-    if (user == null || user.authId != null) return false;
+    if (user == null || user.authId != null) {
+      return false;
+    }
     _updateUserData(user, userCredential);
     await user.linkAuth(userCredential.user!.uid, method);
     return true;
   }
+}
 
-  Future<YustUser?> signUp(
-    String firstName,
+Future<YustUser?> signUp(String firstName,
     String lastName,
     String email,
     String password, {
-    YustGender? gender,
-  }) async {
-    final userCredential = await fireAuth.createUserWithEmailAndPassword(
-        email: email, password: password);
-    final successfullyLinked =
-        await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
-    if (successfullyLinked) return null;
+      YustGender? gender,
+    }) async {
+  final userCredential = await fireAuth.createUserWithEmailAndPassword(
+      email: email, password: password);
+  final successfullyLinked =
+  await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
+  if (successfullyLinked) return null;
 
-    return await _createUser(
-      firstName: firstName,
-      email: email,
-      lastName: lastName,
-      id: userCredential.user!.uid,
-      authId: userCredential.user!.uid,
-      gender: gender,
-      authenticationMethod: YustAuthenticationMethod.mail,
-    );
-  }
+  return await _createUser(
+    firstName: firstName,
+    email: email,
+    lastName: lastName,
+    id: userCredential.user!.uid,
+    authId: userCredential.user!.uid,
+    gender: gender,
+    authenticationMethod: YustAuthenticationMethod.mail,
+  );
+}
 
-  Future<YustUser> _createUser({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String id,
-    required String authId,
-    YustAuthenticationMethod? authenticationMethod,
-    String? domain,
-    YustGender? gender,
-  }) async {
-    final user = Yust.userSetup.newDoc()
-      ..email = email
-      ..firstName = firstName
-      ..lastName = lastName
-      ..id = id
-      ..authId = authId
-      ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
-      ..gender = gender;
+Future<YustUser> _createUser({
+  required String firstName,
+  required String lastName,
+  required String email,
+  required String id,
+  required String authId,
+  YustAuthenticationMethod? authenticationMethod,
+  String? domain,
+  YustGender? gender,
+}) async {
+  final user = Yust.userSetup.newDoc()
+    ..email = email
+    ..firstName = firstName
+    ..lastName = lastName
+    ..id = id
+    ..authId = authId
+    ..authenticationMethod = authenticationMethod
+    ..domain = domain ?? email
+        .split('@')
+        .last
+    ..gender = gender;
+  await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+  return user;
+}
+
+Future<void> signOut() async {
+  await fireAuth.signOut();
+}
+
+Future<void> sendPasswordResetEmail(String email) async {
+  await fireAuth.sendPasswordResetEmail(email: email);
+}
+
+Future<void> changeEmail(String email, String password) async {
+  final userCredential = await fireAuth.signInWithEmailAndPassword(
+    email: fireAuth.currentUser!.email!,
+    password: password,
+  );
+  await userCredential.user!.updateEmail(email);
+  final user = await Yust.databaseService
+      .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
+  if (user != null) {
+    user.email = email;
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-    return user;
-  }
-
-  Future<void> signOut() async {
-    await fireAuth.signOut();
-  }
-
-  Future<void> sendPasswordResetEmail(String email) async {
-    await fireAuth.sendPasswordResetEmail(email: email);
-  }
-
-  Future<void> changeEmail(String email, String password) async {
-    final userCredential = await fireAuth.signInWithEmailAndPassword(
-      email: fireAuth.currentUser!.email!,
-      password: password,
-    );
-    await userCredential.user!.updateEmail(email);
-    final user = await Yust.databaseService
-        .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
-    if (user != null) {
-      user.email = email;
-      await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-    }
-  }
-
-  Future<void> changePassword(String newPassword, String oldPassword) async {
-    final userCredential = await fireAuth.signInWithEmailAndPassword(
-      email: fireAuth.currentUser!.email!,
-      password: oldPassword,
-    );
-    await userCredential.user!.updatePassword(newPassword);
-  }
-
-  Future<void> checkPassword(String password) async {
-    await fireAuth.currentUser!
-        .reauthenticateWithCredential(EmailAuthProvider.credential(
-      email: fireAuth.currentUser!.email!,
-      password: password,
-    ));
-  }
-
-  Future<void> deleteAccount([String? password]) async {
-    try {
-      final user = fireAuth.currentUser;
-      await user?.delete();
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login' && password != null) {
-        final user = (await fireAuth.signInWithEmailAndPassword(
-          email: fireAuth.currentUser!.email!,
-          password: password,
-        ))
-            .user;
-        await user?.delete();
-      } else {
-        rethrow;
-      }
-    }
   }
 }
+
+Future<void> changePassword(String newPassword, String oldPassword) async {
+  final userCredential = await fireAuth.signInWithEmailAndPassword(
+    email: fireAuth.currentUser!.email!,
+    password: oldPassword,
+  );
+  await userCredential.user!.updatePassword(newPassword);
+}
+
+Future<void> checkPassword(String password) async {
+  await fireAuth.currentUser!
+      .reauthenticateWithCredential(EmailAuthProvider.credential(
+    email: fireAuth.currentUser!.email!,
+    password: password,
+  ));
+}
+
+Future<void> deleteAccount([String? password]) async {
+  try {
+    final user = fireAuth.currentUser;
+    await user?.delete();
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'requires-recent-login' && password != null) {
+      final user = (await fireAuth.signInWithEmailAndPassword(
+        email: fireAuth.currentUser!.email!,
+        password: password,
+      ))
+          .user;
+      await user?.delete();
+    } else {
+      rethrow;
+    }
+  }
+}}

@@ -78,6 +78,8 @@ class YustAuthService {
     final userCredential =
         await _signInAndGetUserCredential(provider, redirect: redirect);
     await fireAuth.currentUser?.reload();
+    await userCredential.user?.reload();
+    print(userCredential.user?.displayName);
 
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);

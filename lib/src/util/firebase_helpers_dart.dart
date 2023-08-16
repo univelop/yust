@@ -28,7 +28,7 @@ class FirebaseHelpers {
     late AutoRefreshingAuthClient authClient;
     final scopes = [
       FirestoreApi.datastoreScope,
-      StorageApi.devstorageReadWriteScope,
+      StorageApi.devstorageFullControlScope,
     ];
 
     if (pathToServiceAccountJson == null) {

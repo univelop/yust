@@ -175,6 +175,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool doNotCreate = false,
   }) async {
     await doc.onSave();
+    await prepareSaveDoc(docSetup, doc,
+        trackModification: trackModification, skipOnSave: skipOnSave);
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));

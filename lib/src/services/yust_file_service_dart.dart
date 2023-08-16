@@ -113,10 +113,21 @@ class YustFileService {
     final object = await _storageApi.objects
         .get(YustStorageApi.bucketName!, '$path/$name');
     if (object is Object) {
-      final token =
+      var token =
           object.metadata?['firebaseStorageDownloadTokens']?.split(',')[0];
       if (token == null) {
-        throw Exception('No token found');
+        token = Uuid().v4();
+        if (object.metadata == null) {
+          object.metadata = {'firebaseStorageDownloadTokens': token};
+        } else {
+          object.metadata!['firebaseStorageDownloadTokens'] = token;
+        }
+        try {
+          await _storageApi.objects
+              .update(object, YustStorageApi.bucketName!, object.name!);
+        } catch (e) {
+          throw Exception('Error while creating token: ${e.toString()}}');
+        }
       }
       return _createDownloadUrl(path, name, token);
     }

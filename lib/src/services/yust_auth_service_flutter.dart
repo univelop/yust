@@ -106,8 +106,12 @@ class YustAuthService {
 
   String _getLastName(List<String> nameParts) => nameParts.removeLast();
 
-  List<String> _extractNameParts(UserCredential userCredential) =>
-      userCredential.user!.displayName?.split(' ') ?? [];
+  List<String> _extractNameParts(UserCredential userCredential) {
+    if (userCredential.user!.displayName == null) {
+      throw Exception('No name returned by provider!');
+    }
+    return userCredential.user!.displayName?.split(' ') ?? [];
+  }
 
   bool _yustUserWasLinked(YustUser? connectedYustUser) =>
       connectedYustUser != null;

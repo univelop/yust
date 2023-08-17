@@ -7,6 +7,8 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  flutter:
+        sdk: flutter
   json_annotation: ^4.8.0
   firebase_core: ^2.9.0
   firebase_auth: ^4.6.3

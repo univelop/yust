@@ -3,7 +3,7 @@ import 'dart:async';
 import '../models/yust_user.dart';
 import '../yust.dart';
 
-/// Handels auth request for Firebase Auth.
+/// Handles auth request for Firebase Auth.
 class YustAuthService {
   YustAuthService({String? emulatorAddress});
 
@@ -39,6 +39,12 @@ class YustAuthService {
   /// Sign in with Google. If a new user was created, return the user.
   /// The Google Authentication method must be activated in the Firebase console.
   Future<YustUser?> signInWithGoogle() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  /// Sign in with Apple. If a new user was created, return the user.
+  /// The Apple Authentication method must be activated in the Firebase console.
+  Future<YustUser?> signInWithApple() async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 

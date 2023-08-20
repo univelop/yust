@@ -60,6 +60,11 @@ class YustAuthService {
     return _signInWithProvider(googleProvider, YustAuthenticationMethod.google);
   }
 
+  Future<YustUser?> signInWithApple() async {
+    final appleProvider = AppleAuthProvider();
+    return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
+  }
+
   Future<YustUser?> signInWithOpenId(String providerId) async {
     final provider = OAuthProvider(providerId);
     return _signInWithProvider(provider, YustAuthenticationMethod.openId);
@@ -101,8 +106,12 @@ class YustAuthService {
 
   String _getLastName(List<String> nameParts) => nameParts.removeLast();
 
-  List<String> _extractNameParts(UserCredential userCredential) =>
-      userCredential.user!.displayName?.split(' ') ?? [];
+  List<String> _extractNameParts(UserCredential userCredential) {
+    if (userCredential.user!.displayName == null) {
+      throw Exception('No name returned by provider!');
+    }
+    return userCredential.user!.displayName?.split(' ') ?? [];
+  }
 
   bool _yustUserWasLinked(YustUser? connectedYustUser) =>
       connectedYustUser != null;

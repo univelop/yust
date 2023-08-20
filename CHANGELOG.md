@@ -1,4 +1,8 @@
-## 3.11.1 - 2023-07-28
+## 3.11.2 - 2023-07-28
+
+- Improve database service error handling
+
+## 3.11.1 - 2023-07-18
 
 - Improve file service
 

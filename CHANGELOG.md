@@ -1,3 +1,8 @@
+## 3.12.0 - 2023-08-20
+
+- Upgrade to Flutter 3.10
+- Add Apple Login
+
 ## 3.11.2 - 2023-07-28
 
 - Improve database service error handling

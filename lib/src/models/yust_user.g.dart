@@ -70,5 +70,6 @@ const _$YustAuthenticationMethodEnumMap = {
   YustAuthenticationMethod.mail: 'mail',
   YustAuthenticationMethod.microsoft: 'microsoft',
   YustAuthenticationMethod.google: 'google',
+  YustAuthenticationMethod.apple: 'apple',
   YustAuthenticationMethod.openId: 'openId',
 };

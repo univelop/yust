@@ -321,16 +321,34 @@ class YustDatabaseService {
     return modifiedObj;
   }
 
-  /// NOTE: This method has no use in frontend
   Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 5000,
-  }) {
-    return Stream.fromFuture(
-            getList(docSetup, filters: filters, orderBy: orderBy))
-        .expand((e) => e);
+  }) async* {
+    var isDone = false;
+    DocumentSnapshot? lastDoc;
+    while (!isDone) {
+      var query = _getQuery(docSetup,
+          filters: filters, orderBy: orderBy, limit: pageSize);
+      if (lastDoc != null) {
+        query = query.startAfterDocument(lastDoc);
+      }
+
+      final snapshot =
+          await query.get(GetOptions(source: Source.serverAndCache));
+
+      for (final doc in snapshot.docs) {
+        final transformedDoc = _transformDoc<T>(docSetup, doc);
+        if (transformedDoc != null) {
+          yield transformedDoc;
+        }
+      }
+
+      lastDoc = snapshot.docs.last;
+      isDone = snapshot.docs.length < pageSize;
+    }
   }
 
   Future<void> deleteDocs<T extends YustDoc>(

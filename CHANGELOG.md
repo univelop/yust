@@ -1,3 +1,7 @@
+## 3.13.0 - 2023-09-12
+
+- Small improvements
+
 ## 3.12.2 - 2023-08-27
 
 - Implement getListChunked for Flutter

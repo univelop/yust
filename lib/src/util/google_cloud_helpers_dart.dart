@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http/http.dart' as http;
 
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 
+import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 import 'yust_storage_api.dart';
 
-/// Firebase specific helpers used in other modules.
-class FirebaseHelpers {
+/// Google Cloud (incl. Firebase) specific helpers used in other modules.
+class GoogleCloudHelpers {
   /// Initializes firebase
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
@@ -25,36 +27,20 @@ class FirebaseHelpers {
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {
-    late AutoRefreshingAuthClient authClient;
     final scopes = [
       FirestoreApi.datastoreScope,
       StorageApi.devstorageFullControlScope,
     ];
 
-    if (pathToServiceAccountJson == null) {
-      authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
-      // Default to Dev Environment
-      projectId = projectId ??
-          Platform.environment['GCP_PROJECT'] ??
-          Platform.environment['GCLOUD_PROJECT'];
-      if (projectId == null) {
-        throw Exception('No ProjectId given or found in env variables');
-      }
-    } else {
-      final serviceAccountJson =
-          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+    final authClient = await createAuthClient(
+      scopes: scopes,
+      pathToServiceAccountJson: pathToServiceAccountJson,
+    );
+    final projectId = await getProjectId(
+      pathToServiceAccountJson: pathToServiceAccountJson,
+    );
 
-      projectId ??= serviceAccountJson['project_id'];
-
-      final accountCredentials =
-          ServiceAccountCredentials.fromJson(serviceAccountJson);
-
-      authClient = await clientViaServiceAccount(
-        accountCredentials,
-        scopes,
-      );
-      print('Current GCP project id: $projectId');
-    }
+    print('Current GCP project id: $projectId');
 
     YustFirestoreApi.initialize(
       authClient,
@@ -78,5 +64,18 @@ class FirebaseHelpers {
   /// If the value is not a timestamp the origianal value is returned.
   static dynamic convertTimestamp(dynamic value) {
     return value;
+  }
+
+  /// Gets the project id from the google cloud metadata server.
+  /// This is only available in the google cloud environment.
+  static Future<String> _getProjectIdWithMetadataServer() async {
+    final metadataServer = Uri.parse(
+        'http://metadata.google.internal/computeMetadata/v1/project/project-id');
+
+    final projectId =
+        (await http.get(metadataServer, headers: {'Metadata-Flavor': 'Google'}))
+            .body;
+
+    return projectId;
   }
 }

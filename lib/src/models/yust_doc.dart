@@ -1,6 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../util/firebase_helpers.dart';
+import '../util/google_cloud_helpers.dart';
 import '../yust.dart';
 
 /// A document, what can be saved to the Firestore database.
@@ -99,7 +99,7 @@ abstract class YustDoc {
 
   /// Converts a firebase timestamp to a [DateTime].
   static dynamic convertTimestamp(dynamic value) {
-    return FirebaseHelpers.convertTimestamp(value);
+    return GoogleCloudHelpers.convertTimestamp(value);
   }
 
   /// is triggerd when the document is saved

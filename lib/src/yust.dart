@@ -6,7 +6,7 @@ import 'services/yust_auth_service.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
-import 'util/firebase_helpers.dart';
+import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
 
 /// Represents the state of the user authentication.
@@ -59,8 +59,7 @@ class Yust {
       String docPath,
       Map<String, dynamic>? oldDocument,
       Map<String, dynamic>? newDocument,
-    )?
-        onChange,
+    )? onChange,
   }) async {
     initializeTimeZones();
     Yust.envCollectionName = envCollectionName;
@@ -91,7 +90,7 @@ class Yust {
     // Init timezones
     initializeTimeZones();
 
-    await FirebaseHelpers.initializeFirebase(
+    await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
       projectId: projectId,

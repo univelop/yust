@@ -59,6 +59,59 @@ class GoogleCloudHelpers {
     );
   }
 
+  /// Creates an auth client for the google cloud environment.
+  ///
+  /// If [pathToServiceAccountJson] is provided, the client is created with the service account credentials.
+  /// Else the client is created with the application default credentials (e.g. from environment variables)
+  ///
+  /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
+  static Future<AutoRefreshingAuthClient> createAuthClient(
+      {required List<String> scopes, String? pathToServiceAccountJson}) async {
+    final AutoRefreshingAuthClient authClient;
+    if (pathToServiceAccountJson == null) {
+      authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
+    } else {
+      final serviceAccountJson =
+          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+
+      final accountCredentials =
+          ServiceAccountCredentials.fromJson(serviceAccountJson);
+
+      authClient = await clientViaServiceAccount(
+        accountCredentials,
+        scopes,
+      );
+    }
+    return authClient;
+  }
+
+  /// Gets the google project id from the execution environment.
+  ///
+  /// If [pathToServiceAccountJson] is provided, the project id is read from the json file.
+  /// If [useMetadataServer] is set to true, the project id is read from the google cloud metadata server.
+  /// If [pathToServiceAccountJson] and [useMetadataServer] are both not provided,
+  /// the project id is read from typical google cloud environment variables.
+  static Future<String> getProjectId({
+    String? pathToServiceAccountJson,
+    useMetadataServer = false,
+  }) async {
+    String? projectId;
+    if (pathToServiceAccountJson == null) {
+      if (useMetadataServer) return _getProjectIdWithMetadataServer();
+      projectId = Platform.environment['GCP_PROJECT'] ??
+          Platform.environment['GCLOUD_PROJECT'];
+    } else {
+      final serviceAccountJson =
+          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+
+      projectId = serviceAccountJson['project_id'];
+    }
+    if ((projectId ?? '') == '') {
+      throw YustException('No project id found!');
+    }
+    return projectId!;
+  }
+
   /// Converts a timestamp to a DateTime.
   ///
   /// If the value is not a timestamp the origianal value is returned.

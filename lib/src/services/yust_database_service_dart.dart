@@ -681,7 +681,9 @@ class YustDatabaseService {
     }
 
     try {
-      return docSetup.fromJson(json);
+      final doc = docSetup.fromJson(json);
+      doc.clearUpdateMask();
+      return doc;
     } catch (e) {
       print(
           '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}: $e ($json)');

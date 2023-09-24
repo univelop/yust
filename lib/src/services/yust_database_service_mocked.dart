@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
@@ -163,6 +164,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
+  Future<int> count<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+  }) async =>
+      (await getList(docSetup, filters: filters)).length;
+
+  @override
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -298,9 +306,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
   ) {
     for (final f in filters ?? []) {
-      collection = collection
-          .where((e) => f.isFieldMatching(_readValueInJsonDoc(e, f.field)))
-          .toList();
+      collection = collection.where((e) {
+        var value = _readValueInJsonDoc(e, f.field);
+
+        // As we are filtering the raw json, we need to make a special case for
+        // DateTime fields
+        if (value is String && value.isIso8601String) {
+          value = DateTime.parse(value);
+        }
+        return f.isFieldMatching(value);
+      }).toList();
     }
     return collection;
   }

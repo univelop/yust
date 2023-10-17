@@ -25,7 +25,7 @@ class YustUser extends YustDoc {
   String lastName;
 
   /// The gender of the user.
-  ///? default value
+  @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   YustGender? gender;
 
   /// The tenant the user has access to.
@@ -42,7 +42,7 @@ class YustUser extends YustDoc {
   DateTime? lastLogin;
 
   /// The authentication method.
-  ///? default value
+  @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   YustAuthenticationMethod? authenticationMethod;
 
   /// The domain of the user mail.

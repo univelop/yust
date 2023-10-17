@@ -45,8 +45,7 @@ class YustFilter {
   /// The comparator to compare the value of the brick with the [brickId] [value]
   @JsonKey(
       fromJson: YustFilter.comparatorFromString,
-      toJson: YustFilter.comparatorToString,
-      unknownEnumValue: YustFilterComparator.equal)
+      toJson: YustFilter.comparatorToString)
   YustFilterComparator comparator;
 
   /// The Value to compare the value of the brick with [brickId] to

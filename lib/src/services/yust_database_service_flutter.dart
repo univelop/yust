@@ -550,7 +550,9 @@ class YustDatabaseService {
         return currentNode.value;
       });
       try {
-        return docSetup.fromJson(modifiedData);
+        final doc = docSetup.fromJson(modifiedData);
+        doc.clearUpdateMask();
+        return doc;
       } catch (e) {
         print('[[WARNING]] Error Transforming JSON $e');
         return null;

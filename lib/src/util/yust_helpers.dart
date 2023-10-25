@@ -136,4 +136,43 @@ class YustHelpers {
   double roundToDecimalPlaces(num value, [int fractionalDigits = 8]) =>
       (value * pow(10, fractionalDigits + 1)).roundToDouble() /
       pow(10, fractionalDigits + 1);
+
+  /// Returns a list of indexes of the found strings.
+  /// The search looks for strings that **contain** the search [searchString].
+  /// - if [ignoreCase] is true, the search is case insensitive
+  /// - if [reorder] is false the order is preserved
+  /// - if [reorder] is  true the result is sorted as follows:
+  ///   0. if the search string is empty, the order is preserved
+  ///   1. first exact matches
+  ///   2. then matches at the beginning of the string (sorted alphabetically (not case sensitive))
+  ///   3. then matches only contain the search string (sorted alphabetically (not case sensitive))
+  List<int> searchString(
+      {required List<String> strings,
+      required String searchString,
+      bool ignoreCase = true,
+      bool reorder = true}) {
+    final indices = List.generate(strings.length, (i) => i);
+    if (searchString.isEmpty) return indices;
+
+    final stringsToBeSearched = ignoreCase
+        ? strings.map((s) => s.toLowerCase()).toList()
+        : strings;
+    final searchFor = ignoreCase ? searchString.toLowerCase() : searchString;
+
+    final searchResult = indices
+        .where((index) => stringsToBeSearched[index].contains(searchFor))
+        .toList();
+
+    if (!reorder) return searchResult;
+    return searchResult
+      ..sort((a, b) {
+        final aString = stringsToBeSearched[a];
+        final bString = stringsToBeSearched[b];
+        final aStartsWith = aString.startsWith(searchFor);
+        final bStartsWith = bString.startsWith(searchFor);
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        return aString.compareTo(bString);
+      });
+  }
 }

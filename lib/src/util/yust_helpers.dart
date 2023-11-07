@@ -98,6 +98,23 @@ class YustHelpers {
     );
   }
 
+  /// adds a Duration that is more that 24 hours
+  /// this works with time shifts like daylight saving time
+  DateTime addDaysOrMore(DateTime dateTime, {int days = 0, int months = 0, int years = 0}) {
+    final localTime = dateTime.isUtc ? utcToLocal(dateTime) : dateTime;
+    final newTime = DateTime(
+      localTime.year + years,
+      localTime.month + months,
+      localTime.day + days,
+      localTime.hour,
+      localTime.minute,
+      localTime.second,
+      localTime.millisecond,
+      localTime.microsecond,
+    );
+    return dateTime.isUtc ? localToUtc(newTime) : newTime;
+  }
+
   DateTime utcToLocal(DateTime dateTime) =>
       TZDateTime.from(dateTime, UTC).toLocal();
   DateTime localToUtc(DateTime dateTime) => dateTime.isUtc

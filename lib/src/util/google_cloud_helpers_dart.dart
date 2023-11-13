@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
-
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
+import 'package:http/http.dart' as http;
 
 import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
@@ -88,18 +87,16 @@ class GoogleCloudHelpers {
   /// Gets the google project id from the execution environment.
   ///
   /// If [pathToServiceAccountJson] is provided, the project id is read from the json file.
-  /// If [useMetadataServer] is set to true, the project id is read from the google cloud metadata server.
   /// If [pathToServiceAccountJson] and [useMetadataServer] are both not provided,
   /// the project id is read from typical google cloud environment variables.
   static Future<String> getProjectId({
     String? pathToServiceAccountJson,
-    useMetadataServer = false,
   }) async {
     String? projectId;
     if (pathToServiceAccountJson == null) {
-      if (useMetadataServer) return _getProjectIdWithMetadataServer();
       projectId = Platform.environment['GCP_PROJECT'] ??
           Platform.environment['GCLOUD_PROJECT'];
+      projectId ??= await _getProjectIdWithMetadataServer();
     } else {
       final serviceAccountJson =
           jsonDecode(await File(pathToServiceAccountJson).readAsString());

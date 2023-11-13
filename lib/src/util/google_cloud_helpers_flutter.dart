@@ -65,8 +65,7 @@ class GoogleCloudHelpers {
   }
 
   /// Just a stub for now. See google_cloud_helpers_dart.dart for documentation.
-  static Future<String> getProjectId(
-      {String? pathToServiceAccountJson, useMetadataServer = false}) async {
+  static Future<String> getProjectId({String? pathToServiceAccountJson}) async {
     throw UnimplementedError();
   }
 

@@ -3,6 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 import '../yust.dart';
 import 'yust_doc.dart';
 import 'yust_doc_setup.dart';
+import 'yust_file.dart';
 
 part 'yust_user.g.dart';
 
@@ -48,6 +49,9 @@ class YustUser extends YustDoc {
 
   /// The link to the authentication user uid.
   String? authId;
+
+  /// Profile picture.
+  YustFile? profilePicture;
 
   YustUser({
     required this.email,

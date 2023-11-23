@@ -526,8 +526,15 @@ class YustDatabaseService {
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))),
         name: _getDocumentPath(docSetup, doc.id));
-    final write =
-        Write(update: dbDoc, currentDocument: Precondition(exists: true));
+    final write = Write(
+        update: dbDoc,
+        updateMask: DocumentMask(
+            fieldPaths: doc.updateMask
+                .map(
+                  (e) => YustHelpers().toQuotedFieldPath(e),
+                )
+                .toList()),
+        currentDocument: Precondition(exists: true));
     final commitRequest =
         CommitRequest(transaction: transaction, writes: [write]);
     await _api.projects.databases.documents

@@ -498,7 +498,7 @@ class YustDatabaseService {
   Future<void> runTransactionForDocument<T extends YustDoc>(
       YustDocSetup<T> docSetup,
       String docId,
-      Function(T doc) transaction) async {
+      Future<void> Function(T doc) transaction) async {
     final transactionId = await beginTransaction();
     final doc = await getFromDB<T>(docSetup, docId, transaction: transactionId);
     if (doc == null) {

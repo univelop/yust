@@ -152,7 +152,7 @@ class YustAuthService {
         ),
       ],
     );
-    if (user == null || user.authId != null) return false;
+    if (user == null) return false;
     await user.linkAuth(userCredential.user!.uid, method);
     return true;
   }

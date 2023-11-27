@@ -6,6 +6,7 @@ import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
 import '../util/object_helper.dart';
+import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
@@ -59,8 +60,9 @@ class YustDatabaseService {
 
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) {
+    String id, {
+    String? transaction,
+  }) {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
@@ -398,6 +400,25 @@ class YustDatabaseService {
     );
 
     return doc;
+  }
+
+  /// Reads a document, executes a function and saves the document as a transaction.
+  Future<void> runTransactionForDocument<T extends YustDoc>(
+      YustDocSetup<T> docSetup,
+      String docId,
+      Function(T doc) transaction) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  /// Begins a transaction.
+  Future<String> beginTransaction() async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  /// Saves a YustDoc and finishes a transaction.
+  Future<void> commitTransaction(
+      String transaction, YustDocSetup docSetup, YustDoc doc) async {
+    throw YustException('Not implemented for flutter');
   }
 
   dynamic getQuery<T extends YustDoc>(

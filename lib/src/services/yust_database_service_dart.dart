@@ -71,12 +71,13 @@ class YustDatabaseService {
   /// Be careful with offline fuctionality.
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
+    String id, {
+    String? transaction,
+  }) async {
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     try {
       final response = await _api.projects.databases.documents
-          .get(_getDocumentPath(docSetup, id));
+          .get(_getDocumentPath(docSetup, id), transaction: transaction);
       dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
       return _transformDoc<T>(docSetup, response);
     } on ApiRequestError {
@@ -491,6 +492,46 @@ class YustDatabaseService {
     );
 
     return doc;
+  }
+
+  /// Reads a document, executes a function and saves the document as a transaction.
+  Future<void> runTransactionForDocument<T extends YustDoc>(
+      YustDocSetup<T> docSetup,
+      String docId,
+      Future<void> Function(T doc) transaction) async {
+    final transactionId = await beginTransaction();
+    final doc = await getFromDB<T>(docSetup, docId, transaction: transactionId);
+    if (doc == null) {
+      throw YustException('Can not find document $docId.');
+    }
+    await transaction(doc);
+    await commitTransaction(transactionId, docSetup, doc);
+  }
+
+  /// Begins a transaction.
+  Future<String> beginTransaction() async {
+    final response = await _api.projects.databases.documents
+        .beginTransaction(BeginTransactionRequest(), _getDatabasePath());
+    if (response.transaction == null) {
+      throw YustException('Can not begin transaction.');
+    }
+    return response.transaction!;
+  }
+
+  /// Saves a YustDoc and finishes a transaction.
+  Future<void> commitTransaction(
+      String transaction, YustDocSetup docSetup, YustDoc doc) async {
+    final jsonDoc = doc.toJson();
+    final dbDoc = Document(
+        fields:
+            jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))),
+        name: _getDocumentPath(docSetup, doc.id));
+    final write =
+        Write(update: dbDoc, currentDocument: Precondition(exists: true));
+    final commitRequest =
+        CommitRequest(transaction: transaction, writes: [write]);
+    await _api.projects.databases.documents
+        .commit(commitRequest, _getDatabasePath());
   }
 
   /// Returns a query for specified filter and order.

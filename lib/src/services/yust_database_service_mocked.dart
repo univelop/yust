@@ -43,8 +43,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
+    String id, {
+    String? transaction,
+  }) async {
     final docs = _getCollection<T>(docSetup);
     try {
       return docs.firstWhere((doc) => doc.id == id);

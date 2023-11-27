@@ -1,3 +1,10 @@
+## 3.15.0 - 2023-11-17
+
+- Improve Yust Select
+- Add Google Cloud helpers
+- Improve date calculation
+- Fix bugs
+
 ## 3.14.0 - 2023-10-06
 
 - Fix bugs

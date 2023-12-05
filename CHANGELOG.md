@@ -1,3 +1,7 @@
+## 3.15.1 - 2023-12-05
+
+- Update Google APIs
+
 ## 3.15.0 - 2023-11-17
 
 - Improve Yust Select

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:googleapis/firestore/v1.dart';
 import 'package:stream_transform/stream_transform.dart';
@@ -499,13 +500,40 @@ class YustDatabaseService {
       YustDocSetup<T> docSetup,
       String docId,
       Future<void> Function(T doc) transaction) async {
-    final transactionId = await beginTransaction();
-    final doc = await getFromDB<T>(docSetup, docId, transaction: transactionId);
-    if (doc == null) {
-      throw YustException('Can not find document $docId.');
+    const maxRetries = 10;
+    const retryDelayFactor = 5000;
+    const retryMinDelay = 100;
+
+    var numberRetries = 0;
+    while (numberRetries < maxRetries) {
+      final transactionId = await beginTransaction();
+      final doc =
+          await getFromDB<T>(docSetup, docId, transaction: transactionId);
+      if (doc == null) {
+        throw YustException('Can not find document $docId.');
+      }
+      await transaction(doc);
+      try {
+        await commitTransaction(transactionId, docSetup, doc);
+        break;
+      } on DetailedApiRequestError catch (e) {
+        if (e.status == 409) {
+          numberRetries++;
+          await Future.delayed(Duration(
+              milliseconds: (Random().nextDouble() * retryDelayFactor).toInt() +
+                  retryMinDelay));
+        } else {
+          rethrow;
+        }
+      }
     }
-    await transaction(doc);
-    await commitTransaction(transactionId, docSetup, doc);
+    if (numberRetries == maxRetries) {
+      print(
+          '[[WARNING]] Retried transaction $numberRetries times (maxRetries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+    } else if (numberRetries > 1) {
+      print(
+          'Retried transaction $numberRetries times: Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+    }
   }
 
   /// Begins a transaction.
@@ -521,7 +549,7 @@ class YustDatabaseService {
   /// Saves a YustDoc and finishes a transaction.
   Future<void> commitTransaction(
       String transaction, YustDocSetup docSetup, YustDoc doc) async {
-    final jsonDoc = doc.toJson();
+        final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))),

@@ -30,6 +30,16 @@ class GoogleCloudHelpers {
     if (emulatorAddress != null) {
       FirebaseFirestore.instance.useFirestoreEmulator(emulatorAddress, 8080);
     }
+
+    // Set Cache Options
+    if (kIsWeb) {
+      await FirebaseFirestore.instance
+          // Have one Cache over all univelop tabs (IndexDB)
+          .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
+    } else {
+      FirebaseFirestore.instance.settings =
+          const Settings(persistenceEnabled: true);
+    }
   }
 
   static FirebaseOptions? fromMap(Map<String, String>? map) {

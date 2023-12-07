@@ -500,7 +500,7 @@ class YustDatabaseService {
       YustDocSetup<T> docSetup,
       String docId,
       Future<void> Function(T doc) transaction) async {
-    const maxRetries = 10;
+    const maxRetries = 20;
     const retryDelayFactor = 5000;
     const retryMinDelay = 100;
 
@@ -528,8 +528,8 @@ class YustDatabaseService {
       }
     }
     if (numberRetries == maxRetries) {
-      print(
-          '[[WARNING]] Retried transaction $numberRetries times (maxRetries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+      throw YustException(
+          'Retried transaction $numberRetries times (maxRetries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     } else if (numberRetries > 1) {
       print(
           'Retried transaction $numberRetries times: Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
@@ -549,7 +549,7 @@ class YustDatabaseService {
   /// Saves a YustDoc and finishes a transaction.
   Future<void> commitTransaction(
       String transaction, YustDocSetup docSetup, YustDoc doc) async {
-        final jsonDoc = doc.toJson();
+    final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))),

@@ -16,7 +16,7 @@ import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
-/// Handels database requests for Cloud Firestore.
+/// Handles database requests for Cloud Firestore.
 ///
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
@@ -35,7 +35,7 @@ class YustDatabaseService {
 
   YustDatabaseService.mocked({this.dbLogCallback});
 
-  /// Initialises a document with an id and the time it was created.
+  /// Initializes a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
   /// assigned a new id becoming a new document if it had an id previously.
@@ -47,7 +47,7 @@ class YustDatabaseService {
   /// Returns a [YustDoc] from the server, if available, otherwise from the cache.
   /// The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -58,7 +58,7 @@ class YustDatabaseService {
   /// Returns a [YustDoc] from the cache, if available, otherwise from the server.
   /// Be careful: The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -68,7 +68,7 @@ class YustDatabaseService {
 
   /// Returns a [YustDoc] directly from the server.
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id, {
@@ -98,7 +98,7 @@ class YustDatabaseService {
   /// Returns the first [YustDoc] in a list from the server, if available, otherwise from the cache.
   /// The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   /// The result is null if no document was found.
   Future<T?> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -111,7 +111,7 @@ class YustDatabaseService {
   /// Returns the first [YustDoc] in a list from the cache, if available, otherwise from the server.
   /// Be careful: The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   /// The result is null if no document was found.
   Future<T?> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -123,7 +123,7 @@ class YustDatabaseService {
 
   /// Returns the first [YustDoc] in a list directly from the server.
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   /// The result is null if no document was found.
   Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -200,7 +200,7 @@ class YustDatabaseService {
 
   /// Returns [YustDoc]s directly from the database.
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   ///
   /// [docSetup] is used to read the collection path.
   ///
@@ -466,22 +466,22 @@ class YustDatabaseService {
     }
   }
 
-  /// Initialises a [YustDoc] and saves it.
+  /// Initializes a [YustDoc] and saves it.
   ///
-  /// If [onInitialised] is provided, it will be called and
-  /// waited for after the document is initialised.
+  /// If [onInitialized] is provided, it will be called and
+  /// waited for after the document is initialized.
   ///
-  /// An existing document can be given which will instead be initialised.
+  /// An existing document can be given which will instead be initialized.
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     required T doc,
-    Future<void> Function(T)? onInitialised,
+    Future<void> Function(T)? onInitialized,
     bool? removeNullValues,
   }) async {
     doc = initDoc<T>(docSetup, doc);
 
-    if (onInitialised != null) {
-      await onInitialised(doc);
+    if (onInitialized != null) {
+      await onInitialized(doc);
     }
     dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1);
     await saveDoc<T>(

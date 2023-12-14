@@ -29,6 +29,11 @@ enum DatabaseLogAction {
   final String logText;
 }
 
+enum YustBackend {
+  firebase,
+  parse,
+}
+
 typedef DatabaseLogCallback = void Function(
     DatabaseLogAction action, YustDocSetup setup, int count,
     {String? id, List<String>? updateMask});
@@ -44,10 +49,12 @@ class Yust {
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
 
-  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
+  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tenant automatically.
   static bool useSubcollections = true;
 
-  /// Represents the collection name for the tannants.
+  static YustBackend defaultBackend = YustBackend.firebase;
+
+  /// Represents the collection name for the tenant.
   static String envCollectionName = 'envs';
 
   /// Initializes [Yust] with mocked services for testing.
@@ -72,8 +79,8 @@ class Yust {
   /// This method should be called before any usage of the yust package.
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [pathToServiceAccountJson] if you are connecting directly with Dart.
   /// Set the [emulatorAddress], if you want to emulate Firebase. [buildRelease] must be set to true if you want to create an iOS release. [userSetup] let you overwrite the default [UserSetup].
-  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
-  /// [envCollectionName] represents the collection name for the tannants.
+  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tenant automatically.
+  /// [envCollectionName] represents the collection name for the tenants.
   /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
   /// Use [dbLogCallback] to provide a function that will get called on each DatabaseCall
   static Future<void> initialize({
@@ -86,6 +93,7 @@ class Yust {
     bool useSubcollections = false,
     String envCollectionName = 'envs',
     DatabaseLogCallback? dbLogCallback,
+    YustBackend defaultBackend = YustBackend.firebase,
   }) async {
     // Init timezones
     initializeTimeZones();
@@ -100,6 +108,7 @@ class Yust {
 
     Yust.userSetup = userSetup ?? YustUser.setup();
     Yust.useSubcollections = useSubcollections;
+    Yust.defaultBackend = defaultBackend;
     Yust.envCollectionName = envCollectionName;
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
     // Note that the data connection for the emulator is handled in [initializeFirebase]

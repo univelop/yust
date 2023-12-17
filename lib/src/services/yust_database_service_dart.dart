@@ -437,6 +437,33 @@ class YustDatabaseService {
     }
   }
 
+  /// Delete all [YustDoc]s in the filter as a batch.
+  Future<int> deleteDocsAsBatch<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) async {
+    final response = await _api.projects.databases.documents.runQuery(
+      _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
+      _getParentPath(docSetup),
+    );
+
+    final noOfDocs =
+        response.where((element) => element.document != null).length;
+
+    await _api.projects.databases.documents.batchWrite(
+      BatchWriteRequest(
+        writes: response
+            .where((element) => element.document != null)
+            .map((element) => Write(delete: element.document?.name))
+            .toList(),
+      ),
+      _getDatabasePath(),
+    );
+    return noOfDocs;
+  }
+
   /// Delete a [YustDoc].
   Future<void> deleteDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,

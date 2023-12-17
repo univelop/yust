@@ -363,6 +363,23 @@ class YustDatabaseService {
     }
   }
 
+  Future<int> deleteDocsAsBatch<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) async {
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit);
+    final snapshot = await query.get(GetOptions(source: Source.server));
+    final batch = _fireStore.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+    return snapshot.docs.length;
+  }
+
   Future<void> deleteDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc,

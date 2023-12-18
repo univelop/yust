@@ -1,3 +1,10 @@
+## 3.16.0 - 2023-12-18
+
+- Profile picture for user
+- Improve transactions
+- Add batches
+- Fix bugs
+
 ## 3.15.1 - 2023-12-05
 
 - Update Google APIs

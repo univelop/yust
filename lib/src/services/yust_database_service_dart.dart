@@ -385,8 +385,7 @@ class YustDatabaseService {
         currentDocument_exists: doNotCreate ? true : null,
       );
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -420,8 +419,7 @@ class YustDatabaseService {
         _getDatabasePath(),
       );
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not update the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -475,8 +473,7 @@ class YustDatabaseService {
     try {
       await _api.projects.databases.documents.delete(docPath);
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not delete the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -489,8 +486,7 @@ class YustDatabaseService {
     try {
       await _api.projects.databases.documents.delete(docPath);
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not delete the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -523,28 +519,60 @@ class YustDatabaseService {
   }
 
   /// Reads a document, executes a function and saves the document as a transaction.
-  Future<void> runTransactionForDocument<T extends YustDoc>(
-      YustDocSetup<T> docSetup,
-      String docId,
-      Future<void> Function(T doc) transaction) async {
-    const maxRetries = 20;
+  /// Returns true if the transaction was successful.
+  ///
+  /// If the transaction fails, it will be retried up to [maxTries] - 1 times.
+  /// If [ignore409Error] is true, no error will be thrown on 409 (Unsuccessful Transaction) Errors.
+  /// [transaction] should return the updated document, if it returns null, nothing will be saved to the db.
+  ///
+  /// Some general Notes on Transactions:
+  /// - Transactions are only auto-retried by the google client libraries, so we need to do it manually
+  /// - Transactions will only fail if a document was changed by a other transaction.
+  ///   _Not_ if the document was changed by a normal save
+  Future<bool> runTransactionForDocument<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String docId,
+    Future<T?> Function(T doc) transaction, {
+    int maxTries = 20,
+    bool ignoreTransactionErrors = false,
+    bool useUpdateMask = false,
+  }) async {
     const retryDelayFactor = 5000;
     const retryMinDelay = 100;
 
     var numberRetries = 0;
-    while (numberRetries < maxRetries) {
+    while (numberRetries < maxTries) {
       final transactionId = await beginTransaction();
       final doc =
           await getFromDB<T>(docSetup, docId, transaction: transactionId);
       if (doc == null) {
         throw YustException('Can not find document $docId.');
       }
-      await transaction(doc);
+
       try {
-        await commitTransaction(transactionId, docSetup, doc);
+        final updatedDoc = await transaction(doc);
+        if (updatedDoc == null) {
+          await commitEmptyTransaction(transactionId);
+          return false;
+        } else {
+          await commitTransaction(transactionId, docSetup, updatedDoc,
+              useUpdateMask: useUpdateMask);
+        }
         break;
-      } on DetailedApiRequestError catch (e) {
-        if (e.status == 409) {
+      }
+      // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here
+      catch (e) {
+        var exception = e;
+        // Should there be an error in our transaction code, that needs to be
+        // transformed to an YustException as well
+        if (e is DetailedApiRequestError) {
+          exception = YustException.fromDetailedApiRequestError(
+              docSetup.collectionName, e);
+        }
+        if (exception is YustTransactionFailedException ||
+            exception is YustDocumentLockedException) {
+          if (ignoreTransactionErrors) return false;
+
           numberRetries++;
           await Future.delayed(Duration(
               milliseconds: (Random().nextDouble() * retryDelayFactor).toInt() +
@@ -554,13 +582,14 @@ class YustDatabaseService {
         }
       }
     }
-    if (numberRetries == maxRetries) {
+    if (numberRetries == maxTries) {
       throw YustException(
           'Retried transaction $numberRetries times (maxRetries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     } else if (numberRetries > 1) {
       print(
           'Retried transaction $numberRetries times: Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     }
+    return true;
   }
 
   /// Begins a transaction.
@@ -575,23 +604,32 @@ class YustDatabaseService {
 
   /// Saves a YustDoc and finishes a transaction.
   Future<void> commitTransaction(
-      String transaction, YustDocSetup docSetup, YustDoc doc) async {
+      String transaction, YustDocSetup docSetup, YustDoc doc,
+      {bool useUpdateMask = false}) async {
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))),
         name: _getDocumentPath(docSetup, doc.id));
-    final write = Write(
-        update: dbDoc,
-        updateMask: DocumentMask(
-            fieldPaths: doc.updateMask
-                .map(
-                  (e) => YustHelpers().toQuotedFieldPath(e),
-                )
-                .toList()),
-        currentDocument: Precondition(exists: true));
+    final write =
+        Write(update: dbDoc, currentDocument: Precondition(exists: true));
+    if (useUpdateMask) {
+      write.updateMask = DocumentMask(
+          fieldPaths: doc.updateMask
+              .map(
+                (e) => YustHelpers().toQuotedFieldPath(e),
+              )
+              .toList());
+    }
     final commitRequest =
         CommitRequest(transaction: transaction, writes: [write]);
+    await _api.projects.databases.documents
+        .commit(commitRequest, _getDatabasePath());
+  }
+
+  // Makes an empty commit, thereby releasing the lock on the document.
+  Future<void> commitEmptyTransaction(String transaction) async {
+    final commitRequest = CommitRequest(transaction: transaction);
     await _api.projects.databases.documents
         .commit(commitRequest, _getDatabasePath());
   }
@@ -864,10 +902,5 @@ class YustDatabaseService {
 
   String _createDocumentId() {
     return Yust.helpers.randomString(length: 20);
-  }
-
-  String _detailedApiRequestErrorToString(DetailedApiRequestError e) {
-    return 'Message: ${e.message}, Status: ${e.status}, '
-        'Response: ${jsonEncode(e.jsonResponse)}';
   }
 }

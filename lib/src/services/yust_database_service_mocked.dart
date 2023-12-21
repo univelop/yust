@@ -282,11 +282,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   @override
   Future<bool> runTransactionForDocument<T extends YustDoc>(
-      YustDocSetup<T> docSetup,
-      String docId,
-      Future<void> Function(T doc) transaction,
-      {int maxTries = 20,
-      bool ignoreTransactionErrors = false}) async {
+    YustDocSetup<T> docSetup,
+    String docId,
+    Future<void> Function(T doc) transaction, {
+    int maxTries = 20,
+    bool ignoreTransactionErrors = false,
+    bool useUpdateMask = false,
+  }) async {
     final doc = await get(docSetup, docId);
     if (doc == null) {
       if (ignoreTransactionErrors) {

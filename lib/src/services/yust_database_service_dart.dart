@@ -524,6 +524,11 @@ class YustDatabaseService {
   /// If the transaction fails, it will be retried up to [maxTries] - 1 times.
   /// If [ignore409Error] is true, no error will be thrown on 409 (Unsuccessful Transaction) Errors.
   /// [transaction] should return the updated document, if it returns null, nothing will be saved to the db.
+  ///
+  /// Some general Notes on Transactions:
+  /// - Transactions are only auto-retried by the google client libraries, so we need to do it manually
+  /// - Transactions will only fail if a document was changed by a other transaction.
+  ///   _Not_ if the document was changed by a normal save
   Future<bool> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
@@ -548,6 +553,7 @@ class YustDatabaseService {
         final updatedDoc = await transaction(doc);
         if (updatedDoc == null) {
           await commitEmptyTransaction(transactionId);
+          return false;
         } else {
           await commitTransaction(transactionId, docSetup, updatedDoc,
               useUpdateMask: useUpdateMask);

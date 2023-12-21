@@ -525,11 +525,13 @@ class YustDatabaseService {
   /// If [ignore409Error] is true, no error will be thrown on 409 (Unsuccessful Transaction) Errors.
   /// [transaction] should return the updated document, if it returns null, nothing will be saved to the db.
   Future<bool> runTransactionForDocument<T extends YustDoc>(
-      YustDocSetup<T> docSetup,
-      String docId,
-      Future<T?> Function(T doc) transaction,
-      {int maxTries = 20,
-      bool ignore409Error = false}) async {
+    YustDocSetup<T> docSetup,
+    String docId,
+    Future<T?> Function(T doc) transaction, {
+    int maxTries = 20,
+    bool ignoreTransactionErrors = false,
+    bool useUpdateMask = false,
+  }) async {
     const retryDelayFactor = 5000;
     const retryMinDelay = 100;
 
@@ -547,16 +549,23 @@ class YustDatabaseService {
         if (updatedDoc == null) {
           await commitEmptyTransaction(transactionId);
         } else {
-          await commitTransaction(transactionId, docSetup, updatedDoc);
+          await commitTransaction(transactionId, docSetup, updatedDoc,
+              useUpdateMask: useUpdateMask);
         }
-
         break;
       }
       // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here
       catch (e) {
-        if (e is DetailedApiRequestError && e.status == 409 ||
-            e is YustTransactionFailedException) {
-          if (ignore409Error) return false;
+        var exception = e;
+        // Should there be an error in our transaction code, that needs to be
+        // transformed to an YustException as well
+        if (e is DetailedApiRequestError) {
+          exception = YustException.fromDetailedApiRequestError(
+              docSetup.collectionName, e);
+        }
+        if (exception is YustTransactionFailedException ||
+            exception is YustDocumentLockedException) {
+          if (ignoreTransactionErrors) return false;
 
           numberRetries++;
           await Future.delayed(Duration(
@@ -589,21 +598,23 @@ class YustDatabaseService {
 
   /// Saves a YustDoc and finishes a transaction.
   Future<void> commitTransaction(
-      String transaction, YustDocSetup docSetup, YustDoc doc) async {
+      String transaction, YustDocSetup docSetup, YustDoc doc,
+      {bool useUpdateMask = false}) async {
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
             jsonDoc.map((key, value) => MapEntry(key, _valueToDbValue(value))),
         name: _getDocumentPath(docSetup, doc.id));
-    final write = Write(
-        update: dbDoc,
-        updateMask: DocumentMask(
-            fieldPaths: doc.updateMask
-                .map(
-                  (e) => YustHelpers().toQuotedFieldPath(e),
-                )
-                .toList()),
-        currentDocument: Precondition(exists: true));
+    final write =
+        Write(update: dbDoc, currentDocument: Precondition(exists: true));
+    if (useUpdateMask) {
+      write.updateMask = DocumentMask(
+          fieldPaths: doc.updateMask
+              .map(
+                (e) => YustHelpers().toQuotedFieldPath(e),
+              )
+              .toList());
+    }
     final commitRequest =
         CommitRequest(transaction: transaction, writes: [write]);
     await _api.projects.databases.documents

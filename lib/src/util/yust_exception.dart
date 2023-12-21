@@ -17,14 +17,14 @@ class YustException implements Exception {
         (e.message!.contains('Too much contention on these documents') ||
             e.message!
                 .contains('Aborted due to cross-transaction contention.'))) {
-      throw YustDocumentLockedException(
+      return YustDocumentLockedException(
           'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
     if (e.status == 409) {
-      throw YustTransactionFailedException(
+      return YustTransactionFailedException(
           'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
-    throw YustException(
+    return YustException(
         'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
   }
 

@@ -286,10 +286,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       String docId,
       Future<void> Function(T doc) transaction,
       {int maxTries = 20,
-      bool ignore409Error = false}) async {
+      bool ignoreTransactionErrors = false}) async {
     final doc = await get(docSetup, docId);
     if (doc == null) {
-      if (ignore409Error) {
+      if (ignoreTransactionErrors) {
         return false;
       } else {
         throw Exception('Document not found');

@@ -385,19 +385,7 @@ class YustDatabaseService {
         currentDocument_exists: doNotCreate ? true : null,
       );
     } on DetailedApiRequestError catch (e) {
-      if (e.message != null &&
-          (e.message!.contains('Too much contention on these documents') ||
-              e.message!
-                  .contains('Aborted due to cross-transaction contention.'))) {
-        throw YustDocumentLockedException(
-            'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
-      }
-      if (e.status == 409) {
-        throw YustTransactionFailedException(
-            'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
-      }
-      throw YustException(
-          'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -431,8 +419,7 @@ class YustDatabaseService {
         _getDatabasePath(),
       );
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not update the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -486,8 +473,7 @@ class YustDatabaseService {
     try {
       await _api.projects.databases.documents.delete(docPath);
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not delete the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -500,8 +486,7 @@ class YustDatabaseService {
     try {
       await _api.projects.databases.documents.delete(docPath);
     } on DetailedApiRequestError catch (e) {
-      throw YustException(
-          'Can not delete the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      throw YustException.fromDetailedApiRequestError(docPath, e);
     }
   }
 
@@ -900,10 +885,5 @@ class YustDatabaseService {
 
   String _createDocumentId() {
     return Yust.helpers.randomString(length: 20);
-  }
-
-  String _detailedApiRequestErrorToString(DetailedApiRequestError e) {
-    return 'Message: ${e.message}, Status: ${e.status}, '
-        'Response: ${jsonEncode(e.jsonResponse)}';
   }
 }

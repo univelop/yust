@@ -529,7 +529,7 @@ class YustDatabaseService {
   /// - Transactions are only auto-retried by the google client libraries, so we need to do it manually
   /// - Transactions will only fail if a document was changed by a other transaction.
   ///   _Not_ if the document was changed by a normal save
-  Future<bool> runTransactionForDocument<T extends YustDoc>(
+  Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
     Future<T?> Function(T doc) transaction, {
@@ -541,6 +541,7 @@ class YustDatabaseService {
     const retryMinDelay = 100;
 
     var numberRetries = 0;
+    T? updatedDoc;
     while (numberRetries < maxTries) {
       final transactionId = await beginTransaction();
       final doc =
@@ -550,10 +551,10 @@ class YustDatabaseService {
       }
 
       try {
-        final updatedDoc = await transaction(doc);
+        updatedDoc = await transaction(doc);
         if (updatedDoc == null) {
           await commitEmptyTransaction(transactionId);
-          return false;
+          return (false, null);
         } else {
           await commitTransaction(transactionId, docSetup, updatedDoc,
               useUpdateMask: useUpdateMask);
@@ -571,7 +572,7 @@ class YustDatabaseService {
         }
         if (exception is YustTransactionFailedException ||
             exception is YustDocumentLockedException) {
-          if (ignoreTransactionErrors) return false;
+          if (ignoreTransactionErrors) return (false, null);
 
           numberRetries++;
           await Future.delayed(Duration(
@@ -589,7 +590,7 @@ class YustDatabaseService {
       print(
           'Retried transaction $numberRetries times: Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     }
-    return true;
+    return (true, updatedDoc);
   }
 
   /// Begins a transaction.

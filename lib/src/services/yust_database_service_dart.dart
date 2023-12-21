@@ -17,7 +17,13 @@ import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
-/// Handels database requests for Cloud Firestore.
+enum AggregationType {
+  count,
+  sum,
+  avg;
+}
+
+/// Handles database requests for Cloud Firestore.
 ///
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
@@ -334,10 +340,65 @@ class YustDatabaseService {
     List<YustFilter>? filters,
   }) async {
     final response = await _api.projects.databases.documents
-        .runAggregationQuery(_getAggregationQuery(docSetup, filters: filters),
+        .runAggregationQuery(
+            _getAggregationQuery(AggregationType.count, docSetup,
+                filters: filters),
             _getParentPath(docSetup));
-    return int.parse(
-        response[0].result?.aggregateFields?['count']?.integerValue ?? '0');
+    return int.parse(response[0]
+            .result
+            ?.aggregateFields?[AggregationType.count.name]
+            ?.integerValue ??
+        '0');
+  }
+
+  /// Returns the sum over a field of multiple documents in a collection.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [field] is the field over which to sum.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  Future<double> sum<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    final response = await _api.projects.databases.documents
+        .runAggregationQuery(
+            _getAggregationQuery(AggregationType.sum, docSetup,
+                filters: filters, fieldPath: fieldPath),
+            _getParentPath(docSetup));
+    return double.parse(response[0]
+            .result
+            ?.aggregateFields?[AggregationType.sum.name]
+            ?.integerValue ??
+        '0');
+  }
+
+  /// Returns the sum over a field of multiple documents in a collection.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [fieldPath] is the field over which to sum.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  Future<double> avg<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    final response = await _api.projects.databases.documents
+        .runAggregationQuery(
+            _getAggregationQuery(AggregationType.avg, docSetup,
+                fieldPath: fieldPath, filters: filters),
+            _getParentPath(docSetup));
+    return double.parse(response[0]
+            .result
+            ?.aggregateFields?[AggregationType.avg.name]
+            ?.integerValue ??
+        '0');
   }
 
   /// Saves a document.
@@ -702,12 +763,30 @@ class YustDatabaseService {
   }
 
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
+    AggregationType type,
     YustDocSetup<T> docSetup, {
+    String? fieldPath,
     List<YustFilter>? filters,
   }) {
+    final Aggregation aggregation;
+    switch (type) {
+      case AggregationType.count:
+        aggregation = Aggregation(alias: type.name, count: Count());
+        break;
+      case AggregationType.sum:
+        aggregation = Aggregation(
+            alias: type.name,
+            sum: Sum(field: FieldReference(fieldPath: fieldPath)));
+        break;
+      case AggregationType.avg:
+        aggregation = Aggregation(
+            alias: type.name,
+            avg: Avg(field: FieldReference(fieldPath: fieldPath)));
+        break;
+    }
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
-        aggregations: [Aggregation(alias: 'count', count: Count())],
+        aggregations: [aggregation],
         structuredQuery: StructuredQuery(
           from: [CollectionSelector(collectionId: _getCollection(docSetup))],
           where: Filter(

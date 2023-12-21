@@ -247,6 +247,30 @@ class YustDatabaseService {
     return snapshot.count;
   }
 
+  Future<int> sum<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    throw YustException('Not implemented for flutter');
+    // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
+    // var query = _getQuery(docSetup, filters: filters);
+    // final snapshot = await query.sum(fieldPath).get();
+    // return snapshot.count;
+  }
+
+  Future<int> avg<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    throw YustException('Not implemented for flutter');
+    // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
+    // var query = _getQuery(docSetup, filters: filters);
+    // final snapshot = await query.average(fieldPath).get();
+    // return snapshot.count;
+  }
+
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {

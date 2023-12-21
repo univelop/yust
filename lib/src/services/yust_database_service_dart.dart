@@ -385,6 +385,17 @@ class YustDatabaseService {
         currentDocument_exists: doNotCreate ? true : null,
       );
     } on DetailedApiRequestError catch (e) {
+      if (e.message != null &&
+          (e.message!.contains('Too much contention on these documents') ||
+              e.message!
+                  .contains('Aborted due to cross-transaction contention.'))) {
+        throw YustDocumentLockedException(
+            'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      }
+      if (e.status == 409) {
+        throw YustTransactionFailedException(
+            'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+      }
       throw YustException(
           'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
@@ -523,28 +534,45 @@ class YustDatabaseService {
   }
 
   /// Reads a document, executes a function and saves the document as a transaction.
-  Future<void> runTransactionForDocument<T extends YustDoc>(
+  /// Returns true if the transaction was successful.
+  ///
+  /// If the transaction fails, it will be retried up to [maxTries] - 1 times.
+  /// If [ignore409Error] is true, no error will be thrown on 409 (Unsuccessful Transaction) Errors.
+  /// [transaction] should return the updated document, if it returns null, nothing will be saved to the db.
+  Future<bool> runTransactionForDocument<T extends YustDoc>(
       YustDocSetup<T> docSetup,
       String docId,
-      Future<void> Function(T doc) transaction) async {
-    const maxRetries = 20;
+      Future<T?> Function(T doc) transaction,
+      {int maxTries = 20,
+      bool ignore409Error = false}) async {
     const retryDelayFactor = 5000;
     const retryMinDelay = 100;
 
     var numberRetries = 0;
-    while (numberRetries < maxRetries) {
+    while (numberRetries < maxTries) {
       final transactionId = await beginTransaction();
       final doc =
           await getFromDB<T>(docSetup, docId, transaction: transactionId);
       if (doc == null) {
         throw YustException('Can not find document $docId.');
       }
-      await transaction(doc);
+
       try {
-        await commitTransaction(transactionId, docSetup, doc);
+        final updatedDoc = await transaction(doc);
+        if (updatedDoc == null) {
+          await commitEmptyTransaction(transactionId);
+        } else {
+          await commitTransaction(transactionId, docSetup, updatedDoc);
+        }
+
         break;
-      } on DetailedApiRequestError catch (e) {
-        if (e.status == 409) {
+      }
+      // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here
+      catch (e) {
+        if (e is DetailedApiRequestError && e.status == 409 ||
+            e is YustTransactionFailedException) {
+          if (ignore409Error) return false;
+
           numberRetries++;
           await Future.delayed(Duration(
               milliseconds: (Random().nextDouble() * retryDelayFactor).toInt() +
@@ -554,13 +582,14 @@ class YustDatabaseService {
         }
       }
     }
-    if (numberRetries == maxRetries) {
+    if (numberRetries == maxTries) {
       throw YustException(
           'Retried transaction $numberRetries times (maxRetries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     } else if (numberRetries > 1) {
       print(
           'Retried transaction $numberRetries times: Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     }
+    return true;
   }
 
   /// Begins a transaction.
@@ -592,6 +621,13 @@ class YustDatabaseService {
         currentDocument: Precondition(exists: true));
     final commitRequest =
         CommitRequest(transaction: transaction, writes: [write]);
+    await _api.projects.databases.documents
+        .commit(commitRequest, _getDatabasePath());
+  }
+
+  // Makes an empty commit, thereby releasing the lock on the document.
+  Future<void> commitEmptyTransaction(String transaction) async {
+    final commitRequest = CommitRequest(transaction: transaction);
     await _api.projects.databases.documents
         .commit(commitRequest, _getDatabasePath());
   }

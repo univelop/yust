@@ -7,3 +7,11 @@ class YustException implements Exception {
     return message;
   }
 }
+
+class YustTransactionFailedException extends YustException {
+  YustTransactionFailedException(String message) : super(message);
+}
+
+class YustDocumentLockedException extends YustException {
+  YustDocumentLockedException(String message) : super(message);
+}

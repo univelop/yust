@@ -280,6 +280,25 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     );
   }
 
+  @override
+  Future<bool> runTransactionForDocument<T extends YustDoc>(
+      YustDocSetup<T> docSetup,
+      String docId,
+      Future<void> Function(T doc) transaction,
+      {int maxTries = 20,
+      bool ignore409Error = false}) async {
+    final doc = await get(docSetup, docId);
+    if (doc == null) {
+      if (ignore409Error) {
+        return false;
+      } else {
+        throw Exception('Document not found');
+      }
+    }
+    await transaction(doc);
+    return true;
+  }
+
   List<Map<String, dynamic>> _getJSONCollection(String collectionName) {
     if (_db[collectionName] == null) {
       _db[collectionName] = [];

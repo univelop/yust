@@ -281,7 +281,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
-  Future<bool> runTransactionForDocument<T extends YustDoc>(
+  Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
     Future<void> Function(T doc) transaction, {
@@ -292,13 +292,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final doc = await get(docSetup, docId);
     if (doc == null) {
       if (ignoreTransactionErrors) {
-        return false;
+        return (false, null);
       } else {
         throw Exception('Document not found');
       }
     }
     await transaction(doc);
-    return true;
+    return (true, doc);
   }
 
   List<Map<String, dynamic>> _getJSONCollection(String collectionName) {

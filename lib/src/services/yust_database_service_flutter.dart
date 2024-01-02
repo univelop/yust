@@ -421,9 +421,10 @@ class YustDatabaseService {
 
   /// Reads a document, executes a function and saves the document as a transaction.
   Future<void> runTransactionForDocument<T extends YustDoc>(
-      YustDocSetup<T> docSetup,
-      String docId,
-      Function(T doc) transaction) async {
+    YustDocSetup<T> docSetup,
+    String docId,
+    Future<T?> Function(T doc) transaction,
+  ) async {
     throw YustException('Not implemented for flutter');
   }
 

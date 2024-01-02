@@ -284,7 +284,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
-    Future<void> Function(T doc) transaction, {
+    Future<T?> Function(T doc) transaction, {
     int maxTries = 20,
     bool ignoreTransactionErrors = false,
     bool useUpdateMask = false,
@@ -297,7 +297,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         throw Exception('Document not found');
       }
     }
-    await transaction(doc);
+    final newDoc = await transaction(doc);
+    if (newDoc != null) {
+      await saveDoc(
+        docSetup,
+        newDoc,
+        skipOnSave: true,
+        updateMask: useUpdateMask ? newDoc.updateMask.toList() : null,
+      );
+    }
     return (true, doc);
   }
 

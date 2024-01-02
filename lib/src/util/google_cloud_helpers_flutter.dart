@@ -33,9 +33,10 @@ class GoogleCloudHelpers {
 
     // Set Cache Options
     if (kIsWeb) {
-      await FirebaseFirestore.instance
-          // Have one Cache over all univelop tabs (IndexDB)
-          .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
+      // Disable persistence for web cause of performance issues
+      // await FirebaseFirestore.instance
+      //     // Have one Cache over all univelop tabs (IndexDB)
+      //     .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
     } else {
       FirebaseFirestore.instance.settings =
           const Settings(persistenceEnabled: true);

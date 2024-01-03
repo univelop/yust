@@ -16,7 +16,7 @@ class YustUser extends YustDoc {
         fromJson: (json) => YustUser.fromJson(json),
       );
 
-  String get searchTag => '${firstName.toLowerCase()} ${lastName.toLowerCase()}}'.replaceAll(' ', '_');
+  String get searchTag => '${firstName.toLowerCase()} ${lastName.toLowerCase()}'.replaceAll(' ', '_');
 
   /// The email of the user.
   String email;

@@ -238,7 +238,7 @@ class YustDatabaseService {
     });
   }
 
-  Future<int> count<T extends YustDoc>(
+  Future<int?> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {

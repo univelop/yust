@@ -238,7 +238,7 @@ class YustDatabaseService {
     });
   }
 
-  Future<int> count<T extends YustDoc>(
+  Future<int?> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
@@ -423,8 +423,11 @@ class YustDatabaseService {
   Future<void> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
-    Future<T?> Function(T doc) transaction,
-  ) async {
+    Future<T?> Function(T doc) transaction, {
+    int maxTries = 20,
+    bool ignoreTransactionErrors = false,
+    bool useUpdateMask = false,
+  }) async {
     throw YustException('Not implemented for flutter');
   }
 
@@ -435,7 +438,12 @@ class YustDatabaseService {
 
   /// Saves a YustDoc and finishes a transaction.
   Future<void> commitTransaction(
-      String transaction, YustDocSetup docSetup, YustDoc doc) async {
+      String transaction, YustDocSetup docSetup, YustDoc doc,
+      {bool useUpdateMask = false}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<void> commitEmptyTransaction(String transaction) async {
     throw YustException('Not implemented for flutter');
   }
 

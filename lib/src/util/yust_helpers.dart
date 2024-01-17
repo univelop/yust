@@ -100,7 +100,8 @@ class YustHelpers {
 
   /// adds a Duration that is more that 24 hours
   /// this works with time shifts like daylight saving time
-  DateTime addDaysOrMore(DateTime dateTime, {int days = 0, int months = 0, int years = 0}) {
+  DateTime addDaysOrMore(DateTime dateTime,
+      {int days = 0, int months = 0, int years = 0}) {
     final localTime = dateTime.isUtc ? utcToLocal(dateTime) : dateTime;
     final newTime = DateTime(
       localTime.year + years,
@@ -134,6 +135,14 @@ class YustHelpers {
       dateTime == null ? null : utcToLocal(dateTime);
   DateTime? tryLocalToUtc(DateTime? dateTime) =>
       dateTime == null ? null : localToUtc(dateTime);
+
+  /// Returns true if the given [dateTime] includes a time.
+  bool dateTimeIncludeTime(DateTime dateTime) {
+    final localDateTime = utcToLocal(dateTime);
+    return localDateTime.hour != 0 ||
+        localDateTime.minute != 0 ||
+        localDateTime.second != 0;
+  }
 
   /// Use this function instead of [DateTime.difference]!
   ///
@@ -171,9 +180,8 @@ class YustHelpers {
     final indices = List.generate(strings.length, (i) => i);
     if (searchString.isEmpty) return indices;
 
-    final stringsToBeSearched = ignoreCase
-        ? strings.map((s) => s.toLowerCase()).toList()
-        : strings;
+    final stringsToBeSearched =
+        ignoreCase ? strings.map((s) => s.toLowerCase()).toList() : strings;
     final searchFor = ignoreCase ? searchString.toLowerCase() : searchString;
 
     final searchResult = indices

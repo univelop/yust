@@ -420,7 +420,7 @@ class YustDatabaseService {
   }
 
   /// Reads a document, executes a function and saves the document as a transaction.
-  Future<void> runTransactionForDocument<T extends YustDoc>(
+  Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
     Future<T?> Function(T doc) transaction, {

@@ -940,7 +940,14 @@ class YustDatabaseService {
     } else if (value is DateTime) {
       return Value(timestampValue: value.toIso8601StringWithOffset());
     } else {
-      throw (YustException('Value can not be transformed for Firestore.'));
+      late String output;
+      try {
+        output = jsonEncode(value);
+      } catch (e) {
+        output = value.toString();
+      }
+      throw (YustException(
+          'Value can not be transformed for Firestore: $output'));
     }
   }
 
@@ -975,7 +982,8 @@ class YustDatabaseService {
     } else if (dbValue.timestampValue != null) {
       return dbValue.timestampValue;
     } else {
-      throw (YustException('Value can not be transformed from Firestore.'));
+      throw YustException(
+          'Value can not be transformed from Firestore: ${jsonEncode(dbValue.toJson())}');
     }
   }
 

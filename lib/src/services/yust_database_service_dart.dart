@@ -17,7 +17,13 @@ import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
-/// Handels database requests for Cloud Firestore.
+enum AggregationType {
+  count,
+  sum,
+  avg;
+}
+
+/// Handles database requests for Cloud Firestore.
 ///
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
@@ -36,7 +42,7 @@ class YustDatabaseService {
 
   YustDatabaseService.mocked({this.dbLogCallback});
 
-  /// Initialises a document with an id and the time it was created.
+  /// Initializes a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
   /// assigned a new id becoming a new document if it had an id previously.
@@ -48,7 +54,7 @@ class YustDatabaseService {
   /// Returns a [YustDoc] from the server, if available, otherwise from the cache.
   /// The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -59,7 +65,7 @@ class YustDatabaseService {
   /// Returns a [YustDoc] from the cache, if available, otherwise from the server.
   /// Be careful: The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -69,7 +75,7 @@ class YustDatabaseService {
 
   /// Returns a [YustDoc] directly from the server.
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id, {
@@ -99,7 +105,7 @@ class YustDatabaseService {
   /// Returns the first [YustDoc] in a list from the server, if available, otherwise from the cache.
   /// The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   /// The result is null if no document was found.
   Future<T?> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -112,7 +118,7 @@ class YustDatabaseService {
   /// Returns the first [YustDoc] in a list from the cache, if available, otherwise from the server.
   /// Be careful: The cached documents may not be up to date!
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   /// The result is null if no document was found.
   Future<T?> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -124,7 +130,7 @@ class YustDatabaseService {
 
   /// Returns the first [YustDoc] in a list directly from the server.
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   /// The result is null if no document was found.
   Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
@@ -201,7 +207,7 @@ class YustDatabaseService {
 
   /// Returns [YustDoc]s directly from the database.
   ///
-  /// Be careful with offline fuctionality.
+  /// Be careful with offline functionality.
   ///
   /// [docSetup] is used to read the collection path.
   ///
@@ -333,11 +339,57 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
+    final type = AggregationType.count;
     final response = await _api.projects.databases.documents
-        .runAggregationQuery(_getAggregationQuery(docSetup, filters: filters),
+        .runAggregationQuery(
+            _getAggregationQuery(type, docSetup, filters: filters),
             _getParentPath(docSetup));
     return int.parse(
-        response[0].result?.aggregateFields?['count']?.integerValue ?? '0');
+        response[0].result?.aggregateFields?[type.name]?.integerValue ?? '0');
+  }
+
+  /// Returns the sum over a field of multiple documents in a collection.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [field] is the field over which to sum.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  Future<double> sum<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    final type = AggregationType.sum;
+    final response = await _api.projects.databases.documents
+        .runAggregationQuery(
+            _getAggregationQuery(type, docSetup,
+                filters: filters, fieldPath: fieldPath),
+            _getParentPath(docSetup));
+    return response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
+  }
+
+  /// Returns the sum over a field of multiple documents in a collection.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [fieldPath] is the field over which to sum.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  Future<double> avg<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    final type = AggregationType.avg;
+    final response = await _api.projects.databases.documents
+        .runAggregationQuery(
+            _getAggregationQuery(type, docSetup,
+                fieldPath: fieldPath, filters: filters),
+            _getParentPath(docSetup));
+    return response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
   }
 
   /// Saves a document.
@@ -490,12 +542,12 @@ class YustDatabaseService {
     }
   }
 
-  /// Initialises a [YustDoc] and saves it.
+  /// Initializes a [YustDoc] and saves it.
   ///
   /// If [onInitialised] is provided, it will be called and
-  /// waited for after the document is initialised.
+  /// waited for after the document is initialized.
   ///
-  /// An existing document can be given which will instead be initialised.
+  /// An existing document can be given which will instead be initialized.
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     required T doc,
@@ -703,12 +755,30 @@ class YustDatabaseService {
   }
 
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
+    AggregationType type,
     YustDocSetup<T> docSetup, {
+    String? fieldPath,
     List<YustFilter>? filters,
   }) {
+    final Aggregation aggregation;
+    switch (type) {
+      case AggregationType.count:
+        aggregation = Aggregation(alias: type.name, count: Count());
+        break;
+      case AggregationType.sum:
+        aggregation = Aggregation(
+            alias: type.name,
+            sum: Sum(field: FieldReference(fieldPath: fieldPath)));
+        break;
+      case AggregationType.avg:
+        aggregation = Aggregation(
+            alias: type.name,
+            avg: Avg(field: FieldReference(fieldPath: fieldPath)));
+        break;
+    }
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
-        aggregations: [Aggregation(alias: 'count', count: Count())],
+        aggregations: [aggregation],
         structuredQuery: StructuredQuery(
           from: [CollectionSelector(collectionId: _getCollection(docSetup))],
           where: Filter(
@@ -862,7 +932,14 @@ class YustDatabaseService {
     } else if (value is DateTime) {
       return Value(timestampValue: value.toIso8601StringWithOffset());
     } else {
-      throw (YustException('Value can not be transformed for Firestore.'));
+      late String output;
+      try {
+        output = jsonEncode(value);
+      } catch (e) {
+        output = value.toString();
+      }
+      throw (YustException(
+          'Value can not be transformed for Firestore: $output'));
     }
   }
 
@@ -897,7 +974,8 @@ class YustDatabaseService {
     } else if (dbValue.timestampValue != null) {
       return dbValue.timestampValue;
     } else {
-      throw (YustException('Value can not be transformed from Firestore.'));
+      throw YustException(
+          'Value can not be transformed from Firestore: ${jsonEncode(dbValue.toJson())}');
     }
   }
 

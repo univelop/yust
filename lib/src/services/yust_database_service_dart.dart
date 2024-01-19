@@ -339,16 +339,13 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
+    final type = AggregationType.count;
     final response = await _api.projects.databases.documents
         .runAggregationQuery(
-            _getAggregationQuery(AggregationType.count, docSetup,
-                filters: filters),
+            _getAggregationQuery(type, docSetup, filters: filters),
             _getParentPath(docSetup));
-    return int.parse(response[0]
-            .result
-            ?.aggregateFields?[AggregationType.count.name]
-            ?.integerValue ??
-        '0');
+    return int.parse(
+        response[0].result?.aggregateFields?[type.name]?.integerValue ?? '0');
   }
 
   /// Returns the sum over a field of multiple documents in a collection.
@@ -364,16 +361,13 @@ class YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
   }) async {
+    final type = AggregationType.sum;
     final response = await _api.projects.databases.documents
         .runAggregationQuery(
-            _getAggregationQuery(AggregationType.sum, docSetup,
+            _getAggregationQuery(type, docSetup,
                 filters: filters, fieldPath: fieldPath),
             _getParentPath(docSetup));
-    return double.parse(response[0]
-            .result
-            ?.aggregateFields?[AggregationType.sum.name]
-            ?.integerValue ??
-        '0');
+    return response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
   }
 
   /// Returns the sum over a field of multiple documents in a collection.
@@ -389,16 +383,13 @@ class YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
   }) async {
+    final type = AggregationType.avg;
     final response = await _api.projects.databases.documents
         .runAggregationQuery(
-            _getAggregationQuery(AggregationType.avg, docSetup,
+            _getAggregationQuery(type, docSetup,
                 fieldPath: fieldPath, filters: filters),
             _getParentPath(docSetup));
-    return double.parse(response[0]
-            .result
-            ?.aggregateFields?[AggregationType.avg.name]
-            ?.integerValue ??
-        '0');
+    return response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
   }
 
   /// Saves a document.

@@ -244,7 +244,7 @@ class YustDatabaseService {
   }) async {
     var query = _getQuery(docSetup, filters: filters);
     final snapshot = await query.count().get();
-    return snapshot.count;
+    return snapshot.count ?? 0;
   }
 
   Future<int> sum<T extends YustDoc>(

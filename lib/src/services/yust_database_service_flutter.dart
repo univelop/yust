@@ -247,7 +247,7 @@ class YustDatabaseService {
     return snapshot.count ?? 0;
   }
 
-  Future<int> sum<T extends YustDoc>(
+  Future<double> sum<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
@@ -259,7 +259,7 @@ class YustDatabaseService {
     // return snapshot.count;
   }
 
-  Future<int> avg<T extends YustDoc>(
+  Future<double> avg<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,

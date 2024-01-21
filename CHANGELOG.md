@@ -1,466 +1,471 @@
+## 3.17.0 - 2024-01-21
+
+- Add sum and average to datebase service
+- Fix bugs
+
 ## 3.16.1 - 2024-01-01
 
--   Disable persistence for web
+- Disable persistence for web
 
 ## 3.16.0 - 2023-12-18
 
--   Profile picture for user
--   Improve transactions
--   Add batches
--   Fix bugs
+- Profile picture for user
+- Improve transactions
+- Add batches
+- Fix bugs
 
 ## 3.15.1 - 2023-12-05
 
--   Update Google APIs
+- Update Google APIs
 
 ## 3.15.0 - 2023-11-17
 
--   Improve Yust Select
--   Add Google Cloud helpers
--   Improve date calculation
--   Fix bugs
+- Improve Yust Select
+- Add Google Cloud helpers
+- Improve date calculation
+- Fix bugs
 
 ## 3.14.0 - 2023-10-06
 
--   Fix bugs
+- Fix bugs
 
 ## 3.13.0 - 2023-09-12
 
--   Small improvements
+- Small improvements
 
 ## 3.12.2 - 2023-08-27
 
--   Implement getListChunked for Flutter
+- Implement getListChunked for Flutter
 
 ## 3.12.1 - 2023-08-24
 
--   Fix bugs
+- Fix bugs
 
 ## 3.12.0 - 2023-08-20
 
--   Upgrade to Flutter 3.10
--   Add Apple Login
+- Upgrade to Flutter 3.10
+- Add Apple Login
 
 ## 3.11.2 - 2023-07-28
 
--   Improve database service error handling
+- Improve database service error handling
 
 ## 3.11.1 - 2023-07-18
 
--   Improve file service
+- Improve file service
 
 ## 3.11.0 - 2023-07-16
 
--   Add count to database service
--   Implement file service for server
+- Add count to database service
+- Implement file service for server
 
 ## 3.10.0 - 2023-06-17
 
--   Add not null filter
+- Add not null filter
 
 ## 3.9.0 - 2023-05-14
 
--   Small improvements
+- Small improvements
 
 ## 3.8.5 - 2023-05-02
 
--   Improve authentication
+- Improve authentication
 
 ## 3.8.4 - 2023-05-01
 
--   Improve authentication
+- Improve authentication
 
 ## 3.8.3 - 2023-04-21
 
--   Fix greater filters
+- Fix greater filters
 
 ## 3.8.2 - 2023-04-20
 
--   Fix bugs
+- Fix bugs
 
 ## 3.8.1 - 2023-04-16
 
--   Fix bugs
+- Fix bugs
 
 ## 3.8.0 - 2023-04-16
 
--   Add user auth id
--   Upgrade firebase packages
--   Fix bugs
+- Add user auth id
+- Upgrade firebase packages
+- Fix bugs
 
 ## 3.7.0 - 2023-03-27
 
--   Improve datetime handling
--   Fix bugs
+- Improve datetime handling
+- Fix bugs
 
 ## 3.6.1 - 2023-02-27
 
--   Little improvements
--   Fix bugs
+- Little improvements
+- Fix bugs
 
 ## 3.6.0 - 2023-02-19
 
--   Add OAuth authentication
--   Add update mask to YustDoc
--   Add YustSnapshot
--   Update firebase packages
--   Improvements
--   Fix bugs
+- Add OAuth authentication
+- Add update mask to YustDoc
+- Add YustSnapshot
+- Update firebase packages
+- Improvements
+- Fix bugs
 
 ## 3.5.0 - 2023-01-16
 
--   Improve mocked database service
--   Fix bugs
+- Improve mocked database service
+- Fix bugs
 
 ## 3.4.0 - 2022-12-16
 
--   Add getDocsChunked
--   Add modifiedAt to YustFile
--   Round doubles
--   Improve filters
--   Fix bugs
+- Add getDocsChunked
+- Add modifiedAt to YustFile
+- Round doubles
+- Improve filters
+- Fix bugs
 
 ## 3.3.2 - 2022-11-22
 
--   Fix bugs
+- Fix bugs
 
 ## 3.3.1 - 2022-11-15
 
--   Improve date time handling
--   Add do not create option to save doc
+- Improve date time handling
+- Add do not create option to save doc
 
 ## 3.3.0 - 2022-11-13
 
--   Add update masks
--   Add hasAuthor and hasOwner to doc setup
--   Improve notifications
--   Remove forUser filter
--   Improve dart database service
+- Add update masks
+- Add hasAuthor and hasOwner to doc setup
+- Improve notifications
+- Remove forUser filter
+- Improve dart database service
 
 ## 3.2.0 - 2022-10-09
 
--   Add mock database
--   Improve database service
--   Fix bugs
+- Add mock database
+- Improve database service
+- Fix bugs
 
 ## 3.1.0 - 2022-08-28
 
--   Add file service.
--   Fix bugs
+- Add file service.
+- Fix bugs
 
 ## 3.0.0 - 2022-07-30
 
--   Refactoring, move UI components to new package yust_ui.
--   Fix bugs
+- Refactoring, move UI components to new package yust_ui.
+- Fix bugs
 
 ## 3.0.0-dev.12 - 2022-07-14
 
--   Fix bugs
+- Fix bugs
 
 ## 3.0.0-dev.11 - 2022-07-03
 
--   Fix bugs
+- Fix bugs
 
 ## 3.0.0-dev.10 - 2022-06-12
 
--   Fix bugs
+- Fix bugs
 
 ## 3.0.0-dev.9 - 2022-06-11
 
--   Add dropzone to file picker
--   Upgrade to Flutter 3
--   Improve image caching
--   Fix bugs
+- Add dropzone to file picker
+- Upgrade to Flutter 3
+- Improve image caching
+- Fix bugs
 
 ## 3.0.0-dev.8 - 2022-05-12
 
--   Fix bugs
+- Fix bugs
 
 ## 3.0.0-dev.7 - 2022-05-01
 
--   Add yust filter
--   Add offline compatibility for image and file picker.
--   Improve notifications
--   Add hash to files
--   Fix bugs
+- Add yust filter
+- Add offline compatibility for image and file picker.
+- Improve notifications
+- Add hash to files
+- Fix bugs
 
 ## 3.0.0-dev.6 - 2022-04-02
 
--   Track last user login time
--   Fix bugs
+- Track last user login time
+- Fix bugs
 
 ## 3.0.0-dev.5 - 2022-03-07
 
--   Fix iOS App initialization
+- Fix iOS App initialization
 
 ## 3.0.0-dev.4 - 2022-03-05
 
--   Fix iOS App initialization
+- Fix iOS App initialization
 
 ## 3.0.0-dev.3 - 2022-03-04
 
--   Textfield validation
--   Traversal object helper
--   Remove yust store
--   Improve state management
--   Rework json logic
+- Textfield validation
+- Traversal object helper
+- Remove yust store
+- Improve state management
+- Rework json logic
 
 ## 3.0.0-dev.2 - 2022-02-17
 
--   Scrollbars for web
--   Descriptions for alerts
--   Unit test support
--   Improve read only mode
--   Improve timestamp handling
--   Fix bugs
+- Scrollbars for web
+- Descriptions for alerts
+- Unit test support
+- Improve read only mode
+- Improve timestamp handling
+- Fix bugs
 
 ## 3.0.0-dev.1 - 2022-01-08
 
--   New widget layout
--   Add pagination for lists
--   Download images
--   Improve routing
--   Fix bugs
+- New widget layout
+- Add pagination for lists
+- Download images
+- Improve routing
+- Fix bugs
 
 ## 2.6.1 - 2021-11-29
 
--   Fix bugs
+- Fix bugs
 
 ## 2.6.0 - 2021-11-28
 
--   Improve text field
--   Improve firebase emulators
--   Fix bugs
+- Improve text field
+- Improve firebase emulators
+- Fix bugs
 
 ## 2.5.3 - 2021-10-23
 
--   Add validator to text field dialog
--   Improve date and time picker
--   Support firebase emulator
--   Improve image picker and galery
+- Add validator to text field dialog
+- Improve date and time picker
+- Support firebase emulator
+- Improve image picker and galery
 
 ## 2.5.2 - 2021-10-02
 
--   Add multiple image support to image picker
+- Add multiple image support to image picker
 
 ## 2.5.1 - 2021-10-01
 
--   Optimize widgets for smaller screens
+- Optimize widgets for smaller screens
 
 ## 2.5.0 - 2021-10-01
 
--   Migrate to Flutter 2.5.1
--   Improve text and number fields
--   Improve image picker
--   Disable persistence for browser
--   Fix bugs
+- Migrate to Flutter 2.5.1
+- Improve text and number fields
+- Improve image picker
+- Disable persistence for browser
+- Fix bugs
 
 ## 2.4.0 - 2021-08-27
 
--   Add validation to input fields
--   Add controllers to input fields
--   Fix bugs
+- Add validation to input fields
+- Add controllers to input fields
+- Fix bugs
 
 ## 2.3.0 - 2021-08-07
 
--   Improve focus handling
--   Improve timestamp convertion
--   Fix bugs
+- Improve focus handling
+- Improve timestamp convertion
+- Fix bugs
 
 ## 2.2.0 - 2021-07-02
 
--   Add checkbox control for switch
--   Support Firebase subcollections
--   Add quality setting to image picker
--   Improve file offline handling
+- Add checkbox control for switch
+- Support Firebase subcollections
+- Add quality setting to image picker
+- Improve file offline handling
 
 ## 2.1.1 - 2021-06-03
 
--   Improve null safety
+- Improve null safety
 
 ## 2.1.0 - 2021-05-30
 
--   Improve text dialog
--   Improve file opening
--   Improve null safety
+- Improve text dialog
+- Improve file opening
+- Improve null safety
 
 ## 2.0.0 - 2021-05-18
 
--   Add null safety
+- Add null safety
 
 ## 1.9.3 - 2021-05-03
 
--   Add read only to widgets
--   Change time picker input hint
--   Add pop up title to time picker
+- Add read only to widgets
+- Change time picker input hint
+- Add pop up title to time picker
 
 ## 1.9.2 - 2021-04-12
 
--   Improve number field
+- Improve number field
 
 ## 1.9.1 - 2021-04-11
 
--   Upgrade firebase packages
--   Add YustSerializable for a bette toJson support
+- Upgrade firebase packages
+- Add YustSerializable for a bette toJson support
 
 ## 1.9.0 - 2021-04-01
 
--   Upgrade to Flutter 2
--   Add time picker keyboard support
+- Upgrade to Flutter 2
+- Add time picker keyboard support
 
 ## 1.8.4 - 2021-03-27
 
--   Fix bilding issue
+- Fix bilding issue
 
 ## 1.8.3 - 2021-03-26
 
--   Improve mapToJson support
--   Remove web helper
--   Fix flutter web support
+- Improve mapToJson support
+- Remove web helper
+- Fix flutter web support
 
 ## 1.8.2 - 2021-03-09
 
--   Fix file exists
+- Fix file exists
 
 ## 1.8.1 - 2021-03-08
 
--   Fix file upload
+- Fix file upload
 
 ## 1.8.0 - 2021-03-07
 
--   Add button tile
--   Add prefix icon to text and number field
+- Add button tile
+- Add prefix icon to text and number field
 
 ## 1.7.0 - 2021-02-26
 
--   Update firebase
--   Support flutter web directly
+- Update firebase
+- Support flutter web directly
 
 ## 1.6.1 - 2021-02-22
 
--   Improve mapToJson
+- Improve mapToJson
 
 ## 1.6.0 - 2021-02-19
 
--   Improve date time handling
--   Add offline check
--   Improve yust doc
+- Improve date time handling
+- Add offline check
+- Improve yust doc
 
 Breaking changes:
 
--   `YustDoc.mapFromJson` returs DateTime values instead of Timestamp values.
--   Therefore `YustDoc.mapToJson` transfers DateTime values to Timestamps.
+- `YustDoc.mapFromJson` returs DateTime values instead of Timestamp values.
+- Therefore `YustDoc.mapToJson` transfers DateTime values to Timestamps.
 
 ## 1.5.0 - 2021-02-19
 
--   Add time picker
--   Add input tile
--   Migrate to Flutter 1.12
--   Improve reset password
--   Improve image picker
--   Improve resize image
--   Improve text field
--   Improve map from json
--   Improve modal buttons
--   Usability improvements
--   Fix bugs
+- Add time picker
+- Add input tile
+- Migrate to Flutter 1.12
+- Improve reset password
+- Improve image picker
+- Improve resize image
+- Improve text field
+- Improve map from json
+- Improve modal buttons
+- Usability improvements
+- Fix bugs
 
 ## 1.4.0 - 2020-11-14
 
--   Add image handling for web
--   Add multiple image picking
--   Add file picker
--   Improve authentication
--   Add file download
--   Add file exisit check
--   Fix bugs
+- Add image handling for web
+- Add multiple image picking
+- Add file picker
+- Improve authentication
+- Add file download
+- Add file exisit check
+- Fix bugs
 
 ## 1.3.0 - 2020-09-24
 
--   Update firebase
--   Add image picker
--   Improve number field
+- Update firebase
+- Add image picker
+- Improve number field
 
 ## 1.2.2 - 2020-09-11
 
--   Fix widget overflows
+- Fix widget overflows
 
 ## 1.2.1 - 2020-09-08
 
--   Improve serialization
+- Improve serialization
 
 ## 1.2.0 - 2020-09-07
 
--   Add onEditingComplete to widgets
--   Improve store builder
+- Add onEditingComplete to widgets
+- Improve store builder
 
 ## 1.1.0 - 2020-09-01
 
--   Add prefix icon to widgets
+- Add prefix icon to widgets
 
 ## 1.0.1 - 2020-08-20
 
--   Improve switch
+- Improve switch
 
 ## 1.0.0 - 2020-08-01
 
--   Add created by, modified at, modified by
--   Improve number field
--   Improve authentication
--   Improve widgets
+- Add created by, modified at, modified by
+- Improve number field
+- Improve authentication
+- Improve widgets
 
 ## 0.5.0 - 2020-06-05
 
--   Improve authentication
--   Improve filtering
--   Improve user subscriber
--   Support Flutter Web
--   Support Firestore timestamps:
-    Set `useTimestamps` in `Yust.initialize` to `true`
--   Improve JSON Serialization
--   Add useful widgets
--   Add documentation
--   Fix issues
+- Improve authentication
+- Improve filtering
+- Improve user subscriber
+- Support Flutter Web
+- Support Firestore timestamps:
+  Set `useTimestamps` in `Yust.initialize` to `true`
+- Improve JSON Serialization
+- Add useful widgets
+- Add documentation
+- Fix issues
 
 Breaking changes:
 
--   `createdAt` in YustDoc changed type from String to DateTime.
--   Use `formatDate` and `formatTime` in YustService if you switch to Firebase timestamps. Use `formatIsoDate` and `formatIsoTime` for the old ISO Datetime format.
+- `createdAt` in YustDoc changed type from String to DateTime.
+- Use `formatDate` and `formatTime` in YustService if you switch to Firebase timestamps. Use `formatIsoDate` and `formatIsoTime` for the old ISO Datetime format.
 
 ## 0.4.0 - 2020-01-17
 
--   Update to Flutter 1.12
--   Add insights to doc builder
--   Improve date picker
--   Improve push notifications
--   Enable offline persistance
--   Improve sign in and sign up
--   Improve routing
--   Make user extendable
--   Improve descanding ordering
+- Update to Flutter 1.12
+- Add insights to doc builder
+- Improve date picker
+- Improve push notifications
+- Enable offline persistance
+- Improve sign in and sign up
+- Improve routing
+- Make user extendable
+- Improve descanding ordering
 
 ## 0.3.0 - 2019-10-25
 
--   Improve doc builder
--   Add sorting for queries
--   Add getDocOnce and getDocsOnce queries
--   Add switch tile widget
--   Add notifications and badges
--   Add progress button
--   Add account edit screen
--   Use firebase document merging
--   Improvements and hotfixes
+- Improve doc builder
+- Add sorting for queries
+- Add getDocOnce and getDocsOnce queries
+- Add switch tile widget
+- Add notifications and badges
+- Add progress button
+- Add account edit screen
+- Use firebase document merging
+- Improvements and hotfixes
 
 ## 0.2.0 - 2019-07-31
 
--   Improve filters
--   Add random string generator
--   Add account screen
--   Improvements and hotfixes
+- Improve filters
+- Add random string generator
+- Add account screen
+- Improvements and hotfixes
 
 ## 0.1.0 - 2019-07-23
 
--   Initial release
--   Firebase Authentication
--   Firestore load and save services
--   Widgets to handle firebase requests
+- Initial release
+- Firebase Authentication
+- Firestore load and save services
+- Widgets to handle firebase requests

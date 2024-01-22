@@ -372,7 +372,7 @@ class YustDatabaseService {
         }
       }
 
-      lastDoc = snapshot.docs.last;
+      lastDoc = snapshot.docs.lastOrNull;
       isDone = snapshot.docs.length < pageSize;
     }
   }

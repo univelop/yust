@@ -80,12 +80,8 @@ class YustFileService {
   }
 
   Future<bool> fileExist({required String path, required String name}) async {
-    try {
-      await _fireStorage.ref().child(path).child(name).getDownloadURL();
-    } on FirebaseException catch (_) {
-      return false;
-    }
-    return true;
+    final fileList = await _fireStorage.ref().child(path).list();
+    return fileList.items.any((element) => element.name == name);
   }
 
   Future<String> getFileDownloadUrl(

@@ -137,4 +137,24 @@ class YustFile {
   bool isValid() {
     return name != null && name != '' && url != null && url != '';
   }
+
+  String getFileNameWithoutExtension() {
+    if (name == null) {
+      return '';
+    }
+
+    final pathParts = name!.split('.');
+    if (pathParts.length > 1) {
+      pathParts.removeLast();
+    }
+    return pathParts.join('.');
+  }
+
+  String getFilenameExtension() {
+    if (name == null) {
+      return '';
+    }
+
+    return name!.contains('.') ? name!.split('.').last : '';
+  }
 }

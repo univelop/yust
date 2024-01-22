@@ -68,7 +68,7 @@ class Yust {
   }
 
   /// Initializes [Yust].
-  ///
+  //
   /// This method should be called before any usage of the yust package.
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [pathToServiceAccountJson] if you are connecting directly with Dart.
   /// Set the [emulatorAddress], if you want to emulate Firebase. [buildRelease] must be set to true if you want to create an iOS release. [userSetup] let you overwrite the default [UserSetup].

@@ -1,3 +1,7 @@
+## 3.17.1 - 2024-01-22
+
+- Fix bugs
+
 ## 3.17.0 - 2024-01-21
 
 - Add sum and average to datebase service

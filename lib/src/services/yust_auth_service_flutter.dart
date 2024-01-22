@@ -142,6 +142,10 @@ class YustAuthService {
     UserCredential userCredential,
     YustAuthenticationMethod? method,
   ) async {
+    if (userCredential.user?.email == null ||
+        userCredential.user?.email == '') {
+      return false;
+    }
     final user = await Yust.databaseService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [

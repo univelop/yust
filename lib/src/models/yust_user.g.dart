@@ -10,7 +10,8 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       email: json['email'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
-      gender: $enumDecodeNullable(_$YustGenderEnumMap, json['gender']),
+      gender: $enumDecodeNullable(_$YustGenderEnumMap, json['gender'],
+          unknownValue: JsonKey.nullForUndefinedEnumValue),
       authId: json['authId'] as String?,
     )
       ..id = json['id'] as String
@@ -36,7 +37,8 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
           ? null
           : DateTime.parse(json['lastLogin'] as String)
       ..authenticationMethod = $enumDecodeNullable(
-          _$YustAuthenticationMethodEnumMap, json['authenticationMethod'])
+          _$YustAuthenticationMethodEnumMap, json['authenticationMethod'],
+          unknownValue: JsonKey.nullForUndefinedEnumValue)
       ..domain = json['domain'] as String?
       ..profilePicture = json['profilePicture'] == null
           ? null

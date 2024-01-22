@@ -6,6 +6,7 @@ import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
 import '../util/object_helper.dart';
+import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
@@ -59,8 +60,9 @@ class YustDatabaseService {
 
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) {
+    String id, {
+    String? transaction,
+  }) {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
@@ -236,13 +238,37 @@ class YustDatabaseService {
     });
   }
 
-  Future<int> count<T extends YustDoc>(
+  Future<int?> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
     var query = _getQuery(docSetup, filters: filters);
     final snapshot = await query.count().get();
-    return snapshot.count;
+    return snapshot.count ?? 0;
+  }
+
+  Future<double> sum<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    throw YustException('Not implemented for flutter');
+    // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
+    // var query = _getQuery(docSetup, filters: filters);
+    // final snapshot = await query.sum(fieldPath).get();
+    // return snapshot.count;
+  }
+
+  Future<double> avg<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async {
+    throw YustException('Not implemented for flutter');
+    // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
+    // var query = _getQuery(docSetup, filters: filters);
+    // final snapshot = await query.average(fieldPath).get();
+    // return snapshot.count;
   }
 
   Future<void> saveDoc<T extends YustDoc>(
@@ -346,7 +372,7 @@ class YustDatabaseService {
         }
       }
 
-      lastDoc = snapshot.docs.last;
+      lastDoc = snapshot.docs.lastOrNull;
       isDone = snapshot.docs.length < pageSize;
     }
   }
@@ -359,6 +385,23 @@ class YustDatabaseService {
     for (var doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
+  }
+
+  Future<int> deleteDocsAsBatch<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) async {
+    var query =
+        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit);
+    final snapshot = await query.get(GetOptions(source: Source.server));
+    final batch = _fireStore.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+    return snapshot.docs.length;
   }
 
   Future<void> deleteDoc<T extends YustDoc>(
@@ -398,6 +441,34 @@ class YustDatabaseService {
     );
 
     return doc;
+  }
+
+  /// Reads a document, executes a function and saves the document as a transaction.
+  Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String docId,
+    Future<T?> Function(T doc) transaction, {
+    int maxTries = 20,
+    bool ignoreTransactionErrors = false,
+    bool useUpdateMask = false,
+  }) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  /// Begins a transaction.
+  Future<String> beginTransaction() async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  /// Saves a YustDoc and finishes a transaction.
+  Future<void> commitTransaction(
+      String transaction, YustDocSetup docSetup, YustDoc doc,
+      {bool useUpdateMask = false}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<void> commitEmptyTransaction(String transaction) async {
+    throw YustException('Not implemented for flutter');
   }
 
   dynamic getQuery<T extends YustDoc>(

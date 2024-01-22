@@ -1,3 +1,30 @@
+## 3.17.0 - 2024-01-21
+
+- Add sum and average to datebase service
+- Fix bugs
+
+## 3.16.1 - 2024-01-01
+
+- Disable persistence for web
+
+## 3.16.0 - 2023-12-18
+
+- Profile picture for user
+- Improve transactions
+- Add batches
+- Fix bugs
+
+## 3.15.1 - 2023-12-05
+
+- Update Google APIs
+
+## 3.15.0 - 2023-11-17
+
+- Improve Yust Select
+- Add Google Cloud helpers
+- Improve date calculation
+- Fix bugs
+
 ## 3.14.0 - 2023-10-06
 
 - Fix bugs

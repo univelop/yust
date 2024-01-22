@@ -3,10 +3,11 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:googleapis_auth/googleapis_auth.dart';
 
 import 'yust_exception.dart';
 
-class FirebaseHelpers {
+class GoogleCloudHelpers {
   static Future<void> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
@@ -28,6 +29,17 @@ class FirebaseHelpers {
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {
       FirebaseFirestore.instance.useFirestoreEmulator(emulatorAddress, 8080);
+    }
+
+    // Set Cache Options
+    if (kIsWeb) {
+      // Disable persistence for web cause of performance issues
+      // await FirebaseFirestore.instance
+      //     // Have one Cache over all univelop tabs (IndexDB)
+      //     .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
+    } else {
+      FirebaseFirestore.instance.settings =
+          const Settings(persistenceEnabled: true);
     }
   }
 
@@ -61,5 +73,16 @@ class FirebaseHelpers {
     } else {
       return value;
     }
+  }
+
+  /// Just a stub for now. See google_cloud_helpers_dart.dart for documentation.
+  static Future<String> getProjectId({String? pathToServiceAccountJson}) async {
+    throw UnimplementedError();
+  }
+
+  /// Just a stub for now. See google_cloud_helpers_dart.dart for documentation.
+  static Future<AutoRefreshingAuthClient> createAuthClient(
+      {required List<String> scopes, String? pathToServiceAccountJson}) async {
+    throw UnimplementedError();
   }
 }

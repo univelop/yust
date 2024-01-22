@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
@@ -42,8 +44,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
+    String id, {
+    String? transaction,
+  }) async {
     final docs = _getCollection<T>(docSetup);
     try {
       return docs.firstWhere((doc) => doc.id == id);
@@ -163,6 +166,33 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
+  Future<int> count<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+  }) async =>
+      (await getList(docSetup, filters: filters)).length;
+
+  @override
+  Future<double> sum<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async =>
+      (await getList(docSetup, filters: filters))
+          .map((e) => _getDoubleValue(e, fieldPath))
+          .fold<double>(
+              0.0, (previousValue, element) => previousValue + element);
+
+  @override
+  Future<double> avg<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+  }) async =>
+      (await sum(docSetup, fieldPath, filters: filters)) /
+      (await count(docSetup, filters: filters));
+
+  @override
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -271,6 +301,35 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     );
   }
 
+  @override
+  Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
+    YustDocSetup<T> docSetup,
+    String docId,
+    Future<T?> Function(T doc) transaction, {
+    int maxTries = 20,
+    bool ignoreTransactionErrors = false,
+    bool useUpdateMask = false,
+  }) async {
+    final doc = await get(docSetup, docId);
+    if (doc == null) {
+      if (ignoreTransactionErrors) {
+        return (false, null);
+      } else {
+        throw Exception('Document not found');
+      }
+    }
+    final newDoc = await transaction(doc);
+    if (newDoc != null) {
+      await saveDoc(
+        docSetup,
+        newDoc,
+        skipOnSave: true,
+        updateMask: useUpdateMask ? newDoc.updateMask.toList() : null,
+      );
+    }
+    return (true, doc);
+  }
+
   List<Map<String, dynamic>> _getJSONCollection(String collectionName) {
     if (_db[collectionName] == null) {
       _db[collectionName] = [];
@@ -298,9 +357,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
   ) {
     for (final f in filters ?? []) {
-      collection = collection
-          .where((e) => f.isFieldMatching(_readValueInJsonDoc(e, f.field)))
-          .toList();
+      collection = collection.where((e) {
+        var value = _readValueInJsonDoc(e, f.field);
+
+        // As we are filtering the raw json, we need to make a special case for
+        // DateTime fields
+        if (value is String && value.isIso8601String) {
+          value = DateTime.parse(value);
+        }
+        return f.isFieldMatching(value);
+      }).toList();
     }
     return collection;
   }
@@ -353,5 +419,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     }
 
     return '$parentPath/${docSetup.collectionName}/${doc?.id ?? id ?? ''}';
+  }
+
+  double _getDoubleValue<T extends YustDoc>(T doc, String fieldPath) {
+    final value = doc.toJson()[fieldPath];
+    if (value is double) {
+      return value;
+    } else if (value is int) {
+      return value.toDouble();
+    } else {
+      return 0.0;
+    }
   }
 }

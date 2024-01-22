@@ -217,13 +217,17 @@ class YustAuthService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final userCredential = await fireAuth.signInWithEmailAndPassword(
-      email: fireAuth.currentUser!.email!,
-      password: password,
-    );
-    await userCredential.user!.updateEmail(email);
     final user = await Yust.databaseService
         .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
+    if(user?.authenticationMethod == null ||
+        user?.authenticationMethod == YustAuthenticationMethod.mail) {
+      final userCredential = await fireAuth.signInWithEmailAndPassword(
+        email: fireAuth.currentUser!.email!,
+        password: password,
+      );
+      await userCredential.user!.updateEmail(email);
+    }
+
     if (user != null) {
       user.email = email;
       await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);

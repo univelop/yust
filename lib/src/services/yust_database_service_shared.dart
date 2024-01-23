@@ -8,23 +8,25 @@ Future<void> prepareSaveDoc<T extends YustDoc>(
   bool? trackModification,
   bool skipOnSave = false,
 }) async {
-  if (trackModification ?? docSetup.trackModification) {
-    if (docSetup.hasAuthor) {
-      doc.createdBy ??= doc.modifiedBy;
-
-      doc.modifiedBy = docSetup.userId;
-    }
-
-    if (docSetup.hasOwner && doc.userId == null) {
-      doc.userId = docSetup.userId;
-    }
-
-    doc.modifiedAt = Yust.helpers.utcNow();
+  doc.createdAt ??= Yust.helpers.utcNow();
+  doc.modifiedAt ??= doc.createdAt;
+  if (docSetup.forEnvironment) {
+    doc.envId ??= docSetup.envId;
+  }
+  if (docSetup.hasAuthor) {
+    doc.createdBy ??= docSetup.userId;
+    doc.modifiedBy ??= docSetup.userId;
+  }
+  if (docSetup.hasOwner) {
+    doc.userId ??= docSetup.userId;
   }
 
-  doc.createdAt ??= doc.modifiedAt;
-
-  if (doc.envId == null && docSetup.forEnvironment) doc.envId = docSetup.envId;
+  if (trackModification ?? docSetup.trackModification) {
+    doc.modifiedAt = Yust.helpers.utcNow();
+    if (docSetup.hasAuthor) {
+      doc.modifiedBy = docSetup.userId;
+    }
+  }
 
   if (!skipOnSave) await docSetup.onSave?.call(doc);
 }

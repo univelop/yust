@@ -35,9 +35,9 @@ class YustException implements Exception {
 }
 
 class YustTransactionFailedException extends YustException {
-  YustTransactionFailedException(String message) : super(message);
+  YustTransactionFailedException(super.message);
 }
 
 class YustDocumentLockedException extends YustException {
-  YustDocumentLockedException(String message) : super(message);
+  YustDocumentLockedException(super.message);
 }

@@ -19,19 +19,19 @@ enum AuthState {
 }
 
 enum DatabaseLogAction {
-  delete('DELETE'),
-  get('READ'),
-  saveNew('CREATE'),
-  save('UPDATE'),
-  transform('UPDATE');
+  delete,
+  get,
+  saveNew,
+  save,
+  transform,
+  aggregate;
 
-  const DatabaseLogAction(this.logText);
-  final String logText;
+  const DatabaseLogAction();
 }
 
 typedef DatabaseLogCallback = void Function(
     DatabaseLogAction action, YustDocSetup setup, int count,
-    {String? id, List<String>? updateMask});
+    {String? id, List<String>? updateMask, num? aggregationResult});
 
 /// Yust is the easiest way to connect full stack Dart app to Firebase.
 ///

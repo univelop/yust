@@ -241,6 +241,7 @@ class YustDatabaseService {
   Future<int?> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
+    int? limit,
   }) async {
     var query = _getQuery(docSetup, filters: filters);
     final snapshot = await query.count().get();
@@ -251,6 +252,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
+    int? limit,
   }) async {
     throw YustException('Not implemented for flutter');
     // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
@@ -263,6 +265,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
+    int? limit,
   }) async {
     throw YustException('Not implemented for flutter');
     // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged

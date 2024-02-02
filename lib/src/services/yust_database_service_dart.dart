@@ -645,10 +645,10 @@ class YustDatabaseService {
     }
     if (numberRetries == maxTries) {
       throw YustException(
-          'Retried transaction $numberRetries times (maxRetries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+          'Retried transaction $numberRetries times (no more retries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     } else if (numberRetries > 1) {
       print(
-          'Retried transaction $numberRetries times: Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+          'Retried transaction $numberRetries times (of $maxTries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
     }
     return (true, updatedDoc);
   }

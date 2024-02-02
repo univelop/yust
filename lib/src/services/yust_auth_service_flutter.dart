@@ -101,7 +101,8 @@ class YustAuthService {
   String _getEmail(UserCredential userCredential) =>
       userCredential.user!.email ?? '';
 
-  String _getFirstName(List<String> nameParts) => nameParts.join(' ');
+  String _getFirstName(List<String> nameParts) =>
+      nameParts.join(' ').replaceAll(r'+', ' ');
 
   String _getLastName(List<String> nameParts) => nameParts.removeLast();
 

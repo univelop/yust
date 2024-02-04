@@ -234,7 +234,7 @@ class YustDatabaseService {
           if (e.document == null) {
             return null;
           }
-          return _transformDoc<T>(docSetup, e.document!);
+          return _transformDoc<T>(docSetup, e.document!).$1;
         })
         .whereType<T>()
         .toList();

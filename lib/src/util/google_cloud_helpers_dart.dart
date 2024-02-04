@@ -5,16 +5,10 @@ import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 
+import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 import 'yust_storage_api.dart';
-
-enum GoogleCloudPlatform {
-  cloudRunJob,
-  cloudRunService,
-  cloudFunctions,
-  local,
-}
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {

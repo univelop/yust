@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
 
+import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 
 class GoogleCloudHelpers {
@@ -84,5 +85,10 @@ class GoogleCloudHelpers {
   static Future<AutoRefreshingAuthClient> createAuthClient(
       {required List<String> scopes, String? pathToServiceAccountJson}) async {
     throw UnimplementedError();
+  }
+
+  /// Gets the google cloud platform the code is running on.
+  static GoogleCloudPlatform getPlatform() {
+    return GoogleCloudPlatform.local;
   }
 }

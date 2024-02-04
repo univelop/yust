@@ -14,6 +14,7 @@ export 'src/models/yust_notification.dart';
 export 'src/models/yust_order_by.dart';
 export 'src/models/yust_user.dart';
 export 'src/util/google_cloud_helpers.dart';
+export 'src/util/google_cloud_helpers_shared.dart';
 export 'src/util/object_helper.dart';
 export 'src/util/yust_exception.dart';
 export 'src/util/yust_field_transform.dart';

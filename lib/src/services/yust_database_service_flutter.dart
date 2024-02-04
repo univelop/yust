@@ -81,7 +81,7 @@ class YustDatabaseService {
         .map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
   }
 
-  Future<T?> getFirst<T extends YustDoc>(
+  Future<(T?, YustException?)> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -94,10 +94,10 @@ class YustDatabaseService {
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
     }
-    return doc;
+    return (doc, null);
   }
 
-  Future<T?> getFirstFromCache<T extends YustDoc>(
+  Future<(T?, YustException?)> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -121,10 +121,10 @@ class YustDatabaseService {
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
     }
-    return doc;
+    return (doc, null);
   }
 
-  Future<T?> getFirstFromDB<T extends YustDoc>(
+  Future<(T?, YustException?)> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -137,7 +137,7 @@ class YustDatabaseService {
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
     }
-    return doc;
+    return (doc, null);
   }
 
   Stream<T?> getFirstStream<T extends YustDoc>(

@@ -131,12 +131,12 @@ class YustAuthService {
 
   Future<YustUser?> _maybeGetConnectedYustUser(
           UserCredential userCredential) async =>
-      await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
+      (await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',
             comparator: YustFilterComparator.equal,
             value: userCredential.user!.uid)
-      ]);
+      ]));
 
   Future<bool> _tryLinkYustUser(
     UserCredential userCredential,
@@ -219,7 +219,7 @@ class YustAuthService {
   Future<void> changeEmail(String email, String password) async {
     final user = await Yust.databaseService
         .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
-    if(user?.authenticationMethod == null ||
+    if (user?.authenticationMethod == null ||
         user?.authenticationMethod == YustAuthenticationMethod.mail) {
       final userCredential = await fireAuth.signInWithEmailAndPassword(
         email: fireAuth.currentUser!.email!,

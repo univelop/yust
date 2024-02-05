@@ -5,6 +5,7 @@ import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 
+import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 import 'yust_storage_api.dart';
@@ -114,6 +115,17 @@ class GoogleCloudHelpers {
   /// If the value is not a timestamp the origianal value is returned.
   static dynamic convertTimestamp(dynamic value) {
     return value;
+  }
+
+  /// Gets the google cloud platform the code is running on.
+  static GoogleCloudPlatform getPlatform() {
+    if (Platform.environment.containsKey('K_SERVICE')) {
+      return GoogleCloudPlatform.cloudRunService;
+    } else if (Platform.environment.containsKey('CLOUD_RUN_JOB')) {
+      return GoogleCloudPlatform.cloudRunJob;
+    } else {
+      return GoogleCloudPlatform.local;
+    }
   }
 
   /// Gets the project id from the google cloud metadata server.

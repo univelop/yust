@@ -20,7 +20,7 @@ class YustFileService {
 
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
-  /// 
+  ///
   /// It returns the download url of the uploaded file.
   Future<String> uploadFile(
       {required String path,
@@ -92,6 +92,18 @@ class YustFileService {
   /// Deletes a existing file at [path] and filename [name].
   Future<void> deleteFile({required String path, String? name}) async {
     await _storageApi.objects.delete(YustStorageApi.bucketName!, '$path/$name');
+  }
+
+  Future<void> deleteFolder({required String path}) async {
+    final objects = await _storageApi.objects
+        .list(YustStorageApi.bucketName!, prefix: path);
+
+    if (objects.items != null) {
+      for (final object in objects.items!) {
+        await _storageApi.objects
+            .delete(YustStorageApi.bucketName!, object.name!);
+      }
+    }
   }
 
   /// Checks if a file exists at a given [path] and [name].

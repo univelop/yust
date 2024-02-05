@@ -41,3 +41,9 @@ class YustTransactionFailedException extends YustException {
 class YustDocumentLockedException extends YustException {
   YustDocumentLockedException(super.message);
 }
+
+class YustJsonParseException extends YustException {
+  YustJsonParseException(super.message, this.json);
+
+  final Map<String, dynamic> json;
+}

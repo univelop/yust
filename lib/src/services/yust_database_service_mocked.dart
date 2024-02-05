@@ -19,6 +19,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   final _db = <String, List<Map<String, dynamic>>>{};
 
+  Map<String, List<Map<String, dynamic>>> get db => _db;
+
   @override
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _createDocumentId();
@@ -169,6 +171,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   Future<int> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
+    int? limit,
   }) async =>
       (await getList(docSetup, filters: filters)).length;
 
@@ -177,6 +180,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
+    int? limit,
   }) async =>
       (await getList(docSetup, filters: filters))
           .map((e) => _getDoubleValue(e, fieldPath))
@@ -188,6 +192,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
+    int? limit,
   }) async =>
       (await sum(docSetup, fieldPath, filters: filters)) /
       (await count(docSetup, filters: filters));

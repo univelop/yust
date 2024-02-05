@@ -81,7 +81,6 @@ class YustDatabaseService {
     String id, {
     String? transaction,
   }) async {
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     try {
       final response = await _api.projects.databases.documents
           .get(_getDocumentPath(docSetup, id), transaction: transaction);
@@ -335,17 +334,18 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
-  Future<int> count<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    List<YustFilter>? filters,
-  }) async {
+  Future<int> count<T extends YustDoc>(YustDocSetup<T> docSetup,
+      {List<YustFilter>? filters, int? limit}) async {
     final type = AggregationType.count;
     final response = await _api.projects.databases.documents
         .runAggregationQuery(
-            _getAggregationQuery(type, docSetup, filters: filters),
+            _getAggregationQuery(type, docSetup, filters: filters, upTo: limit),
             _getParentPath(docSetup));
-    return int.parse(
+
+    final result = int.parse(
         response[0].result?.aggregateFields?[type.name]?.integerValue ?? '0');
+    dbLogCallback?.call(DatabaseLogAction.aggregate, docSetup, result);
+    return result;
   }
 
   /// Returns the sum over a field of multiple documents in a collection.
@@ -357,17 +357,10 @@ class YustDatabaseService {
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   Future<double> sum<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String fieldPath, {
-    List<YustFilter>? filters,
-  }) async {
-    final type = AggregationType.sum;
-    final response = await _api.projects.databases.documents
-        .runAggregationQuery(
-            _getAggregationQuery(type, docSetup,
-                filters: filters, fieldPath: fieldPath),
-            _getParentPath(docSetup));
-    return response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
+      YustDocSetup<T> docSetup, String fieldPath,
+      {List<YustFilter>? filters, int? limit}) async {
+    return _performAggregation(AggregationType.sum, docSetup, fieldPath,
+        filters: filters, limit: limit);
   }
 
   /// Returns the sum over a field of multiple documents in a collection.
@@ -379,17 +372,30 @@ class YustDatabaseService {
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   Future<double> avg<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String fieldPath, {
-    List<YustFilter>? filters,
-  }) async {
-    final type = AggregationType.avg;
+      YustDocSetup<T> docSetup, String fieldPath,
+      {List<YustFilter>? filters, int? limit}) async {
+    return _performAggregation(AggregationType.avg, docSetup, fieldPath,
+        filters: filters, limit: limit);
+  }
+
+  Future<double> _performAggregation<T extends YustDoc>(
+      AggregationType type, YustDocSetup<T> docSetup, String fieldPath,
+      {List<YustFilter>? filters, int? limit}) async {
     final response = await _api.projects.databases.documents
         .runAggregationQuery(
             _getAggregationQuery(type, docSetup,
-                fieldPath: fieldPath, filters: filters),
+                fieldPath: fieldPath, filters: filters, upTo: limit),
             _getParentPath(docSetup));
-    return response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
+    final result =
+        response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
+    final count = int.parse(response[0]
+            .result
+            ?.aggregateFields?[AggregationType.count.name]
+            ?.integerValue ??
+        '0');
+    dbLogCallback?.call(DatabaseLogAction.aggregate, docSetup, count,
+        aggregationResult: result);
+    return result;
   }
 
   /// Saves a document.
@@ -414,10 +420,6 @@ class YustDatabaseService {
     final yustUpdateMask = doc.updateMask;
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
-    if (!skipLog) {
-      dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
-          id: doc.id, updateMask: updateMask ?? []);
-    }
     final jsonDoc = doc.toJson();
     final dbDoc = Document(
         fields:
@@ -436,6 +438,10 @@ class YustDatabaseService {
         updateMask_fieldPaths: quotedUpdateMask,
         currentDocument_exists: doNotCreate ? true : null,
       );
+      if (!skipLog) {
+        dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+            id: doc.id, updateMask: updateMask ?? []);
+      }
     } on DetailedApiRequestError catch (e) {
       throw YustException.fromDetailedApiRequestError(docPath, e);
     }
@@ -462,14 +468,14 @@ class YustDatabaseService {
         transform: documentTransform,
         currentDocument: Precondition(exists: true));
     final commitRequest = CommitRequest(writes: [write]);
-    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
-        id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
 
     try {
       await _api.projects.databases.documents.commit(
         commitRequest,
         _getDatabasePath(),
       );
+      dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+          id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
     } on DetailedApiRequestError catch (e) {
       throw YustException.fromDetailedApiRequestError(docPath, e);
     }
@@ -480,8 +486,8 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
+    // (No logs here, because getListFromDB, and deleteDoc already log)
     final docs = await getListFromDB<T>(docSetup, filters: filters);
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, docs.length);
     for (var doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
@@ -511,6 +517,7 @@ class YustDatabaseService {
       ),
       _getDatabasePath(),
     );
+    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, noOfDocs);
     return noOfDocs;
   }
 
@@ -520,10 +527,10 @@ class YustDatabaseService {
     T doc,
   ) async {
     await doc.onDelete();
-    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     final docPath = _getDocumentPath(docSetup, doc.id);
     try {
       await _api.projects.databases.documents.delete(docPath);
+      dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     } on DetailedApiRequestError catch (e) {
       throw YustException.fromDetailedApiRequestError(docPath, e);
     }
@@ -533,10 +540,10 @@ class YustDatabaseService {
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
     await (await get(docSetup, docId))?.onDelete();
-    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
     final docPath = _getDocumentPath(docSetup, docId);
     try {
       await _api.projects.databases.documents.delete(docPath);
+      dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: docId);
     } on DetailedApiRequestError catch (e) {
       throw YustException.fromDetailedApiRequestError(docPath, e);
     }
@@ -559,7 +566,7 @@ class YustDatabaseService {
     if (onInitialised != null) {
       await onInitialised(doc);
     }
-    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1);
+    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1, id: doc.id);
     await saveDoc<T>(
       docSetup,
       doc,
@@ -755,30 +762,27 @@ class YustDatabaseService {
   }
 
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
-    AggregationType type,
-    YustDocSetup<T> docSetup, {
-    String? fieldPath,
-    List<YustFilter>? filters,
-  }) {
-    final Aggregation aggregation;
-    switch (type) {
-      case AggregationType.count:
-        aggregation = Aggregation(alias: type.name, count: Count());
-        break;
-      case AggregationType.sum:
-        aggregation = Aggregation(
-            alias: type.name,
-            sum: Sum(field: FieldReference(fieldPath: fieldPath)));
-        break;
-      case AggregationType.avg:
-        aggregation = Aggregation(
-            alias: type.name,
-            avg: Avg(field: FieldReference(fieldPath: fieldPath)));
-        break;
-    }
+      AggregationType type, YustDocSetup<T> docSetup,
+      {String? fieldPath, List<YustFilter>? filters, int? upTo}) {
+    final countAggregation = Aggregation(
+        alias: AggregationType.count.name,
+        count: Count(upTo: upTo?.toString()));
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
-        aggregations: [aggregation],
+        aggregations: [
+          // We always include count to get the number of aggregated documents
+          countAggregation,
+          if (type == AggregationType.sum)
+            Aggregation(
+                alias: type.name,
+                count: Count(upTo: upTo?.toString()),
+                sum: Sum(field: FieldReference(fieldPath: fieldPath))),
+          if (type == AggregationType.avg)
+            Aggregation(
+                alias: type.name,
+                count: Count(upTo: upTo?.toString()),
+                avg: Avg(field: FieldReference(fieldPath: fieldPath))),
+        ],
         structuredQuery: StructuredQuery(
           from: [CollectionSelector(collectionId: _getCollection(docSetup))],
           where: Filter(
@@ -945,9 +949,9 @@ class YustDatabaseService {
 
   dynamic _dbValueToValue(Value dbValue) {
     if (dbValue.arrayValue != null) {
-      return (dbValue.arrayValue!.values ?? []).map((childValue) {
-        return _dbValueToValue(childValue);
-      }).toList();
+      return (dbValue.arrayValue!.values ?? [])
+          .map((childValue) => _dbValueToValue(childValue))
+          .toList();
     } else if (dbValue.mapValue != null) {
       final map = dbValue.mapValue!.fields;
       if (map?['_seconds'] != null) {

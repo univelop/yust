@@ -950,9 +950,9 @@ class YustDatabaseService {
 
   dynamic _dbValueToValue(Value dbValue) {
     if (dbValue.arrayValue != null) {
-      return (dbValue.arrayValue!.values ?? []).map((childValue) {
-        return _dbValueToValue(childValue);
-      }).toList();
+      return (dbValue.arrayValue!.values ?? [])
+          .map((childValue) => _dbValueToValue(childValue))
+          .toList();
     } else if (dbValue.mapValue != null) {
       final map = dbValue.mapValue!.fields;
       if (map?['_seconds'] != null) {

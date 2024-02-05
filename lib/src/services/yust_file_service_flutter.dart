@@ -88,4 +88,8 @@ class YustFileService {
       {required String path, required String name}) async {
     return await _fireStorage.ref().child(path).child(name).getDownloadURL();
   }
+
+  Future<void> deleteFolder({required String path}) async {
+    await _fireStorage.ref().child(path).delete();
+  }
 }

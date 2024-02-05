@@ -10,6 +10,13 @@ import 'yust_exception.dart';
 import 'yust_firestore_api.dart';
 import 'yust_storage_api.dart';
 
+enum GoogleCloudPlatform {
+  cloudRunJob,
+  cloudRunService,
+  cloudFunctions,
+  local,
+}
+
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
   /// Initializes firebase

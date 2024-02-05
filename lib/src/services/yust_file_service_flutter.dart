@@ -90,6 +90,9 @@ class YustFileService {
   }
 
   Future<void> deleteFolder({required String path}) async {
-    await _fireStorage.ref().child(path).delete();
+    final fileList = await _fireStorage.ref().child(path).list();
+    for (final file in fileList.items) {
+      await file.delete();
+    }
   }
 }

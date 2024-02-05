@@ -95,7 +95,15 @@ class YustFileService {
   }
 
   Future<void> deleteFolder({required String path}) async {
-    await _storageApi.objects.delete(YustStorageApi.bucketName!, path);
+    final objects = await _storageApi.objects
+        .list(YustStorageApi.bucketName!, prefix: path);
+
+    if (objects.items != null) {
+      for (final object in objects.items!) {
+        await _storageApi.objects
+            .delete(YustStorageApi.bucketName!, object.name!);
+      }
+    }
   }
 
   /// Checks if a file exists at a given [path] and [name].

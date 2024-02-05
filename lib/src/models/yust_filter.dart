@@ -66,48 +66,54 @@ class YustFilter {
   ///
   /// Returns true if [fieldValue] is matching or filter is incomplete. Otherwise false.
   bool isFieldMatching(dynamic fieldValue) {
-    if (fieldValue == null && comparator != YustFilterComparator.isNull) {
-      return false;
-    }
-
-    fieldValue = _handleBoolValue(fieldValue);
-    fieldValue = _handleTZDateTimeValue(fieldValue);
-    value = _handleBoolValue(value);
-    value = _handleTZDateTimeValue(value);
-    value = _handleNumberValue(fieldValue, value);
-    if (value == null &&
-        ![YustFilterComparator.isNull, YustFilterComparator.isNotNull]
-            .contains(comparator)) {
-      return true;
-    }
-
-    switch (comparator) {
-      case YustFilterComparator.equal:
-        return fieldValue == value;
-      case YustFilterComparator.notEqual:
-        return fieldValue != value;
-      case YustFilterComparator.lessThan:
-        return fieldValue.compareTo(value) == -1;
-      case YustFilterComparator.lessThanEqual:
-        return fieldValue.compareTo(value) <= 0;
-      case YustFilterComparator.greaterThan:
-        return fieldValue.compareTo(value) == 1;
-      case YustFilterComparator.greaterThanEqual:
-        return fieldValue.compareTo(value) >= 0;
-      case YustFilterComparator.arrayContains:
-        return (fieldValue as List).contains(value);
-      case YustFilterComparator.arrayContainsAny:
-        return (value as List).any((v) => (fieldValue as List).contains(v));
-      case YustFilterComparator.inList:
-        return (value as List).contains(fieldValue);
-      case YustFilterComparator.notInList:
-        return !(value as List).contains(fieldValue);
-      case YustFilterComparator.isNull:
-        return fieldValue == null;
-      case YustFilterComparator.isNotNull:
-        return fieldValue != null;
-      default:
+    try {
+      if (fieldValue == null && comparator != YustFilterComparator.isNull) {
         return false;
+      }
+
+      fieldValue = _handleBoolValue(fieldValue);
+      fieldValue = _handleTZDateTimeValue(fieldValue);
+      value = _handleBoolValue(value);
+      value = _handleTZDateTimeValue(value);
+      value = _handleNumberValue(fieldValue, value);
+      if (value == null &&
+          ![YustFilterComparator.isNull, YustFilterComparator.isNotNull]
+              .contains(comparator)) {
+        return true;
+      }
+
+      switch (comparator) {
+        case YustFilterComparator.equal:
+          return fieldValue == value;
+        case YustFilterComparator.notEqual:
+          return fieldValue != value;
+        case YustFilterComparator.lessThan:
+          return fieldValue.compareTo(value) == -1;
+        case YustFilterComparator.lessThanEqual:
+          return fieldValue.compareTo(value) <= 0;
+        case YustFilterComparator.greaterThan:
+          return fieldValue.compareTo(value) == 1;
+        case YustFilterComparator.greaterThanEqual:
+          return fieldValue.compareTo(value) >= 0;
+        case YustFilterComparator.arrayContains:
+          return (fieldValue as List).contains(value);
+        case YustFilterComparator.arrayContainsAny:
+          return (value as List).any((v) => (fieldValue as List).contains(v));
+        case YustFilterComparator.inList:
+          return (value as List).contains(fieldValue);
+        case YustFilterComparator.notInList:
+          return !(value as List).contains(fieldValue);
+        case YustFilterComparator.isNull:
+          return fieldValue == null;
+        case YustFilterComparator.isNotNull:
+          return fieldValue != null;
+        default:
+          return false;
+      }
+    } catch (e) {
+      print(
+          "[[WARNING]] Error in comparing ($comparator) filter value '$value' with field value '$fieldValue': $e");
+      return false;
     }
   }
 

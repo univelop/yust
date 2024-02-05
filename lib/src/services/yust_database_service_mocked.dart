@@ -5,7 +5,6 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
-import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service.dart';
@@ -67,7 +66,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
-  Future<(T?, YustException?)> getFirst<T extends YustDoc>(
+  Future<T?> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -76,7 +75,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
-  Future<(T?, YustException?)> getFirstFromCache<T extends YustDoc>(
+  Future<T?> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -85,7 +84,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
-  Future<(T?, YustException?)> getFirstFromDB<T extends YustDoc>(
+  Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -95,9 +94,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
     if (docs.isEmpty) {
-      return (null, null);
+      return null;
     } else {
-      return (docs.first, null);
+      return docs.first;
     }
   }
 
@@ -108,8 +107,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustOrderBy>? orderBy,
   }) {
     return Stream.fromFuture(
-            getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy))
-        .map((e) => e.$1);
+        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
   }
 
   @override

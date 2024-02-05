@@ -85,7 +85,7 @@ class YustDatabaseService {
       final response = await _api.projects.databases.documents
           .get(_getDocumentPath(docSetup, id), transaction: transaction);
       dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
-      return _transformDoc<T>(docSetup, response).$1;
+      return _transformDoc<T>(docSetup, response);
     } on ApiRequestError {
       return null;
     }
@@ -106,7 +106,7 @@ class YustDatabaseService {
   ///
   /// Be careful with offline functionality.
   /// The result is null if no document was found.
-  Future<(T?, YustException?)> getFirst<T extends YustDoc>(
+  Future<T?> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -119,7 +119,7 @@ class YustDatabaseService {
   ///
   /// Be careful with offline functionality.
   /// The result is null if no document was found.
-  Future<(T?, YustException?)> getFirstFromCache<T extends YustDoc>(
+  Future<T?> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -131,7 +131,7 @@ class YustDatabaseService {
   ///
   /// Be careful with offline functionality.
   /// The result is null if no document was found.
-  Future<(T?, YustException?)> getFirstFromDB<T extends YustDoc>(
+  Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -141,7 +141,7 @@ class YustDatabaseService {
         _getParentPath(docSetup));
 
     if (response.isEmpty || response.first.document == null) {
-      return (null, null);
+      return null;
     }
     dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     return _transformDoc<T>(docSetup, response.first.document!);
@@ -157,8 +157,7 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
   }) {
     return Stream.fromFuture(
-            getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy))
-        .map((e) => e.$1);
+        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
   }
 
   /// Returns [YustDoc]s from the server, if available, otherwise from the cache.
@@ -234,7 +233,7 @@ class YustDatabaseService {
           if (e.document == null) {
             return null;
           }
-          return _transformDoc<T>(docSetup, e.document!).$1;
+          return _transformDoc<T>(docSetup, e.document!);
         })
         .whereType<T>()
         .toList();
@@ -302,7 +301,7 @@ class YustDatabaseService {
 
     return lazyPaginationGenerator().map<T?>((e) {
       if (e['document'] == null) return null;
-      return _transformDoc<T>(docSetup, Document.fromJson(e['document'])).$1;
+      return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
     }).whereType<T>();
   }
 
@@ -711,7 +710,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     dynamic document,
   ) {
-    return _transformDoc(docSetup, document as Document).$1;
+    return _transformDoc(docSetup, document as Document);
   }
 
   String _getDatabasePath() => 'projects/$_projectId/databases/(default)';
@@ -886,7 +885,7 @@ class YustDatabaseService {
   }
 
   /// Returns null if no data exists.
-  (T?, YustException?) _transformDoc<T extends YustDoc>(
+  T? _transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     Document document,
   ) {
@@ -894,17 +893,17 @@ class YustDatabaseService {
         ?.map((key, dbValue) => MapEntry(key, _dbValueToValue(dbValue)));
 
     if (json == null) {
-      return (null, null);
+      return null;
     }
 
     try {
       final doc = docSetup.fromJson(json);
       doc.clearUpdateMask();
-      return (doc, null);
+      return doc;
     } catch (e) {
       print(
           '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}: $e ($json)');
-      return (null, YustJsonParseException(e.toString(), json));
+      return null;
     }
   }
 

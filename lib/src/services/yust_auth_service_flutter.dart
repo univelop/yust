@@ -136,8 +136,7 @@ class YustAuthService {
             field: 'authId',
             comparator: YustFilterComparator.equal,
             value: userCredential.user!.uid)
-      ]))
-          .$1;
+      ]));
 
   Future<bool> _tryLinkYustUser(
     UserCredential userCredential,
@@ -147,7 +146,7 @@ class YustAuthService {
         userCredential.user?.email == '') {
       return false;
     }
-    final (user, _) = await Yust.databaseService.getFirst<YustUser>(
+    final user = await Yust.databaseService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
         YustFilter(

@@ -15,7 +15,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   final Future<void> Function(String docPath, Map<String, dynamic>? oldDocument,
       Map<String, dynamic>? newDocument)? onChange;
 
-  YustDatabaseServiceMocked.mocked({this.onChange}) : super.mocked();
+  YustDatabaseServiceMocked.mocked({
+    this.onChange,
+    required super.envCollectionName,
+    required super.useSubcollections,
+  }) : super.mocked();
 
   final _db = <String, List<Map<String, dynamic>>>{};
 
@@ -419,8 +423,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   String _getParentPath(YustDocSetup docSetup, {YustDoc? doc, String? id}) {
     var parentPath = '/documents';
-    if (Yust.useSubcollections && docSetup.forEnvironment) {
-      parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
+    if (useSubcollections && docSetup.forEnvironment) {
+      parentPath += '/$envCollectionName/${docSetup.envId}';
     }
 
     return '$parentPath/${docSetup.collectionName}/${doc?.id ?? id ?? ''}';

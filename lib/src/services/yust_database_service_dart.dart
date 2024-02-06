@@ -33,7 +33,17 @@ class YustDatabaseService {
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
-  YustDatabaseService({DatabaseLogCallback? databaseLogCallback}) {
+  /// Represents the collection name for the tenants.
+  final String envCollectionName;
+
+  /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  final bool useSubcollections;
+
+  YustDatabaseService({
+    DatabaseLogCallback? databaseLogCallback,
+    required this.envCollectionName,
+    required this.useSubcollections,
+  }) {
     if (YustFirestoreApi.instance != null) {
       _api = YustFirestoreApi.instance!;
     }
@@ -50,7 +60,11 @@ class YustDatabaseService {
     };
   }
 
-  YustDatabaseService.mocked({this.dbLogCallback});
+  YustDatabaseService.mocked({
+    required this.envCollectionName,
+    required this.useSubcollections,
+    this.dbLogCallback,
+  });
 
   /// Initializes a document with an id and the time it was created.
   ///
@@ -728,8 +742,8 @@ class YustDatabaseService {
 
   String _getParentPath(YustDocSetup docSetup) {
     var parentPath = '${_getDatabasePath()}/documents';
-    if (Yust.useSubcollections && docSetup.forEnvironment) {
-      parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
+    if (useSubcollections && docSetup.forEnvironment) {
+      parentPath += '/$envCollectionName/${docSetup.envId}';
     }
     if (docSetup.collectionName.contains('/')) {
       final nameParts = docSetup.collectionName.split('/');
@@ -810,7 +824,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
   ) {
     final result = <Filter>[];
-    if (!Yust.useSubcollections && docSetup.forEnvironment) {
+    if (!useSubcollections && docSetup.forEnvironment) {
       result.add(Filter(
           fieldFilter: FieldFilter(
         field: FieldReference(fieldPath: 'envId'),

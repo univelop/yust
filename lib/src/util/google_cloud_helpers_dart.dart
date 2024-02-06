@@ -140,4 +140,13 @@ class GoogleCloudHelpers {
 
     return projectId;
   }
+
+  static Future<String> getInstanceId() async {
+    final instanceId = (await http.get(
+            Uri.parse(
+                "http://metadata.google.internal/computeMetadata/v1/instance/id"),
+            headers: {'Metadata-Flavor': 'Google'}))
+        .body;
+    return instanceId;
+  }
 }

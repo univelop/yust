@@ -10,7 +10,7 @@ class YustAuthService {
   YustAuthService.mocked();
 
   /// Returns the current [AuthState] in a Steam.
-  Stream<AuthState> get authStateStream {
+  Stream<AuthState> getAuthStateStream(Yust yust) {
     throw UnsupportedError('Not supported. No UI available.');
   }
 

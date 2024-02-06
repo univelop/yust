@@ -49,30 +49,29 @@ class Yust {
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
 
-  /// Represents the collection name for the tenants.
-  String envCollectionName;
-
   YustDatabaseService databaseService;
 
   bool mocked = false;
 
-  /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
-  bool useSubcollections;
-
   Yust({
     DatabaseLogCallback? dbLogCallback,
-    this.useSubcollections = false,
-    this.envCollectionName = 'envs',
-  }) : databaseService =
-            YustDatabaseService(databaseLogCallback: dbLogCallback) {
+    bool useSubcollections = false,
+    String envCollectionName = 'envs',
+  }) : databaseService = YustDatabaseService(
+            databaseLogCallback: dbLogCallback,
+            useSubcollections: useSubcollections,
+            envCollectionName: envCollectionName) {
     initializeTimeZones();
   }
 
   Yust.mocked({
     OnChangeCallback? onChange,
-    this.useSubcollections = false,
-    this.envCollectionName = 'envs',
-  })  : databaseService = YustDatabaseServiceMocked.mocked(onChange: onChange),
+    bool useSubcollections = false,
+    String envCollectionName = 'envs',
+  })  : databaseService = YustDatabaseServiceMocked.mocked(
+            onChange: onChange,
+            useSubcollections: useSubcollections,
+            envCollectionName: envCollectionName),
         mocked = true {
     initializeTimeZones();
   }

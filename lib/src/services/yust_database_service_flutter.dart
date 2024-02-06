@@ -20,8 +20,11 @@ class YustDatabaseService {
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
-  YustDatabaseService({DatabaseLogCallback? databaseLogCallback})
-      : _fireStore = FirebaseFirestore.instance {
+  YustDatabaseService({
+    DatabaseLogCallback? databaseLogCallback,
+    required this.envCollectionName,
+    required this.useSubcollections,
+  }) : _fireStore = FirebaseFirestore.instance {
     dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
       statistics.dbStatisticsCallback(action, setup, count,
@@ -31,7 +34,17 @@ class YustDatabaseService {
     };
   }
 
-  YustDatabaseService.mocked({this.dbLogCallback});
+  /// Represents the collection name for the tenants.
+  final String envCollectionName;
+
+  /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  final bool useSubcollections;
+
+  YustDatabaseService.mocked({
+    this.dbLogCallback,
+    required this.envCollectionName,
+    required this.useSubcollections,
+  });
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -503,8 +516,8 @@ class YustDatabaseService {
 
   String _getCollectionPath(YustDocSetup docSetup) {
     var collectionPath = '';
-    if (Yust.useSubcollections && docSetup.forEnvironment) {
-      collectionPath += '${Yust.envCollectionName}/${docSetup.envId}/';
+    if (useSubcollections && docSetup.forEnvironment) {
+      collectionPath += '$envCollectionName/${docSetup.envId}/';
     }
     collectionPath += docSetup.collectionName;
     return collectionPath;
@@ -531,7 +544,7 @@ class YustDatabaseService {
     Query query,
     YustDocSetup<T> docSetup,
   ) {
-    if (!Yust.useSubcollections && docSetup.forEnvironment) {
+    if (!useSubcollections && docSetup.forEnvironment) {
       query = _filterForEnvironment(query, docSetup.envId!);
     }
 

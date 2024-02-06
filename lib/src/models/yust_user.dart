@@ -16,7 +16,8 @@ class YustUser extends YustDoc {
         fromJson: (json) => YustUser.fromJson(json),
       );
 
-  String get searchTag => '${firstName.toLowerCase()} ${lastName.toLowerCase()}'.replaceAll(' ', '_');
+  String get searchTag => '${firstName.toLowerCase()} ${lastName.toLowerCase()}'
+      .replaceAll(' ', '_');
 
   /// The email of the user.
   String email;
@@ -72,9 +73,9 @@ class YustUser extends YustDoc {
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
 
   /// Saves the current [DateTime] as the last login.
-  void setLoginTime() async {
+  void setLoginTime(Yust yust) async {
     lastLogin = Yust.helpers.utcNow();
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+    await yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
   }
 
   /// Returns the user name.
@@ -83,15 +84,17 @@ class YustUser extends YustDoc {
   }
 
   /// Deletes the user.
-  Future<void> delete({String? password, bool deleteAuth = true}) async {
-    await Yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
+  Future<void> delete(Yust yust,
+      {String? password, bool deleteAuth = true}) async {
+    await yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
     if (deleteAuth) await Yust.authService.deleteAccount(password);
   }
 
-  Future<void> linkAuth(String uid, YustAuthenticationMethod? method) async {
+  Future<void> linkAuth(
+      Yust yust, String uid, YustAuthenticationMethod? method) async {
     authId = uid;
     authenticationMethod = method;
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+    await yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
   }
 }
 

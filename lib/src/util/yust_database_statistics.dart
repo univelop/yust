@@ -45,13 +45,8 @@ class YustDatabaseStatistics {
       _statistics.values.map((e) => e[action] ?? 0).sum;
 
   /// Gets the total "read" count for the given action.
-  /// This includes the actions "get" and "aggregate".
-  int getTotalReadCount() => _statistics.values
-      .expand((v) => v.entries
-          .where((e) => [DatabaseLogAction.get, DatabaseLogAction.aggregate]
-              .contains(e.key))
-          .map((e) => e.value))
-      .sum;
+  /// This includes the actions "get"
+  int getTotalReadCount() => getActionCount(DatabaseLogAction.get);
 
   /// Gets the total "write" count for the given action.
   /// This includes the actions "transform", "delete", "save" and "saveNew".

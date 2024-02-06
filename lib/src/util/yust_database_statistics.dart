@@ -11,10 +11,11 @@ class YustDatabaseStatistics {
   void dbStatisticsCallback(
       DatabaseLogAction action, YustDocSetup setup, int count,
       {String? id, List<String>? updateMask, num? aggregationResult}) {
-    _statistics[setup.collectionName] ??= {};
-    _statistics[setup.collectionName]![action] ??= 0;
-    _statistics[setup.collectionName]![action] =
-        _statistics[setup.collectionName]![action]! + count;
+    final collectionGroupName = setup.collectionName.split('/').last;
+    _statistics[collectionGroupName] ??= {};
+    _statistics[collectionGroupName]![action] ??= 0;
+    _statistics[collectionGroupName]![action] =
+        _statistics[collectionGroupName]![action]! + count;
   }
 
   clear() => _statistics.clear();

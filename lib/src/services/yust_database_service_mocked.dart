@@ -10,18 +10,22 @@ import '../yust.dart';
 import 'yust_database_service.dart';
 import 'yust_database_service_shared.dart';
 
+typedef MockDBType = Map<String, List<Map<String, dynamic>>>;
+
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
-  final Future<void> Function(String docPath, Map<String, dynamic>? oldDocument,
-      Map<String, dynamic>? newDocument)? onChange;
+  static OnChangeCallback? onChange;
 
   YustDatabaseServiceMocked.mocked({
-    this.onChange,
+    OnChangeCallback? onChange,
     required super.envCollectionName,
     required super.useSubcollections,
-  }) : super.mocked();
+  }) : super.mocked() {
+    YustDatabaseServiceMocked.onChange =
+        onChange ?? YustDatabaseServiceMocked.onChange;
+  }
 
-  final _db = <String, List<Map<String, dynamic>>>{};
+  static final MockDBType _db = {};
 
   Map<String, List<Map<String, dynamic>>> get db => _db;
 
@@ -440,4 +444,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       return 0.0;
     }
   }
+
+  void clearDb() => _db.clear();
 }

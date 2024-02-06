@@ -44,6 +44,8 @@ typedef OnChangeCallback = Future<void> Function(
 /// It is supporting Firebase Auth, Cloud Firestore and Cloud Storage.
 /// You can use Yust in a flutter and for a server app.
 class Yust {
+  static Yust? instance;
+
   static late YustAuthService authService;
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
@@ -53,7 +55,12 @@ class Yust {
 
   bool mocked = false;
 
+  bool forUI;
+
+  /// Initializes [Yust].
+  /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
   Yust({
+    required this.forUI,
     DatabaseLogCallback? dbLogCallback,
     bool useSubcollections = false,
     String envCollectionName = 'envs',
@@ -64,7 +71,10 @@ class Yust {
     initializeTimeZones();
   }
 
+  /// Initializes [Yust] in a mocked way => use in memory db instead of a real connection to firebase.
+  /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
   Yust.mocked({
+    required this.forUI,
     OnChangeCallback? onChange,
     bool useSubcollections = false,
     String envCollectionName = 'envs',
@@ -102,6 +112,8 @@ class Yust {
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
   }) async {
+    if (forUI) instance = this;
+
     if (mocked) return _initializeMocked();
     // Init timezones
     await GoogleCloudHelpers.initializeFirebase(

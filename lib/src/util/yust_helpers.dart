@@ -37,7 +37,8 @@ class YustHelpers {
     object.removeWhere((key, _) => !keys.contains(key));
   }
 
-  /// Return a string representing [dateTime] in the German date format or another given [format].
+  /// Return a string representing [dateTime] in the German or English date
+  /// format or another given [format].
   String formatDate(DateTime? dateTime,
       {String locale = 'de', String? format}) {
     if (dateTime == null) return '';

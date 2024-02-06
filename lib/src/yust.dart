@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:timezone/data/latest.dart';
 
 import 'models/yust_doc_setup.dart';
@@ -27,6 +28,12 @@ enum DatabaseLogAction {
   aggregate;
 
   const DatabaseLogAction();
+
+  String toJson() => toString().split('.').last;
+
+  static DatabaseLogAction fromJson(String json) =>
+      DatabaseLogAction.values.firstWhereOrNull((e) => e.toJson() == json) ??
+      DatabaseLogAction.get;
 }
 
 typedef DatabaseLogCallback = void Function(

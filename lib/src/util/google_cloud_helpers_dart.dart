@@ -40,8 +40,6 @@ class GoogleCloudHelpers {
       pathToServiceAccountJson: pathToServiceAccountJson,
     );
 
-    print('Current GCP project id: $projectId');
-
     YustFirestoreApi.initialize(
       authClient,
       emulatorAddress != null

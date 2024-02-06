@@ -33,38 +33,56 @@ typedef DatabaseLogCallback = void Function(
     DatabaseLogAction action, YustDocSetup setup, int count,
     {String? id, List<String>? updateMask, num? aggregationResult});
 
+typedef OnChangeCallback = Future<void> Function(
+  String docPath,
+  Map<String, dynamic>? oldDocument,
+  Map<String, dynamic>? newDocument,
+);
+
 /// Yust is the easiest way to connect full stack Dart app to Firebase.
 ///
 /// It is supporting Firebase Auth, Cloud Firestore and Cloud Storage.
 /// You can use Yust in a flutter and for a server app.
 class Yust {
   static late YustAuthService authService;
-  static late YustDatabaseService databaseService;
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
 
-  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
-  static bool useSubcollections = true;
+  /// Represents the collection name for the tenants.
+  String envCollectionName;
 
-  /// Represents the collection name for the tannants.
-  static String envCollectionName = 'envs';
+  YustDatabaseService databaseService;
+
+  bool mocked = false;
+
+  /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  bool useSubcollections;
+
+  Yust({
+    DatabaseLogCallback? dbLogCallback,
+    this.useSubcollections = false,
+    this.envCollectionName = 'envs',
+  }) : databaseService =
+            YustDatabaseService(databaseLogCallback: dbLogCallback) {
+    initializeTimeZones();
+  }
+
+  Yust.mocked({
+    OnChangeCallback? onChange,
+    this.useSubcollections = false,
+    this.envCollectionName = 'envs',
+  })  : databaseService = YustDatabaseServiceMocked.mocked(onChange: onChange),
+        mocked = true {
+    initializeTimeZones();
+  }
 
   /// Initializes [Yust] with mocked services for testing.
   ///
   /// This method should be called before any usage of the yust package.
-  static Future<void> initializeMocked({
-    String envCollectionName = 'envs',
-    Future<void> Function(
-      String docPath,
-      Map<String, dynamic>? oldDocument,
-      Map<String, dynamic>? newDocument,
-    )? onChange,
-  }) async {
+  void _initializeMocked() {
     initializeTimeZones();
-    Yust.envCollectionName = envCollectionName;
     Yust.authService = YustAuthService.mocked();
-    Yust.databaseService = YustDatabaseServiceMocked.mocked(onChange: onChange);
   }
 
   /// Initializes [Yust].
@@ -76,20 +94,17 @@ class Yust {
   /// [envCollectionName] represents the collection name for the tannants.
   /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
   /// Use [dbLogCallback] to provide a function that will get called on each DatabaseCall
-  static Future<void> initialize({
+  Future<void> initialize({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
     String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
     YustDocSetup<YustUser>? userSetup,
-    bool useSubcollections = false,
-    String envCollectionName = 'envs',
     DatabaseLogCallback? dbLogCallback,
   }) async {
+    if (mocked) return _initializeMocked();
     // Init timezones
-    initializeTimeZones();
-
     await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
@@ -99,11 +114,9 @@ class Yust {
     );
 
     Yust.userSetup = userSetup ?? YustUser.setup();
-    Yust.useSubcollections = useSubcollections;
-    Yust.envCollectionName = envCollectionName;
+
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
     // Note that the data connection for the emulator is handled in [initializeFirebase]
-    Yust.databaseService = YustDatabaseService(dbLogCallback: dbLogCallback);
     Yust.fileService = YustFileService(emulatorAddress: emulatorAddress);
   }
 }

@@ -10,6 +10,7 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
+import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../util/yust_firestore_api.dart';
@@ -30,14 +31,23 @@ class YustDatabaseService {
   late final FirestoreApi _api;
   late final String _projectId;
   DatabaseLogCallback? dbLogCallback;
+  YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
-  YustDatabaseService({this.dbLogCallback}) {
+  YustDatabaseService({DatabaseLogCallback? databaseLogCallback}) {
     if (YustFirestoreApi.instance != null) {
       _api = YustFirestoreApi.instance!;
     }
     if (YustFirestoreApi.projectId != null) {
       _projectId = YustFirestoreApi.projectId!;
     }
+
+    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+        {String? id, List<String>? updateMask, num? aggregationResult}) {
+      statistics.dbStatisticsCallback(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+      databaseLogCallback?.call(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+    };
   }
 
   YustDatabaseService.mocked({this.dbLogCallback});
@@ -84,6 +94,7 @@ class YustDatabaseService {
     try {
       final response = await _api.projects.databases.documents
           .get(_getDocumentPath(docSetup, id), transaction: transaction);
+
       dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
       return _transformDoc<T>(docSetup, response);
     } on ApiRequestError {

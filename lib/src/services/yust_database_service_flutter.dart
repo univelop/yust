@@ -6,6 +6,7 @@ import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
 import '../util/object_helper.dart';
+import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
@@ -17,9 +18,18 @@ class YustDatabaseService {
   // exception is a good indicator for the developer )
   late final FirebaseFirestore _fireStore;
   DatabaseLogCallback? dbLogCallback;
+  YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
-  YustDatabaseService({this.dbLogCallback})
-      : _fireStore = FirebaseFirestore.instance;
+  YustDatabaseService({DatabaseLogCallback? databaseLogCallback})
+      : _fireStore = FirebaseFirestore.instance {
+    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+        {String? id, List<String>? updateMask, num? aggregationResult}) {
+      statistics.dbStatisticsCallback(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+      databaseLogCallback?.call(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+    };
+  }
 
   YustDatabaseService.mocked({this.dbLogCallback});
 

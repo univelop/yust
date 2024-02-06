@@ -38,10 +38,19 @@ class YustHelpers {
   }
 
   /// Return a string representing [dateTime] in the German date format or another given [format].
-  String formatDate(DateTime? dateTime, {String? format}) {
+  String formatDate(DateTime? dateTime,
+      {String locale = 'de', String? format}) {
     if (dateTime == null) return '';
-    var formatter = DateFormat(format ?? 'dd.MM.yyyy');
-    return formatter.format(utcToLocal(dateTime));
+
+    switch (locale) {
+      case 'en':
+        return DateFormat(format ?? 'MM/dd/yyyy', locale)
+            .format(utcToLocal(dateTime));
+      case 'de':
+      default:
+        return DateFormat(format ?? 'dd.MM.yyyy', locale)
+            .format(utcToLocal(dateTime));
+    }
   }
 
   /// Return a string representing [dateTime] in the German time format or another given [format].

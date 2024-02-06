@@ -98,7 +98,7 @@ class Yust {
   //
   /// This method should be called before any usage of the yust package.
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [pathToServiceAccountJson] if you are connecting directly with Dart.
-  /// Set the [emulatorAddress], if you want to emulate Firebase. [buildRelease] must be set to true if you want to create an iOS release. [userSetup] let you overwrite the default [UserSetup].
+  /// Set the [emulatorAddress], if you want to emulate Firebase. [userSetup] let you overwrite the default [UserSetup].
   /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
   /// [envCollectionName] represents the collection name for the tannants.
   /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
@@ -108,7 +108,6 @@ class Yust {
     String? pathToServiceAccountJson,
     String? projectId,
     String? emulatorAddress,
-    bool buildRelease = false,
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
   }) async {
@@ -121,7 +120,6 @@ class Yust {
       pathToServiceAccountJson: pathToServiceAccountJson,
       projectId: projectId,
       emulatorAddress: emulatorAddress,
-      buildRelease: buildRelease,
     );
 
     Yust.userSetup = userSetup ?? YustUser.setup();

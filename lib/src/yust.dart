@@ -58,7 +58,7 @@ class Yust {
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
 
-  YustDatabaseService databaseService;
+  late YustDatabaseService databaseService;
 
   bool mocked = false;
 
@@ -66,30 +66,29 @@ class Yust {
 
   /// Initializes [Yust].
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
-  Yust({
-    required this.forUI,
-    DatabaseLogCallback? dbLogCallback,
-    bool useSubcollections = false,
-    String envCollectionName = 'envs',
-  }) : databaseService = YustDatabaseService(
-            databaseLogCallback: dbLogCallback,
-            useSubcollections: useSubcollections,
-            envCollectionName: envCollectionName) {
+  Yust(
+      {required this.forUI,
+      this.dbLogCallback,
+      this.useSubcollections = false,
+      this.envCollectionName = 'envs',
+      this.onChange}) {
     initializeTimeZones();
   }
 
+  final DatabaseLogCallback? dbLogCallback;
+  final OnChangeCallback? onChange;
+  final bool useSubcollections;
+  final String envCollectionName;
+
   /// Initializes [Yust] in a mocked way => use in memory db instead of a real connection to firebase.
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
-  Yust.mocked({
-    required this.forUI,
-    OnChangeCallback? onChange,
-    bool useSubcollections = false,
-    String envCollectionName = 'envs',
-  })  : databaseService = YustDatabaseServiceMocked.mocked(
-            onChange: onChange,
-            useSubcollections: useSubcollections,
-            envCollectionName: envCollectionName),
-        mocked = true {
+  Yust.mocked(
+      {required this.forUI,
+      this.useSubcollections = false,
+      this.envCollectionName = 'envs',
+      this.dbLogCallback,
+      this.onChange})
+      : mocked = true {
     initializeTimeZones();
   }
 
@@ -120,14 +119,25 @@ class Yust {
   }) async {
     if (forUI) instance = this;
 
-    if (mocked) return _initializeMocked();
-    // Init timezones
+    if (mocked) {
+      databaseService = YustDatabaseServiceMocked.mocked(
+          onChange: onChange,
+          useSubcollections: useSubcollections,
+          envCollectionName: envCollectionName);
+      return _initializeMocked();
+    }
+
     await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
       projectId: projectId,
       emulatorAddress: emulatorAddress,
     );
+
+    databaseService = YustDatabaseService(
+        databaseLogCallback: dbLogCallback,
+        useSubcollections: useSubcollections,
+        envCollectionName: envCollectionName);
 
     Yust.userSetup = userSetup ?? YustUser.setup();
 

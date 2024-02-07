@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:googleapis_auth/auth_io.dart';
-// ignore: implementation_imports
-import 'package:googleapis_auth/src/auth_http_utils.dart';
+
 import 'package:http/http.dart';
 import 'package:timezone/data/latest.dart';
 
@@ -56,6 +55,7 @@ typedef OnChangeCallback = Future<void> Function(
 /// You can use Yust in a flutter and for a server app.
 class Yust {
   static Yust? instance;
+  static AccessCredentials? credentials;
 
   static late YustAuthService authService;
   static late YustFileService fileService;
@@ -146,6 +146,11 @@ class Yust {
       credentials: credentials,
     );
 
+    if (authClient != null && Yust.credentials == null) {
+      Yust.credentials = (authClient as AuthClient).credentials;
+      print('Set new Yust.credentials');
+    }
+
     databaseService = YustDatabaseService(
       client: authClient,
       databaseLogCallback: dbLogCallback,
@@ -165,7 +170,4 @@ class Yust {
   closeClient() {
     authClient?.close();
   }
-
-  AccessCredentials? get credentials =>
-      (authClient as AuthClient?)?.credentials;
 }

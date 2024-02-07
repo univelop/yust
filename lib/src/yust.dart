@@ -57,6 +57,7 @@ class Yust {
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
+  static late String projectId;
 
   late YustDatabaseService databaseService;
 
@@ -112,11 +113,12 @@ class Yust {
   Future<void> initialize({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
-    String? projectId,
+    required String projectId,
     String? emulatorAddress,
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
   }) async {
+    Yust.projectId = projectId;
     if (forUI) instance = this;
 
     if (mocked) {
@@ -127,14 +129,14 @@ class Yust {
       return _initializeMocked();
     }
 
-    await GoogleCloudHelpers.initializeFirebase(
+    final authClient = await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
-      projectId: projectId,
       emulatorAddress: emulatorAddress,
     );
 
     databaseService = YustDatabaseService(
+        authClient: authClient,
         databaseLogCallback: dbLogCallback,
         useSubcollections: useSubcollections,
         envCollectionName: envCollectionName);
@@ -143,6 +145,10 @@ class Yust {
 
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
     // Note that the data connection for the emulator is handled in [initializeFirebase]
-    Yust.fileService = YustFileService(emulatorAddress: emulatorAddress);
+    Yust.fileService = YustFileService(
+      authClient: authClient,
+      emulatorAddress: emulatorAddress,
+      projectId: projectId,
+    );
   }
 }

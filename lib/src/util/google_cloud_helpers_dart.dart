@@ -3,15 +3,19 @@ import 'dart:io';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
+// ignore: implementation_imports
+import 'package:googleapis_auth/src/auth_http_utils.dart';
+
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
-import 'yust_firestore_api.dart';
-import 'yust_storage_api.dart';
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
+  static AccessCredentials? credentials;
+
   /// Initializes firebase
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
@@ -20,10 +24,9 @@ class GoogleCloudHelpers {
   /// like environment variables, etc.
   /// Set the [emulatorAddress], if you want to emulate Firebase.
   /// [buildRelease] must be set to true if you want to create an iOS release.
-  static Future<void> initializeFirebase({
+  static Future<AuthClient> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
-    String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {
@@ -36,25 +39,8 @@ class GoogleCloudHelpers {
       scopes: scopes,
       pathToServiceAccountJson: pathToServiceAccountJson,
     );
-    final projectId = await getProjectId(
-      pathToServiceAccountJson: pathToServiceAccountJson,
-    );
 
-    YustFirestoreApi.initialize(
-      authClient,
-      emulatorAddress != null
-          ? 'http://$emulatorAddress:8080/'
-          : 'https://firestore.googleapis.com/',
-      projectId: projectId,
-    );
-
-    YustStorageApi.initialize(
-      authClient,
-      emulatorAddress != null
-          ? 'http://$emulatorAddress:9199/'
-          : 'https://storage.googleapis.com/',
-      projectId: projectId,
-    );
+    return authClient;
   }
 
   /// Creates an auth client for the google cloud environment.
@@ -63,11 +49,16 @@ class GoogleCloudHelpers {
   /// Else the client is created with the application default credentials (e.g. from environment variables)
   ///
   /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
-  static Future<AutoRefreshingAuthClient> createAuthClient(
+  static Future<AuthClient> createAuthClient(
       {required List<String> scopes, String? pathToServiceAccountJson}) async {
-    final AutoRefreshingAuthClient authClient;
+    late AuthClient authClient;
+    if (credentials != null) {
+      final baseClient = Client();
+      authClient = AuthenticatedClient(baseClient, credentials!);
+    }
     if (pathToServiceAccountJson == null) {
       authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
+      credentials ??= authClient.credentials;
     } else {
       final serviceAccountJson =
           jsonDecode(await File(pathToServiceAccountJson).readAsString());
@@ -79,6 +70,7 @@ class GoogleCloudHelpers {
         accountCredentials,
         scopes,
       );
+      credentials ??= authClient.credentials;
     }
     return authClient;
   }

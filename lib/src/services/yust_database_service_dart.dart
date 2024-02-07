@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:googleapis/firestore/v1.dart';
+import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../extensions/date_time_extension.dart';
@@ -13,10 +14,11 @@ import '../models/yust_order_by.dart';
 import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
-import '../util/yust_firestore_api.dart';
 import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
+
+const rootUrl = 'https://firestore.googleapis.com/';
 
 enum AggregationType {
   count,
@@ -39,17 +41,15 @@ class YustDatabaseService {
   /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
   final bool useSubcollections;
 
+  final Client authClient;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
+    required this.authClient,
     required this.envCollectionName,
     required this.useSubcollections,
   }) {
-    if (YustFirestoreApi.instance != null) {
-      _api = YustFirestoreApi.instance!;
-    }
-    if (YustFirestoreApi.projectId != null) {
-      _projectId = YustFirestoreApi.projectId!;
-    }
+    _api = FirestoreApi(authClient, rootUrl: rootUrl);
 
     dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
@@ -64,7 +64,7 @@ class YustDatabaseService {
     required this.envCollectionName,
     required this.useSubcollections,
     this.dbLogCallback,
-  });
+  }) : authClient = Client();
 
   /// Initializes a document with an id and the time it was created.
   ///
@@ -293,8 +293,7 @@ class YustDatabaseService {
     int pageSize = 5000,
   }) {
     final parent = _getParentPath(docSetup);
-    final url =
-        '${YustFirestoreApi.rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
+    final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
@@ -306,11 +305,10 @@ class YustDatabaseService {
             limit: pageSize,
             offset: lastOffset);
         final body = jsonEncode(request);
-        final result = await YustFirestoreApi.httpClient?.post(
+        final result = await authClient.post(
           Uri.parse(url),
           body: body,
         );
-        if (result == null) return;
 
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));

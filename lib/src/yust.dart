@@ -66,6 +66,8 @@ class Yust {
 
   bool forUI;
 
+  Client? authClient;
+
   /// Initializes [Yust].
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
   Yust(
@@ -132,7 +134,7 @@ class Yust {
       return _initializeMocked();
     }
 
-    Client? authClient = await GoogleCloudHelpers.initializeFirebase(
+    authClient = await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
       emulatorAddress: emulatorAddress,
@@ -152,5 +154,9 @@ class Yust {
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );
+  }
+
+  closeClient() {
+    authClient?.close();
   }
 }

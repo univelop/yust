@@ -54,25 +54,28 @@ class GoogleCloudHelpers {
   static Future<AuthClient> createAuthClient(
       {required List<String> scopes, String? pathToServiceAccountJson}) async {
     late AuthClient authClient;
-    if (credentials != null) {
-      final baseClient = Client();
-      authClient = AuthenticatedClient(baseClient, credentials!);
-    } else if (pathToServiceAccountJson == null) {
-      authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
-      credentials ??= authClient.credentials;
-    } else {
-      final serviceAccountJson =
-          jsonDecode(await File(pathToServiceAccountJson).readAsString());
 
-      final accountCredentials =
-          ServiceAccountCredentials.fromJson(serviceAccountJson);
+    if (credentials == null) {
+      if (pathToServiceAccountJson == null) {
+        final tmpClient =
+            await clientViaApplicationDefaultCredentials(scopes: scopes);
+        credentials ??= tmpClient.credentials;
+      } else {
+        final serviceAccountJson =
+            jsonDecode(await File(pathToServiceAccountJson).readAsString());
 
-      authClient = await clientViaServiceAccount(
-        accountCredentials,
-        scopes,
-      );
-      credentials ??= authClient.credentials;
+        final accountCredentials =
+            ServiceAccountCredentials.fromJson(serviceAccountJson);
+
+        final tmpClient =
+            await clientViaServiceAccount(accountCredentials, scopes);
+        credentials ??= tmpClient.credentials;
+      }
     }
+
+    final baseClient = Client();
+    authClient = AuthenticatedClient(baseClient, credentials!,
+        closeUnderlyingClient: true);
     return authClient;
   }
 

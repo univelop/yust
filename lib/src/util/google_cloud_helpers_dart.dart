@@ -27,6 +27,7 @@ class GoogleCloudHelpers {
   static Future<AuthClient> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
+    required String projectId,
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {

@@ -20,12 +20,12 @@ class YustAuthService {
 
   YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
 
-  Stream<AuthState> getAuthStateStream(Yust yust) {
+  Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
         Yust.instance!.databaseService
             .getFromDB<YustUser>(Yust.userSetup, user.uid)
-            .then((yustUser) => yustUser?.setLoginTime(yust));
+            .then((yustUser) => yustUser?.setLoginTime(Yust.instance!));
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
@@ -43,7 +43,7 @@ class YustAuthService {
     );
   }
 
-  Future<YustUser?> signInWithMicrosoft(Yust yust) async {
+  Future<YustUser?> signInWithMicrosoft() async {
     final microsoftProvider = MicrosoftAuthProvider();
     return _signInWithProvider(
         microsoftProvider, YustAuthenticationMethod.microsoft);
@@ -54,17 +54,17 @@ class YustAuthService {
   //   return _signInWithProvider(githubProvider, YustAuthenticationMethod.github);
   // }
 
-  Future<YustUser?> signInWithGoogle(Yust yust) async {
+  Future<YustUser?> signInWithGoogle() async {
     final googleProvider = GoogleAuthProvider();
     return _signInWithProvider(googleProvider, YustAuthenticationMethod.google);
   }
 
-  Future<YustUser?> signInWithApple(Yust yust) async {
+  Future<YustUser?> signInWithApple() async {
     final appleProvider = AppleAuthProvider();
     return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
   }
 
-  Future<YustUser?> signInWithOpenId(Yust yust, String providerId) async {
+  Future<YustUser?> signInWithOpenId(String providerId) async {
     final provider = OAuthProvider(providerId);
     return _signInWithProvider(provider, YustAuthenticationMethod.openId);
   }
@@ -87,7 +87,6 @@ class YustAuthService {
     final firstName = _getFirstName(nameParts);
 
     return await _createUser(
-      
       firstName: firstName,
       lastName: lastName,
       email: _getEmail(userCredential),
@@ -220,7 +219,7 @@ class YustAuthService {
     await fireAuth.sendPasswordResetEmail(email: email);
   }
 
-  Future<void> changeEmail(Yust yust, String email, String password) async {
+  Future<void> changeEmail(String email, String password) async {
     final user = await Yust.instance!.databaseService
         .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
     if (user?.authenticationMethod == null ||

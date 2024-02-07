@@ -23,7 +23,7 @@ class GoogleCloudHelpers {
   static Future<void> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
-    String? projectId,
+    required String projectId,
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {
@@ -34,9 +34,6 @@ class GoogleCloudHelpers {
 
     final authClient = await createAuthClient(
       scopes: scopes,
-      pathToServiceAccountJson: pathToServiceAccountJson,
-    );
-    final projectId = await getProjectId(
       pathToServiceAccountJson: pathToServiceAccountJson,
     );
 

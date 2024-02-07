@@ -112,7 +112,7 @@ class Yust {
   Future<void> initialize({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
-    String? projectId,
+    required String projectId,
     String? emulatorAddress,
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,

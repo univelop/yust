@@ -16,6 +16,7 @@ class GoogleCloudHelpers {
     String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
+    AccessCredentials? credentials,
   }) async {
     // For the moment don't initialize iOS via config for release
     if (!kIsWeb && buildRelease && Platform.isIOS) {

@@ -1,4 +1,7 @@
 import 'package:collection/collection.dart';
+import 'package:googleapis_auth/auth_io.dart';
+// ignore: implementation_imports
+import 'package:googleapis_auth/src/auth_http_utils.dart';
 import 'package:http/http.dart';
 import 'package:timezone/data/latest.dart';
 
@@ -70,12 +73,13 @@ class Yust {
 
   /// Initializes [Yust].
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
-  Yust(
-      {required this.forUI,
-      this.dbLogCallback,
-      this.useSubcollections = false,
-      this.envCollectionName = 'envs',
-      this.onChange}) {
+  Yust({
+    required this.forUI,
+    this.dbLogCallback,
+    this.useSubcollections = false,
+    this.envCollectionName = 'envs',
+    this.onChange,
+  }) {
     initializeTimeZones();
   }
 
@@ -120,6 +124,7 @@ class Yust {
     String? emulatorAddress,
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
+    AccessCredentials? credentials,
   }) async {
     if (forUI) instance = this;
 
@@ -138,6 +143,7 @@ class Yust {
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
       emulatorAddress: emulatorAddress,
+      credentials: credentials,
     );
 
     databaseService = YustDatabaseService(
@@ -159,4 +165,7 @@ class Yust {
   closeClient() {
     authClient?.close();
   }
+
+  AccessCredentials? get credentials =>
+      (authClient as AuthClient?)?.credentials;
 }

@@ -14,8 +14,6 @@ import 'yust_exception.dart';
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
-  static AccessCredentials? credentials;
-
   /// Initializes firebase
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
@@ -31,7 +29,14 @@ class GoogleCloudHelpers {
     String? pathToServiceAccountJson,
     String? emulatorAddress,
     bool buildRelease = false,
+    AccessCredentials? credentials,
   }) async {
+    if (credentials != null) {
+      final baseClient = Client();
+      return AuthenticatedClient(baseClient, credentials,
+          closeUnderlyingClient: true);
+    }
+
     final scopes = [
       FirestoreApi.datastoreScope,
       StorageApi.devstorageFullControlScope,
@@ -53,28 +58,25 @@ class GoogleCloudHelpers {
   /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
   static Future<AuthClient> createAuthClient(
       {required List<String> scopes, String? pathToServiceAccountJson}) async {
-    late AuthClient authClient;
+    late AccessCredentials credentials;
+    if (pathToServiceAccountJson == null) {
+      final tmpClient =
+          await clientViaApplicationDefaultCredentials(scopes: scopes);
+      credentials = tmpClient.credentials;
+    } else {
+      final serviceAccountJson =
+          jsonDecode(await File(pathToServiceAccountJson).readAsString());
 
-    if (credentials == null) {
-      if (pathToServiceAccountJson == null) {
-        final tmpClient =
-            await clientViaApplicationDefaultCredentials(scopes: scopes);
-        credentials ??= tmpClient.credentials;
-      } else {
-        final serviceAccountJson =
-            jsonDecode(await File(pathToServiceAccountJson).readAsString());
+      final accountCredentials =
+          ServiceAccountCredentials.fromJson(serviceAccountJson);
 
-        final accountCredentials =
-            ServiceAccountCredentials.fromJson(serviceAccountJson);
-
-        final tmpClient =
-            await clientViaServiceAccount(accountCredentials, scopes);
-        credentials ??= tmpClient.credentials;
-      }
+      final tmpClient =
+          await clientViaServiceAccount(accountCredentials, scopes);
+      credentials = tmpClient.credentials;
     }
 
     final baseClient = Client();
-    authClient = AuthenticatedClient(baseClient, credentials!,
+    final authClient = AuthenticatedClient(baseClient, credentials,
         closeUnderlyingClient: true);
     return authClient;
   }

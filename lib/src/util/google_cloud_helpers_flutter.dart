@@ -4,12 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
+import 'package:http/http.dart';
 
 import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 
 class GoogleCloudHelpers {
-  static Future<void> initializeFirebase({
+  static Future<Client> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
     String? projectId,
@@ -42,6 +43,7 @@ class GoogleCloudHelpers {
       FirebaseFirestore.instance.settings =
           const Settings(persistenceEnabled: true);
     }
+    return Client();
   }
 
   static FirebaseOptions? fromMap(Map<String, String>? map) {

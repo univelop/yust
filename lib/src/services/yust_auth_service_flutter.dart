@@ -23,7 +23,7 @@ class YustAuthService {
   Stream<AuthState> getAuthStateStream(Yust yust) {
     return fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
-        yust.databaseService
+        Yust.instance!.databaseService
             .getFromDB<YustUser>(Yust.userSetup, user.uid)
             .then((yustUser) => yustUser?.setLoginTime(yust));
       }
@@ -46,7 +46,7 @@ class YustAuthService {
   Future<YustUser?> signInWithMicrosoft(Yust yust) async {
     final microsoftProvider = MicrosoftAuthProvider();
     return _signInWithProvider(
-        yust, microsoftProvider, YustAuthenticationMethod.microsoft);
+        microsoftProvider, YustAuthenticationMethod.microsoft);
   }
 
   // Future<YustUser?> signInWithGithub() async {
@@ -56,23 +56,20 @@ class YustAuthService {
 
   Future<YustUser?> signInWithGoogle(Yust yust) async {
     final googleProvider = GoogleAuthProvider();
-    return _signInWithProvider(
-        yust, googleProvider, YustAuthenticationMethod.google);
+    return _signInWithProvider(googleProvider, YustAuthenticationMethod.google);
   }
 
   Future<YustUser?> signInWithApple(Yust yust) async {
     final appleProvider = AppleAuthProvider();
-    return _signInWithProvider(
-        yust, appleProvider, YustAuthenticationMethod.apple);
+    return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
   }
 
   Future<YustUser?> signInWithOpenId(Yust yust, String providerId) async {
     final provider = OAuthProvider(providerId);
-    return _signInWithProvider(yust, provider, YustAuthenticationMethod.openId);
+    return _signInWithProvider(provider, YustAuthenticationMethod.openId);
   }
 
   Future<YustUser?> _signInWithProvider(
-    Yust yust,
     AuthProvider provider,
     YustAuthenticationMethod? method, {
     bool redirect = false,
@@ -80,11 +77,9 @@ class YustAuthService {
     final userCredential =
         await _signInAndGetUserCredential(provider, redirect: redirect);
     if (_signInFailed(userCredential)) return null;
-    final connectedYustUser =
-        await _maybeGetConnectedYustUser(yust, userCredential);
+    final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
-    final successfullyLinked =
-        await _tryLinkYustUser(yust, userCredential, method);
+    final successfullyLinked = await _tryLinkYustUser(userCredential, method);
     if (successfullyLinked) return null;
 
     final nameParts = _extractNameParts(userCredential);
@@ -92,7 +87,7 @@ class YustAuthService {
     final firstName = _getFirstName(nameParts);
 
     return await _createUser(
-      yust,
+      
       firstName: firstName,
       lastName: lastName,
       email: _getEmail(userCredential),
@@ -136,10 +131,10 @@ class YustAuthService {
           : await FirebaseAuth.instance.signInWithProvider(provider);
 
   Future<YustUser?> _maybeGetConnectedYustUser(
-    Yust yust,
     UserCredential userCredential,
   ) async =>
-      (await yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
+      (await Yust.instance!.databaseService
+          .getFirst<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',
             comparator: YustFilterComparator.equal,
@@ -147,7 +142,6 @@ class YustAuthService {
       ]));
 
   Future<bool> _tryLinkYustUser(
-    Yust yust,
     UserCredential userCredential,
     YustAuthenticationMethod? method,
   ) async {
@@ -155,7 +149,7 @@ class YustAuthService {
         userCredential.user?.email == '') {
       return false;
     }
-    final user = await yust.databaseService.getFirst<YustUser>(
+    final user = await Yust.instance!.databaseService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
         YustFilter(
@@ -166,12 +160,11 @@ class YustAuthService {
       ],
     );
     if (user == null) return false;
-    await user.linkAuth(yust, userCredential.user!.uid, method);
+    await user.linkAuth(Yust.instance!, userCredential.user!.uid, method);
     return true;
   }
 
   Future<YustUser?> signUp(
-    Yust yust,
     String firstName,
     String lastName,
     String email,
@@ -180,12 +173,11 @@ class YustAuthService {
   }) async {
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final successfullyLinked = await _tryLinkYustUser(
-        yust, userCredential, YustAuthenticationMethod.mail);
+    final successfullyLinked =
+        await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
     if (successfullyLinked) return null;
 
     return await _createUser(
-      yust,
       firstName: firstName,
       email: email,
       lastName: lastName,
@@ -196,8 +188,7 @@ class YustAuthService {
     );
   }
 
-  Future<YustUser> _createUser(
-    Yust yust, {
+  Future<YustUser> _createUser({
     required String firstName,
     required String lastName,
     required String email,
@@ -216,7 +207,8 @@ class YustAuthService {
       ..authenticationMethod = authenticationMethod
       ..domain = domain ?? email.split('@').last
       ..gender = gender;
-    await yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+    await Yust.instance!.databaseService
+        .saveDoc<YustUser>(Yust.userSetup, user);
     return user;
   }
 
@@ -229,7 +221,7 @@ class YustAuthService {
   }
 
   Future<void> changeEmail(Yust yust, String email, String password) async {
-    final user = await yust.databaseService
+    final user = await Yust.instance!.databaseService
         .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
     if (user?.authenticationMethod == null ||
         user?.authenticationMethod == YustAuthenticationMethod.mail) {
@@ -242,7 +234,8 @@ class YustAuthService {
 
     if (user != null) {
       user.email = email;
-      await yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+      await Yust.instance!.databaseService
+          .saveDoc<YustUser>(Yust.userSetup, user);
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart';
 
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
@@ -21,6 +22,7 @@ class YustDatabaseService {
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
   YustDatabaseService({
+    Client? authClient,
     DatabaseLogCallback? databaseLogCallback,
     required this.envCollectionName,
     required this.useSubcollections,

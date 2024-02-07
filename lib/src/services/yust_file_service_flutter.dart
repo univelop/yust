@@ -4,13 +4,17 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
 
 class YustFileService {
-  YustFileService({String? emulatorAddress})
-      : _fireStorage = FirebaseStorage.instance {
+  YustFileService({
+    required AuthClient? authClient,
+    required String? emulatorAddress,
+    required String projectId,
+  }) : _fireStorage = FirebaseStorage.instance {
     if (emulatorAddress != null) {
       _fireStorage.useStorageEmulator(emulatorAddress, 9199);
     }

@@ -22,10 +22,11 @@ class YustDatabaseService {
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
   YustDatabaseService({
-    Client? authClient,
     DatabaseLogCallback? databaseLogCallback,
+    Client? client,
     required this.envCollectionName,
     required this.useSubcollections,
+    String? emulatorAddress,
   }) : _fireStore = FirebaseFirestore.instance {
     dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {

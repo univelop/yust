@@ -3,9 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:googleapis/storage/v1.dart';
-import 'package:googleapis_auth/auth_io.dart';
+import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
+
+const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
 /// Handels Filestorage requests for Google Cloud Storage.
 ///
@@ -16,16 +18,14 @@ class YustFileService {
   final String bucketName;
 
   YustFileService({
-    required AuthClient authClient,
+    Client? authClient,
     required String? emulatorAddress,
     required String projectId,
   })  : bucketName = '$projectId.appspot.com',
-        _storageApi = StorageApi(
-          authClient,
-          rootUrl: emulatorAddress != null
-              ? 'http://$emulatorAddress:9199/'
-              : 'https://storage.googleapis.com/',
-        );
+        _storageApi = StorageApi(authClient!,
+            rootUrl: emulatorAddress != null
+                ? 'http://$emulatorAddress:9199/'
+                : firebaseStorageUrl);
 
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].

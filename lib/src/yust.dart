@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:http/http.dart';
 import 'package:timezone/data/latest.dart';
 
 import 'models/yust_doc_setup.dart';
@@ -118,8 +119,10 @@ class Yust {
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
   }) async {
-    Yust.projectId = projectId;
     if (forUI) instance = this;
+
+    Yust.projectId = projectId;
+    Yust.userSetup = userSetup ?? YustUser.setup();
 
     if (mocked) {
       databaseService = YustDatabaseServiceMocked.mocked(
@@ -129,22 +132,21 @@ class Yust {
       return _initializeMocked();
     }
 
-    final authClient = await GoogleCloudHelpers.initializeFirebase(
+    Client? authClient = await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
       emulatorAddress: emulatorAddress,
     );
 
     databaseService = YustDatabaseService(
-        authClient: authClient,
-        databaseLogCallback: dbLogCallback,
-        useSubcollections: useSubcollections,
-        envCollectionName: envCollectionName);
-
-    Yust.userSetup = userSetup ?? YustUser.setup();
+      client: authClient,
+      databaseLogCallback: dbLogCallback,
+      useSubcollections: useSubcollections,
+      envCollectionName: envCollectionName,
+      emulatorAddress: emulatorAddress,
+    );
 
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
-    // Note that the data connection for the emulator is handled in [initializeFirebase]
     Yust.fileService = YustFileService(
       authClient: authClient,
       emulatorAddress: emulatorAddress,

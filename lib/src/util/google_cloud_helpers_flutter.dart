@@ -10,7 +10,7 @@ import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 
 class GoogleCloudHelpers {
-  static Future<Client> initializeFirebase({
+  static Future<Client?> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
     String? projectId,
@@ -43,7 +43,7 @@ class GoogleCloudHelpers {
       FirebaseFirestore.instance.settings =
           const Settings(persistenceEnabled: true);
     }
-    return Client();
+    return null;
   }
 
   static FirebaseOptions? fromMap(Map<String, String>? map) {

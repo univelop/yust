@@ -24,10 +24,11 @@ class GoogleCloudHelpers {
   /// like environment variables, etc.
   /// Set the [emulatorAddress], if you want to emulate Firebase.
   /// [buildRelease] must be set to true if you want to create an iOS release.
-  static Future<AuthClient> initializeFirebase({
+  ///
+  /// Returns an [Client] (if in dart-only env) which can be used to authenticate with other google cloud services.
+  static Future<Client?> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
-    required String projectId,
     String? emulatorAddress,
     bool buildRelease = false,
   }) async {
@@ -56,8 +57,7 @@ class GoogleCloudHelpers {
     if (credentials != null) {
       final baseClient = Client();
       authClient = AuthenticatedClient(baseClient, credentials!);
-    }
-    if (pathToServiceAccountJson == null) {
+    } else if (pathToServiceAccountJson == null) {
       authClient = await clientViaApplicationDefaultCredentials(scopes: scopes);
       credentials ??= authClient.credentials;
     } else {
@@ -110,7 +110,17 @@ class GoogleCloudHelpers {
 
   /// Gets the google cloud platform the code is running on.
   static GoogleCloudPlatform getPlatform() {
-    if (Platform.environment.containsKey('K_SERVICE')) {
+    final platformOverride = Platform.environment['YUST_PLATFORM'];
+    if (platformOverride != null) {
+      switch (platformOverride) {
+        case 'SERVICE':
+          return GoogleCloudPlatform.cloudRunService;
+        case 'JOB':
+          return GoogleCloudPlatform.cloudRunJob;
+        default:
+          return GoogleCloudPlatform.local;
+      }
+    } else if (Platform.environment.containsKey('K_SERVICE')) {
       return GoogleCloudPlatform.cloudRunService;
     } else if (Platform.environment.containsKey('CLOUD_RUN_JOB')) {
       return GoogleCloudPlatform.cloudRunJob;

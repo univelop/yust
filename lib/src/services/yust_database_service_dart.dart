@@ -18,7 +18,7 @@ import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
-const rootUrl = 'https://firestore.googleapis.com/';
+const firestoreApiUrl = 'https://firestore.googleapis.com/';
 
 enum AggregationType {
   count,
@@ -31,7 +31,6 @@ enum AggregationType {
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
   late final FirestoreApi _api;
-  late final String _projectId;
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
@@ -43,13 +42,23 @@ class YustDatabaseService {
 
   final Client authClient;
 
+  /// Root (aka base) URL for the Firestore REST/GRPC API.
+  final String rootUrl;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
-    required this.authClient,
+    Client? client,
     required this.envCollectionName,
     required this.useSubcollections,
-  }) {
-    _api = FirestoreApi(authClient, rootUrl: rootUrl);
+    String? emulatorAddress,
+  })  : authClient = client!,
+        rootUrl = emulatorAddress != null
+            ? 'http://$emulatorAddress:8080/'
+            : firestoreApiUrl {
+    _api = FirestoreApi(
+      authClient,
+      rootUrl: rootUrl,
+    );
 
     dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
@@ -64,7 +73,8 @@ class YustDatabaseService {
     required this.envCollectionName,
     required this.useSubcollections,
     this.dbLogCallback,
-  }) : authClient = Client();
+  })  : rootUrl = '',
+        authClient = Client();
 
   /// Initializes a document with an id and the time it was created.
   ///
@@ -736,7 +746,7 @@ class YustDatabaseService {
     return _transformDoc(docSetup, document as Document);
   }
 
-  String _getDatabasePath() => 'projects/$_projectId/databases/(default)';
+  String _getDatabasePath() => 'projects/${Yust.projectId}/databases/(default)';
 
   String _getParentPath(YustDocSetup docSetup) {
     var parentPath = '${_getDatabasePath()}/documents';

@@ -13,10 +13,9 @@ class GoogleCloudHelpers {
   static Future<Client?> initializeFirebase({
     Map<String, String>? firebaseOptions,
     String? pathToServiceAccountJson,
-    String? projectId,
     String? emulatorAddress,
     bool buildRelease = false,
-    AccessCredentials? credentials,
+    Client? authClient,
   }) async {
     // For the moment don't initialize iOS via config for release
     if (!kIsWeb && buildRelease && Platform.isIOS) {

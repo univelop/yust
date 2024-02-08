@@ -29,20 +29,16 @@ class GoogleCloudHelpers {
     String? pathToServiceAccountJson,
     String? emulatorAddress,
     bool buildRelease = false,
-    AccessCredentials? credentials,
+    Client? authClient,
   }) async {
-    if (credentials != null) {
-      final baseClient = Client();
-      return AuthenticatedClient(baseClient, credentials,
-          closeUnderlyingClient: true);
-    }
+    if (authClient != null) return authClient;
 
     final scopes = [
       FirestoreApi.datastoreScope,
       StorageApi.devstorageFullControlScope,
     ];
 
-    final authClient = await createAuthClient(
+    authClient = await createAuthClient(
       scopes: scopes,
       pathToServiceAccountJson: pathToServiceAccountJson,
     );

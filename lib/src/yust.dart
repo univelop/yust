@@ -55,7 +55,7 @@ typedef OnChangeCallback = Future<void> Function(
 /// You can use Yust in a flutter and for a server app.
 class Yust {
   static Yust? instance;
-  static AccessCredentials? credentials;
+  static Client? authClient;
 
   static late YustAuthService authService;
   static late YustFileService fileService;
@@ -68,8 +68,6 @@ class Yust {
   bool mocked = false;
 
   bool forUI;
-
-  Client? authClient;
 
   /// Initializes [Yust].
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
@@ -139,20 +137,15 @@ class Yust {
       return _initializeMocked();
     }
 
-    authClient = await GoogleCloudHelpers.initializeFirebase(
+    Yust.authClient = await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       pathToServiceAccountJson: pathToServiceAccountJson,
       emulatorAddress: emulatorAddress,
-      credentials: credentials,
+      authClient: Yust.authClient,
     );
 
-    if (authClient != null && Yust.credentials == null) {
-      Yust.credentials = (authClient as AuthClient).credentials;
-      print('Set new Yust.credentials');
-    }
-
     databaseService = YustDatabaseService(
-      client: authClient,
+      client: Yust.authClient,
       databaseLogCallback: dbLogCallback,
       useSubcollections: useSubcollections,
       envCollectionName: envCollectionName,
@@ -161,7 +154,7 @@ class Yust {
 
     Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
     Yust.fileService = YustFileService(
-      authClient: authClient,
+      authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );

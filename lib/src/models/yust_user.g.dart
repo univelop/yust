@@ -13,6 +13,7 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       gender: $enumDecodeNullable(_$YustGenderEnumMap, json['gender'],
           unknownValue: JsonKey.nullForUndefinedEnumValue),
       authId: json['authId'] as String?,
+      locale: json['locale'] as String?,
     )
       ..id = json['id'] as String
       ..createdAt = json['createdAt'] == null
@@ -66,6 +67,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'domain': instance.domain,
       'authId': instance.authId,
       'profilePicture': instance.profilePicture?.toJson(),
+      'locale': instance.locale,
     };
 
 const _$YustGenderEnumMap = {

@@ -57,13 +57,17 @@ class YustUser extends YustDoc {
   /// Profile picture.
   YustFile? profilePicture;
 
+  /// Locale
+  String locale;
+
   YustUser({
     required this.email,
     required this.firstName,
     required this.lastName,
     this.gender,
     this.authId,
-  });
+    String? locale,
+  }) : locale = locale ?? 'de';
 
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);

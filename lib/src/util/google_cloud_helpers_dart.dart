@@ -54,11 +54,8 @@ class GoogleCloudHelpers {
   /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
   static Future<AuthClient> createAuthClient(
       {required List<String> scopes, String? pathToServiceAccountJson}) async {
-    late AccessCredentials credentials;
     if (pathToServiceAccountJson == null) {
-      final tmpClient =
-          await clientViaApplicationDefaultCredentials(scopes: scopes);
-      credentials = tmpClient.credentials;
+      return await clientViaApplicationDefaultCredentials(scopes: scopes);
     } else {
       final serviceAccountJson =
           jsonDecode(await File(pathToServiceAccountJson).readAsString());
@@ -66,15 +63,8 @@ class GoogleCloudHelpers {
       final accountCredentials =
           ServiceAccountCredentials.fromJson(serviceAccountJson);
 
-      final tmpClient =
-          await clientViaServiceAccount(accountCredentials, scopes);
-      credentials = tmpClient.credentials;
+      return await clientViaServiceAccount(accountCredentials, scopes);
     }
-
-    final baseClient = Client();
-    final authClient = AuthenticatedClient(baseClient, credentials,
-        closeUnderlyingClient: true);
-    return authClient;
   }
 
   /// Gets the google project id from the execution environment.

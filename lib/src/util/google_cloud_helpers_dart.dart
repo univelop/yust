@@ -4,7 +4,6 @@ import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 // ignore: implementation_imports
-import 'package:googleapis_auth/src/auth_http_utils.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';

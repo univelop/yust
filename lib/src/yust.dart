@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:googleapis_auth/auth_io.dart';
-
 import 'package:http/http.dart';
 import 'package:timezone/data/latest.dart';
 
@@ -54,7 +53,14 @@ typedef OnChangeCallback = Future<void> Function(
 /// It is supporting Firebase Auth, Cloud Firestore and Cloud Storage.
 /// You can use Yust in a flutter and for a server app.
 class Yust {
-  static Yust? instance;
+  /// When using Yust with Flutter, you can access the instance of Yust with
+  /// this getter.
+  static Yust get instance => _instance!;
+  static Yust? _instance;
+
+  /// When using Yust with Flutter, you can access the databaseService of the
+  /// only instance of Yust with this getter._
+  static YustDatabaseService get databaseService => instance.dbService;
   static Client? authClient;
 
   static late YustAuthService authService;
@@ -63,7 +69,7 @@ class Yust {
   static YustHelpers helpers = YustHelpers();
   static late String projectId;
 
-  late YustDatabaseService databaseService;
+  late YustDatabaseService dbService;
 
   bool mocked = false;
 
@@ -124,13 +130,13 @@ class Yust {
     DatabaseLogCallback? dbLogCallback,
     AccessCredentials? credentials,
   }) async {
-    if (forUI) instance = this;
+    if (forUI) _instance = this;
 
     Yust.projectId = projectId;
     Yust.userSetup = userSetup ?? YustUser.setup();
 
     if (mocked) {
-      databaseService = YustDatabaseServiceMocked.mocked(
+      dbService = YustDatabaseServiceMocked.mocked(
           onChange: onChange,
           useSubcollections: useSubcollections,
           envCollectionName: envCollectionName);
@@ -144,7 +150,7 @@ class Yust {
       authClient: Yust.authClient,
     );
 
-    databaseService = YustDatabaseService(
+    dbService = YustDatabaseService(
       client: Yust.authClient,
       databaseLogCallback: dbLogCallback,
       useSubcollections: useSubcollections,

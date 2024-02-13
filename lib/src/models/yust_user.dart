@@ -77,9 +77,10 @@ class YustUser extends YustDoc {
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
 
   /// Saves the current [DateTime] as the last login.
-  void setLoginTime(Yust yust) async {
+  void setLoginTime({Yust? yust}) async {
     lastLogin = Yust.helpers.utcNow();
-    await yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+    await (yust?.dbService ?? Yust.databaseService)
+        .saveDoc<YustUser>(Yust.userSetup, this);
   }
 
   /// Returns the user name.
@@ -88,17 +89,19 @@ class YustUser extends YustDoc {
   }
 
   /// Deletes the user.
-  Future<void> delete(Yust yust,
-      {String? password, bool deleteAuth = true}) async {
-    await yust.databaseService.deleteDoc<YustUser>(YustUser.setup(), this);
+  Future<void> delete(
+      {String? password, bool deleteAuth = true, Yust? yust}) async {
+    await (yust?.dbService ?? Yust.databaseService)
+        .deleteDoc<YustUser>(YustUser.setup(), this);
     if (deleteAuth) await Yust.authService.deleteAccount(password);
   }
 
-  Future<void> linkAuth(
-      Yust yust, String uid, YustAuthenticationMethod? method) async {
+  Future<void> linkAuth(String uid, YustAuthenticationMethod? method,
+      {Yust? yust}) async {
     authId = uid;
     authenticationMethod = method;
-    await yust.databaseService.saveDoc<YustUser>(Yust.userSetup, this);
+    await (yust?.dbService ?? Yust.databaseService)
+        .saveDoc<YustUser>(Yust.userSetup, this);
   }
 }
 

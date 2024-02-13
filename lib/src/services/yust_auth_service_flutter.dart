@@ -23,9 +23,9 @@ class YustAuthService {
   Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
-        Yust.instance!.databaseService
+        Yust.databaseService
             .getFromDB<YustUser>(Yust.userSetup, user.uid)
-            .then((yustUser) => yustUser?.setLoginTime(Yust.instance!));
+            .then((yustUser) => yustUser?.setLoginTime());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
@@ -132,8 +132,7 @@ class YustAuthService {
   Future<YustUser?> _maybeGetConnectedYustUser(
     UserCredential userCredential,
   ) async =>
-      (await Yust.instance!.databaseService
-          .getFirst<YustUser>(Yust.userSetup, filters: [
+      (await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',
             comparator: YustFilterComparator.equal,
@@ -148,7 +147,7 @@ class YustAuthService {
         userCredential.user?.email == '') {
       return false;
     }
-    final user = await Yust.instance!.databaseService.getFirst<YustUser>(
+    final user = await Yust.databaseService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
         YustFilter(
@@ -159,7 +158,7 @@ class YustAuthService {
       ],
     );
     if (user == null) return false;
-    await user.linkAuth(Yust.instance!, userCredential.user!.uid, method);
+    await user.linkAuth(userCredential.user!.uid, method);
     return true;
   }
 
@@ -206,8 +205,7 @@ class YustAuthService {
       ..authenticationMethod = authenticationMethod
       ..domain = domain ?? email.split('@').last
       ..gender = gender;
-    await Yust.instance!.databaseService
-        .saveDoc<YustUser>(Yust.userSetup, user);
+    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
     return user;
   }
 
@@ -220,7 +218,7 @@ class YustAuthService {
   }
 
   Future<void> changeEmail(String email, String password) async {
-    final user = await Yust.instance!.databaseService
+    final user = await Yust.databaseService
         .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
     if (user?.authenticationMethod == null ||
         user?.authenticationMethod == YustAuthenticationMethod.mail) {
@@ -233,8 +231,7 @@ class YustAuthService {
 
     if (user != null) {
       user.email = email;
-      await Yust.instance!.databaseService
-          .saveDoc<YustUser>(Yust.userSetup, user);
+      await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
     }
   }
 

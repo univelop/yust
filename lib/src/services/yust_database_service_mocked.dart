@@ -10,7 +10,7 @@ import '../yust.dart';
 import 'yust_database_service.dart';
 import 'yust_database_service_shared.dart';
 
-typedef MockDBType = Map<String, List<Map<String, dynamic>>>;
+typedef MockDB = Map<String, List<Map<String, dynamic>>>;
 
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
@@ -25,7 +25,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         onChange ?? YustDatabaseServiceMocked.onChange;
   }
 
-  static final MockDBType _db = {};
+  static final MockDB _db = {};
 
   Map<String, List<Map<String, dynamic>>> get db => _db;
 

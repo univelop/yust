@@ -104,14 +104,6 @@ class Yust {
     initializeTimeZones();
   }
 
-  /// Initializes [Yust] with mocked services for testing.
-  ///
-  /// This method should be called before any usage of the yust package.
-  void _initializeMocked() {
-    initializeTimeZones();
-    Yust.authService = YustAuthService.mocked();
-  }
-
   /// Initializes [Yust].
   //
   /// This method should be called before any usage of the yust package.
@@ -140,7 +132,8 @@ class Yust {
           onChange: onChange,
           useSubcollections: useSubcollections,
           envCollectionName: envCollectionName);
-      return _initializeMocked();
+      Yust.authService = YustAuthService.mocked();
+      return;
     }
 
     Yust.authClient = await GoogleCloudHelpers.initializeFirebase(

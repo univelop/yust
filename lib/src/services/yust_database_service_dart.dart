@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:googleapis/firestore/v1.dart';
+import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../extensions/date_time_extension.dart';
@@ -10,12 +11,14 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
+import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
-import '../util/yust_firestore_api.dart';
 import '../util/yust_helpers.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
+
+const firestoreApiUrl = 'https://firestore.googleapis.com/';
 
 enum AggregationType {
   count,
@@ -28,19 +31,50 @@ enum AggregationType {
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
 class YustDatabaseService {
   late final FirestoreApi _api;
-  late final String _projectId;
   DatabaseLogCallback? dbLogCallback;
+  YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
-  YustDatabaseService({this.dbLogCallback}) {
-    if (YustFirestoreApi.instance != null) {
-      _api = YustFirestoreApi.instance!;
-    }
-    if (YustFirestoreApi.projectId != null) {
-      _projectId = YustFirestoreApi.projectId!;
-    }
+  /// Represents the collection name for the tenants.
+  final String envCollectionName;
+
+  /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  final bool useSubcollections;
+
+  final Client authClient;
+
+  /// Root (aka base) URL for the Firestore REST/GRPC API.
+  final String rootUrl;
+
+  YustDatabaseService({
+    DatabaseLogCallback? databaseLogCallback,
+    Client? client,
+    required this.envCollectionName,
+    required this.useSubcollections,
+    String? emulatorAddress,
+  })  : authClient = client!,
+        rootUrl = emulatorAddress != null
+            ? 'http://$emulatorAddress:8080/'
+            : firestoreApiUrl {
+    _api = FirestoreApi(
+      authClient,
+      rootUrl: rootUrl,
+    );
+
+    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+        {String? id, List<String>? updateMask, num? aggregationResult}) {
+      statistics.dbStatisticsCallback(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+      databaseLogCallback?.call(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+    };
   }
 
-  YustDatabaseService.mocked({this.dbLogCallback});
+  YustDatabaseService.mocked({
+    required this.envCollectionName,
+    required this.useSubcollections,
+    this.dbLogCallback,
+  })  : rootUrl = '',
+        authClient = Client();
 
   /// Initializes a document with an id and the time it was created.
   ///
@@ -84,6 +118,7 @@ class YustDatabaseService {
     try {
       final response = await _api.projects.databases.documents
           .get(_getDocumentPath(docSetup, id), transaction: transaction);
+
       dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
       return _transformDoc<T>(docSetup, response);
     } on ApiRequestError {
@@ -268,8 +303,7 @@ class YustDatabaseService {
     int pageSize = 5000,
   }) {
     final parent = _getParentPath(docSetup);
-    final url =
-        '${YustFirestoreApi.rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
+    final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
@@ -281,11 +315,10 @@ class YustDatabaseService {
             limit: pageSize,
             offset: lastOffset);
         final body = jsonEncode(request);
-        final result = await YustFirestoreApi.httpClient?.post(
+        final result = await authClient.post(
           Uri.parse(url),
           body: body,
         );
-        if (result == null) return;
 
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));
@@ -713,12 +746,12 @@ class YustDatabaseService {
     return _transformDoc(docSetup, document as Document);
   }
 
-  String _getDatabasePath() => 'projects/$_projectId/databases/(default)';
+  String _getDatabasePath() => 'projects/${Yust.projectId}/databases/(default)';
 
   String _getParentPath(YustDocSetup docSetup) {
     var parentPath = '${_getDatabasePath()}/documents';
-    if (Yust.useSubcollections && docSetup.forEnvironment) {
-      parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
+    if (useSubcollections && docSetup.forEnvironment) {
+      parentPath += '/$envCollectionName/${docSetup.envId}';
     }
     if (docSetup.collectionName.contains('/')) {
       final nameParts = docSetup.collectionName.split('/');
@@ -799,7 +832,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
   ) {
     final result = <Filter>[];
-    if (!Yust.useSubcollections && docSetup.forEnvironment) {
+    if (!useSubcollections && docSetup.forEnvironment) {
       result.add(Filter(
           fieldFilter: FieldFilter(
         field: FieldReference(fieldPath: 'envId'),

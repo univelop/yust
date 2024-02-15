@@ -3,10 +3,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:googleapis/storage/v1.dart';
+import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
-import '../util/yust_storage_api.dart';
+const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
 /// Handels Filestorage requests for Google Cloud Storage.
 ///
@@ -14,9 +15,17 @@ import '../util/yust_storage_api.dart';
 /// and GoogleAPIs for **Dart-only environments**.
 class YustFileService {
   final StorageApi _storageApi;
+  final String bucketName;
 
-  YustFileService({String? emulatorAddress})
-      : _storageApi = YustStorageApi.instance!;
+  YustFileService({
+    Client? authClient,
+    required String? emulatorAddress,
+    required String projectId,
+  })  : bucketName = '$projectId.appspot.com',
+        _storageApi = StorageApi(authClient!,
+            rootUrl: emulatorAddress != null
+                ? 'http://$emulatorAddress:9199/'
+                : firebaseStorageUrl);
 
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
@@ -39,14 +48,13 @@ class YustFileService {
     final token = Uuid().v4();
     final object = Object(
         name: '$path/$name',
-        bucket: YustStorageApi.bucketName,
+        bucket: bucketName,
         metadata: {'firebaseStorageDownloadTokens': token});
     final media = Media(data, file?.lengthSync() ?? bytes!.length,
         contentType: lookupMimeType(name) ?? 'application/octet-stream');
 
     // Using the Google Storage API to insert (upload) the file
-    await _storageApi.objects
-        .insert(object, YustStorageApi.bucketName!, uploadMedia: media);
+    await _storageApi.objects.insert(object, bucketName, uploadMedia: media);
     return _createDownloadUrl(path, name, token);
   }
 
@@ -56,8 +64,7 @@ class YustFileService {
       {required String path,
       required String name,
       int maxSize = 20 * 1024 * 1024}) async {
-    final object = await _storageApi.objects.get(
-        YustStorageApi.bucketName!, '$path/$name',
+    final object = await _storageApi.objects.get(bucketName, '$path/$name',
         downloadOptions: DownloadOptions.fullMedia);
 
     if (object is Media) {
@@ -91,17 +98,15 @@ class YustFileService {
 
   /// Deletes a existing file at [path] and filename [name].
   Future<void> deleteFile({required String path, String? name}) async {
-    await _storageApi.objects.delete(YustStorageApi.bucketName!, '$path/$name');
+    await _storageApi.objects.delete(bucketName, '$path/$name');
   }
 
   Future<void> deleteFolder({required String path}) async {
-    final objects = await _storageApi.objects
-        .list(YustStorageApi.bucketName!, prefix: path);
+    final objects = await _storageApi.objects.list(bucketName, prefix: path);
 
     if (objects.items != null) {
       for (final object in objects.items!) {
-        await _storageApi.objects
-            .delete(YustStorageApi.bucketName!, object.name!);
+        await _storageApi.objects.delete(bucketName, object.name!);
       }
     }
   }
@@ -109,7 +114,7 @@ class YustFileService {
   /// Checks if a file exists at a given [path] and [name].
   Future<bool> fileExist({required String path, required String name}) async {
     try {
-      await _storageApi.objects.get(YustStorageApi.bucketName!, '$path/$name');
+      await _storageApi.objects.get(bucketName, '$path/$name');
       return true;
     } on DetailedApiRequestError catch (e) {
       if (e.status == 404) {
@@ -122,8 +127,7 @@ class YustFileService {
   /// Returns the download url of a existing file at [path] and [name].
   Future<String> getFileDownloadUrl(
       {required String path, required String name}) async {
-    final object = await _storageApi.objects
-        .get(YustStorageApi.bucketName!, '$path/$name');
+    final object = await _storageApi.objects.get(bucketName, '$path/$name');
     if (object is Object) {
       var token =
           object.metadata?['firebaseStorageDownloadTokens']?.split(',')[0];
@@ -135,8 +139,7 @@ class YustFileService {
           object.metadata!['firebaseStorageDownloadTokens'] = token;
         }
         try {
-          await _storageApi.objects
-              .update(object, YustStorageApi.bucketName!, object.name!);
+          await _storageApi.objects.update(object, bucketName, object.name!);
         } catch (e) {
           throw Exception('Error while creating token: ${e.toString()}}');
         }
@@ -148,7 +151,7 @@ class YustFileService {
 
   String _createDownloadUrl(String path, String name, String token) {
     return 'https://firebasestorage.googleapis.com/v0/b/'
-        '${YustStorageApi.bucketName}/o/${Uri.encodeComponent('$path/$name')}'
+        '$bucketName/o/${Uri.encodeComponent('$path/$name')}'
         '?alt=media&token=$token';
   }
 }

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart';
 
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
@@ -6,6 +7,7 @@ import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
 import '../util/object_helper.dart';
+import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
@@ -17,11 +19,35 @@ class YustDatabaseService {
   // exception is a good indicator for the developer )
   late final FirebaseFirestore _fireStore;
   DatabaseLogCallback? dbLogCallback;
+  YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
-  YustDatabaseService({this.dbLogCallback})
-      : _fireStore = FirebaseFirestore.instance;
+  YustDatabaseService({
+    DatabaseLogCallback? databaseLogCallback,
+    Client? client,
+    required this.envCollectionName,
+    required this.useSubcollections,
+    String? emulatorAddress,
+  }) : _fireStore = FirebaseFirestore.instance {
+    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+        {String? id, List<String>? updateMask, num? aggregationResult}) {
+      statistics.dbStatisticsCallback(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+      databaseLogCallback?.call(action, setup, count,
+          id: id, updateMask: updateMask, aggregationResult: aggregationResult);
+    };
+  }
 
-  YustDatabaseService.mocked({this.dbLogCallback});
+  /// Represents the collection name for the tenants.
+  final String envCollectionName;
+
+  /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  final bool useSubcollections;
+
+  YustDatabaseService.mocked({
+    this.dbLogCallback,
+    required this.envCollectionName,
+    required this.useSubcollections,
+  });
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -493,8 +519,8 @@ class YustDatabaseService {
 
   String _getCollectionPath(YustDocSetup docSetup) {
     var collectionPath = '';
-    if (Yust.useSubcollections && docSetup.forEnvironment) {
-      collectionPath += '${Yust.envCollectionName}/${docSetup.envId}/';
+    if (useSubcollections && docSetup.forEnvironment) {
+      collectionPath += '$envCollectionName/${docSetup.envId}/';
     }
     collectionPath += docSetup.collectionName;
     return collectionPath;
@@ -521,7 +547,7 @@ class YustDatabaseService {
     Query query,
     YustDocSetup<T> docSetup,
   ) {
-    if (!Yust.useSubcollections && docSetup.forEnvironment) {
+    if (!useSubcollections && docSetup.forEnvironment) {
       query = _filterForEnvironment(query, docSetup.envId!);
     }
 

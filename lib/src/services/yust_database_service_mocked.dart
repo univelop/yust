@@ -10,14 +10,22 @@ import '../yust.dart';
 import 'yust_database_service.dart';
 import 'yust_database_service_shared.dart';
 
+typedef MockDB = Map<String, List<Map<String, dynamic>>>;
+
 /// A mock database service for storing docs.
 class YustDatabaseServiceMocked extends YustDatabaseService {
-  final Future<void> Function(String docPath, Map<String, dynamic>? oldDocument,
-      Map<String, dynamic>? newDocument)? onChange;
+  static OnChangeCallback? onChange;
 
-  YustDatabaseServiceMocked.mocked({this.onChange}) : super.mocked();
+  YustDatabaseServiceMocked.mocked({
+    OnChangeCallback? onChange,
+    required super.envCollectionName,
+    required super.useSubcollections,
+  }) : super.mocked() {
+    YustDatabaseServiceMocked.onChange =
+        onChange ?? YustDatabaseServiceMocked.onChange;
+  }
 
-  final _db = <String, List<Map<String, dynamic>>>{};
+  static final MockDB _db = {};
 
   Map<String, List<Map<String, dynamic>>> get db => _db;
 
@@ -419,8 +427,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   String _getParentPath(YustDocSetup docSetup, {YustDoc? doc, String? id}) {
     var parentPath = '/documents';
-    if (Yust.useSubcollections && docSetup.forEnvironment) {
-      parentPath += '/${Yust.envCollectionName}/${docSetup.envId}';
+    if (useSubcollections && docSetup.forEnvironment) {
+      parentPath += '/$envCollectionName/${docSetup.envId}';
     }
 
     return '$parentPath/${docSetup.collectionName}/${doc?.id ?? id ?? ''}';
@@ -436,4 +444,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       return 0.0;
     }
   }
+
+  void clearDb() => _db.clear();
 }

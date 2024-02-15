@@ -20,7 +20,7 @@ class YustAuthService {
 
   YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
 
-  Stream<AuthState> get authStateStream {
+  Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
         Yust.databaseService
@@ -130,7 +130,8 @@ class YustAuthService {
           : await FirebaseAuth.instance.signInWithProvider(provider);
 
   Future<YustUser?> _maybeGetConnectedYustUser(
-          UserCredential userCredential) async =>
+    UserCredential userCredential,
+  ) async =>
       (await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',

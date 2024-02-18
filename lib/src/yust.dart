@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart';
-import 'package:timezone/data/latest.dart';
 
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
@@ -83,9 +82,7 @@ class Yust {
     this.useSubcollections = false,
     this.envCollectionName = 'envs',
     this.onChange,
-  }) {
-    initializeTimeZones();
-  }
+  });
 
   final DatabaseLogCallback? dbLogCallback;
   final OnChangeCallback? onChange;
@@ -100,9 +97,7 @@ class Yust {
       this.envCollectionName = 'envs',
       this.dbLogCallback,
       this.onChange})
-      : mocked = true {
-    initializeTimeZones();
-  }
+      : mocked = true;
 
   /// Initializes [Yust].
   //

@@ -81,6 +81,8 @@ class YustFileService {
           final leftOverBytes = maxSize - totalBytes;
           bytesBuilder.add(data.sublist(0, leftOverBytes));
           completer.complete(bytesBuilder.takeBytes());
+          print(
+              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes');
           subscription?.cancel();
         } else {
           bytesBuilder.add(data);
@@ -88,6 +90,8 @@ class YustFileService {
         }
       }, onDone: () {
         if (!completer.isCompleted) {
+          print(
+              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes');
           completer.complete(bytesBuilder.takeBytes());
         }
       }, onError: completer.completeError);

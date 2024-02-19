@@ -64,6 +64,7 @@ class YustFileService {
       {required String path,
       required String name,
       int maxSize = 20 * 1024 * 1024}) async {
+    print('[[DEBUG]] Downloading File from $path/$name');
     final object = await _storageApi.objects.get(bucketName, '$path/$name',
         downloadOptions: DownloadOptions.fullMedia);
 

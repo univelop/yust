@@ -22,7 +22,7 @@ class YustException implements Exception {
     }
     if (e.status == 409) {
       return YustTransactionFailedException(
-          'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+          'Failed save transaction for the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
     return YustException(
         'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
@@ -46,4 +46,8 @@ class YustJsonParseException extends YustException {
   YustJsonParseException(super.message, this.json);
 
   final Map<String, dynamic> json;
+}
+
+class YustBadGatewayException extends YustException {
+  YustBadGatewayException(super.message);
 }

@@ -20,6 +20,10 @@ class YustException implements Exception {
       return YustDocumentLockedException(
           'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
+    if (e.status == 404) {
+      return YustNotFoundException(
+          'The document $docPath was not found. ${_detailedApiRequestErrorToString(e)}');
+    }
     if (e.status == 409) {
       return YustTransactionFailedException(
           'Failed save transaction for the document $docPath. ${_detailedApiRequestErrorToString(e)}');
@@ -50,4 +54,8 @@ class YustJsonParseException extends YustException {
 
 class YustBadGatewayException extends YustException {
   YustBadGatewayException(super.message);
+}
+
+class YustNotFoundException extends YustException {
+  YustNotFoundException(super.message);
 }

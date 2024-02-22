@@ -125,7 +125,7 @@ class YustDatabaseService {
 
       dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
       return _transformDoc<T>(docSetup, response);
-    } on ApiRequestError {
+    } on YustNotFoundException {
       return null;
     }
   }
@@ -1054,9 +1054,9 @@ class YustDatabaseService {
     String fnName,
     String docPath,
     Future<T> Function() fn,
-  ) {
+  ) async {
     try {
-      return fn();
+      return await fn();
     } on TlsException catch (e) {
       print(
           '[[DEBUG]] Retrying $fnName call on TlsException ($e) for $docPath');
@@ -1075,6 +1075,9 @@ class YustDatabaseService {
             () => _retryOnException<T>(fnName, docPath, fn));
       }
       throw YustException.fromDetailedApiRequestError(docPath, e);
+    } catch (e) {
+      print(e);
+      rethrow;
     }
   }
 }

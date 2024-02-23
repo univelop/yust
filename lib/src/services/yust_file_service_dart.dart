@@ -64,6 +64,7 @@ class YustFileService {
       {required String path,
       required String name,
       int maxSize = 20 * 1024 * 1024}) async {
+    print('[[DEBUG]] Downloading File from $path/$name');
     final object = await _storageApi.objects.get(bucketName, '$path/$name',
         downloadOptions: DownloadOptions.fullMedia);
 
@@ -80,6 +81,8 @@ class YustFileService {
           final leftOverBytes = maxSize - totalBytes;
           bytesBuilder.add(data.sublist(0, leftOverBytes));
           completer.complete(bytesBuilder.takeBytes());
+          print(
+              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes');
           subscription?.cancel();
         } else {
           bytesBuilder.add(data);
@@ -87,6 +90,8 @@ class YustFileService {
         }
       }, onDone: () {
         if (!completer.isCompleted) {
+          print(
+              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes');
           completer.complete(bytesBuilder.takeBytes());
         }
       }, onError: completer.completeError);

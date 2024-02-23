@@ -46,6 +46,8 @@ class YustDatabaseService {
   /// Root (aka base) URL for the Firestore REST/GRPC API.
   final String rootUrl;
 
+  num maxRetries = 20;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
     Client? client,
@@ -1053,31 +1055,36 @@ class YustDatabaseService {
   Future<T> _retryOnException<T>(
     String fnName,
     String docPath,
-    Future<T> Function() fn,
-  ) async {
+    Future<T> Function() fn, {
+    int numberOfRetries = 0,
+  }) async {
     try {
       return await fn();
-    } on TlsException catch (e) {
-      print(
-          '[[DEBUG]] Retrying $fnName call on TlsException ($e) for $docPath');
-      return Future.delayed(Duration(milliseconds: 50),
-          () => _retryOnException<T>(fnName, docPath, fn));
-    } on ClientException catch (e) {
-      print(
-          '[[DEBUG]] Retrying $fnName call on ClientException ($e) for $docPath');
-      return Future.delayed(Duration(milliseconds: 50),
-          () => _retryOnException<T>(fnName, docPath, fn));
-    } on DetailedApiRequestError catch (e) {
-      if (e.status == 502) {
-        print(
-            '[[DEBUG]] Retrying $fnName call on YustBadGatewayException ($e) for $docPath');
-        return Future.delayed(Duration(milliseconds: 50),
-            () => _retryOnException<T>(fnName, docPath, fn));
-      }
-      throw YustException.fromDetailedApiRequestError(docPath, e);
     } catch (e) {
-      print(e);
-      rethrow;
+      if (numberOfRetries >= maxRetries) {
+        print(
+            '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
+        rethrow;
+      } else if (e is TlsException) {
+        print(
+            '[[DEBUG]] Retrying $fnName call on TlsException ($e) for $docPath');
+      } else if (e is ClientException) {
+        print(
+            '[[DEBUG]] Retrying $fnName call on ClientException) ($e) for $docPath');
+      } else if (e is DetailedApiRequestError) {
+        if (e.status == 502) {
+          print(
+              '[[DEBUG]] Retrying $fnName call on YustBadGatewayException ($e) for $docPath');
+        } else {
+          throw YustException.fromDetailedApiRequestError(docPath, e);
+        }
+      } else {
+        print(e);
+      }
+      return Future.delayed(
+          Duration(milliseconds: pow(2, numberOfRetries).toInt() * 50),
+          () => _retryOnException<T>(fnName, docPath, fn,
+              numberOfRetries: numberOfRetries + 1));
     }
   }
 }

@@ -712,7 +712,8 @@ class YustDatabaseService {
         'beginTransaction',
         'N.A.',
         () => _api.projects.databases.documents
-            .beginTransaction(BeginTransactionRequest(), _getDatabasePath()));
+            .beginTransaction(BeginTransactionRequest(), _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
     if (response.transaction == null) {
       throw YustException('Can not begin transaction.');
     }
@@ -1070,21 +1071,21 @@ class YustDatabaseService {
         rethrow;
       } else if (e is TlsException) {
         print(
-            '[[DEBUG]] Retrying $fnName call on TlsException ($e) for $docPath');
+            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on TlsException ($e) for $docPath');
       } else if (e is ClientException) {
         print(
-            '[[DEBUG]] Retrying $fnName call on ClientException) ($e) for $docPath');
+            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
       } else if (e is DetailedApiRequestError) {
         if (e.status == 502) {
           print(
-              '[[DEBUG]] Retrying $fnName call on YustBadGatewayException ($e) for $docPath');
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
         } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
           if ((e.message ?? '').contains(
               'The referenced transaction has expired or is no longer valid')) {
             throw YustException.fromDetailedApiRequestError(docPath, e);
           }
           print(
-              '[[DEBUG]] Retrying $fnName call on YustTransactionFailedException ($e) for $docPath');
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustTransactionFailedException ($e) for $docPath');
         } else {
           throw YustException.fromDetailedApiRequestError(docPath, e);
         }
@@ -1092,7 +1093,9 @@ class YustDatabaseService {
         print(e);
       }
       return Future.delayed(
-          Duration(milliseconds: pow(2, numberOfRetries).toInt() * 50),
+          Duration(
+              milliseconds: pow(2, numberOfRetries).toInt() *
+                  (50 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
               numberOfRetries: numberOfRetries + 1));
     }

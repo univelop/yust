@@ -8,7 +8,7 @@ class YustException implements Exception {
 
   @override
   String toString() {
-    return message;
+    return '$runtimeType: $message';
   }
 
   factory YustException.fromDetailedApiRequestError(

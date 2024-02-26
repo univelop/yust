@@ -704,7 +704,7 @@ class YustDatabaseService {
               'Retried transaction $numberRetries times (of $maxTries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
         }
         return (true, updatedDoc);
-      });
+      }, shouldRetryOnTransactionErrors: false);
 
   /// Begins a transaction.
   Future<String> beginTransaction() async {
@@ -1057,6 +1057,7 @@ class YustDatabaseService {
     String docPath,
     Future<T> Function() fn, {
     int numberOfRetries = 0,
+    bool shouldRetryOnTransactionErrors = true,
   }) async {
     try {
       return await fn();
@@ -1075,6 +1076,9 @@ class YustDatabaseService {
         if (e.status == 502) {
           print(
               '[[DEBUG]] Retrying $fnName call on YustBadGatewayException ($e) for $docPath');
+        } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
+          print(
+              '[[DEBUG]] Retrying $fnName call on YustTransactionFailedException ($e) for $docPath');
         } else {
           throw YustException.fromDetailedApiRequestError(docPath, e);
         }

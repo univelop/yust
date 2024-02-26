@@ -744,7 +744,8 @@ class YustDatabaseService {
         'commitTransaction',
         'N.A.',
         () => _api.projects.databases.documents
-            .commit(commitRequest, _getDatabasePath()));
+            .commit(commitRequest, _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
   }
 
   // Makes an empty commit, thereby releasing the lock on the document.
@@ -754,7 +755,8 @@ class YustDatabaseService {
         'commitEmptyTransaction',
         'N.A.',
         () => _api.projects.databases.documents
-            .commit(commitRequest, _getDatabasePath()));
+            .commit(commitRequest, _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
   }
 
   /// Returns a query for specified filter and order.

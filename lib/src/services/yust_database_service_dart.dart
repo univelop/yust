@@ -1079,6 +1079,10 @@ class YustDatabaseService {
           print(
               '[[DEBUG]] Retrying $fnName call on YustBadGatewayException ($e) for $docPath');
         } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
+          if ((e.message ?? '').contains(
+              'The referenced transaction has expired or is no longer valid')) {
+            throw YustException.fromDetailedApiRequestError(docPath, e);
+          }
           print(
               '[[DEBUG]] Retrying $fnName call on YustTransactionFailedException ($e) for $docPath');
         } else {

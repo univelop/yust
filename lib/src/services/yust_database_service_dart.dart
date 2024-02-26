@@ -1090,7 +1090,7 @@ class YustDatabaseService {
           throw YustException.fromDetailedApiRequestError(docPath, e);
         }
       } else {
-        print(e);
+        print('[[WARNING]] Unhandled Firestore Exception $e');
       }
       return Future.delayed(
           Duration(

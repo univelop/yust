@@ -704,7 +704,7 @@ class YustDatabaseService {
               'Retried transaction $numberRetries times (of $maxTries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
         }
         return (true, updatedDoc);
-      });
+      }, shouldRetryOnTransactionErrors: false);
 
   /// Begins a transaction.
   Future<String> beginTransaction() async {
@@ -712,7 +712,8 @@ class YustDatabaseService {
         'beginTransaction',
         'N.A.',
         () => _api.projects.databases.documents
-            .beginTransaction(BeginTransactionRequest(), _getDatabasePath()));
+            .beginTransaction(BeginTransactionRequest(), _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
     if (response.transaction == null) {
       throw YustException('Can not begin transaction.');
     }
@@ -744,7 +745,8 @@ class YustDatabaseService {
         'commitTransaction',
         'N.A.',
         () => _api.projects.databases.documents
-            .commit(commitRequest, _getDatabasePath()));
+            .commit(commitRequest, _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
   }
 
   // Makes an empty commit, thereby releasing the lock on the document.
@@ -754,7 +756,8 @@ class YustDatabaseService {
         'commitEmptyTransaction',
         'N.A.',
         () => _api.projects.databases.documents
-            .commit(commitRequest, _getDatabasePath()));
+            .commit(commitRequest, _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
   }
 
   /// Returns a query for specified filter and order.
@@ -1057,6 +1060,7 @@ class YustDatabaseService {
     String docPath,
     Future<T> Function() fn, {
     int numberOfRetries = 0,
+    bool shouldRetryOnTransactionErrors = true,
   }) async {
     try {
       return await fn();
@@ -1067,22 +1071,31 @@ class YustDatabaseService {
         rethrow;
       } else if (e is TlsException) {
         print(
-            '[[DEBUG]] Retrying $fnName call on TlsException ($e) for $docPath');
+            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on TlsException ($e) for $docPath');
       } else if (e is ClientException) {
         print(
-            '[[DEBUG]] Retrying $fnName call on ClientException) ($e) for $docPath');
+            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
       } else if (e is DetailedApiRequestError) {
         if (e.status == 502) {
           print(
-              '[[DEBUG]] Retrying $fnName call on YustBadGatewayException ($e) for $docPath');
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
+        } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
+          if ((e.message ?? '').contains(
+              'The referenced transaction has expired or is no longer valid')) {
+            throw YustException.fromDetailedApiRequestError(docPath, e);
+          }
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustTransactionFailedException ($e) for $docPath');
         } else {
           throw YustException.fromDetailedApiRequestError(docPath, e);
         }
       } else {
-        print(e);
+        print('[[WARNING]] Unhandled Firestore Exception $e');
       }
       return Future.delayed(
-          Duration(milliseconds: pow(2, numberOfRetries).toInt() * 50),
+          Duration(
+              milliseconds: pow(2, numberOfRetries).toInt() *
+                  (50 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
               numberOfRetries: numberOfRetries + 1));
     }

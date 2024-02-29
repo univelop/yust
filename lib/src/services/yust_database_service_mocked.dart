@@ -157,7 +157,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    int pageSize = 5000,
+    int pageSize = 300,
   }) {
     return Stream.fromFuture(
             getList(docSetup, filters: filters, orderBy: orderBy))

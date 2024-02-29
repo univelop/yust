@@ -380,7 +380,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    int pageSize = 5000,
+    int pageSize = 300,
   }) async* {
     var isDone = false;
     DocumentSnapshot? lastDoc;

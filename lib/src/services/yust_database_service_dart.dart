@@ -336,8 +336,15 @@ class YustDatabaseService {
             body: body,
           );
           if (response.statusCode < 200 || response.statusCode >= 400) {
+            var json = {'error': response.body};
+            try {
+              json = jsonDecode(response.body);
+            } catch (e) {
+              // the response body could not be parsed as json
+            }
             throw DetailedApiRequestError(response.statusCode,
-                'No error details. HTTP status was: $response.statusCode. Body: ${response.body}');
+                'No error details. HTTP status was: $response.statusCode',
+                jsonResponse: json);
           }
         });
 

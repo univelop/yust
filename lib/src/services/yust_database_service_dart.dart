@@ -328,10 +328,14 @@ class YustDatabaseService {
             limit: pageSize,
             offset: lastOffset);
         final body = jsonEncode(request);
-        final result = await authClient.post(
-          Uri.parse(url),
-          body: body,
-        );
+
+        final result = await _retryOnException(
+            'getListChunked', _getDocumentPath(docSetup), () async {
+          return await authClient.post(
+            Uri.parse(url),
+            body: body,
+          );
+        });
 
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));

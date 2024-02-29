@@ -331,10 +331,14 @@ class YustDatabaseService {
 
         final result = await _retryOnException(
             'getListChunked', _getDocumentPath(docSetup), () async {
-          return await authClient.post(
+          final response = await authClient.post(
             Uri.parse(url),
             body: body,
           );
+          if (response.statusCode < 200 || response.statusCode >= 400) {
+            throw DetailedApiRequestError(response.statusCode,
+                'No error details. HTTP status was: $response.statusCode. Body: ${response.body}');
+          }
         });
 
         final response =

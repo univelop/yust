@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../extensions/server_now.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
@@ -335,6 +336,9 @@ class YustDatabaseService {
       // Parse dart DateTimes
       if (currentNode.value is DateTime) {
         return Timestamp.fromDate(currentNode.value);
+      }
+      if (currentNode.value is ServerNow) {
+        return FieldValue.serverTimestamp();
       }
       // Parse ISO Timestamp Strings
       if (currentNode.value is String &&

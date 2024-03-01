@@ -313,7 +313,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    int pageSize = 5000,
+    int pageSize = 300,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
@@ -328,10 +328,25 @@ class YustDatabaseService {
             limit: pageSize,
             offset: lastOffset);
         final body = jsonEncode(request);
-        final result = await authClient.post(
-          Uri.parse(url),
-          body: body,
-        );
+
+        final result = await _retryOnException(
+            'getListChunked', _getDocumentPath(docSetup), () async {
+          final response = await authClient.post(
+            Uri.parse(url),
+            body: body,
+          );
+          if (response.statusCode < 200 || response.statusCode >= 400) {
+            var json = {'error': response.body};
+            try {
+              json = jsonDecode(response.body);
+            } catch (e) {
+              // the response body could not be parsed as json
+            }
+            throw DetailedApiRequestError(response.statusCode,
+                'No error details. HTTP status was: $response.statusCode',
+                jsonResponse: json);
+          }
+        });
 
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));
@@ -1079,6 +1094,10 @@ class YustDatabaseService {
         if (e.status == 502) {
           print(
               '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
+        }
+        if (e.status == 503) {
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');
         } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
           if ((e.message ?? '').contains(
               'The referenced transaction has expired or is no longer valid')) {

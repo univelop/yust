@@ -346,6 +346,7 @@ class YustDatabaseService {
                 'No error details. HTTP status was: $response.statusCode',
                 jsonResponse: json);
           }
+          return response;
         });
 
         final response =

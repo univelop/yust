@@ -3,10 +3,10 @@ import 'package:collection/collection.dart';
 import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
-typedef StatisticsMap = Map<String, Map<DatabaseLogAction, int>>;
+typedef YustStatisticsMap = Map<String, Map<DatabaseLogAction, int>>;
 
 class YustDatabaseStatistics {
-  final StatisticsMap _statistics = {};
+  final YustStatisticsMap _statistics = {};
 
   void dbStatisticsCallback(
       DatabaseLogAction action, YustDocSetup setup, int count,
@@ -20,7 +20,7 @@ class YustDatabaseStatistics {
 
   clear() => _statistics.clear();
 
-  StatisticsMap get statistics => _statistics;
+  YustStatisticsMap get statistics => _statistics;
 
   Map<DatabaseLogAction, int> get aggregatedStatistics =>
       Map.fromEntries(DatabaseLogAction.values

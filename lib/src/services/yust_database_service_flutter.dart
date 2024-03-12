@@ -548,8 +548,14 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    return _getQuery<T>(docSetup,
+    final query = _getQuery<T>(docSetup,
         filters: filters, orderBy: orderBy, limit: limit);
+    return query.withConverter<dynamic>(
+        fromFirestore: (v, _) {
+          dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+          return v.data();
+        },
+        toFirestore: (v, _) => v);
   }
 
   T? transformDoc<T extends YustDoc>(

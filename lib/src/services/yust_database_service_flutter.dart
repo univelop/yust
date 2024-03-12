@@ -542,7 +542,7 @@ class YustDatabaseService {
     throw YustException('Not implemented for flutter');
   }
 
-  dynamic getQuery<T extends YustDoc>(
+  dynamic getQueryWithLogging<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -552,7 +552,10 @@ class YustDatabaseService {
         filters: filters, orderBy: orderBy, limit: limit);
     return query.withConverter<dynamic>(
         fromFirestore: (v, _) {
-          dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+          if (!v.metadata.isFromCache) {
+            dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+          }
+
           return v.data();
         },
         toFirestore: (v, _) => v);

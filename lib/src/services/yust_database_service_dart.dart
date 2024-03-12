@@ -777,7 +777,7 @@ class YustDatabaseService {
   }
 
   /// Returns a query for specified filter and order.
-  dynamic getQuery<T extends YustDoc>(
+  dynamic getQueryWithLogging<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,

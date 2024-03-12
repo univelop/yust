@@ -63,7 +63,10 @@ class YustDatabaseService {
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .get(GetOptions(source: Source.serverAndCache))
-        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
+        .then((value) {
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      return value;
+    }).then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
   }
 
   Future<T?> getFromCache<T extends YustDoc>(
@@ -81,6 +84,7 @@ class YustDatabaseService {
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
       docSnapshot = await doc.get(GetOptions(source: Source.server));
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     }
     return _transformDoc<T>(docSetup, docSnapshot);
   }
@@ -94,7 +98,10 @@ class YustDatabaseService {
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
-        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
+        .then((value) {
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      return value;
+    }).then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
   }
 
   Stream<T?> getStream<T extends YustDoc>(
@@ -105,7 +112,10 @@ class YustDatabaseService {
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .snapshots()
-        .map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
+        .map((value) {
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      return value;
+    }).map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
   }
 
   Future<T?> getFirst<T extends YustDoc>(
@@ -120,6 +130,7 @@ class YustDatabaseService {
 
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     }
     return doc;
   }
@@ -141,6 +152,7 @@ class YustDatabaseService {
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
       snapshot = await query.get(GetOptions(source: Source.server));
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     }
 
     T? doc;
@@ -163,6 +175,7 @@ class YustDatabaseService {
 
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
     }
     return doc;
   }
@@ -177,6 +190,7 @@ class YustDatabaseService {
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.isNotEmpty) {
+        dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
         return _transformDoc(docSetup, snapshot.docs[0]);
       } else {
         return null;
@@ -196,7 +210,8 @@ class YustDatabaseService {
     return query
         .get(GetOptions(source: Source.serverAndCache))
         .then((snapshot) {
-      // print('Get docs once: ${docSetup.collectionName}');
+      dbLogCallback?.call(
+          DatabaseLogAction.get, docSetup, snapshot.docs.length);
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()
@@ -223,6 +238,8 @@ class YustDatabaseService {
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
       snapshot = await query.get(GetOptions(source: Source.server));
+      dbLogCallback?.call(
+          DatabaseLogAction.get, docSetup, snapshot.docs.length);
     }
 
     return snapshot.docs
@@ -241,6 +258,8 @@ class YustDatabaseService {
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
+      dbLogCallback?.call(
+          DatabaseLogAction.get, docSetup, snapshot.docs.length);
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()
@@ -258,6 +277,8 @@ class YustDatabaseService {
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.snapshots().map((snapshot) {
+      dbLogCallback?.call(
+          DatabaseLogAction.get, docSetup, snapshot.docs.length);
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()
@@ -272,6 +293,8 @@ class YustDatabaseService {
   }) async {
     var query = _getQuery(docSetup, filters: filters);
     final snapshot = await query.count().get();
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, docSetup, snapshot.count ?? 0);
     return snapshot.count ?? 0;
   }
 
@@ -309,6 +332,7 @@ class YustDatabaseService {
     bool skipOnSave = false,
     bool? removeNullValues,
     List<String>? updateMask,
+    bool skipLog = false,
     bool doNotCreate = false,
   }) async {
     await doc.onSave();
@@ -331,6 +355,10 @@ class YustDatabaseService {
     await collection
         .doc(doc.id)
         .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
+    if (!skipLog) {
+      dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+          id: doc.id, updateMask: updateMask ?? []);
+    }
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -346,6 +374,8 @@ class YustDatabaseService {
     final update = _transformsToFieldValueMap(fieldTransforms);
 
     await collection.doc(id).update(update);
+    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+        id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
   }
 
   Map<String, dynamic> _prepareJsonForFirebase(
@@ -398,6 +428,8 @@ class YustDatabaseService {
       final snapshot =
           await query.get(GetOptions(source: Source.serverAndCache));
 
+      dbLogCallback?.call(DatabaseLogAction.get, docSetup, snapshot.size);
+
       for (final doc in snapshot.docs) {
         final transformedDoc = _transformDoc<T>(docSetup, doc);
         if (transformedDoc != null) {
@@ -434,6 +466,8 @@ class YustDatabaseService {
       batch.delete(doc.reference);
     }
     await batch.commit();
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, docSetup, snapshot.docs.length);
     return snapshot.docs.length;
   }
 
@@ -445,6 +479,7 @@ class YustDatabaseService {
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
     await docRef.delete();
+    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: doc.id);
   }
 
   Future<void> deleteDocById<T extends YustDoc>(
@@ -453,6 +488,7 @@ class YustDatabaseService {
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
     await docRef.delete();
+    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: docId);
   }
 
   Future<T> saveNewDoc<T extends YustDoc>(
@@ -471,7 +507,9 @@ class YustDatabaseService {
       docSetup,
       doc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
+      skipLog: true,
     );
+    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1, id: doc.id);
 
     return doc;
   }
@@ -504,14 +542,23 @@ class YustDatabaseService {
     throw YustException('Not implemented for flutter');
   }
 
-  dynamic getQuery<T extends YustDoc>(
+  dynamic getQueryWithLogging<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    return _getQuery<T>(docSetup,
+    final query = _getQuery<T>(docSetup,
         filters: filters, orderBy: orderBy, limit: limit);
+    return query.withConverter<dynamic>(
+        fromFirestore: (v, _) {
+          if (!v.metadata.isFromCache) {
+            dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+          }
+
+          return v.data();
+        },
+        toFirestore: (v, _) => v);
   }
 
   T? transformDoc<T extends YustDoc>(

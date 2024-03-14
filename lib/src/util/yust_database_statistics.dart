@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 
-import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
 typedef YustStatisticsMap = Map<String, Map<DatabaseLogAction, int>>;
@@ -11,9 +10,9 @@ class YustDatabaseStatistics {
   final YustStatisticsMap _statistics = {};
 
   void dbStatisticsCallback(
-      DatabaseLogAction action, YustDocSetup setup, int count,
+      DatabaseLogAction action, String documentPath, int count,
       {String? id, List<String>? updateMask, num? aggregationResult}) {
-    final collectionGroupName = setup.collectionName.split('/').last;
+    final collectionGroupName = documentPath.split('/').last;
     _statistics[collectionGroupName] ??= {};
     _statistics[collectionGroupName]![action] ??= 0;
     _statistics[collectionGroupName]![action] =

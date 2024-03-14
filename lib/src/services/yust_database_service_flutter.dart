@@ -29,11 +29,11 @@ class YustDatabaseService {
     required this.useSubcollections,
     String? emulatorAddress,
   }) : _fireStore = FirebaseFirestore.instance {
-    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+    dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
-      statistics.dbStatisticsCallback(action, setup, count,
+      statistics.dbStatisticsCallback(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
-      databaseLogCallback?.call(action, setup, count,
+      databaseLogCallback?.call(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
     };
   }
@@ -64,7 +64,8 @@ class YustDatabaseService {
         .doc(id)
         .get(GetOptions(source: Source.serverAndCache))
         .then((value) {
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
       return value;
     }).then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
   }
@@ -84,7 +85,8 @@ class YustDatabaseService {
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
       docSnapshot = await doc.get(GetOptions(source: Source.server));
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
     }
     return _transformDoc<T>(docSetup, docSnapshot);
   }
@@ -99,7 +101,8 @@ class YustDatabaseService {
         .doc(id)
         .get(GetOptions(source: Source.server))
         .then((value) {
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
       return value;
     }).then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
   }
@@ -113,7 +116,8 @@ class YustDatabaseService {
         .doc(id)
         .snapshots()
         .map((value) {
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
       return value;
     }).map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
   }
@@ -130,7 +134,8 @@ class YustDatabaseService {
 
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
     }
     return doc;
   }
@@ -152,7 +157,8 @@ class YustDatabaseService {
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
       snapshot = await query.get(GetOptions(source: Source.server));
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
     }
 
     T? doc;
@@ -175,7 +181,8 @@ class YustDatabaseService {
 
     if (snapshot.docs.isNotEmpty) {
       doc = _transformDoc(docSetup, snapshot.docs[0]);
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
     }
     return doc;
   }
@@ -190,7 +197,8 @@ class YustDatabaseService {
 
     return query.snapshots().map<T?>((snapshot) {
       if (snapshot.docs.isNotEmpty) {
-        dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+        dbLogCallback?.call(
+            DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
         return _transformDoc(docSetup, snapshot.docs[0]);
       } else {
         return null;
@@ -210,8 +218,8 @@ class YustDatabaseService {
     return query
         .get(GetOptions(source: Source.serverAndCache))
         .then((snapshot) {
-      dbLogCallback?.call(
-          DatabaseLogAction.get, docSetup, snapshot.docs.length);
+      dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+          snapshot.docs.length);
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()
@@ -238,8 +246,8 @@ class YustDatabaseService {
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
       snapshot = await query.get(GetOptions(source: Source.server));
-      dbLogCallback?.call(
-          DatabaseLogAction.get, docSetup, snapshot.docs.length);
+      dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+          snapshot.docs.length);
     }
 
     return snapshot.docs
@@ -258,8 +266,8 @@ class YustDatabaseService {
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.get(GetOptions(source: Source.server)).then((snapshot) {
-      dbLogCallback?.call(
-          DatabaseLogAction.get, docSetup, snapshot.docs.length);
+      dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+          snapshot.docs.length);
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()
@@ -277,8 +285,8 @@ class YustDatabaseService {
         _getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query.snapshots().map((snapshot) {
-      dbLogCallback?.call(
-          DatabaseLogAction.get, docSetup, snapshot.docs.length);
+      dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+          snapshot.docs.length);
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
           .whereType<T>()
@@ -293,8 +301,8 @@ class YustDatabaseService {
   }) async {
     var query = _getQuery(docSetup, filters: filters);
     final snapshot = await query.count().get();
-    dbLogCallback?.call(
-        DatabaseLogAction.aggregate, docSetup, snapshot.count ?? 0);
+    dbLogCallback?.call(DatabaseLogAction.aggregate,
+        _getCollectionPath(docSetup), snapshot.count ?? 0);
     return snapshot.count ?? 0;
   }
 
@@ -356,7 +364,8 @@ class YustDatabaseService {
         .doc(doc.id)
         .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
     if (!skipLog) {
-      dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+      dbLogCallback?.call(
+          DatabaseLogAction.save, _getCollectionPath(docSetup), 1,
           id: doc.id, updateMask: updateMask ?? []);
     }
   }
@@ -374,7 +383,8 @@ class YustDatabaseService {
     final update = _transformsToFieldValueMap(fieldTransforms);
 
     await collection.doc(id).update(update);
-    dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+    dbLogCallback?.call(
+        DatabaseLogAction.transform, _getCollectionPath(docSetup), 1,
         id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
   }
 
@@ -428,7 +438,8 @@ class YustDatabaseService {
       final snapshot =
           await query.get(GetOptions(source: Source.serverAndCache));
 
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, snapshot.size);
+      dbLogCallback?.call(
+          DatabaseLogAction.get, _getCollectionPath(docSetup), snapshot.size);
 
       for (final doc in snapshot.docs) {
         final transformedDoc = _transformDoc<T>(docSetup, doc);
@@ -466,8 +477,8 @@ class YustDatabaseService {
       batch.delete(doc.reference);
     }
     await batch.commit();
-    dbLogCallback?.call(
-        DatabaseLogAction.delete, docSetup, snapshot.docs.length);
+    dbLogCallback?.call(DatabaseLogAction.delete, _getCollectionPath(docSetup),
+        snapshot.docs.length);
     return snapshot.docs.length;
   }
 
@@ -479,7 +490,9 @@ class YustDatabaseService {
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
     await docRef.delete();
-    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: doc.id);
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, _getCollectionPath(docSetup), 1,
+        id: doc.id);
   }
 
   Future<void> deleteDocById<T extends YustDoc>(
@@ -488,7 +501,9 @@ class YustDatabaseService {
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
     await docRef.delete();
-    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: docId);
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, _getCollectionPath(docSetup), 1,
+        id: docId);
   }
 
   Future<T> saveNewDoc<T extends YustDoc>(
@@ -509,7 +524,9 @@ class YustDatabaseService {
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
       skipLog: true,
     );
-    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1, id: doc.id);
+    dbLogCallback?.call(
+        DatabaseLogAction.saveNew, _getCollectionPath(docSetup), 1,
+        id: doc.id);
 
     return doc;
   }
@@ -551,14 +568,8 @@ class YustDatabaseService {
     final query = _getQuery<T>(docSetup,
         filters: filters, orderBy: orderBy, limit: limit);
     return query.withConverter<dynamic>(
-        fromFirestore: (v, _) {
-          if (!v.metadata.isFromCache) {
-            dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
-          }
-
-          return v.data();
-        },
-        toFirestore: (v, _) => v);
+        fromFirestore: _queryWithLoggingFromFirestore,
+        toFirestore: _queryWithLoggingToFirestore);
   }
 
   T? transformDoc<T extends YustDoc>(
@@ -574,6 +585,7 @@ class YustDatabaseService {
       collectionPath += '$envCollectionName/${docSetup.envId}/';
     }
     collectionPath += docSetup.collectionName;
+
     return collectionPath;
   }
 
@@ -722,4 +734,24 @@ class YustDatabaseService {
     }
     return map;
   }
+
+  /// Basically the identity function, but with added logging
+  ///
+  /// Note: This is a class function instead of a lambda, because it needs to stay
+  /// the same instance for every call to [getQueryWithLogging].
+  Map<String, dynamic>? _queryWithLoggingFromFirestore<T>(
+      DocumentSnapshot<Map<String, dynamic>> v, SnapshotOptions? _) {
+    if (!v.metadata.isFromCache) {
+      dbLogCallback?.call(DatabaseLogAction.get, v.reference.parent.path, 1);
+    }
+
+    return v.data();
+  }
+
+  /// Basically the identity function
+  ///
+  /// Note: This is a class function instead of a lambda, because it needs to stay
+  /// the same instance for every call to [getQueryWithLogging].
+  Map<String, Object?> _queryWithLoggingToFirestore(dynamic v, SetOptions? _) =>
+      v;
 }

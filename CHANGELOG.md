@@ -1,3 +1,8 @@
+## 3.19.0 - 2024-03-15
+- Move YustDatabaseService to the Yust instance, instead of being static
+- Add support for DB Action Statistics
+- Fix bugs
+
 ## 3.18.1 - 2024-03-06
 
 - add ServerNow

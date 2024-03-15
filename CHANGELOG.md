@@ -1,3 +1,12 @@
+## 3.18.1 - 2024-03-06
+
+- add ServerNow
+  
+## 3.18.0 - 2024-02-17
+
+- Add multi language support
+- Fix bugs
+
 ## 3.17.3 - 2024-02-09
 
 - Fix bugs

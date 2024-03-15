@@ -63,11 +63,11 @@ class YustDatabaseService {
       rootUrl: rootUrl,
     );
 
-    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+    dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
-      statistics.dbStatisticsCallback(action, setup, count,
+      statistics.dbStatisticsCallback(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
-      databaseLogCallback?.call(action, setup, count,
+      databaseLogCallback?.call(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
     };
   }
@@ -125,7 +125,7 @@ class YustDatabaseService {
           () => _api.projects.databases.documents
               .get(_getDocumentPath(docSetup, id), transaction: transaction));
 
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return _transformDoc<T>(docSetup, response);
     } on YustNotFoundException {
       return null;
@@ -187,7 +187,7 @@ class YustDatabaseService {
     if (response.isEmpty || response.first.document == null) {
       return null;
     }
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+    dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
     return _transformDoc<T>(docSetup, response.first.document!);
   }
 
@@ -274,7 +274,8 @@ class YustDatabaseService {
             _getQuery(docSetup,
                 filters: filters, orderBy: orderBy, limit: limit),
             _getParentPath(docSetup)));
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
+    dbLogCallback?.call(
+        DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
     return response
         .map((e) {
@@ -352,7 +353,8 @@ class YustDatabaseService {
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));
 
-        dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
+        dbLogCallback?.call(
+            DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
         if (!isDone) lastOffset += pageSize;
@@ -410,7 +412,8 @@ class YustDatabaseService {
 
     final result = int.parse(
         response[0].result?.aggregateFields?[type.name]?.integerValue ?? '0');
-    dbLogCallback?.call(DatabaseLogAction.aggregate, docSetup, result);
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), result);
     return result;
   }
 
@@ -462,7 +465,8 @@ class YustDatabaseService {
             ?.aggregateFields?[AggregationType.count.name]
             ?.integerValue ??
         '0');
-    dbLogCallback?.call(DatabaseLogAction.aggregate, docSetup, count,
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
         aggregationResult: result);
     return result;
   }
@@ -508,7 +512,8 @@ class YustDatabaseService {
         currentDocument_exists: doNotCreate ? true : null,
       );
       if (!skipLog) {
-        dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+        dbLogCallback?.call(
+            DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
             id: doc.id, updateMask: updateMask ?? []);
       }
     });
@@ -541,7 +546,8 @@ class YustDatabaseService {
         commitRequest,
         _getDatabasePath(),
       );
-      dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+      dbLogCallback?.call(
+          DatabaseLogAction.transform, _getDocumentPath(docSetup), 1,
           id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
     });
   }
@@ -585,7 +591,8 @@ class YustDatabaseService {
         _getDatabasePath(),
       );
     });
-    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, noOfDocs);
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, _getDocumentPath(docSetup), noOfDocs);
     return noOfDocs;
   }
 
@@ -598,7 +605,8 @@ class YustDatabaseService {
     final docPath = _getDocumentPath(docSetup, doc.id);
     await _retryOnException('deleteDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.delete(docPath);
-      dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
+      dbLogCallback?.call(
+          DatabaseLogAction.delete, _getDocumentPath(docSetup), 1);
     });
   }
 
@@ -610,7 +618,9 @@ class YustDatabaseService {
     await _retryOnException('deleteDocById', _getDocumentPath(docSetup, id),
         () async {
       await _api.projects.databases.documents.delete(docPath);
-      dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: id);
+      dbLogCallback?.call(
+          DatabaseLogAction.delete, _getDocumentPath(docSetup), 1,
+          id: id);
     });
   }
 
@@ -638,7 +648,9 @@ class YustDatabaseService {
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
       skipLog: true,
     );
-    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1, id: doc.id);
+    dbLogCallback?.call(
+        DatabaseLogAction.saveNew, _getDocumentPath(docSetup), 1,
+        id: doc.id);
     return doc;
   }
 

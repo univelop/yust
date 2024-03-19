@@ -12,7 +12,9 @@ class YustDatabaseStatistics {
   void dbStatisticsCallback(
       DatabaseLogAction action, String documentPath, int count,
       {String? id, List<String>? updateMask, num? aggregationResult}) {
-    final collectionGroupName = documentPath.split('/').last;
+    final collectionGroupName =
+        documentPath.split('/').lastWhereOrNull((e) => e.isNotEmpty);
+    if (collectionGroupName == null) return;
     _statistics[collectionGroupName] ??= {};
     _statistics[collectionGroupName]![action] ??= 0;
     _statistics[collectionGroupName]![action] =

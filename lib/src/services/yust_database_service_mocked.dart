@@ -301,12 +301,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   @override
   Future<void> deleteDocById<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String docId) async {
-    final doc = await get(docSetup, docId);
+      YustDocSetup<T> docSetup, String id) async {
+    final doc = await get(docSetup, id);
     if (doc == null) return;
     await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
-    jsonDocs.removeWhere((d) => d['id'] == docId);
+    jsonDocs.removeWhere((d) => d['id'] == id);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
       doc.toJson(),

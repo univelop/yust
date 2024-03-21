@@ -226,7 +226,8 @@ class YustAuthService {
         email: fireAuth.currentUser!.email!,
         password: password,
       );
-      await userCredential.user!.verifyBeforeUpdateEmail(email);
+      // ignore: deprecated_member_use
+      await userCredential.user!.updateEmail(email);
     }
 
     if (user != null) {

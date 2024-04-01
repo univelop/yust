@@ -1,7 +1,13 @@
+## 3.19.2 - 2024-04-01
+
+- Upgrade Flutter
+
 ## 3.19.1 - 2024-03-19
+
 - Fix bugs
 
 ## 3.19.0 - 2024-03-15
+
 - Move YustDatabaseService to the Yust instance, instead of being static
 - Add support for DB Action Statistics
 - Fix bugs
@@ -9,7 +15,7 @@
 ## 3.18.1 - 2024-03-06
 
 - add ServerNow
-  
+
 ## 3.18.0 - 2024-02-17
 
 - Add multi language support

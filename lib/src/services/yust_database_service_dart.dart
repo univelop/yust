@@ -321,13 +321,13 @@ class YustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      var lastOffset = 0;
+      String? lastDocument;
       while (!isDone) {
         final request = _getQuery(docSetup,
             filters: filters,
             orderBy: orderBy,
             limit: pageSize,
-            offset: lastOffset);
+            startAtDocument: lastDocument);
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -357,7 +357,7 @@ class YustDatabaseService {
             DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastOffset += pageSize;
+        if (!isDone) lastDocument = response.last['document']['name'];
 
         yield* Stream.fromIterable(response);
       }
@@ -839,19 +839,24 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    int? offset,
+    String? startAtDocument,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
-          from: [CollectionSelector(collectionId: _getCollection(docSetup))],
-          where: Filter(
-              compositeFilter: CompositeFilter(
-                  filters: _executeStaticFilters(docSetup) +
-                      _executeFilters(filters),
-                  op: 'AND')),
-          orderBy: _executeOrderByList(orderBy),
-          limit: limit,
-          offset: offset),
+        from: [CollectionSelector(collectionId: _getCollection(docSetup))],
+        where: Filter(
+            compositeFilter: CompositeFilter(
+                filters:
+                    _executeStaticFilters(docSetup) + _executeFilters(filters),
+                op: 'AND')),
+        orderBy: _executeOrderByList(orderBy),
+        limit: limit,
+        startAt: startAtDocument == null
+            ? null
+            : Cursor(values: [
+                Value(referenceValue: startAtDocument),
+              ], before: false),
+      ),
     );
   }
 

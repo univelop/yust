@@ -1,3 +1,7 @@
+## 3.19.3 - 2024-04-02
+
+- Fix get list chunked
+
 ## 3.19.2 - 2024-04-01
 
 - Upgrade Flutter

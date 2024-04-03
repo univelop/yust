@@ -325,7 +325,8 @@ class YustDatabaseService {
       while (!isDone) {
         final request = _getQuery(docSetup,
             filters: filters,
-            orderBy: orderBy,
+            // orderBy __name__ is required for pagination
+            orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
             startAfterDocument: lastDocument);
         final body = jsonEncode(request);

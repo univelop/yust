@@ -29,7 +29,7 @@ class YustException implements Exception {
           'Failed save transaction for the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
     return YustException(
-        'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+        'Something went wrong with $docPath. ${_detailedApiRequestErrorToString(e)}');
   }
 
   static String _detailedApiRequestErrorToString(DetailedApiRequestError e) {

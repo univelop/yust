@@ -325,9 +325,10 @@ class YustDatabaseService {
       while (!isDone) {
         final request = _getQuery(docSetup,
             filters: filters,
-            orderBy: orderBy,
+            // orderBy __name__ is required for pagination
+            orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
-            startAtDocument: lastDocument);
+            startAfterDocument: lastDocument);
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -839,7 +840,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAtDocument,
+    String? startAfterDocument,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -851,10 +852,10 @@ class YustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
-        startAt: startAtDocument == null
+        startAt: startAfterDocument == null
             ? null
             : Cursor(values: [
-                Value(referenceValue: startAtDocument),
+                Value(referenceValue: startAfterDocument),
               ], before: false),
       ),
     );

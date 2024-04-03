@@ -46,7 +46,11 @@ class YustDatabaseService {
   /// Root (aka base) URL for the Firestore REST/GRPC API.
   final String rootUrl;
 
-  num maxRetries = 20;
+  /// Maximum number of retries for a request.
+  ///
+  /// 16 means, that the longest (16th) retry waiting period
+  /// is about 1 - 1.5h between requests
+  num maxRetries = 16;
 
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
@@ -688,7 +692,7 @@ class YustDatabaseService {
           final doc =
               await getFromDB<T>(docSetup, docId, transaction: transactionId);
           if (doc == null) {
-            throw YustException('Can not find document $docId.');
+            throw YustNotFoundException('Can not find document $docId.');
           }
 
           try {
@@ -1102,6 +1106,10 @@ class YustDatabaseService {
       if (numberOfRetries >= maxRetries) {
         print(
             '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
+        rethrow;
+      } else if (e is YustException) {
+        print(
+            '[[DEBUG]] NOT Retrying $fnName call for the ${numberOfRetries + 1} time on YustException ($e) for $docPath, because we don\'t retry YustExceptions');
         rethrow;
       } else if (e is TlsException) {
         print(

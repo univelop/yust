@@ -1136,7 +1136,8 @@ class YustDatabaseService {
           throw YustException.fromDetailedApiRequestError(docPath, e);
         }
       } else {
-        print('[[WARNING]] Unhandled Firestore Exception $e');
+        print(
+            '[[WARNING]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unknown Firestore Exception ($e) for $docPath');
       }
       return Future.delayed(
           Duration(

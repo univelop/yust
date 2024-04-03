@@ -1,3 +1,7 @@
+## 3.19.4 - 2024-04-03
+
+- Fix get list chunked sorting
+  
 ## 3.19.3 - 2024-04-02
 
 - Fix get list chunked

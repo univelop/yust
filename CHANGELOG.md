@@ -1,3 +1,7 @@
+## 3.19.5 - 2024-04-03
+
+- Improved Error Handling for Database Service
+
 ## 3.19.4 - 2024-04-03
 
 - Fix get list chunked sorting

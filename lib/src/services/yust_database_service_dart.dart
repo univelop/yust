@@ -317,11 +317,16 @@ class YustDatabaseService {
   Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
     int pageSize = 300,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
+
+    // Calculate orderBy from all unequal filters
+    final orderBy = filters
+        ?.where((filter) => filter.comparator != YustFilterComparator.equal)
+        .map((e) => YustOrderBy(field: e.field))
+        .toList();
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;

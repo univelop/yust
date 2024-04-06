@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
@@ -322,6 +323,19 @@ class YustDatabaseService {
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
+
+    final unequalFilters = (filters ?? [])
+        .whereNot((filter) =>
+            YustFilterComparator.equalityFilters.contains(filter.comparator))
+        .toList();
+
+    assert(!((unequalFilters.isNotEmpty) && (orderBy?.isNotEmpty ?? false)),
+        'You can\'t use orderBy and unequal filters at the same time');
+
+    // Calculate orderBy from all unequal filters
+    if (unequalFilters.isNotEmpty) {
+      orderBy = unequalFilters.map((e) => YustOrderBy(field: e.field)).toList();
+    }
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;

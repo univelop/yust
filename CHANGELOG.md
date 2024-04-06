@@ -1,3 +1,7 @@
+## 3.19.6 - 2024-04-06
+
+- Further improved getListChunked sorting
+
 ## 3.19.5 - 2024-04-03
 
 - Improved Error Handling for Database Service

@@ -19,7 +19,10 @@ enum YustFilterComparator {
   inList,
   notInList,
   isNull,
-  isNotNull,
+  isNotNull;
+
+  static List<YustFilterComparator> get equalityFilters =>
+      const [equal, arrayContains, arrayContainsAny, inList, isNull];
 }
 
 /// The Filter class represents a document filter

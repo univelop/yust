@@ -173,12 +173,13 @@ class YustFileService {
     return fileVersions.where((e) => e.timeCreated != null).sortedBy<DateTime>((element) => element.timeCreated!).last.generation;
   }
 
-  Future<String?> getLatestInvalidFileGeneration({required String path, required String name}) async {
+  Future<String?> getLatestInvalidFileGeneration({required String path, required String name, DateTime? momentBeforeDeletion}) async {
     final fileVersions = ((await _storageApi.objects.list(bucketName, 
     prefix: path, versions: true)).items ?? [])
     .where((e) => e.name == name);
       // Get the generation of the file that has been deleted last
     return fileVersions.where((e) => e.timeCreated != null && e.timeDeleted != null)
+      .where((e) => momentBeforeDeletion != null ? e.timeDeleted?.isAfter(momentBeforeDeletion) ?? false :true)
       .sortedBy<DateTime>((element) => element.timeDeleted!).last.generation;
   }
 

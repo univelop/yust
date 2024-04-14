@@ -1,3 +1,7 @@
+## 3.20.0 - 2024-04-14
+
+- Improve file picker
+
 ## 3.19.6 - 2024-04-06
 
 - Further improved getListChunked sorting
@@ -9,7 +13,7 @@
 ## 3.19.4 - 2024-04-03
 
 - Fix get list chunked sorting
-  
+
 ## 3.19.3 - 2024-04-02
 
 - Fix get list chunked

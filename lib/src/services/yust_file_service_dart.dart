@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:http/http.dart';
 import 'package:mime/mime.dart';
@@ -158,5 +159,39 @@ class YustFileService {
     return 'https://firebasestorage.googleapis.com/v0/b/'
         '$bucketName/o/${Uri.encodeComponent('$path/$name')}'
         '?alt=media&token=$token';
+  }
+
+  Future<List<Object>> getFilesInFolder({required String path}) async {
+    return (await _storageApi.objects.list(bucketName, prefix: path)).items ?? [];
+  }
+
+  /// Returns the latest generation and latest invalid file generation of a file at [path] and [name].
+  /// 
+  /// $1 is the latest generation, $2 is the latest invalid generation. 
+  Future<String?> getLatestFileGeneration({required String path, required String name}) async {
+    final fileVersions = ((await _storageApi.objects.list(bucketName, 
+    prefix: path, versions: true)).items ?? [])
+    .where((e) => e.name == name);
+      // Get the generation of the file that has been deleted last
+    return fileVersions.where((e) => e.timeCreated != null).sortedBy<DateTime>((element) => element.timeCreated!).last.generation;
+  }
+
+    /// Returns the latest generation and latest invalid file generation of a file at [path] and [name].
+  /// 
+  /// $1 is the latest generation, $2 is the latest invalid generation. 
+  Future<String?> getLatestInvalidFileGeneration({required String path, required String name}) async {
+    final fileVersions = ((await _storageApi.objects.list(bucketName, 
+    prefix: path, versions: true)).items ?? [])
+    .where((e) => e.name == name);
+      // Get the generation of the file that has been deleted last
+    return fileVersions.where((e) => e.timeCreated != null && e.timeDeleted != null)
+      .sortedBy<DateTime>((element) => element.timeDeleted!).last.generation;
+  }
+
+  Future<void> recoverOutdatedFile({required String path, required String name, required String generation}) async {
+    final object = await _storageApi.objects.get(bucketName, '$path/$name', generation: generation);
+    if (object is Object) {
+      await _storageApi.objects.copy(object, bucketName, object.name!, bucketName, object.name!);
+    }
   }
 }

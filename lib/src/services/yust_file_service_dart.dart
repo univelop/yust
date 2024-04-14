@@ -165,9 +165,6 @@ class YustFileService {
     return (await _storageApi.objects.list(bucketName, prefix: path)).items ?? [];
   }
 
-  /// Returns the latest generation and latest invalid file generation of a file at [path] and [name].
-  /// 
-  /// $1 is the latest generation, $2 is the latest invalid generation. 
   Future<String?> getLatestFileGeneration({required String path, required String name}) async {
     final fileVersions = ((await _storageApi.objects.list(bucketName, 
     prefix: path, versions: true)).items ?? [])
@@ -176,9 +173,6 @@ class YustFileService {
     return fileVersions.where((e) => e.timeCreated != null).sortedBy<DateTime>((element) => element.timeCreated!).last.generation;
   }
 
-    /// Returns the latest generation and latest invalid file generation of a file at [path] and [name].
-  /// 
-  /// $1 is the latest generation, $2 is the latest invalid generation. 
   Future<String?> getLatestInvalidFileGeneration({required String path, required String name}) async {
     final fileVersions = ((await _storageApi.objects.list(bucketName, 
     prefix: path, versions: true)).items ?? [])

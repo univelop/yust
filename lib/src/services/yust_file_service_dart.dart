@@ -165,6 +165,25 @@ class YustFileService {
     return (await _storageApi.objects.list(bucketName, prefix: path)).items ?? [];
   }
 
+  Future<List<Object>> getFileVersionsInFolder({required String path}) async {
+    return (await _storageApi.objects.list(bucketName, prefix: path, versions: true)).items ?? [];
+  }
+
+  Future<Map<String,List<Object>>> getFilesMapInFolder({required String path}) async {
+    final objects = await getFileVersionsInFolder(path: path);
+    final result = <String,List<Object>>{};
+    for (final object in objects) {
+      if (object.name != null) {
+        if (result.containsKey(object.name!)) {
+          result[object.name]!.add(object);
+        } else {
+          result[object.name!] = [object];
+        }
+      }
+    }
+    return result;
+  }
+
   Future<String?> getLatestFileGeneration({required String path, required String name}) async {
     final fileVersions = ((await _storageApi.objects.list(bucketName, 
     prefix: path, versions: true)).items ?? [])

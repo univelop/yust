@@ -162,50 +162,74 @@ class YustFileService {
   }
 
   Future<List<Object>> getFilesInFolder({required String path}) async {
-    return (await _storageApi.objects.list(bucketName, prefix: path)).items ?? [];
+    return (await _storageApi.objects.list(bucketName, prefix: path)).items ??
+        [];
   }
 
   Future<List<Object>> getFileVersionsInFolder({required String path}) async {
-    return (await _storageApi.objects.list(bucketName, prefix: path, versions: true)).items ?? [];
+    return (await _storageApi.objects
+                .list(bucketName, prefix: path, versions: true))
+            .items ??
+        [];
   }
 
-  Future<Map<String,List<Object>>> getFilesMapInFolder({required String path}) async {
-    final objects = await getFileVersionsInFolder(path: path);
-    final result = <String,List<Object>>{};
-    for (final object in objects) {
-      if (object.name != null) {
-        if (result.containsKey(object.name!)) {
-          result[object.name]!.add(object);
-        } else {
-          result[object.name!] = [object];
-        }
-      }
-    }
-    return result;
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped(
+      {required String path}) async {
+    final objects = groupBy((await getFileVersionsInFolder(path: path)),
+        (Object object) => object.name);
+    return objects;
   }
 
-  Future<String?> getLatestFileGeneration({required String path, required String name}) async {
-    final fileVersions = ((await _storageApi.objects.list(bucketName, 
-    prefix: path, versions: true)).items ?? [])
-    .where((e) => e.name == name);
-      // Get the generation of the file that has been deleted last
-    return fileVersions.where((e) => e.timeCreated != null).sortedBy<DateTime>((element) => element.timeCreated!).last.generation;
+  Future<String?> getLatestFileVersion(
+      {required String path, required String name}) async {
+    final fileVersions = ((await _storageApi.objects
+                    .list(bucketName, prefix: path, versions: true))
+                .items ??
+            [])
+        .where((e) => e.name == '$path/$name');
+    // Get the generation of the file that has been deleted last
+    return fileVersions
+        .where((e) => e.timeCreated != null)
+        .sortedBy<DateTime>((element) => element.timeCreated!)
+        .lastOrNull
+        ?.generation;
   }
 
-  Future<String?> getLatestInvalidFileGeneration({required String path, required String name, DateTime? momentBeforeDeletion}) async {
-    final fileVersions = ((await _storageApi.objects.list(bucketName, 
-    prefix: path, versions: true)).items ?? [])
-    .where((e) => e.name == name);
-      // Get the generation of the file that has been deleted last
-    return fileVersions.where((e) => e.timeCreated != null && e.timeDeleted != null)
-      .where((e) => momentBeforeDeletion != null ? e.timeDeleted?.isAfter(momentBeforeDeletion) ?? false :true)
-      .sortedBy<DateTime>((element) => element.timeDeleted!).last.generation;
+  Future<String?> getLatestInvalidFileVersion({
+    required String path,
+    required String name,
+    DateTime? beforeDeletion,
+    DateTime? afterDeletion,
+  }) async {
+    final fileVersions = ((await _storageApi.objects
+                    .list(bucketName, prefix: path, versions: true))
+                .items ??
+            [])
+        .where((e) => e.name == '$path/$name');
+    // Get the generation of the file that has been deleted last
+    return fileVersions
+        .where((e) => e.timeCreated != null && e.timeDeleted != null)
+        .where((e) => beforeDeletion != null
+            ? e.timeDeleted?.isAfter(beforeDeletion) ?? false
+            : true)
+        .where((e) => afterDeletion != null
+            ? e.timeDeleted?.isBefore(afterDeletion) ?? false
+            : true)
+        .sortedBy<DateTime>((element) => element.timeDeleted!)
+        .lastOrNull
+        ?.generation;
   }
 
-  Future<void> recoverOutdatedFile({required String path, required String name, required String generation}) async {
-    final object = await _storageApi.objects.get(bucketName, '$path/$name', generation: generation);
+  Future<void> recoverOutdatedFile(
+      {required String path,
+      required String name,
+      required String generation}) async {
+    final object = await _storageApi.objects
+        .get(bucketName, '$path/$name', generation: generation);
     if (object is Object) {
-      await _storageApi.objects.copy(object, bucketName, object.name!, bucketName, object.name!);
+      await _storageApi.objects.rewrite(
+          object, bucketName, object.name!, bucketName, object.name!,
+          sourceGeneration: generation);
     }
   }
 }

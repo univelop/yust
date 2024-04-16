@@ -359,10 +359,17 @@ class YustDatabaseService {
       jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
-    if (doNotCreate && (await get(docSetup, doc.id)) == null) return;
-    await collection
-        .doc(doc.id)
-        .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
+    if (doNotCreate) {
+      try {
+        await collection.doc(doc.id).update(modifiedDoc);
+      } catch (_) {
+        return;
+      }
+    } else {
+      await collection
+          .doc(doc.id)
+          .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
+    }
     if (!skipLog) {
       dbLogCallback?.call(
           DatabaseLogAction.save, _getCollectionPath(docSetup), 1,

@@ -360,11 +360,7 @@ class YustDatabaseService {
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
     if (doNotCreate) {
-      try {
-        await collection.doc(doc.id).update(modifiedDoc);
-      } catch (_) {
-        return;
-      }
+      await collection.doc(doc.id).update(modifiedDoc);
     } else {
       await collection
           .doc(doc.id)

@@ -25,7 +25,7 @@ class YustAuthService {
       if (user != null) {
         Yust.databaseService
             .getFromDB<YustUser>(Yust.userSetup, user.uid)
-            .then((yustUser) => yustUser?.setLoginTime());
+            .then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });

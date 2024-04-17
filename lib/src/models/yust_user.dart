@@ -45,6 +45,9 @@ class YustUser extends YustDoc {
   /// The timestamp of the last login.
   DateTime? lastLogin;
 
+  /// The domain of the last login.
+  String? lastLoginDomain;
+
   /// The authentication method.
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
   YustAuthenticationMethod? authenticationMethod;
@@ -76,8 +79,10 @@ class YustUser extends YustDoc {
   @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
 
-  /// Saves the current [DateTime] as the last login.
-  void setLoginTime({Yust? yust}) async {
+  /// Saves the current [DateTime] as the last login and the current domain.
+  Future<void> setLoginFields({Yust? yust}) async {
+    lastLoginDomain =
+        Uri.base.scheme.contains('http') ? Uri.base.host : lastLoginDomain;
     lastLogin = Yust.helpers.utcNow();
     await (yust?.dbService ?? Yust.databaseService)
         .saveDoc<YustUser>(Yust.userSetup, this);

@@ -1,3 +1,7 @@
+## 3.20.1 - 2024-04-18
+
+- Added lastLoginDomain field to YustUser
+
 ## 3.20.0 - 2024-04-14
 
 - Improve file picker

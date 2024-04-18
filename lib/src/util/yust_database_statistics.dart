@@ -7,23 +7,38 @@ typedef YustAggregatedStatisticsMap = Map<DatabaseLogAction, int>;
 typedef YustEnhancedStatisticsMap = Map<String, int>;
 
 class YustDatabaseStatistics {
+  // Containts statistics for each collection, e.g. "collection"
   final YustStatisticsMap _statistics = {};
+  // Contains statistics for each collection including it's parent, e.g.  "collection/id/subcollection"
+  final YustStatisticsMap _statisticsTwoSegments = {};
 
   void dbStatisticsCallback(
       DatabaseLogAction action, String documentPath, int count,
       {String? id, List<String>? updateMask, num? aggregationResult}) {
     final collectionGroupName =
         documentPath.split('/').lastWhereOrNull((e) => e.isNotEmpty);
+    final collectionNameIncludingParent =
+        documentPath.split('/').reversed.take(3).toList().reversed.join('/');
+
     if (collectionGroupName == null) return;
     _statistics[collectionGroupName] ??= {};
     _statistics[collectionGroupName]![action] ??= 0;
     _statistics[collectionGroupName]![action] =
         _statistics[collectionGroupName]![action]! + count;
+
+    _statisticsTwoSegments[collectionNameIncludingParent] ??= {};
+    _statisticsTwoSegments[collectionNameIncludingParent]![action] ??= 0;
+    _statisticsTwoSegments[collectionNameIncludingParent]![action] =
+        _statisticsTwoSegments[collectionNameIncludingParent]![action]! + count;
   }
 
-  clear() => _statistics.clear();
+  clear() {
+    _statistics.clear();
+    _statisticsTwoSegments.clear();
+  }
 
   YustStatisticsMap get statistics => _statistics;
+  YustStatisticsMap get statisticsTwoSegments => _statisticsTwoSegments;
 
   YustAggregatedStatisticsMap get aggregatedStatistics =>
       Map.fromEntries(DatabaseLogAction.values

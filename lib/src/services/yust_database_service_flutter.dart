@@ -64,10 +64,19 @@ class YustDatabaseService {
         .doc(id)
         .get(GetOptions(source: Source.serverAndCache))
         .then((value) {
-      dbLogCallback?.call(
-          DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
-      return value;
-    }).then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
+          dbLogCallback?.call(
+              DatabaseLogAction.get, _getCollectionPath(docSetup), 1);
+          return value;
+        })
+        .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot))
+        .catchError((e) {
+          if (e is FirebaseException && e.code == 'permission-denied') {
+            print('Permission denied for doc: ${docSetup.collectionName}/$id');
+            return null;
+          }
+          throw e;
+        });
+    ;
   }
 
   Future<T?> getFromCache<T extends YustDoc>(

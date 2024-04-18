@@ -1016,9 +1016,7 @@ class YustDatabaseService {
   }
 
   Value _valueToDbValue(dynamic value) {
-    if (value is ServerNow) {
-      return Value(timestampValue: 'SERVER_TIMESTAMP');
-    } else if (value is List) {
+    if (value is List) {
       return Value(
           arrayValue: ArrayValue(
               values: value

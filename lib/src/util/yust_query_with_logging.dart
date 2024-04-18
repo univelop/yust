@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../yust.dart';
 
 // ignore: subtype_of_sealed_class
+/// A Custom implementation of [Query] that logs all actions to a callback.
+///
+/// Its very closely based on the [_WithConverterQuery] class from the Firestore package.
 class YustQueryWithLogging implements Query {
   YustQueryWithLogging(
     this._dbLogCallback,

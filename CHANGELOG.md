@@ -1,4 +1,4 @@
-## 3.20.1 - 2024-04-18
+## 3.20.2 - 2024-04-18
 
 - Added lastLoginDomain field to YustUser
 

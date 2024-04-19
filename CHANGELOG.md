@@ -1,3 +1,8 @@
+## 3.20.3 - 2024-04-19
+
+- Improve Database Statistics
+- Fix orderBy bug
+
 ## 3.20.2 - 2024-04-18
 
 - Added lastLoginDomain field to YustUser

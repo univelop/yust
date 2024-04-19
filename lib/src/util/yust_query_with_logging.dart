@@ -15,12 +15,6 @@ class YustQueryWithLogging implements Query {
   final Query _originalQuery;
   final DatabaseLogCallback _dbLogCallback;
 
-  @override
-  FirebaseFirestore get firestore => _originalQuery.firestore;
-
-  @override
-  Map<String, dynamic> get parameters => _originalQuery.parameters;
-
   Query _mapQuery(
     Query newOriginalQuery,
   ) =>
@@ -65,9 +59,16 @@ class YustQueryWithLogging implements Query {
 
   // ########################################################################
   // #                                                                      #
-  // # NO Custom logic below here, just passing through to _originalQuery   #
+  // # NO own logic below here, just passing through to _originalQuery      #
+  // # (Copied from [_WithConverterQuery] in the Firestore package)         #
   // #                                                                      #
   // ########################################################################
+
+  @override
+  FirebaseFirestore get firestore => _originalQuery.firestore;
+
+  @override
+  Map<String, dynamic> get parameters => _originalQuery.parameters;
 
   @override
   Query endAt(Iterable<Object?> values) =>

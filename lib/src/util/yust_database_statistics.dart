@@ -7,9 +7,9 @@ typedef YustAggregatedStatisticsMap = Map<DatabaseLogAction, int>;
 typedef YustEnhancedStatisticsMap = Map<String, int>;
 
 class YustDatabaseStatistics {
-  // Containts statistics for each collection, e.g. "collection"
+  // Contains statistics for each collection, e.g. "collection"
   final YustStatisticsMap _statistics = {};
-  // Contains statistics for each collection including it's parent, e.g.  "collection/id/subcollection"
+  // Contains statistics for each collection including it's parent, e.g. "parent_collection/parent_id/collection"
   final YustStatisticsMap _statisticsTwoSegments = {};
 
   void dbStatisticsCallback(

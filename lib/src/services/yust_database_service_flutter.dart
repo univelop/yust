@@ -701,16 +701,4 @@ class YustDatabaseService {
     }
     return map;
   }
-
-  /// Basically the identity function, but with added logging
-  ///
-  /// Note: This is a class function instead of a lambda, because it needs to stay
-  /// the same instance for every call to [getQueryWithLogging].
-  Map<String, dynamic>? _queryWithLoggingFromFirestore<T>(
-      DocumentSnapshot<Map<String, dynamic>> v, SnapshotOptions? _) {
-    dbLogCallback?.call(
-        DatabaseLogAction.fromSnapshot(v), v.reference.parent.path, 1);
-
-    return v.data();
-  }
 }

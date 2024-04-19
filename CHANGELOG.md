@@ -1,4 +1,4 @@
-## 3.20.3 - 2024-04-19
+## 3.20.4 - 2024-04-19
 
 - Improve Database Statistics
 - Fix orderBy bug

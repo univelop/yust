@@ -28,8 +28,8 @@ class YustQueryWithLogging implements Query {
     final snapshot = await _originalQuery.get(options);
     if (snapshot.docs.isNotEmpty) {
       for (final doc in snapshot.docs) {
-        _dbLogCallback(
-            DatabaseLogAction.fromSnapshot(doc), doc.reference.parent.path, 1);
+        _dbLogCallback(DatabaseLogActionExtension.fromSnapshot(doc),
+            doc.reference.parent.path, 1);
       }
     }
 
@@ -43,7 +43,7 @@ class YustQueryWithLogging implements Query {
           .map((snapshot) {
         if (snapshot.docs.isNotEmpty) {
           for (final doc in snapshot.docs) {
-            _dbLogCallback(DatabaseLogAction.fromSnapshot(doc),
+            _dbLogCallback(DatabaseLogActionExtension.fromSnapshot(doc),
                 doc.reference.parent.path, 1);
           }
         }
@@ -214,4 +214,12 @@ class YustQueryWithLogging implements Query {
           aggregateField28,
           aggregateField29,
           aggregateField30);
+}
+
+extension DatabaseLogActionExtension on DatabaseLogAction {
+  static DatabaseLogAction fromSnapshot(DocumentSnapshot doc) =>
+      fromSnapshotMetadata(doc.metadata);
+
+  static DatabaseLogAction fromSnapshotMetadata(SnapshotMetadata meta) =>
+      meta.isFromCache ? DatabaseLogAction.getFromCache : DatabaseLogAction.get;
 }

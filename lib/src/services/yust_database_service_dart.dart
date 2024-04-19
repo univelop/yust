@@ -996,7 +996,8 @@ class YustDatabaseService {
   List<Order> _executeOrderByList(List<YustOrderBy>? orderBy) {
     return orderBy
             ?.map((e) => Order(
-                field: FieldReference(fieldPath: e.field),
+                field: FieldReference(
+                    fieldPath: YustHelpers().toQuotedFieldPath(e.field)),
                 direction: e.descending ? 'DESCENDING' : 'ASCENDING'))
             .toList() ??
         <Order>[];

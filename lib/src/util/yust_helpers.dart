@@ -24,8 +24,8 @@ class YustHelpers {
   /// Because the Firestore REST-Api (used in the background) can't handle
   /// attributes starting with numbers, e.g. 'foo.0bar', we need to escape the
   /// path-parts by using '´': '`foo`.`0bar`'.
-  String toQuotedFieldPath(String fieldPath) =>
-      fieldPath.split('.').map((f) => '`$f`').join('.');
+  String? toQuotedFieldPath(String? fieldPath) =>
+      fieldPath?.split('.').map((f) => '`$f`').join('.');
 
   /// Remove multiple keys from a map.
   void removeKeysFromMap(Map<String, dynamic> object, List<String> keys) {

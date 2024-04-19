@@ -520,7 +520,7 @@ class YustDatabaseService {
     // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
     // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
     final quotedUpdateMask = updateMask
-        ?.map((path) => YustHelpers().toQuotedFieldPath(path))
+        ?.map((path) => YustHelpers().toQuotedFieldPath(path)!)
         .toList();
     final docPath = _getDocumentPath(docSetup, doc.id);
     await _retryOnException('saveDoc', _getDocumentPath(docSetup), () async {
@@ -782,7 +782,7 @@ class YustDatabaseService {
       write.updateMask = DocumentMask(
           fieldPaths: doc.updateMask
               .map(
-                (e) => YustHelpers().toQuotedFieldPath(e),
+                (e) => YustHelpers().toQuotedFieldPath(e)!,
               )
               .toList());
     }
@@ -874,6 +874,7 @@ class YustDatabaseService {
     final countAggregation = Aggregation(
         alias: AggregationType.count.name,
         count: Count(upTo: upTo?.toString()));
+    final quotedFieldPath = YustHelpers().toQuotedFieldPath(fieldPath);
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
         aggregations: [
@@ -883,12 +884,12 @@ class YustDatabaseService {
             Aggregation(
                 alias: type.name,
                 count: Count(upTo: upTo?.toString()),
-                sum: Sum(field: FieldReference(fieldPath: fieldPath))),
+                sum: Sum(field: FieldReference(fieldPath: quotedFieldPath))),
           if (type == AggregationType.avg)
             Aggregation(
                 alias: type.name,
                 count: Count(upTo: upTo?.toString()),
-                avg: Avg(field: FieldReference(fieldPath: fieldPath))),
+                avg: Avg(field: FieldReference(fieldPath: quotedFieldPath))),
         ],
         structuredQuery: StructuredQuery(
           from: [CollectionSelector(collectionId: _getCollection(docSetup))],
@@ -985,7 +986,8 @@ class YustDatabaseService {
   List<Order> _executeOrderByList(List<YustOrderBy>? orderBy) {
     return orderBy
             ?.map((e) => Order(
-                field: FieldReference(fieldPath: e.field),
+                field: FieldReference(
+                    fieldPath: YustHelpers().toQuotedFieldPath(e.field)),
                 direction: e.descending ? 'DESCENDING' : 'ASCENDING'))
             .toList() ??
         <Order>[];

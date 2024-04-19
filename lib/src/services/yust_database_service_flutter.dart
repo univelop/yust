@@ -7,7 +7,6 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
-import '../util/field_delete.dart';
 import '../util/object_helper.dart';
 import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
@@ -65,17 +64,14 @@ class YustDatabaseService {
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .get(GetOptions(source: Source.serverAndCache))
-        .then((value) {
-          return value;
-        })
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot))
         .catchError((e) {
-          if (e is FirebaseException && e.code == 'permission-denied') {
-            print('Permission denied for doc: ${docSetup.collectionName}/$id');
-            return null;
-          }
-          throw e;
-        });
+      if (e is FirebaseException && e.code == 'permission-denied') {
+        print('Permission denied for doc: ${docSetup.collectionName}/$id');
+        return null;
+      }
+      throw e;
+    });
   }
 
   Future<T?> getFromCache<T extends YustDoc>(
@@ -389,9 +385,6 @@ class YustDatabaseService {
       }
       if (currentNode.value is ServerNow) {
         return FieldValue.serverTimestamp();
-      }
-      if (currentNode.value is FieldDelete) {
-        return FieldValue.delete();
       }
       // Parse ISO Timestamp Strings
       if (currentNode.value is String &&
@@ -720,11 +713,4 @@ class YustDatabaseService {
 
     return v.data();
   }
-
-  /// Basically the identity function
-  ///
-  /// Note: This is a class function instead of a lambda, because it needs to stay
-  /// the same instance for every call to [getQueryWithLogging].
-  Map<String, Object?> _queryWithLoggingToFirestore(dynamic v, SetOptions? _) =>
-      v;
 }

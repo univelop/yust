@@ -186,7 +186,7 @@ class YustDatabaseService {
         'getFirstFromDB',
         _getDocumentPath(docSetup),
         () => _api.projects.databases.documents.runQuery(
-            _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
+            getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
             _getParentPath(docSetup)));
 
     if (response.isEmpty || response.first.document == null) {
@@ -276,7 +276,7 @@ class YustDatabaseService {
         'getListFromDB',
         _getDocumentPath(docSetup),
         () => _api.projects.databases.documents.runQuery(
-            _getQuery(docSetup,
+            getQuery(docSetup,
                 filters: filters, orderBy: orderBy, limit: limit),
             _getParentPath(docSetup)));
     dbLogCallback?.call(
@@ -341,7 +341,7 @@ class YustDatabaseService {
       var isDone = false;
       String? lastDocument;
       while (!isDone) {
-        final request = _getQuery(docSetup,
+        final request = getQuery(docSetup,
             filters: filters,
             // orderBy __name__ is required for pagination
             orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
@@ -591,7 +591,7 @@ class YustDatabaseService {
     int? limit,
   }) async {
     final response = await _api.projects.databases.documents.runQuery(
-      _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
+      getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
       _getParentPath(docSetup),
     );
 
@@ -807,17 +807,6 @@ class YustDatabaseService {
         shouldRetryOnTransactionErrors: false);
   }
 
-  /// Returns a query for specified filter and order.
-  dynamic getQueryWithLogging<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
-    int? limit,
-  }) {
-    return _getQuery<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
-  }
-
   /// Transforms a json to a [YustDoc]
   T? transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
@@ -853,7 +842,7 @@ class YustDatabaseService {
     return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
   }
 
-  RunQueryRequest _getQuery<T extends YustDoc>(
+  RunQueryRequest getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,

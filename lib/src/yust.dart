@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart';
@@ -23,6 +24,7 @@ enum AuthState {
 enum DatabaseLogAction {
   delete,
   get,
+  getFromCache,
   saveNew,
   save,
   transform,
@@ -35,6 +37,12 @@ enum DatabaseLogAction {
   static DatabaseLogAction fromJson(String json) =>
       DatabaseLogAction.values.firstWhereOrNull((e) => e.toJson() == json) ??
       DatabaseLogAction.get;
+
+  static DatabaseLogAction fromSnapshot(DocumentSnapshot doc) =>
+      fromSnapshotMetadata(doc.metadata);
+
+  static DatabaseLogAction fromSnapshotMetadata(SnapshotMetadata meta) =>
+      meta.isFromCache ? DatabaseLogAction.getFromCache : DatabaseLogAction.get;
 }
 
 typedef DatabaseLogCallback = void Function(

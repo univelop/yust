@@ -87,7 +87,7 @@ class YustFilter {
 
       switch (comparator) {
         case YustFilterComparator.equal:
-          return fieldValue == value;
+          return DeepCollectionEquality().equals(fieldValue, value);
         case YustFilterComparator.notEqual:
           return fieldValue != value;
         case YustFilterComparator.lessThan:

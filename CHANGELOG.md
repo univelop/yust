@@ -1,3 +1,7 @@
+## 3.20.5 - 2024-04-28
+
+- Fix filter bug
+
 ## 3.20.4 - 2024-04-19
 
 - Improve Database Statistics

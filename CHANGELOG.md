@@ -1,3 +1,7 @@
+## 3.21.0 - 2024-05-14
+
+- Upgrade dependencies
+
 ## 3.20.5 - 2024-04-28
 
 - Fix filter bug

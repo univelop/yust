@@ -37,7 +37,9 @@ class YustQueryWithLogging implements Query {
   }
 
   @override
-  Stream<QuerySnapshot> snapshots({bool includeMetadataChanges = false}) =>
+  Stream<QuerySnapshot> snapshots(
+          {bool includeMetadataChanges = false,
+          ListenSource source = ListenSource.defaultSource}) =>
       _originalQuery
           .snapshots(includeMetadataChanges: includeMetadataChanges)
           .map((snapshot) {

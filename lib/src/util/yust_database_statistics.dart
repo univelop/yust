@@ -1,32 +1,50 @@
 import 'package:collection/collection.dart';
 
-import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
-typedef StatisticsMap = Map<String, Map<DatabaseLogAction, int>>;
+typedef YustStatisticsMap = Map<String, Map<DatabaseLogAction, int>>;
+typedef YustAggregatedStatisticsMap = Map<DatabaseLogAction, int>;
+typedef YustEnhancedStatisticsMap = Map<String, int>;
 
 class YustDatabaseStatistics {
-  final StatisticsMap _statistics = {};
+  // Contains statistics for each collection, e.g. "collection"
+  final YustStatisticsMap _statistics = {};
+  // Contains statistics for each collection including it's parent, e.g. "parent_collection/parent_id/collection"
+  final YustStatisticsMap _statisticsTwoSegments = {};
 
   void dbStatisticsCallback(
-      DatabaseLogAction action, YustDocSetup setup, int count,
+      DatabaseLogAction action, String documentPath, int count,
       {String? id, List<String>? updateMask, num? aggregationResult}) {
-    final collectionGroupName = setup.collectionName.split('/').last;
+    final collectionGroupName =
+        documentPath.split('/').lastWhereOrNull((e) => e.isNotEmpty);
+    final collectionNameIncludingParent =
+        documentPath.split('/').reversed.take(3).toList().reversed.join('/');
+
+    if (collectionGroupName == null) return;
     _statistics[collectionGroupName] ??= {};
     _statistics[collectionGroupName]![action] ??= 0;
     _statistics[collectionGroupName]![action] =
         _statistics[collectionGroupName]![action]! + count;
+
+    _statisticsTwoSegments[collectionNameIncludingParent] ??= {};
+    _statisticsTwoSegments[collectionNameIncludingParent]![action] ??= 0;
+    _statisticsTwoSegments[collectionNameIncludingParent]![action] =
+        _statisticsTwoSegments[collectionNameIncludingParent]![action]! + count;
   }
 
-  clear() => _statistics.clear();
+  clear() {
+    _statistics.clear();
+    _statisticsTwoSegments.clear();
+  }
 
-  StatisticsMap get statistics => _statistics;
+  YustStatisticsMap get statistics => _statistics;
+  YustStatisticsMap get statisticsTwoSegments => _statisticsTwoSegments;
 
-  Map<DatabaseLogAction, int> get aggregatedStatistics =>
+  YustAggregatedStatisticsMap get aggregatedStatistics =>
       Map.fromEntries(DatabaseLogAction.values
           .map((key) => MapEntry(key, getActionCount(key))));
 
-  Map<String, int> get enhancedStatistics =>
+  YustEnhancedStatisticsMap get enhancedStatistics =>
       aggregatedStatistics.map((key, value) => MapEntry(key.toJson(), value))
         ..addAll({
           'totalRead': getTotalReadCount(),

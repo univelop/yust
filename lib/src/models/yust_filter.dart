@@ -19,7 +19,10 @@ enum YustFilterComparator {
   inList,
   notInList,
   isNull,
-  isNotNull,
+  isNotNull;
+
+  static List<YustFilterComparator> get equalityFilters =>
+      const [equal, arrayContains, arrayContainsAny, inList, isNull];
 }
 
 /// The Filter class represents a document filter
@@ -84,7 +87,7 @@ class YustFilter {
 
       switch (comparator) {
         case YustFilterComparator.equal:
-          return fieldValue == value;
+          return DeepCollectionEquality().equals(fieldValue, value);
         case YustFilterComparator.notEqual:
           return fieldValue != value;
         case YustFilterComparator.lessThan:

@@ -8,7 +8,7 @@ class YustException implements Exception {
 
   @override
   String toString() {
-    return message;
+    return '$runtimeType: $message';
   }
 
   factory YustException.fromDetailedApiRequestError(
@@ -20,12 +20,16 @@ class YustException implements Exception {
       return YustDocumentLockedException(
           'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
+    if (e.status == 404) {
+      return YustNotFoundException(
+          'The document $docPath was not found. ${_detailedApiRequestErrorToString(e)}');
+    }
     if (e.status == 409) {
       return YustTransactionFailedException(
-          'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+          'Failed save transaction for the document $docPath. ${_detailedApiRequestErrorToString(e)}');
     }
     return YustException(
-        'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+        'Something went wrong with $docPath. ${_detailedApiRequestErrorToString(e)}');
   }
 
   static String _detailedApiRequestErrorToString(DetailedApiRequestError e) {
@@ -46,4 +50,12 @@ class YustJsonParseException extends YustException {
   YustJsonParseException(super.message, this.json);
 
   final Map<String, dynamic> json;
+}
+
+class YustBadGatewayException extends YustException {
+  YustBadGatewayException(super.message);
+}
+
+class YustNotFoundException extends YustException {
+  YustNotFoundException(super.message);
 }

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:googleapis/firestore/v1.dart';
 import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
@@ -45,6 +47,12 @@ class YustDatabaseService {
   /// Root (aka base) URL for the Firestore REST/GRPC API.
   final String rootUrl;
 
+  /// Maximum number of retries for a request.
+  ///
+  /// 16 means, that the longest (16th) retry waiting period
+  /// is about 1 - 1.5h between requests
+  num maxRetries = 16;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
     Client? client,
@@ -60,11 +68,11 @@ class YustDatabaseService {
       rootUrl: rootUrl,
     );
 
-    dbLogCallback = (DatabaseLogAction action, YustDocSetup setup, int count,
+    dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
-      statistics.dbStatisticsCallback(action, setup, count,
+      statistics.dbStatisticsCallback(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
-      databaseLogCallback?.call(action, setup, count,
+      databaseLogCallback?.call(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
     };
   }
@@ -116,12 +124,15 @@ class YustDatabaseService {
     String? transaction,
   }) async {
     try {
-      final response = await _api.projects.databases.documents
-          .get(_getDocumentPath(docSetup, id), transaction: transaction);
+      final response = await _retryOnException<Document>(
+          'getFromDB',
+          _getDocumentPath(docSetup, id),
+          () => _api.projects.databases.documents
+              .get(_getDocumentPath(docSetup, id), transaction: transaction));
 
-      dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return _transformDoc<T>(docSetup, response);
-    } on ApiRequestError {
+    } on YustNotFoundException {
       return null;
     }
   }
@@ -171,14 +182,17 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
   }) async {
-    final response = await _api.projects.databases.documents.runQuery(
-        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
-        _getParentPath(docSetup));
+    final response = await _retryOnException<List<RunQueryResponseElement>>(
+        'getFirstFromDB',
+        _getDocumentPath(docSetup),
+        () => _api.projects.databases.documents.runQuery(
+            getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
+            _getParentPath(docSetup)));
 
     if (response.isEmpty || response.first.document == null) {
       return null;
     }
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, 1);
+    dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
     return _transformDoc<T>(docSetup, response.first.document!);
   }
 
@@ -258,10 +272,15 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    final response = await _api.projects.databases.documents.runQuery(
-        _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
-        _getParentPath(docSetup));
-    dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
+    final response = await _retryOnException<List<RunQueryResponseElement>>(
+        'getListFromDB',
+        _getDocumentPath(docSetup),
+        () => _api.projects.databases.documents.runQuery(
+            getQuery(docSetup,
+                filters: filters, orderBy: orderBy, limit: limit),
+            _getParentPath(docSetup)));
+    dbLogCallback?.call(
+        DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
     return response
         .map((e) {
@@ -300,33 +319,64 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    int pageSize = 5000,
+    int pageSize = 300,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
+    final unequalFilters = (filters ?? [])
+        .whereNot((filter) =>
+            YustFilterComparator.equalityFilters.contains(filter.comparator))
+        .toList();
+
+    assert(!((unequalFilters.isNotEmpty) && (orderBy?.isNotEmpty ?? false)),
+        'You can\'t use orderBy and unequal filters at the same time');
+
+    // Calculate orderBy from all unequal filters
+    if (unequalFilters.isNotEmpty) {
+      orderBy = unequalFilters.map((e) => YustOrderBy(field: e.field)).toList();
+    }
+
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      var lastOffset = 0;
+      String? lastDocument;
       while (!isDone) {
-        final request = _getQuery(docSetup,
+        final request = getQuery(docSetup,
             filters: filters,
-            orderBy: orderBy,
+            // orderBy __name__ is required for pagination
+            orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
-            offset: lastOffset);
+            startAfterDocument: lastDocument);
         final body = jsonEncode(request);
-        final result = await authClient.post(
-          Uri.parse(url),
-          body: body,
-        );
+
+        final result = await _retryOnException(
+            'getListChunked', _getDocumentPath(docSetup), () async {
+          final response = await authClient.post(
+            Uri.parse(url),
+            body: body,
+          );
+          if (response.statusCode < 200 || response.statusCode >= 400) {
+            var json = {'error': response.body};
+            try {
+              json = jsonDecode(response.body);
+            } catch (e) {
+              // the response body could not be parsed as json
+            }
+            throw DetailedApiRequestError(response.statusCode,
+                'No error details. HTTP status was: $response.statusCode',
+                jsonResponse: json);
+          }
+          return response;
+        });
 
         final response =
             List<Map<dynamic, dynamic>>.from(jsonDecode(result.body));
 
-        dbLogCallback?.call(DatabaseLogAction.get, docSetup, response.length);
+        dbLogCallback?.call(
+            DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastOffset += pageSize;
+        if (!isDone) lastDocument = response.last['document']['name'];
 
         yield* Stream.fromIterable(response);
       }
@@ -370,14 +420,19 @@ class YustDatabaseService {
   Future<int> count<T extends YustDoc>(YustDocSetup<T> docSetup,
       {List<YustFilter>? filters, int? limit}) async {
     final type = AggregationType.count;
-    final response = await _api.projects.databases.documents
-        .runAggregationQuery(
-            _getAggregationQuery(type, docSetup, filters: filters, upTo: limit),
-            _getParentPath(docSetup));
+    final response =
+        await _retryOnException<List<RunAggregationQueryResponseElement>>(
+            'count',
+            _getDocumentPath(docSetup),
+            () => _api.projects.databases.documents.runAggregationQuery(
+                _getAggregationQuery(type, docSetup,
+                    filters: filters, upTo: limit),
+                _getParentPath(docSetup)));
 
     final result = int.parse(
         response[0].result?.aggregateFields?[type.name]?.integerValue ?? '0');
-    dbLogCallback?.call(DatabaseLogAction.aggregate, docSetup, result);
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), result);
     return result;
   }
 
@@ -414,11 +469,14 @@ class YustDatabaseService {
   Future<double> _performAggregation<T extends YustDoc>(
       AggregationType type, YustDocSetup<T> docSetup, String fieldPath,
       {List<YustFilter>? filters, int? limit}) async {
-    final response = await _api.projects.databases.documents
-        .runAggregationQuery(
-            _getAggregationQuery(type, docSetup,
-                fieldPath: fieldPath, filters: filters, upTo: limit),
-            _getParentPath(docSetup));
+    final response =
+        await _retryOnException<List<RunAggregationQueryResponseElement>>(
+            'performAggregation:${type.name.split('.').last}',
+            _getDocumentPath(docSetup),
+            () => _api.projects.databases.documents.runAggregationQuery(
+                _getAggregationQuery(type, docSetup,
+                    fieldPath: fieldPath, filters: filters, upTo: limit),
+                _getParentPath(docSetup)));
     final result =
         response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
     final count = int.parse(response[0]
@@ -426,7 +484,8 @@ class YustDatabaseService {
             ?.aggregateFields?[AggregationType.count.name]
             ?.integerValue ??
         '0');
-    dbLogCallback?.call(DatabaseLogAction.aggregate, docSetup, count,
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
         aggregationResult: result);
     return result;
   }
@@ -461,10 +520,10 @@ class YustDatabaseService {
     // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
     // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
     final quotedUpdateMask = updateMask
-        ?.map((path) => YustHelpers().toQuotedFieldPath(path))
+        ?.map((path) => YustHelpers().toQuotedFieldPath(path)!)
         .toList();
     final docPath = _getDocumentPath(docSetup, doc.id);
-    try {
+    await _retryOnException('saveDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.patch(
         dbDoc,
         docPath,
@@ -472,12 +531,11 @@ class YustDatabaseService {
         currentDocument_exists: doNotCreate ? true : null,
       );
       if (!skipLog) {
-        dbLogCallback?.call(DatabaseLogAction.save, docSetup, 1,
+        dbLogCallback?.call(
+            DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
             id: doc.id, updateMask: updateMask ?? []);
       }
-    } on DetailedApiRequestError catch (e) {
-      throw YustException.fromDetailedApiRequestError(docPath, e);
-    }
+    });
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -501,17 +559,16 @@ class YustDatabaseService {
         transform: documentTransform,
         currentDocument: Precondition(exists: true));
     final commitRequest = CommitRequest(writes: [write]);
-
-    try {
+    await _retryOnException(
+        'updateDocByTransform', _getDocumentPath(docSetup, id), () async {
       await _api.projects.databases.documents.commit(
         commitRequest,
         _getDatabasePath(),
       );
-      dbLogCallback?.call(DatabaseLogAction.transform, docSetup, 1,
+      dbLogCallback?.call(
+          DatabaseLogAction.transform, _getDocumentPath(docSetup), 1,
           id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
-    } on DetailedApiRequestError catch (e) {
-      throw YustException.fromDetailedApiRequestError(docPath, e);
-    }
+    });
   }
 
   /// Delete all [YustDoc]s in the filter.
@@ -534,23 +591,27 @@ class YustDatabaseService {
     int? limit,
   }) async {
     final response = await _api.projects.databases.documents.runQuery(
-      _getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
+      getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
       _getParentPath(docSetup),
     );
 
     final noOfDocs =
         response.where((element) => element.document != null).length;
 
-    await _api.projects.databases.documents.batchWrite(
-      BatchWriteRequest(
-        writes: response
-            .where((element) => element.document != null)
-            .map((element) => Write(delete: element.document?.name))
-            .toList(),
-      ),
-      _getDatabasePath(),
-    );
-    dbLogCallback?.call(DatabaseLogAction.delete, docSetup, noOfDocs);
+    await _retryOnException('deleteDocsAsBatch', _getDocumentPath(docSetup),
+        () async {
+      await _api.projects.databases.documents.batchWrite(
+        BatchWriteRequest(
+          writes: response
+              .where((element) => element.document != null)
+              .map((element) => Write(delete: element.document?.name))
+              .toList(),
+        ),
+        _getDatabasePath(),
+      );
+    });
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, _getDocumentPath(docSetup), noOfDocs);
     return noOfDocs;
   }
 
@@ -561,25 +622,25 @@ class YustDatabaseService {
   ) async {
     await doc.onDelete();
     final docPath = _getDocumentPath(docSetup, doc.id);
-    try {
+    await _retryOnException('deleteDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.delete(docPath);
-      dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1);
-    } on DetailedApiRequestError catch (e) {
-      throw YustException.fromDetailedApiRequestError(docPath, e);
-    }
+      dbLogCallback?.call(
+          DatabaseLogAction.delete, _getDocumentPath(docSetup), 1);
+    });
   }
 
   /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String docId) async {
-    await (await get(docSetup, docId))?.onDelete();
-    final docPath = _getDocumentPath(docSetup, docId);
-    try {
+      YustDocSetup<T> docSetup, String id) async {
+    await (await get(docSetup, id))?.onDelete();
+    final docPath = _getDocumentPath(docSetup, id);
+    await _retryOnException('deleteDocById', _getDocumentPath(docSetup, id),
+        () async {
       await _api.projects.databases.documents.delete(docPath);
-      dbLogCallback?.call(DatabaseLogAction.delete, docSetup, 1, id: docId);
-    } on DetailedApiRequestError catch (e) {
-      throw YustException.fromDetailedApiRequestError(docPath, e);
-    }
+      dbLogCallback?.call(
+          DatabaseLogAction.delete, _getDocumentPath(docSetup), 1,
+          id: id);
+    });
   }
 
   /// Initializes a [YustDoc] and saves it.
@@ -599,14 +660,16 @@ class YustDatabaseService {
     if (onInitialised != null) {
       await onInitialised(doc);
     }
-    dbLogCallback?.call(DatabaseLogAction.saveNew, docSetup, 1, id: doc.id);
+
     await saveDoc<T>(
       docSetup,
       doc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
       skipLog: true,
     );
-
+    dbLogCallback?.call(
+        DatabaseLogAction.saveNew, _getDocumentPath(docSetup), 1,
+        id: doc.id);
     return doc;
   }
 
@@ -628,67 +691,76 @@ class YustDatabaseService {
     int maxTries = 20,
     bool ignoreTransactionErrors = false,
     bool useUpdateMask = false,
-  }) async {
-    const retryDelayFactor = 5000;
-    const retryMinDelay = 100;
+  }) =>
+      _retryOnException(
+          'runTransactionForDocument', _getDocumentPath(docSetup, docId),
+          () async {
+        const retryDelayFactor = 5000;
+        const retryMinDelay = 100;
 
-    var numberRetries = 0;
-    T? updatedDoc;
-    while (numberRetries < maxTries) {
-      final transactionId = await beginTransaction();
-      final doc =
-          await getFromDB<T>(docSetup, docId, transaction: transactionId);
-      if (doc == null) {
-        throw YustException('Can not find document $docId.');
-      }
+        var numberRetries = 0;
+        T? updatedDoc;
 
-      try {
-        updatedDoc = await transaction(doc);
-        if (updatedDoc == null) {
-          await commitEmptyTransaction(transactionId);
-          return (false, null);
-        } else {
-          await commitTransaction(transactionId, docSetup, updatedDoc,
-              useUpdateMask: useUpdateMask);
-        }
-        break;
-      }
-      // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here
-      catch (e) {
-        var exception = e;
-        // Should there be an error in our transaction code, that needs to be
-        // transformed to an YustException as well
-        if (e is DetailedApiRequestError) {
-          exception = YustException.fromDetailedApiRequestError(
-              docSetup.collectionName, e);
-        }
-        if (exception is YustTransactionFailedException ||
-            exception is YustDocumentLockedException) {
-          if (ignoreTransactionErrors) return (false, null);
+        while (numberRetries < maxTries) {
+          final transactionId = await beginTransaction();
+          final doc =
+              await getFromDB<T>(docSetup, docId, transaction: transactionId);
+          if (doc == null) {
+            throw YustNotFoundException('Can not find document $docId.');
+          }
 
-          numberRetries++;
-          await Future.delayed(Duration(
-              milliseconds: (Random().nextDouble() * retryDelayFactor).toInt() +
-                  retryMinDelay));
-        } else {
-          rethrow;
+          try {
+            updatedDoc = await transaction(doc);
+            if (updatedDoc == null) {
+              await commitEmptyTransaction(transactionId);
+              return (false, null);
+            } else {
+              await commitTransaction(transactionId, docSetup, updatedDoc,
+                  useUpdateMask: useUpdateMask);
+            }
+            break;
+          }
+          // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here
+          catch (e) {
+            var exception = e;
+            // Should there be an error in our transaction code, that needs to be
+            // transformed to an YustException as well
+            if (e is DetailedApiRequestError) {
+              exception = YustException.fromDetailedApiRequestError(
+                  docSetup.collectionName, e);
+            }
+            if (exception is YustTransactionFailedException ||
+                exception is YustDocumentLockedException) {
+              if (ignoreTransactionErrors) return (false, null);
+
+              numberRetries++;
+              await Future.delayed(Duration(
+                  milliseconds:
+                      (Random().nextDouble() * retryDelayFactor).toInt() +
+                          retryMinDelay));
+            } else {
+              rethrow;
+            }
+          }
         }
-      }
-    }
-    if (numberRetries == maxTries) {
-      throw YustException(
-          'Retried transaction $numberRetries times (no more retries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
-    } else if (numberRetries > 1) {
-      print(
-          'Retried transaction $numberRetries times (of $maxTries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
-    }
-    return (true, updatedDoc);
-  }
+        if (numberRetries == maxTries) {
+          throw YustException(
+              'Retried transaction $numberRetries times (no more retries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+        } else if (numberRetries > 1) {
+          print(
+              'Retried transaction $numberRetries times (of $maxTries): Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}');
+        }
+        return (true, updatedDoc);
+      }, shouldRetryOnTransactionErrors: false);
 
   /// Begins a transaction.
   Future<String> beginTransaction() async {
-    final response = await _api.projects.databases.documents
-        .beginTransaction(BeginTransactionRequest(), _getDatabasePath());
+    final response = await _retryOnException<BeginTransactionResponse>(
+        'beginTransaction',
+        'N.A.',
+        () => _api.projects.databases.documents
+            .beginTransaction(BeginTransactionRequest(), _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
     if (response.transaction == null) {
       throw YustException('Can not begin transaction.');
     }
@@ -710,32 +782,29 @@ class YustDatabaseService {
       write.updateMask = DocumentMask(
           fieldPaths: doc.updateMask
               .map(
-                (e) => YustHelpers().toQuotedFieldPath(e),
+                (e) => YustHelpers().toQuotedFieldPath(e)!,
               )
               .toList());
     }
     final commitRequest =
         CommitRequest(transaction: transaction, writes: [write]);
-    await _api.projects.databases.documents
-        .commit(commitRequest, _getDatabasePath());
+    await _retryOnException<void>(
+        'commitTransaction',
+        'N.A.',
+        () => _api.projects.databases.documents
+            .commit(commitRequest, _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
   }
 
   // Makes an empty commit, thereby releasing the lock on the document.
   Future<void> commitEmptyTransaction(String transaction) async {
     final commitRequest = CommitRequest(transaction: transaction);
-    await _api.projects.databases.documents
-        .commit(commitRequest, _getDatabasePath());
-  }
-
-  /// Returns a query for specified filter and order.
-  dynamic getQuery<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
-    int? limit,
-  }) {
-    return _getQuery<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+    await _retryOnException<void>(
+        'commitEmptyTransaction',
+        'N.A.',
+        () => _api.projects.databases.documents
+            .commit(commitRequest, _getDatabasePath()),
+        shouldRetryOnTransactionErrors: false);
   }
 
   /// Transforms a json to a [YustDoc]
@@ -769,28 +838,33 @@ class YustDatabaseService {
     }
   }
 
-  String _getDocumentPath(YustDocSetup docSetup, String id) {
+  String _getDocumentPath(YustDocSetup docSetup, [String? id = '']) {
     return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
   }
 
-  RunQueryRequest _getQuery<T extends YustDoc>(
+  RunQueryRequest getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    int? offset,
+    String? startAfterDocument,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
-          from: [CollectionSelector(collectionId: _getCollection(docSetup))],
-          where: Filter(
-              compositeFilter: CompositeFilter(
-                  filters: _executeStaticFilters(docSetup) +
-                      _executeFilters(filters),
-                  op: 'AND')),
-          orderBy: _executeOrderByList(orderBy),
-          limit: limit,
-          offset: offset),
+        from: [CollectionSelector(collectionId: _getCollection(docSetup))],
+        where: Filter(
+            compositeFilter: CompositeFilter(
+                filters:
+                    _executeStaticFilters(docSetup) + _executeFilters(filters),
+                op: 'AND')),
+        orderBy: _executeOrderByList(orderBy),
+        limit: limit,
+        startAt: startAfterDocument == null
+            ? null
+            : Cursor(values: [
+                Value(referenceValue: startAfterDocument),
+              ], before: false),
+      ),
     );
   }
 
@@ -800,6 +874,7 @@ class YustDatabaseService {
     final countAggregation = Aggregation(
         alias: AggregationType.count.name,
         count: Count(upTo: upTo?.toString()));
+    final quotedFieldPath = YustHelpers().toQuotedFieldPath(fieldPath);
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
         aggregations: [
@@ -809,12 +884,12 @@ class YustDatabaseService {
             Aggregation(
                 alias: type.name,
                 count: Count(upTo: upTo?.toString()),
-                sum: Sum(field: FieldReference(fieldPath: fieldPath))),
+                sum: Sum(field: FieldReference(fieldPath: quotedFieldPath))),
           if (type == AggregationType.avg)
             Aggregation(
                 alias: type.name,
                 count: Count(upTo: upTo?.toString()),
-                avg: Avg(field: FieldReference(fieldPath: fieldPath))),
+                avg: Avg(field: FieldReference(fieldPath: quotedFieldPath))),
         ],
         structuredQuery: StructuredQuery(
           from: [CollectionSelector(collectionId: _getCollection(docSetup))],
@@ -911,7 +986,8 @@ class YustDatabaseService {
   List<Order> _executeOrderByList(List<YustOrderBy>? orderBy) {
     return orderBy
             ?.map((e) => Order(
-                field: FieldReference(fieldPath: e.field),
+                field: FieldReference(
+                    fieldPath: YustHelpers().toQuotedFieldPath(e.field)),
                 direction: e.descending ? 'DESCENDING' : 'ASCENDING'))
             .toList() ??
         <Order>[];
@@ -1018,5 +1094,62 @@ class YustDatabaseService {
 
   String _createDocumentId() {
     return Yust.helpers.randomString(length: 20);
+  }
+
+  /// Retries the given function if a TlsException, ClientException or YustBadGatewayException occurs.
+  /// Those are network errors that can occur when the firestore is rate-limiting.
+  Future<T> _retryOnException<T>(
+    String fnName,
+    String docPath,
+    Future<T> Function() fn, {
+    int numberOfRetries = 0,
+    bool shouldRetryOnTransactionErrors = true,
+  }) async {
+    try {
+      return await fn();
+    } catch (e) {
+      if (numberOfRetries >= maxRetries) {
+        print(
+            '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
+        rethrow;
+      } else if (e is YustException) {
+        print(
+            '[[DEBUG]] NOT Retrying $fnName call for the ${numberOfRetries + 1} time on YustException ($e) for $docPath, because we don\'t retry YustExceptions');
+        rethrow;
+      } else if (e is TlsException) {
+        print(
+            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on TlsException ($e) for $docPath');
+      } else if (e is ClientException) {
+        print(
+            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
+      } else if (e is DetailedApiRequestError) {
+        if (e.status == 502) {
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
+        }
+        if (e.status == 503) {
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');
+        } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
+          if ((e.message ?? '').contains(
+              'The referenced transaction has expired or is no longer valid')) {
+            throw YustException.fromDetailedApiRequestError(docPath, e);
+          }
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustTransactionFailedException ($e) for $docPath');
+        } else {
+          throw YustException.fromDetailedApiRequestError(docPath, e);
+        }
+      } else {
+        print(
+            '[[WARNING]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unknown Firestore Exception ($e) for $docPath');
+      }
+      return Future.delayed(
+          Duration(
+              milliseconds: pow(2, numberOfRetries).toInt() *
+                  (50 + Random().nextInt(20))),
+          () => _retryOnException<T>(fnName, docPath, fn,
+              numberOfRetries: numberOfRetries + 1));
+    }
   }
 }

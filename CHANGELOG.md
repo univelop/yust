@@ -1,3 +1,59 @@
+## 3.20.5 - 2024-04-28
+
+- Fix filter bug
+
+## 3.20.4 - 2024-04-19
+
+- Improve Database Statistics
+- Fix orderBy bug
+
+## 3.20.2 - 2024-04-18
+
+- Added lastLoginDomain field to YustUser
+
+## 3.20.0 - 2024-04-14
+
+- Improve file picker
+
+## 3.19.6 - 2024-04-06
+
+- Further improved getListChunked sorting
+
+## 3.19.5 - 2024-04-03
+
+- Improved Error Handling for Database Service
+
+## 3.19.4 - 2024-04-03
+
+- Fix get list chunked sorting
+
+## 3.19.3 - 2024-04-02
+
+- Fix get list chunked
+
+## 3.19.2 - 2024-04-01
+
+- Upgrade Flutter
+
+## 3.19.1 - 2024-03-19
+
+- Fix bugs
+
+## 3.19.0 - 2024-03-15
+
+- Move YustDatabaseService to the Yust instance, instead of being static
+- Add support for DB Action Statistics
+- Fix bugs
+
+## 3.18.1 - 2024-03-06
+
+- add ServerNow
+
+## 3.18.0 - 2024-02-17
+
+- Add multi language support
+- Fix bugs
+
 ## 3.17.3 - 2024-02-09
 
 - Fix bugs

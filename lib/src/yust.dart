@@ -23,6 +23,7 @@ enum AuthState {
 enum DatabaseLogAction {
   delete,
   get,
+  getFromCache,
   saveNew,
   save,
   transform,
@@ -38,7 +39,7 @@ enum DatabaseLogAction {
 }
 
 typedef DatabaseLogCallback = void Function(
-    DatabaseLogAction action, YustDocSetup setup, int count,
+    DatabaseLogAction action, String documentPath, int count,
     {String? id, List<String>? updateMask, num? aggregationResult});
 
 typedef OnChangeCallback = Future<void> Function(

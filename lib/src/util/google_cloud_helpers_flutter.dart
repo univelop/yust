@@ -83,6 +83,10 @@ class GoogleCloudHelpers {
     throw UnimplementedError();
   }
 
+  static Future<String> getInstanceId() async {
+    throw UnimplementedError();
+  }
+
   /// Just a stub for now. See google_cloud_helpers_dart.dart for documentation.
   static Future<AutoRefreshingAuthClient> createAuthClient(
       {required List<String> scopes, String? pathToServiceAccountJson}) async {

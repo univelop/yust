@@ -1,3 +1,7 @@
+## 3.21.1 - 2024-05-15
+
+- Support DB Statistics in mocked DB Service
+
 ## 3.21.0 - 2024-05-14
 
 - Upgrade dependencies

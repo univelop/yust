@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
+
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
@@ -21,6 +23,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     required super.envCollectionName,
     required super.useSubcollections,
   }) : super.mocked() {
+    dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
+            {String? id, List<String>? updateMask, num? aggregationResult}) =>
+        statistics.dbStatisticsCallback(action, documentPath, count,
+            id: id,
+            updateMask: updateMask,
+            aggregationResult: aggregationResult);
+
     YustDatabaseServiceMocked.onChange =
         onChange ?? YustDatabaseServiceMocked.onChange;
   }
@@ -59,7 +68,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }) async {
     final docs = _getCollection<T>(docSetup);
     try {
-      return docs.firstWhere((doc) => doc.id == id);
+      final doc = docs.firstWhereOrNull((doc) => doc.id == id);
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
+      return doc;
     } catch (e) {
       return null;
     }
@@ -104,6 +115,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     if (docs.isEmpty) {
       return null;
     } else {
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return docs.first;
     }
   }
@@ -149,7 +161,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
-    return docs.sublist(0, limit);
+    final limitedDocs = docs.sublist(0, limit);
+    dbLogCallback?.call(
+        DatabaseLogAction.get, _getDocumentPath(docSetup), limitedDocs.length);
+    return limitedDocs;
   }
 
   @override
@@ -180,8 +195,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     int? limit,
-  }) async =>
-      (await getList(docSetup, filters: filters)).length;
+  }) async {
+    final result = (await getList(docSetup, filters: filters)).length;
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), result);
+    return result;
+  }
 
   @override
   Future<double> sum<T extends YustDoc>(
@@ -189,11 +208,18 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
-  }) async =>
-      (await getList(docSetup, filters: filters))
-          .map((e) => _getDoubleValue(e, fieldPath))
-          .fold<double>(
-              0.0, (previousValue, element) => previousValue + element);
+  }) async {
+    final docs = await getList(docSetup, filters: filters);
+    final count = docs.length;
+    final result = docs
+        .map((e) => _getDoubleValue(e, fieldPath))
+        .fold<double>(0.0, (previousValue, element) => previousValue + element);
+
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
+        aggregationResult: result);
+    return result;
+  }
 
   @override
   Future<double> avg<T extends YustDoc>(
@@ -201,9 +227,19 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
-  }) async =>
-      (await sum(docSetup, fieldPath, filters: filters)) /
-      (await count(docSetup, filters: filters));
+  }) async {
+    final docs = await getList(docSetup, filters: filters);
+    final count = docs.length;
+    final sum = docs
+        .map((e) => _getDoubleValue(e, fieldPath))
+        .fold<double>(0.0, (previousValue, element) => previousValue + element);
+    final result = sum / count;
+
+    dbLogCallback?.call(
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
+        aggregationResult: result);
+    return result;
+  }
 
   @override
   Future<void> saveDoc<T extends YustDoc>(
@@ -230,6 +266,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         null,
         docJsonClone,
       );
+      dbLogCallback?.call(DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
+          id: doc.id, updateMask: updateMask ?? []);
     } else {
       final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
       if (updateMask == null) {
@@ -253,6 +291,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
           jsonDoc,
         );
       }
+      dbLogCallback?.call(DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
+          id: doc.id, updateMask: updateMask ?? []);
     }
   }
 
@@ -282,6 +322,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
         jsonDocClone,
       );
     }
+    dbLogCallback?.call(
+        DatabaseLogAction.transform, _getDocumentPath(docSetup), 1,
+        id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
   }
 
   @override
@@ -297,6 +340,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       doc.toJson(),
       null,
     );
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, _getDocumentPath(docSetup), 1);
   }
 
   @override
@@ -312,6 +357,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       doc.toJson(),
       null,
     );
+    dbLogCallback?.call(
+        DatabaseLogAction.delete, _getDocumentPath(docSetup), 1);
   }
 
   @override
@@ -446,4 +493,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   void clearDb() => _db.clear();
+
+  String _getDocumentPath(YustDocSetup docSetup, [String? id = '']) {
+    return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
+  }
 }

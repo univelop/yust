@@ -14,18 +14,21 @@ const firebaseStorageUrl = 'https://storage.googleapis.com/';
 /// Uses the GoogleApi for Flutter Platforms (Android, iOS, Web)
 /// and GoogleAPIs for **Dart-only environments**.
 class YustFileService {
-  final StorageApi _storageApi;
-  final String bucketName;
+  late StorageApi _storageApi;
+  late String bucketName;
+  late String rootUrl;
 
   YustFileService({
     Client? authClient,
     required String? emulatorAddress,
     required String projectId,
-  })  : bucketName = '$projectId.appspot.com',
-        _storageApi = StorageApi(authClient!,
-            rootUrl: emulatorAddress != null
-                ? 'http://$emulatorAddress:9199/'
-                : firebaseStorageUrl);
+  }) {
+    bucketName = '$projectId.appspot.com';
+    rootUrl = emulatorAddress != null
+        ? 'http://$emulatorAddress:9199/'
+        : firebaseStorageUrl;
+    _storageApi = StorageApi(authClient!, rootUrl: rootUrl);
+  }
 
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
@@ -54,7 +57,8 @@ class YustFileService {
         contentType: lookupMimeType(name) ?? 'application/octet-stream');
 
     // Using the Google Storage API to insert (upload) the file
-    await _storageApi.objects.insert(object, bucketName, uploadMedia: media);
+    await _storageApi.objects.insert(object, bucketName,
+        uploadMedia: media);
     return _createDownloadUrl(path, name, token);
   }
 
@@ -155,7 +159,7 @@ class YustFileService {
   }
 
   String _createDownloadUrl(String path, String name, String token) {
-    return 'https://firebasestorage.googleapis.com/v0/b/'
+    return '${rootUrl}v0/b/'
         '$bucketName/o/${Uri.encodeComponent('$path/$name')}'
         '?alt=media&token=$token';
   }

@@ -25,7 +25,7 @@ class YustAuthService {
       if (user != null) {
         Yust.databaseService
             .getFromDB<YustUser>(Yust.userSetup, user.uid)
-            .then((yustUser) => yustUser?.setLoginTime());
+            .then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
@@ -226,8 +226,7 @@ class YustAuthService {
         email: fireAuth.currentUser!.email!,
         password: password,
       );
-      // ignore: deprecated_member_use
-      await userCredential.user!.updateEmail(email);
+      await userCredential.user!.verifyBeforeUpdateEmail(email);
     }
 
     if (user != null) {

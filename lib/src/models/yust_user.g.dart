@@ -37,6 +37,7 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..lastLogin = json['lastLogin'] == null
           ? null
           : DateTime.parse(json['lastLogin'] as String)
+      ..lastLoginDomain = json['lastLoginDomain'] as String?
       ..authenticationMethod = $enumDecodeNullable(
           _$YustAuthenticationMethodEnumMap, json['authenticationMethod'],
           unknownValue: JsonKey.nullForUndefinedEnumValue)
@@ -62,6 +63,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'currEnvId': instance.currEnvId,
       'deviceIds': instance.deviceIds,
       'lastLogin': instance.lastLogin?.toIso8601String(),
+      'lastLoginDomain': instance.lastLoginDomain,
       'authenticationMethod':
           _$YustAuthenticationMethodEnumMap[instance.authenticationMethod],
       'domain': instance.domain,

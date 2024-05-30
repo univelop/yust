@@ -23,6 +23,7 @@ enum AuthState {
 enum DatabaseLogAction {
   delete,
   get,
+  getFromCache,
   saveNew,
   save,
   transform,

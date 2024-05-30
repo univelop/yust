@@ -1,3 +1,28 @@
+## 3.21.1 - 2024-05-15
+
+- Support DB Statistics in mocked DB Service
+
+## 3.21.0 - 2024-05-14
+
+- Upgrade dependencies
+
+## 3.20.5 - 2024-04-28
+
+- Fix filter bug
+
+## 3.20.4 - 2024-04-19
+
+- Improve Database Statistics
+- Fix orderBy bug
+
+## 3.20.2 - 2024-04-18
+
+- Added lastLoginDomain field to YustUser
+
+## 3.20.0 - 2024-04-14
+
+- Improve file picker
+
 ## 3.19.6 - 2024-04-06
 
 - Further improved getListChunked sorting
@@ -9,7 +34,7 @@
 ## 3.19.4 - 2024-04-03
 
 - Fix get list chunked sorting
-  
+
 ## 3.19.3 - 2024-04-02
 
 - Fix get list chunked

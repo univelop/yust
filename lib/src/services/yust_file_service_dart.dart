@@ -58,8 +58,7 @@ class YustFileService {
         contentType: lookupMimeType(name) ?? 'application/octet-stream');
 
     // Using the Google Storage API to insert (upload) the file
-    await _storageApi.objects.insert(object, bucketName,
-        uploadMedia: media);
+    await _storageApi.objects.insert(object, bucketName, uploadMedia: media);
     return _createDownloadUrl(path, name, token);
   }
 
@@ -186,10 +185,7 @@ class YustFileService {
 
   Future<String?> getLatestFileVersion(
       {required String path, required String name}) async {
-    final fileVersions = ((await _storageApi.objects
-                    .list(bucketName, prefix: path, versions: true))
-                .items ??
-            [])
+    final fileVersions = (await getFileVersionsInFolder(path: path))
         .where((e) => e.name == '$path/$name');
     // Get the generation of the file that has been deleted last
     return fileVersions
@@ -205,10 +201,7 @@ class YustFileService {
     DateTime? beforeDeletion,
     DateTime? afterDeletion,
   }) async {
-    final fileVersions = ((await _storageApi.objects
-                    .list(bucketName, prefix: path, versions: true))
-                .items ??
-            [])
+    final fileVersions = (await getFileVersionsInFolder(path: path))
         .where((e) => e.name == '$path/$name');
     // Get the generation of the file that has been deleted last
     return fileVersions

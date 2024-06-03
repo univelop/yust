@@ -30,6 +30,16 @@ class YustFileService {
     _storageApi = StorageApi(authClient!, rootUrl: rootUrl);
   }
 
+  YustFileService.mocked({
+    required String? emulatorAddress,
+    required String projectId,
+  }) {
+    bucketName = '$projectId.appspot.com';
+    rootUrl = emulatorAddress != null
+        ? 'http://$emulatorAddress:9199/'
+        : firebaseStorageUrl;
+  }
+
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
   ///
@@ -57,8 +67,7 @@ class YustFileService {
         contentType: lookupMimeType(name) ?? 'application/octet-stream');
 
     // Using the Google Storage API to insert (upload) the file
-    await _storageApi.objects.insert(object, bucketName,
-        uploadMedia: media);
+    await _storageApi.objects.insert(object, bucketName, uploadMedia: media);
     return _createDownloadUrl(path, name, token);
   }
 

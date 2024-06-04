@@ -1126,8 +1126,7 @@ class YustDatabaseService {
         if (e.status == 502) {
           print(
               '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
-        }
-        if (e.status == 503) {
+        } else if (e.status == 503) {
           print(
               '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');
         } else if (e.status == 409 && shouldRetryOnTransactionErrors) {

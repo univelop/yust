@@ -688,14 +688,14 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String docId,
     Future<T?> Function(T doc) transaction, {
-    int maxTries = 20,
+    int maxTries = 200,
     bool ignoreTransactionErrors = false,
     bool useUpdateMask = false,
   }) =>
       _retryOnException(
           'runTransactionForDocument', _getDocumentPath(docSetup, docId),
           () async {
-        const retryDelayFactor = 5000;
+        const retryDelayFactor = 10000;
         const retryMinDelay = 100;
 
         var numberRetries = 0;
@@ -1123,9 +1123,12 @@ class YustDatabaseService {
         print(
             '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
       } else if (e is DetailedApiRequestError) {
-        if (e.status == 502) {
+        if (e.status == 500) {
           print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on InternalServerError ($e) for $docPath');
+        } else if (e.status == 502) {
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on BadGateway ($e) for $docPath');
         } else if (e.status == 503) {
           print(
               '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');

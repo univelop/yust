@@ -337,7 +337,16 @@ class YustDatabaseService {
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
     if (doNotCreate) {
-      await collection.doc(doc.id).update(modifiedDoc);
+      try {
+        await collection.doc(doc.id).update(modifiedDoc);
+      } on FirebaseException catch (e) {
+        if (e.code == 'not-found') {
+          print(
+              'Exception Ignored: doNotCreate was set, but doc does not exist: ${doc.id}');
+        } else {
+          rethrow;
+        }
+      }
     } else {
       await collection
           .doc(doc.id)

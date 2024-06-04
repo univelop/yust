@@ -535,7 +535,7 @@ class YustDatabaseService {
             DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
             id: doc.id, updateMask: updateMask ?? []);
       }
-    });
+    }, shouldIgnoreNotFound: doNotCreate);
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -1104,6 +1104,7 @@ class YustDatabaseService {
     Future<T> Function() fn, {
     int numberOfRetries = 0,
     bool shouldRetryOnTransactionErrors = true,
+    bool shouldIgnoreNotFound = false,
   }) async {
     try {
       return await fn();
@@ -1113,6 +1114,11 @@ class YustDatabaseService {
             '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
         rethrow;
       } else if (e is YustException) {
+        if (e is YustNotFoundException && shouldIgnoreNotFound) {
+          print(
+              '[[DEBUG]] YustNotFoundException ignored for $fnName call for $docPath, this usually means the document was deleted before saving.');
+          return null as T;
+        }
         print(
             '[[DEBUG]] NOT Retrying $fnName call for the ${numberOfRetries + 1} time on YustException ($e) for $docPath, because we don\'t retry YustExceptions');
         rethrow;

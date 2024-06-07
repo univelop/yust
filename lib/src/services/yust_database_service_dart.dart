@@ -535,7 +535,7 @@ class YustDatabaseService {
             DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
             id: doc.id, updateMask: updateMask ?? []);
       }
-    });
+    }, shouldIgnoreNotFound: doNotCreate);
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -688,14 +688,14 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String docId,
     Future<T?> Function(T doc) transaction, {
-    int maxTries = 20,
+    int maxTries = 200,
     bool ignoreTransactionErrors = false,
     bool useUpdateMask = false,
   }) =>
       _retryOnException(
           'runTransactionForDocument', _getDocumentPath(docSetup, docId),
           () async {
-        const retryDelayFactor = 5000;
+        const retryDelayFactor = 10000;
         const retryMinDelay = 100;
 
         var numberRetries = 0;
@@ -1104,6 +1104,7 @@ class YustDatabaseService {
     Future<T> Function() fn, {
     int numberOfRetries = 0,
     bool shouldRetryOnTransactionErrors = true,
+    bool shouldIgnoreNotFound = false,
   }) async {
     try {
       return await fn();
@@ -1113,6 +1114,11 @@ class YustDatabaseService {
             '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
         rethrow;
       } else if (e is YustException) {
+        if (e is YustNotFoundException && shouldIgnoreNotFound) {
+          print(
+              '[[DEBUG]] YustNotFoundException ignored for $fnName call for $docPath, this usually means the document was deleted before saving.');
+          return null as T;
+        }
         print(
             '[[DEBUG]] NOT Retrying $fnName call for the ${numberOfRetries + 1} time on YustException ($e) for $docPath, because we don\'t retry YustExceptions');
         rethrow;
@@ -1123,11 +1129,13 @@ class YustDatabaseService {
         print(
             '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
       } else if (e is DetailedApiRequestError) {
-        if (e.status == 502) {
+        if (e.status == 500) {
           print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustBadGatewayException ($e) for $docPath');
-        }
-        if (e.status == 503) {
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on InternalServerError ($e) for $docPath');
+        } else if (e.status == 502) {
+          print(
+              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on BadGateway ($e) for $docPath');
+        } else if (e.status == 503) {
           print(
               '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');
         } else if (e.status == 409 && shouldRetryOnTransactionErrors) {

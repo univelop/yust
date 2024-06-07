@@ -1,3 +1,7 @@
+## 3.21.2 - 2024-06-07
+
+- Fixes & improvements for YustDatabaseService
+
 ## 3.21.1 - 2024-05-15
 
 - Support DB Statistics in mocked DB Service

@@ -1,6 +1,10 @@
 ## 3.22.0 - 2024-05-30
 
 - Make yust ready for Flutter 3.22.1
+  
+## 3.21.2 - 2024-06-07
+
+- Fixes & improvements for YustDatabaseService
 
 ## 3.21.1 - 2024-05-15
 

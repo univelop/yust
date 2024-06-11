@@ -1,3 +1,7 @@
+## 3.23.0 - 2024-06-11
+
+- Realign YustUI & Yust-Version
+
 ## 3.22.1 - 2024-06-07
 
 - Improvements to YustFileService

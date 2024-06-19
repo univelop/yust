@@ -99,9 +99,10 @@ class YustDatabaseService {
   /// Be careful with offline functionality.
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
-    return getFromDB(docSetup, id);
+    String id, {
+    DateTime? readTime,
+  }) async {
+    return getFromDB(docSetup, id, readTime: readTime);
   }
 
   /// Returns a [YustDoc] from the cache, if available, otherwise from the server.
@@ -110,9 +111,10 @@ class YustDatabaseService {
   /// Be careful with offline functionality.
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
-    return getFromDB(docSetup, id);
+    String id, {
+    DateTime? readTime,
+  }) async {
+    return getFromDB(docSetup, id, readTime: readTime);
   }
 
   /// Returns a [YustDoc] directly from the server.
@@ -122,13 +124,16 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id, {
     String? transaction,
+    DateTime? readTime,
   }) async {
     try {
       final response = await _retryOnException<Document>(
           'getFromDB',
           _getDocumentPath(docSetup, id),
-          () => _api.projects.databases.documents
-              .get(_getDocumentPath(docSetup, id), transaction: transaction));
+          () => _api.projects.databases.documents.get(
+              _getDocumentPath(docSetup, id),
+              readTime: readTime?.toUtc().toIso8601String(),
+              transaction: transaction));
 
       dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return _transformDoc<T>(docSetup, response);
@@ -142,9 +147,10 @@ class YustDatabaseService {
   /// Whenever another user makes a change, a new version of the document is returned.
   Stream<T?> getStream<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) {
-    return Stream.fromFuture(getFromDB<T>(docSetup, id));
+    String id, {
+    DateTime? readTime,
+  }) {
+    return Stream.fromFuture(getFromDB<T>(docSetup, id, readTime: readTime));
   }
 
   /// Returns the first [YustDoc] in a list from the server, if available, otherwise from the cache.
@@ -156,8 +162,10 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) async {
-    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getFirstFromDB(docSetup,
+        filters: filters, orderBy: orderBy, readTime: readTime);
   }
 
   /// Returns the first [YustDoc] in a list from the cache, if available, otherwise from the server.
@@ -169,8 +177,10 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) async {
-    return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getFirstFromDB(docSetup,
+        filters: filters, orderBy: orderBy, readTime: readTime);
   }
 
   /// Returns the first [YustDoc] in a list directly from the server.
@@ -181,12 +191,19 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) async {
     final response = await _retryOnException<List<RunQueryResponseElement>>(
         'getFirstFromDB',
         _getDocumentPath(docSetup),
         () => _api.projects.databases.documents.runQuery(
-            getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1),
+            getQuery(
+              docSetup,
+              filters: filters,
+              orderBy: orderBy,
+              limit: 1,
+              readTime: readTime,
+            ),
             _getParentPath(docSetup)));
 
     if (response.isEmpty || response.first.document == null) {
@@ -204,9 +221,10 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) {
-    return Stream.fromFuture(
-        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
+    return Stream.fromFuture(getFirstFromDB<T>(docSetup,
+        filters: filters, orderBy: orderBy, readTime: readTime));
   }
 
   /// Returns [YustDoc]s from the server, if available, otherwise from the cache.
@@ -226,9 +244,10 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) {
     return getListFromDB(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+        filters: filters, orderBy: orderBy, limit: limit, readTime: readTime);
   }
 
   /// Returns [YustDoc]s from the cache, if available, otherwise from the server.
@@ -248,9 +267,10 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) {
     return getListFromDB(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+        filters: filters, orderBy: orderBy, limit: limit, readTime: readTime);
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -271,13 +291,19 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) async {
     final response = await _retryOnException<List<RunQueryResponseElement>>(
         'getListFromDB',
         _getDocumentPath(docSetup),
         () => _api.projects.databases.documents.runQuery(
-            getQuery(docSetup,
-                filters: filters, orderBy: orderBy, limit: limit),
+            getQuery(
+              docSetup,
+              filters: filters,
+              orderBy: orderBy,
+              limit: limit,
+              readTime: readTime,
+            ),
             _getParentPath(docSetup)));
     dbLogCallback?.call(
         DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
@@ -320,6 +346,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    DateTime? readTime,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
@@ -346,7 +373,8 @@ class YustDatabaseService {
             // orderBy __name__ is required for pagination
             orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
-            startAfterDocument: lastDocument);
+            startAfterDocument: lastDocument,
+            readTime: readTime);
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -406,9 +434,10 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) {
     return Stream.fromFuture(getListFromDB<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit));
+        filters: filters, orderBy: orderBy, limit: limit, readTime: readTime));
   }
 
   /// Counts the number of documents in a collection.
@@ -417,8 +446,12 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
-  Future<int> count<T extends YustDoc>(YustDocSetup<T> docSetup,
-      {List<YustFilter>? filters, int? limit}) async {
+  Future<int> count<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+    DateTime? readTime,
+  }) async {
     final type = AggregationType.count;
     final response =
         await _retryOnException<List<RunAggregationQueryResponseElement>>(
@@ -426,7 +459,7 @@ class YustDatabaseService {
             _getDocumentPath(docSetup),
             () => _api.projects.databases.documents.runAggregationQuery(
                 _getAggregationQuery(type, docSetup,
-                    filters: filters, upTo: limit),
+                    filters: filters, upTo: limit, readTime: readTime),
                 _getParentPath(docSetup)));
 
     final result = int.parse(
@@ -445,10 +478,14 @@ class YustDatabaseService {
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   Future<double> sum<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String fieldPath,
-      {List<YustFilter>? filters, int? limit}) async {
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+    int? limit,
+    DateTime? readTime,
+  }) async {
     return _performAggregation(AggregationType.sum, docSetup, fieldPath,
-        filters: filters, limit: limit);
+        filters: filters, limit: limit, readTime: readTime);
   }
 
   /// Returns the sum over a field of multiple documents in a collection.
@@ -460,22 +497,34 @@ class YustDatabaseService {
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   Future<double> avg<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String fieldPath,
-      {List<YustFilter>? filters, int? limit}) async {
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+    int? limit,
+    DateTime? readTime,
+  }) async {
     return _performAggregation(AggregationType.avg, docSetup, fieldPath,
-        filters: filters, limit: limit);
+        filters: filters, limit: limit, readTime: readTime);
   }
 
   Future<double> _performAggregation<T extends YustDoc>(
-      AggregationType type, YustDocSetup<T> docSetup, String fieldPath,
-      {List<YustFilter>? filters, int? limit}) async {
+    AggregationType type,
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+    int? limit,
+    DateTime? readTime,
+  }) async {
     final response =
         await _retryOnException<List<RunAggregationQueryResponseElement>>(
             'performAggregation:${type.name.split('.').last}',
             _getDocumentPath(docSetup),
             () => _api.projects.databases.documents.runAggregationQuery(
                 _getAggregationQuery(type, docSetup,
-                    fieldPath: fieldPath, filters: filters, upTo: limit),
+                    fieldPath: fieldPath,
+                    filters: filters,
+                    upTo: limit,
+                    readTime: readTime),
                 _getParentPath(docSetup)));
     final result =
         response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
@@ -589,9 +638,11 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) async {
     final response = await _api.projects.databases.documents.runQuery(
-      getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
+      getQuery(docSetup,
+          filters: filters, orderBy: orderBy, limit: limit, readTime: readTime),
       _getParentPath(docSetup),
     );
 
@@ -848,6 +899,7 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
     String? startAfterDocument,
+    DateTime? readTime,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -865,12 +917,18 @@ class YustDatabaseService {
                 Value(referenceValue: startAfterDocument),
               ], before: false),
       ),
+      readTime: readTime?.toUtc().toIso8601String(),
     );
   }
 
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
-      AggregationType type, YustDocSetup<T> docSetup,
-      {String? fieldPath, List<YustFilter>? filters, int? upTo}) {
+    AggregationType type,
+    YustDocSetup<T> docSetup, {
+    String? fieldPath,
+    List<YustFilter>? filters,
+    int? upTo,
+    DateTime? readTime,
+  }) {
     final countAggregation = Aggregation(
         alias: AggregationType.count.name,
         count: Count(upTo: upTo?.toString()));
@@ -900,6 +958,7 @@ class YustDatabaseService {
                   op: 'AND')),
         ),
       ),
+      readTime: readTime?.toUtc().toIso8601String(),
     );
   }
 

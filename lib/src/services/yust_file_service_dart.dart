@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:http/http.dart';
 import 'package:mime/mime.dart';
@@ -171,5 +172,71 @@ class YustFileService {
     return '${rootUrl}v0/b/'
         '$bucketName/o/${Uri.encodeComponent('$path/$name')}'
         '?alt=media&token=$token';
+  }
+
+  Future<List<Object>> getFilesInFolder({required String path}) async {
+    return (await _storageApi.objects.list(bucketName, prefix: path)).items ??
+        [];
+  }
+
+  Future<List<Object>> getFileVersionsInFolder({required String path}) async {
+    return (await _storageApi.objects
+                .list(bucketName, prefix: path, versions: true))
+            .items ??
+        [];
+  }
+
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped(
+      {required String path}) async {
+    final objects = groupBy((await getFileVersionsInFolder(path: path)),
+        (Object object) => object.name);
+    return objects;
+  }
+
+  Future<String?> getLatestFileVersion(
+      {required String path, required String name}) async {
+    final fileVersions = (await getFileVersionsInFolder(path: path))
+        .where((e) => e.name == '$path/$name');
+    // Get the generation of the file that has been deleted last
+    return fileVersions
+        .where((e) => e.timeCreated != null)
+        .sortedBy<DateTime>((element) => element.timeCreated!)
+        .lastOrNull
+        ?.generation;
+  }
+
+  Future<String?> getLatestInvalidFileVersion({
+    required String path,
+    required String name,
+    DateTime? beforeDeletion,
+    DateTime? afterDeletion,
+  }) async {
+    final fileVersions = (await getFileVersionsInFolder(path: path))
+        .where((e) => e.name == '$path/$name');
+    // Get the generation of the file that has been deleted last
+    return fileVersions
+        .where((e) => e.timeCreated != null && e.timeDeleted != null)
+        .where((e) => beforeDeletion != null
+            ? e.timeDeleted?.isAfter(beforeDeletion) ?? false
+            : true)
+        .where((e) => afterDeletion != null
+            ? e.timeDeleted?.isBefore(afterDeletion) ?? false
+            : true)
+        .sortedBy<DateTime>((element) => element.timeDeleted!)
+        .lastOrNull
+        ?.generation;
+  }
+
+  Future<void> recoverOutdatedFile(
+      {required String path,
+      required String name,
+      required String generation}) async {
+    final object = await _storageApi.objects
+        .get(bucketName, '$path/$name', generation: generation);
+    if (object is Object) {
+      await _storageApi.objects.rewrite(
+          object, bucketName, object.name!, bucketName, object.name!,
+          sourceGeneration: generation);
+    }
   }
 }

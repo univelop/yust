@@ -35,10 +35,8 @@ class YustFileService {
     required String? emulatorAddress,
     required String projectId,
   }) {
-    bucketName = '$projectId.appspot.com';
-    rootUrl = emulatorAddress != null
-        ? 'http://$emulatorAddress:9199/'
-        : firebaseStorageUrl;
+    bucketName = 'bucket_name_placeholder';
+    rootUrl = '0.0.0.0:80';
   }
 
   /// Uploads a file from either a [File] or [Uint8List]

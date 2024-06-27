@@ -14,10 +14,7 @@ class YustFileServiceMocked extends YustFileService {
   // In-memory storage for the files.
   final Map<String, Map<String, MockedFile>> _storage = {};
 
-  YustFileServiceMocked({
-    required super.emulatorAddress,
-    required super.projectId,
-  }) : super.mocked();
+  YustFileServiceMocked() : super.mocked();
 
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].

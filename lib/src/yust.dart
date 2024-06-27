@@ -130,8 +130,7 @@ class Yust {
           useSubcollections: useSubcollections,
           envCollectionName: envCollectionName);
       Yust.authService = YustAuthService.mocked();
-      Yust.fileService = YustFileServiceMocked(
-          projectId: projectId, emulatorAddress: emulatorAddress);
+      Yust.fileService = YustFileServiceMocked();
       return;
     }
 

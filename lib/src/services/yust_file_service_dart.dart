@@ -31,10 +31,7 @@ class YustFileService {
     _storageApi = StorageApi(authClient!, rootUrl: rootUrl);
   }
 
-  YustFileService.mocked({
-    required String? emulatorAddress,
-    required String projectId,
-  }) {
+  YustFileService.mocked() {
     bucketName = 'bucket_name_placeholder';
     rootUrl = '0.0.0.0:80';
   }

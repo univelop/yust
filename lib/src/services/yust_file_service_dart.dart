@@ -31,6 +31,11 @@ class YustFileService {
     _storageApi = StorageApi(authClient!, rootUrl: rootUrl);
   }
 
+  YustFileService.mocked() {
+    bucketName = 'bucket_name_placeholder';
+    rootUrl = '0.0.0.0:80';
+  }
+
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
   ///

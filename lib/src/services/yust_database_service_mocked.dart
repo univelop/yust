@@ -47,16 +47,18 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
+    String id, {
+    DateTime? readTime,
+  }) async {
     return getFromDB(docSetup, id);
   }
 
   @override
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) async {
+    String id, {
+    DateTime? readTime,
+  }) async {
     return getFromDB(docSetup, id);
   }
 
@@ -65,6 +67,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id, {
     String? transaction,
+    DateTime? readTime,
   }) async {
     final docs = _getCollection<T>(docSetup);
     try {
@@ -79,8 +82,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   @override
   Stream<T?> getStream<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id,
-  ) {
+    String id, {
+    DateTime? readTime,
+  }) {
     return Stream.fromFuture(getFromDB<T>(docSetup, id));
   }
 
@@ -89,6 +93,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) async {
     return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
@@ -98,6 +103,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) async {
     return getFirstFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
@@ -107,6 +113,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) async {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs = _filter(jsonDocs, filters);
@@ -125,6 +132,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
+    DateTime? readTime,
   }) {
     return Stream.fromFuture(
         getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
@@ -136,6 +144,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) {
     return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
@@ -146,6 +155,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) {
     return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
   }
@@ -156,6 +166,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) async {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs = _filter(jsonDocs, filters);
@@ -173,6 +184,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    DateTime? readTime,
   }) {
     return Stream.fromFuture(
             getList(docSetup, filters: filters, orderBy: orderBy))
@@ -185,6 +197,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DateTime? readTime,
   }) {
     return Stream.fromFuture(getListFromDB<T>(docSetup,
         filters: filters, orderBy: orderBy, limit: limit));
@@ -195,6 +208,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     int? limit,
+    DateTime? readTime,
   }) async {
     final result = (await getList(docSetup, filters: filters)).length;
     dbLogCallback?.call(
@@ -208,6 +222,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
+    DateTime? readTime,
   }) async {
     final docs = await getList(docSetup, filters: filters);
     final count = docs.length;
@@ -227,6 +242,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
+    DateTime? readTime,
   }) async {
     final docs = await getList(docSetup, filters: filters);
     final count = docs.length;

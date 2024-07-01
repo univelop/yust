@@ -1,3 +1,7 @@
+## 3.23.1 - 2024-07-01
+
+- Fix download URL
+
 ## 3.23.1 - 2024-06-27
 
 - Improve String Extension

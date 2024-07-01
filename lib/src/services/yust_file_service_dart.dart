@@ -159,7 +159,7 @@ class YustFileService {
   }
 
   String _createDownloadUrl(String path, String name, String token) {
-    return '${rootUrl}v0/b/'
+    return 'https://firebasestorage.googleapis.com/v0/b/'
         '$bucketName/o/${Uri.encodeComponent('$path/$name')}'
         '?alt=media&token=$token';
   }

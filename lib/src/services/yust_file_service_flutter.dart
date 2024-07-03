@@ -99,4 +99,38 @@ class YustFileService {
       await file.delete();
     }
   }
+
+  Future<List<Object>> getFilesInFolder({required String path}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<List<Object>> getFileVersionsInFolder({required String path}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped(
+      {required String path}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<String?> getLatestFileVersion(
+      {required String path, required String name}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<String?> getLatestInvalidFileVersion({
+    required String path,
+    required String name,
+    DateTime? beforeDeletion,
+    DateTime? afterDeletion,
+  }) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<void> recoverOutdatedFile(
+      {required String path,
+      required String name,
+      required String generation}) async {
+    throw YustException('Not implemented for flutter');
+  }
 }

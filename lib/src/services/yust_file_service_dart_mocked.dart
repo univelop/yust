@@ -7,9 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import 'yust_file_service_dart.dart';
 
-const firebaseStorageUrl = 'https://storage.googleapis.com/';
-
-/// Mocked Filestorage service.
+/// Mocked Filestorage service for Dart.
 class YustFileServiceMocked extends YustFileService {
   // In-memory storage for the files.
   final Map<String, Map<String, MockedFile>> _storage = {};

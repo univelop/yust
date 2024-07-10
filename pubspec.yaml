@@ -12,6 +12,7 @@ dependencies:
   cloud_firestore: ^4.17.0
   collection: ^1.18.0
   firebase_auth_mocks: ^0.13.0
+  firebase_storage_mocks: ^0.6.0
   firebase_auth_platform_interface: ^7.0.9
   firebase_auth: ^4.17.9
   firebase_core: ^2.27.1

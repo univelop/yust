@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
-import 'yust_file_service_dart.dart';
+import 'yust_file_service_flutter.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
@@ -103,7 +103,7 @@ class YustFileServiceMocked extends YustFileService {
   }
 
   String _createDownloadUrl(String path, String name, String token) {
-    return '$rootUrl/invalid-mockUrl?bucket=$bucketName&file=$path/$name&token=$token';
+    return '0.0.0.0:80/invalid-mockUrl?bucket=example_bucket_name&file=$path/$name&token=$token';
   }
 }
 

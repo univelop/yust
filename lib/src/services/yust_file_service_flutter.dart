@@ -3,7 +3,9 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage_mocks/firebase_storage_mocks.dart';
 import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 
@@ -20,7 +22,11 @@ class YustFileService {
     }
   }
 
-  final FirebaseStorage _fireStorage;
+  YustFileService.mocked() {
+    _fireStorage = MockFirebaseStorage();
+  }
+
+  late FirebaseStorage _fireStorage;
 
   Future<String> uploadFile(
       {required String path,

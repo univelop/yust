@@ -1,3 +1,7 @@
+## 3.23.3 - 2024-07-10
+
+- Add mocked file service
+
 ## 3.23.2 - 2024-07-01
 
 - Fix download URL

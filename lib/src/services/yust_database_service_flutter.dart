@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:http/http.dart';
 
@@ -19,7 +20,7 @@ class YustDatabaseService {
   // The _fireStore is late because we don't want to init if, if initialized mocked.
   // (in this case the _firsStore is not used in in the mocked service and a
   // exception is a good indicator for the developer )
-  late final cf.FirebaseFirestore _fireStore;
+  late final FirebaseFirestore _fireStore;
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
@@ -29,7 +30,7 @@ class YustDatabaseService {
     required this.envCollectionName,
     required this.useSubcollections,
     String? emulatorAddress,
-  }) : _fireStore = cf.FirebaseFirestore.instance {
+  }) : _fireStore = FirebaseFirestore.instance {
     dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
       statistics.dbStatisticsCallback(action, documentPath, count,
@@ -49,7 +50,9 @@ class YustDatabaseService {
     this.dbLogCallback,
     required this.envCollectionName,
     required this.useSubcollections,
-  });
+  }) {
+    throw UnsupportedError('Not supported in Flutter Environment');
+  }
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
@@ -63,10 +66,10 @@ class YustDatabaseService {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
-        .get(cf.GetOptions(source: cf.Source.serverAndCache))
+        .get(GetOptions(source: Source.serverAndCache))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot))
         .catchError((e) {
-      if (e is cf.FirebaseException && e.code == 'permission-denied') {
+      if (e is FirebaseException && e.code == 'permission-denied') {
         print('Permission denied for doc: ${docSetup.collectionName}/$id');
         return null;
       }
@@ -79,16 +82,16 @@ class YustDatabaseService {
     String id,
   ) async {
     final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
-    cf.DocumentSnapshot<Map<String, dynamic>>? docSnapshot;
+    DocumentSnapshot<Map<String, dynamic>>? docSnapshot;
 
     try {
-      docSnapshot = await doc.get(cf.GetOptions(source: cf.Source.cache));
+      docSnapshot = await doc.get(GetOptions(source: Source.cache));
       // Check if we got a hit
       if (docSnapshot.data()?.isEmpty ?? true) throw Exception('Not in Cache!');
     }
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
-      docSnapshot = await doc.get(cf.GetOptions(source: cf.Source.server));
+      docSnapshot = await doc.get(GetOptions(source: Source.server));
     }
 
     return _transformDoc<T>(docSetup, docSnapshot);
@@ -102,7 +105,7 @@ class YustDatabaseService {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
-        .get(cf.GetOptions(source: cf.Source.server))
+        .get(GetOptions(source: Source.server))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
   }
 
@@ -124,8 +127,7 @@ class YustDatabaseService {
   }) async {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    final snapshot =
-        await query.get(cf.GetOptions(source: cf.Source.serverAndCache));
+    final snapshot = await query.get(GetOptions(source: Source.serverAndCache));
     T? doc;
 
     if (snapshot.docs.isNotEmpty) {
@@ -142,15 +144,15 @@ class YustDatabaseService {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
 
-    cf.QuerySnapshot<Object?>? snapshot;
+    QuerySnapshot<Object?>? snapshot;
     try {
-      snapshot = await query.get(cf.GetOptions(source: cf.Source.cache));
+      snapshot = await query.get(GetOptions(source: Source.cache));
       // Check if we got a hit
       if (snapshot.docs.isEmpty) throw Exception('Not in Cache');
     }
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
-      snapshot = await query.get(cf.GetOptions(source: cf.Source.server));
+      snapshot = await query.get(GetOptions(source: Source.server));
     }
 
     T? doc;
@@ -168,7 +170,7 @@ class YustDatabaseService {
   }) async {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
-    final snapshot = await query.get(cf.GetOptions(source: cf.Source.server));
+    final snapshot = await query.get(GetOptions(source: Source.server));
     T? doc;
 
     if (snapshot.docs.isNotEmpty) {
@@ -204,7 +206,7 @@ class YustDatabaseService {
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
     return query
-        .get(cf.GetOptions(source: cf.Source.serverAndCache))
+        .get(GetOptions(source: Source.serverAndCache))
         .then((snapshot) {
       return snapshot.docs
           .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
@@ -222,16 +224,16 @@ class YustDatabaseService {
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
-    cf.QuerySnapshot<Object?>? snapshot;
+    QuerySnapshot<Object?>? snapshot;
 
     try {
-      snapshot = await query.get(cf.GetOptions(source: cf.Source.cache));
+      snapshot = await query.get(GetOptions(source: Source.cache));
       // Check if we got a hit
       if (snapshot.docs.isEmpty) throw Exception('Not in Cache');
     }
     // Handle a missing cache entry or other firebase errors by retrying against server
     catch (_) {
-      snapshot = await query.get(cf.GetOptions(source: cf.Source.server));
+      snapshot = await query.get(GetOptions(source: Source.server));
     }
 
     return snapshot.docs
@@ -249,7 +251,7 @@ class YustDatabaseService {
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
-    final snapshot = await query.get(cf.GetOptions(source: cf.Source.server));
+    final snapshot = await query.get(GetOptions(source: Source.server));
     return snapshot.docs
         .map((docSnapshot) => _transformDoc(docSetup, docSnapshot))
         .whereType<T>()
@@ -290,11 +292,9 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    final query = getQuery(docSetup, filters: filters);
-    return query
-        .aggregate(cf.sum(fieldPath))
-        .get()
-        .then((snap) => snap.getSum(fieldPath) ?? 0);
+    var query = getQuery(docSetup, filters: filters);
+    final snapshot = await query.aggregate(cf.sum(fieldPath)).get();
+    return (snapshot.getSum(fieldPath) ?? 0);
   }
 
   Future<double> avg<T extends YustDoc>(
@@ -303,11 +303,9 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    final query = getQuery(docSetup, filters: filters);
-    return query
-        .aggregate(cf.average(fieldPath))
-        .get()
-        .then((snap) => snap.getAverage(fieldPath) ?? 0);
+    var query = getQuery(docSetup, filters: filters);
+    final snapshot = await query.aggregate(cf.average(fieldPath)).get();
+    return (snapshot.getAverage(fieldPath) ?? 0);
   }
 
   Future<void> saveDoc<T extends YustDoc>(
@@ -340,7 +338,7 @@ class YustDatabaseService {
     if (doNotCreate) {
       try {
         await collection.doc(doc.id).update(modifiedDoc);
-      } on cf.FirebaseException catch (e) {
+      } on FirebaseException catch (e) {
         if (e.code == 'not-found') {
           print(
               'Exception Ignored: doNotCreate was set, but doc does not exist: ${doc.id}');
@@ -349,8 +347,9 @@ class YustDatabaseService {
         }
       }
     } else {
-      await collection.doc(doc.id).set(
-          modifiedDoc, cf.SetOptions(merge: merge, mergeFields: updateMask));
+      await collection
+          .doc(doc.id)
+          .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
     }
     if (!skipLog) {
       dbLogCallback?.call(
@@ -386,19 +385,19 @@ class YustDatabaseService {
       if (removeNullValues &&
           !currentNode.info.isInList &&
           currentNode.value == null) {
-        return cf.FieldValue.delete();
+        return FieldValue.delete();
       }
       // Parse dart DateTimes
       if (currentNode.value is DateTime) {
-        return cf.Timestamp.fromDate(currentNode.value);
+        return Timestamp.fromDate(currentNode.value);
       }
       if (currentNode.value is ServerNow) {
-        return cf.FieldValue.serverTimestamp();
+        return FieldValue.serverTimestamp();
       }
-      // Parse ISO cf.Timestamp Strings
+      // Parse ISO Timestamp Strings
       if (currentNode.value is String &&
           (currentNode.value as String).isIso8601String) {
-        return cf.Timestamp.fromDate(DateTime.parse(currentNode.value));
+        return Timestamp.fromDate(DateTime.parse(currentNode.value));
       }
       // Round double values
       if (currentNode.value is double) {
@@ -416,7 +415,7 @@ class YustDatabaseService {
     int pageSize = 300,
   }) async* {
     var isDone = false;
-    cf.DocumentSnapshot? lastDoc;
+    DocumentSnapshot? lastDoc;
     while (!isDone) {
       var query = getQuery(docSetup,
           filters: filters, orderBy: orderBy, limit: pageSize);
@@ -425,7 +424,7 @@ class YustDatabaseService {
       }
 
       final snapshot =
-          await query.get(cf.GetOptions(source: cf.Source.serverAndCache));
+          await query.get(GetOptions(source: Source.serverAndCache));
 
       for (final doc in snapshot.docs) {
         final transformedDoc = _transformDoc<T>(docSetup, doc);
@@ -457,7 +456,7 @@ class YustDatabaseService {
   }) async {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit);
-    final snapshot = await query.get(cf.GetOptions(source: cf.Source.server));
+    final snapshot = await query.get(GetOptions(source: Source.server));
     final batch = _fireStore.batch();
     for (final doc in snapshot.docs) {
       batch.delete(doc.reference);
@@ -549,7 +548,7 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     dynamic document,
   ) {
-    return _transformDoc(docSetup, document as cf.DocumentSnapshot);
+    return _transformDoc(docSetup, document as DocumentSnapshot);
   }
 
   String _getCollectionPath(YustDocSetup docSetup) {
@@ -562,13 +561,13 @@ class YustDatabaseService {
     return collectionPath;
   }
 
-  cf.Query getQuery<T extends YustDoc>(
+  Query getQuery<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    cf.Query query = _fireStore.collection(_getCollectionPath(docSetup));
+    Query query = _fireStore.collection(_getCollectionPath(docSetup));
     if (dbLogCallback != null) {
       query = YustQueryWithLogging(dbLogCallback!, query);
     }
@@ -582,8 +581,8 @@ class YustDatabaseService {
     return query;
   }
 
-  cf.Query _executeStaticFilters<T extends YustDoc>(
-    cf.Query query,
+  Query _executeStaticFilters<T extends YustDoc>(
+    Query query,
     YustDocSetup<T> docSetup,
   ) {
     if (!useSubcollections && docSetup.forEnvironment) {
@@ -593,10 +592,10 @@ class YustDatabaseService {
     return query;
   }
 
-  cf.Query _filterForEnvironment(cf.Query query, String envId) =>
+  Query _filterForEnvironment(Query query, String envId) =>
       query.where('envId', isEqualTo: envId);
 
-  cf.Query _executeFilters(cf.Query query, List<YustFilter>? filters) {
+  Query _executeFilters(Query query, List<YustFilter>? filters) {
     if (filters != null) {
       filters = filters.toSet().toList();
       for (final filter in filters) {
@@ -654,7 +653,7 @@ class YustDatabaseService {
     return query;
   }
 
-  cf.Query _executeOrderByList(cf.Query query, List<YustOrderBy>? orderBy) {
+  Query _executeOrderByList(Query query, List<YustOrderBy>? orderBy) {
     if (orderBy != null) {
       for (final order in orderBy) {
         query = query.orderBy(order.field, descending: order.descending);
@@ -665,18 +664,18 @@ class YustDatabaseService {
 
   T? _transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    cf.DocumentSnapshot snapshot,
+    DocumentSnapshot snapshot,
   ) {
     if (snapshot.exists == false) {
       return null;
     }
     final data = snapshot.data();
     if (data is Map<String, dynamic>) {
-      // Convert cf.Timestamps to ISOStrings
+      // Convert Timestamps to ISOStrings
       final modifiedData = TraverseObject.traverseObject(data, (currentNode) {
-        // Convert cf.Timestamp to Iso8601-String, as this is the format json_serializable expects
-        if (currentNode.value is cf.Timestamp) {
-          return (currentNode.value as cf.Timestamp)
+        // Convert Timestamp to Iso8601-String, as this is the format json_serializable expects
+        if (currentNode.value is Timestamp) {
+          return (currentNode.value as Timestamp)
               .toDate()
               .toUtc()
               .toIso8601String();

@@ -31,6 +31,11 @@ class YustFileService {
     _storageApi = StorageApi(authClient!, rootUrl: rootUrl);
   }
 
+  YustFileService.mocked() {
+    bucketName = 'bucket_name_placeholder';
+    rootUrl = '0.0.0.0:80';
+  }
+
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
   ///
@@ -159,7 +164,7 @@ class YustFileService {
   }
 
   String _createDownloadUrl(String path, String name, String token) {
-    return '${rootUrl}v0/b/'
+    return 'https://firebasestorage.googleapis.com/v0/b/'
         '$bucketName/o/${Uri.encodeComponent('$path/$name')}'
         '?alt=media&token=$token';
   }

@@ -4,4 +4,7 @@ extension StringExtension on String {
     final iso8601Regex = RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}');
     return iso8601Regex.hasMatch(this);
   }
+
+  String toCapitalized() =>
+      isNotEmpty ? '${this[0].toUpperCase()}${substring(1)}' : '';
 }

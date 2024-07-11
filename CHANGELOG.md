@@ -1,3 +1,7 @@
+## 3.23.4 - 2024-07-11
+
+- Fixes for mocked file service
+
 ## 3.23.3 - 2024-07-10
 
 - Add mocked file service

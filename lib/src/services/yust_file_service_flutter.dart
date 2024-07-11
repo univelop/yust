@@ -20,6 +20,10 @@ class YustFileService {
     }
   }
 
+  YustFileService.mocked() : _fireStorage = FirebaseStorage.instance {
+    throw UnsupportedError('Not supported in Flutter Environment');
+  }
+
   final FirebaseStorage _fireStorage;
 
   Future<String> uploadFile(

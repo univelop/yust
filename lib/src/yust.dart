@@ -8,7 +8,7 @@ import 'services/yust_auth_service.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
-import 'services/yust_file_service_dart_mocked.dart';
+import 'services/yust_file_service_mocked.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
 

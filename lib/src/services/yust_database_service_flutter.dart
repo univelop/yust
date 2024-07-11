@@ -49,7 +49,9 @@ class YustDatabaseService {
     this.dbLogCallback,
     required this.envCollectionName,
     required this.useSubcollections,
-  });
+  }) {
+    throw UnsupportedError('Not supported in Flutter Environment');
+  }
 
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;

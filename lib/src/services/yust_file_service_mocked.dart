@@ -103,7 +103,7 @@ class YustFileServiceMocked extends YustFileService {
   }
 
   String _createDownloadUrl(String path, String name, String token) {
-    return '$rootUrl/invalid-mockUrl?bucket=$bucketName&file=$path/$name&token=$token';
+    return 'https://not-a-real-url.mocked/$path/$name&token=$token';
   }
 }
 

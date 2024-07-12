@@ -568,7 +568,7 @@ class YustDatabaseService {
       dbLogCallback?.call(
           DatabaseLogAction.transform, _getDocumentPath(docSetup), 1,
           id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
-    });
+    }, useHigherBackoff: true);
   }
 
   /// Delete all [YustDoc]s in the filter.
@@ -1105,6 +1105,7 @@ class YustDatabaseService {
     int numberOfRetries = 0,
     bool shouldRetryOnTransactionErrors = true,
     bool shouldIgnoreNotFound = false,
+    bool useHigherBackoff = false,
   }) async {
     try {
       return await fn();
@@ -1154,7 +1155,9 @@ class YustDatabaseService {
       }
       return Future.delayed(
           Duration(
-              milliseconds: pow(2, numberOfRetries).toInt() *
+              milliseconds: (useHigherBackoff
+                      ? pow(2, numberOfRetries + 4).toInt()
+                      : pow(2, numberOfRetries).toInt()) *
                   (50 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
               numberOfRetries: numberOfRetries + 1));

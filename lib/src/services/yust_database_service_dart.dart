@@ -1160,7 +1160,8 @@ class YustDatabaseService {
                       : pow(2, numberOfRetries).toInt()) *
                   (50 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
-              numberOfRetries: numberOfRetries + 1));
+              numberOfRetries: numberOfRetries + 1,
+              useHigherBackoff: useHigherBackoff));
     }
   }
 }

@@ -23,6 +23,8 @@ class YustDatabaseService {
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
+  DateTime? readTime;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
     Client? client,
@@ -60,9 +62,8 @@ class YustDatabaseService {
 
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id, {
-    DateTime? readTime,
-  }) {
+    String id,
+  ) {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
@@ -79,9 +80,8 @@ class YustDatabaseService {
 
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id, {
-    DateTime? readTime,
-  }) async {
+    String id,
+  ) async {
     final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
     DocumentSnapshot<Map<String, dynamic>>? docSnapshot;
 
@@ -102,7 +102,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id, {
     String? transaction,
-    DateTime? readTime,
   }) {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
@@ -113,9 +112,8 @@ class YustDatabaseService {
 
   Stream<T?> getStream<T extends YustDoc>(
     YustDocSetup<T> docSetup,
-    String id, {
-    DateTime? readTime,
-  }) {
+    String id,
+  ) {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
@@ -127,7 +125,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    DateTime? readTime,
   }) async {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
@@ -144,7 +141,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    DateTime? readTime,
   }) async {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
@@ -172,7 +168,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    DateTime? readTime,
   }) async {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
@@ -189,7 +184,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
-    DateTime? readTime,
   }) {
     var query =
         getQuery(docSetup, filters: filters, orderBy: orderBy, limit: 1);
@@ -208,7 +202,6 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    DateTime? readTime,
   }) {
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -228,7 +221,6 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    DateTime? readTime,
   }) async {
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -256,7 +248,6 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    DateTime? readTime,
   }) async {
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -273,7 +264,6 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    DateTime? readTime,
   }) {
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -290,7 +280,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     int? limit,
-    DateTime? readTime,
   }) async {
     var query = getQuery(docSetup, filters: filters);
     final snapshot = await query.count().get();
@@ -303,7 +292,6 @@ class YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
-    DateTime? readTime,
   }) async {
     throw YustException('Not implemented for flutter');
     // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
@@ -317,7 +305,6 @@ class YustDatabaseService {
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
-    DateTime? readTime,
   }) async {
     throw YustException('Not implemented for flutter');
     // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged

@@ -49,7 +49,7 @@ typedef OnChangeCallback = Future<void> Function(
   Map<String, dynamic>? newDocument,
 );
 
-/// Yust is the easiest way to connect full stack Dart app to Firebase.
+/// Yust is the easiest way to connect a full stack Dart app to Firebase.
 ///
 /// It is supporting Firebase Auth, Cloud Firestore and Cloud Storage.
 /// You can use Yust in a flutter and for a server app.
@@ -75,6 +75,8 @@ class Yust {
   bool mocked = false;
 
   bool forUI;
+
+  set readTime(DateTime? time) => dbService.readTime = time;
 
   /// Initializes [Yust].
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.

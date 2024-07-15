@@ -53,7 +53,10 @@ class YustDatabaseService {
   /// is about 1 - 1.5h between requests
   num maxRetries = 16;
 
-  int maxBackoffMs = 7 * 60 * 1000; // 7 minutes
+  /// Maximum for the exponential part of the backoff time,
+  /// this will be multiplied by a random number between 20 and 40.
+  /// For 16384 => 16384ms * ~30 = 491520ms (min 5.4min, max 10.9min)
+  int maxExponentialBackoffMs = 16384;
 
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
@@ -1156,10 +1159,9 @@ class YustDatabaseService {
       }
       return Future.delayed(
           Duration(
-              milliseconds: min(
-                  maxBackoffMs,
-                  pow(2, numberOfRetries + 3).toInt() *
-                      (20 + Random().nextInt(20)))),
+              milliseconds: min(maxExponentialBackoffMs,
+                      pow(2, numberOfRetries + 3).toInt()) *
+                  (20 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
               numberOfRetries: numberOfRetries + 1));
     }

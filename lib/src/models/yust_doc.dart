@@ -61,14 +61,11 @@ abstract class YustDoc {
     _envId = s;
   }
 
-  final Set<String> _updateMask = {};
-
-  /// The fields that should be updated.
-  Set<String> get updateMask => _updateMask;
+  Set<String> updateMask = {};
 
   /// are there changes to be saved?
   @JsonKey(includeFromJson: false, includeToJson: false)
-  bool get hasChanges => _updateMask.isNotEmpty;
+  bool get hasChanges => updateMask.isNotEmpty;
 
   YustDoc({
     String id = '',
@@ -109,5 +106,5 @@ abstract class YustDoc {
   Future<void> onDelete() async {}
 
   /// clear the update mask
-  void clearUpdateMask() => _updateMask.clear();
+  void clearUpdateMask() => updateMask.clear();
 }

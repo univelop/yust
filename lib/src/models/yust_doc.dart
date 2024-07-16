@@ -53,7 +53,7 @@ abstract class YustDoc {
     _userId = s;
   }
 
-  /// The tennant ID where the document belongs to.
+  /// The tenant ID where the document belongs to.
   String? _envId;
   String? get envId => _envId;
   set envId(String? s) {
@@ -99,10 +99,10 @@ abstract class YustDoc {
     return GoogleCloudHelpers.convertTimestamp(value);
   }
 
-  /// is triggerd when the document is saved
+  /// is triggered when the document is saved
   Future<void> onSave() async {}
 
-  /// is triggerd when the document is removed
+  /// is triggered when the document is removed
   Future<void> onDelete() async {}
 
   /// clear the update mask

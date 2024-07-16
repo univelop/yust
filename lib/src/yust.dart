@@ -108,8 +108,8 @@ class Yust {
   /// This method should be called before any usage of the yust package.
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [pathToServiceAccountJson] if you are connecting directly with Dart.
   /// Set the [emulatorAddress], if you want to emulate Firebase. [userSetup] let you overwrite the default [UserSetup].
-  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
-  /// [envCollectionName] represents the collection name for the tannants.
+  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tenant automatically.
+  /// [envCollectionName] represents the collection name for the tenants.
   /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
   /// Use [dbLogCallback] to provide a function that will get called on each DatabaseCall
   Future<void> initialize({

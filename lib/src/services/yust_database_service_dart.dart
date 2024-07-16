@@ -53,6 +53,11 @@ class YustDatabaseService {
   /// is about 1 - 1.5h between requests
   num maxRetries = 16;
 
+  /// Maximum for the exponential part of the backoff time,
+  /// this will be multiplied by a random number between 20 and 40.
+  /// For 16384 => 16384ms * ~30 = 491520ms (min 5.4min, max 10.9min)
+  int maxExponentialBackoffMs = 16384;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
     Client? client,
@@ -568,7 +573,7 @@ class YustDatabaseService {
       dbLogCallback?.call(
           DatabaseLogAction.transform, _getDocumentPath(docSetup), 1,
           id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
-    }, useHigherBackoff: true);
+    });
   }
 
   /// Delete all [YustDoc]s in the filter.
@@ -1105,7 +1110,6 @@ class YustDatabaseService {
     int numberOfRetries = 0,
     bool shouldRetryOnTransactionErrors = true,
     bool shouldIgnoreNotFound = false,
-    bool useHigherBackoff = false,
   }) async {
     try {
       return await fn();
@@ -1155,13 +1159,11 @@ class YustDatabaseService {
       }
       return Future.delayed(
           Duration(
-              milliseconds: (useHigherBackoff
-                      ? pow(2, numberOfRetries + 4).toInt()
-                      : pow(2, numberOfRetries).toInt()) *
-                  (50 + Random().nextInt(20))),
+              milliseconds: min(maxExponentialBackoffMs,
+                      pow(2, numberOfRetries + 3).toInt()) *
+                  (20 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
-              numberOfRetries: numberOfRetries + 1,
-              useHigherBackoff: useHigherBackoff));
+              numberOfRetries: numberOfRetries + 1));
     }
   }
 }

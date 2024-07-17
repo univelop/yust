@@ -61,11 +61,14 @@ abstract class YustDoc {
     _envId = s;
   }
 
-  Set<String> updateMask = {};
+  final Set<String> _updateMask = {};
+
+  /// The fields that should be updated.
+  Set<String> get updateMask => _updateMask;
 
   /// are there changes to be saved?
   @JsonKey(includeFromJson: false, includeToJson: false)
-  bool get hasChanges => updateMask.isNotEmpty;
+  bool get hasChanges => _updateMask.isNotEmpty;
 
   YustDoc({
     String id = '',

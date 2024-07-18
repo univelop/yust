@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:collection/collection.dart';
 
@@ -157,14 +158,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    var jsonDocs = _getJSONCollection(docSetup.collectionName);
-    jsonDocs = _filter(jsonDocs, filters);
-    jsonDocs = _orderBy(jsonDocs, orderBy);
-    final docs = _jsonListToDocList(jsonDocs, docSetup);
-    final limitedDocs = docs.sublist(0, limit);
+    final docs =
+        _getList(docSetup, filters: filters, orderBy: orderBy, limit: limit);
     dbLogCallback?.call(
-        DatabaseLogAction.get, _getDocumentPath(docSetup), limitedDocs.length);
-    return limitedDocs;
+        DatabaseLogAction.get, _getDocumentPath(docSetup), docs.length);
+    return docs;
   }
 
   @override
@@ -196,7 +194,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    final result = (await getList(docSetup, filters: filters)).length;
+    final result = _getList(docSetup, filters: filters, limit: limit).length;
     dbLogCallback?.call(
         DatabaseLogAction.aggregate, _getDocumentPath(docSetup), result);
     return result;
@@ -209,7 +207,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    final docs = await getList(docSetup, filters: filters);
+    final docs = _getList(docSetup, filters: filters, limit: limit);
     final count = docs.length;
     final result = docs
         .map((e) => _getDoubleValue(e, fieldPath))
@@ -228,7 +226,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    final docs = await getList(docSetup, filters: filters);
+    final docs = _getList(docSetup, filters: filters, limit: limit);
     final count = docs.length;
     final sum = docs
         .map((e) => _getDoubleValue(e, fieldPath))
@@ -482,7 +480,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   double _getDoubleValue<T extends YustDoc>(T doc, String fieldPath) {
-    final value = doc.toJson()[fieldPath];
+    final value = _readValueInJsonDoc(doc.toJson(), fieldPath);
     if (value is double) {
       return value;
     } else if (value is int) {
@@ -496,5 +494,21 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   String _getDocumentPath(YustDocSetup docSetup, [String? id = '']) {
     return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
+  }
+
+  List<T> _getList<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    var jsonDocs = _getJSONCollection(docSetup.collectionName);
+    jsonDocs = _filter(jsonDocs, filters);
+    jsonDocs = _orderBy(jsonDocs, orderBy);
+    final docs = _jsonListToDocList(jsonDocs, docSetup);
+
+    final limitedDocs = docs.sublist(0, min(limit ?? docs.length, docs.length));
+
+    return limitedDocs;
   }
 }

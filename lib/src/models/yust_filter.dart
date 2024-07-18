@@ -160,6 +160,12 @@ class YustFilter {
     }
   }
 
+  get isEqualityFilter => [
+        YustFilterComparator.equal,
+        YustFilterComparator.arrayContains,
+        YustFilterComparator.isNull
+      ].contains(comparator);
+
   /// A map with the [YustFilterComparator] and the string repesentation.
   static Map<YustFilterComparator, String> comparatorStrings = {
     YustFilterComparator.equal: '=',

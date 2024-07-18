@@ -1,3 +1,7 @@
+## 3.23.5 - 2024-07-16
+
+- Improvement to YustDatabaseService
+
 ## 3.23.4 - 2024-07-11
 
 - Fixes for mocked file service
@@ -21,7 +25,7 @@
 ## 3.22.1 - 2024-06-07
 
 - Improvements to YustFileService
-  
+
 ## 3.21.2 - 2024-06-07
 
 - Fixes & improvements for YustDatabaseService
@@ -29,7 +33,7 @@
 ## 3.22.0 - 2024-05-30
 
 - Make yust ready for Flutter 3.22.1
-  
+
 ## 3.21.1 - 2024-05-15
 
 - Support DB Statistics in mocked DB Service

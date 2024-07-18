@@ -1,3 +1,7 @@
+## 3.23.6 - 2024-07-18
+
+- Add support for PITR in YustDatabaseService
+
 ## 3.23.5 - 2024-07-16
 
 - Improvement to YustDatabaseService

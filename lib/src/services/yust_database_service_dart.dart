@@ -53,6 +53,17 @@ class YustDatabaseService {
   /// is about 1 - 1.5h between requests
   num maxRetries = 16;
 
+  /// Which version of documents to read.
+  ///
+  /// A timestamp in the past will return the document at that time.
+  /// Null will return the most recent version.
+  DateTime? readTime;
+
+  /// Maximum for the exponential part of the backoff time,
+  /// this will be multiplied by a random number between 20 and 40.
+  /// For 16384 => 16384ms * ~30 = 491520ms (min 5.4min, max 10.9min)
+  int maxExponentialBackoffMs = 16384;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
     Client? client,
@@ -127,8 +138,10 @@ class YustDatabaseService {
       final response = await _retryOnException<Document>(
           'getFromDB',
           _getDocumentPath(docSetup, id),
-          () => _api.projects.databases.documents
-              .get(_getDocumentPath(docSetup, id), transaction: transaction));
+          () => _api.projects.databases.documents.get(
+              _getDocumentPath(docSetup, id),
+              readTime: readTime?.toUtc().toIso8601String(),
+              transaction: transaction));
 
       dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return _transformDoc<T>(docSetup, response);
@@ -865,6 +878,7 @@ class YustDatabaseService {
                 Value(referenceValue: startAfterDocument),
               ], before: false),
       ),
+      readTime: readTime?.toUtc().toIso8601String(),
     );
   }
 
@@ -900,6 +914,7 @@ class YustDatabaseService {
                   op: 'AND')),
         ),
       ),
+      readTime: readTime?.toUtc().toIso8601String(),
     );
   }
 
@@ -1154,8 +1169,9 @@ class YustDatabaseService {
       }
       return Future.delayed(
           Duration(
-              milliseconds: pow(2, numberOfRetries).toInt() *
-                  (50 + Random().nextInt(20))),
+              milliseconds: min(maxExponentialBackoffMs,
+                      pow(2, numberOfRetries + 3).toInt()) *
+                  (20 + Random().nextInt(20))),
           () => _retryOnException<T>(fnName, docPath, fn,
               numberOfRetries: numberOfRetries + 1));
     }

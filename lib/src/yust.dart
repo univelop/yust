@@ -8,6 +8,7 @@ import 'services/yust_auth_service.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
+import 'services/yust_file_service_mocked.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
 
@@ -48,7 +49,7 @@ typedef OnChangeCallback = Future<void> Function(
   Map<String, dynamic>? newDocument,
 );
 
-/// Yust is the easiest way to connect full stack Dart app to Firebase.
+/// Yust is the easiest way to connect a full stack Dart app to Firebase.
 ///
 /// It is supporting Firebase Auth, Cloud Firestore and Cloud Storage.
 /// You can use Yust in a flutter and for a server app.
@@ -74,6 +75,8 @@ class Yust {
   bool mocked = false;
 
   bool forUI;
+
+  set readTime(DateTime? time) => dbService.readTime = time;
 
   /// Initializes [Yust].
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
@@ -105,8 +108,8 @@ class Yust {
   /// This method should be called before any usage of the yust package.
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [pathToServiceAccountJson] if you are connecting directly with Dart.
   /// Set the [emulatorAddress], if you want to emulate Firebase. [userSetup] let you overwrite the default [UserSetup].
-  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tannant automatically.
-  /// [envCollectionName] represents the collection name for the tannants.
+  /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tenant automatically.
+  /// [envCollectionName] represents the collection name for the tenants.
   /// Use [projectId] to override / set the project id otherwise gathered from the execution environment.
   /// Use [dbLogCallback] to provide a function that will get called on each DatabaseCall
   Future<void> initialize({
@@ -129,6 +132,7 @@ class Yust {
           useSubcollections: useSubcollections,
           envCollectionName: envCollectionName);
       Yust.authService = YustAuthService.mocked();
+      Yust.fileService = YustFileServiceMocked();
       return;
     }
 

@@ -24,6 +24,8 @@ class YustDatabaseService {
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
+  DateTime? readTime;
+
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
     Client? client,

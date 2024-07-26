@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:http/http.dart';
 
 import '../extensions/server_now.dart';
@@ -293,11 +294,9 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    throw YustException('Not implemented for flutter');
-    // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
-    // var query = getQuery(docSetup, filters: filters);
-    // final snapshot = await query.sum(fieldPath).get();
-    // return snapshot.count;
+    var query = getQuery(docSetup, filters: filters);
+    final snapshot = await query.aggregate(cf.sum(fieldPath)).get();
+    return (snapshot.getSum(fieldPath) ?? 0);
   }
 
   Future<double> avg<T extends YustDoc>(
@@ -306,11 +305,9 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    throw YustException('Not implemented for flutter');
-    // Wait for https://github.com/firebase/flutterfire/pull/11757 to be merged
-    // var query = getQuery(docSetup, filters: filters);
-    // final snapshot = await query.average(fieldPath).get();
-    // return snapshot.count;
+    var query = getQuery(docSetup, filters: filters);
+    final snapshot = await query.aggregate(cf.average(fieldPath)).get();
+    return (snapshot.getAverage(fieldPath) ?? 0);
   }
 
   Future<void> saveDoc<T extends YustDoc>(

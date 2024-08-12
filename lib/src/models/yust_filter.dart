@@ -8,19 +8,22 @@ part 'yust_filter.g.dart';
 
 /// All types a filter can compare a brick value with a constant
 enum YustFilterComparator {
-  equal,
-  notEqual,
-  lessThan,
-  lessThanEqual,
-  greaterThan,
-  greaterThanEqual,
-  arrayContains,
-  arrayContainsAny,
-  inList,
-  notInList,
-  isNull,
-  isNotNull;
+  equal('EQUAL'),
+  notEqual('NOT_EQUAL'),
+  lessThan('LESS_THAN'),
+  lessThanEqual('LESS_THAN_EQUAL'),
+  greaterThan('GREATER_THAN'),
+  greaterThanEqual('GREATER_THAN_EQUAL'),
+  arrayContains('ARRAY_CONTAINS'),
+  arrayContainsAny('ARRAY_CONTAINS_ANY'),
+  inList('IN'),
+  notInList('NOT_IN'),
+  isNull('IS_NULL'),
+  isNotNull('IS_NOT_NULL');
 
+  final String firestoreOperatorName;
+
+  const YustFilterComparator(this.firestoreOperatorName);
   static List<YustFilterComparator> get equalityFilters =>
       const [equal, arrayContains, arrayContainsAny, inList, isNull];
 }

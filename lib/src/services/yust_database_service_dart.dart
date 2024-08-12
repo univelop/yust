@@ -943,55 +943,23 @@ class YustDatabaseService {
         if ((filter.value != null) ||
             ([YustFilterComparator.isNull, YustFilterComparator.isNotNull]
                 .contains(filter.comparator))) {
-          String op;
-          switch (filter.comparator) {
-            case YustFilterComparator.equal:
-              op = 'EQUAL';
-              break;
-            case YustFilterComparator.notEqual:
-              op = 'NOT_EQUAL';
-              break;
-            case YustFilterComparator.lessThan:
-              op = 'LESS_THAN';
-              break;
-            case YustFilterComparator.lessThanEqual:
-              op = 'LESS_THAN_OR_EQUAL';
-              break;
-            case YustFilterComparator.greaterThan:
-              op = 'GREATER_THAN';
-              break;
-            case YustFilterComparator.greaterThanEqual:
-              op = 'GREATER_THAN_OR_EQUAL';
-              break;
-            case YustFilterComparator.arrayContains:
-              op = 'ARRAY_CONTAINS';
-              break;
-            case YustFilterComparator.arrayContainsAny:
-              op = 'ARRAY_CONTAINS_ANY';
-              break;
-            case YustFilterComparator.inList:
-              op = 'IN';
-              break;
-            case YustFilterComparator.notInList:
-              op = 'NOT_IN';
-              break;
-            case YustFilterComparator.isNull:
-              op = 'IS_NULL';
-              break;
-            case YustFilterComparator.isNotNull:
-              op = 'IS_NOT_NULL';
-              break;
-            default:
-              throw 'The comparator "${filter.comparator}" is not supported.';
-          }
           final quotedFieldPath = YustHelpers().toQuotedFieldPath(filter.field);
 
-          result.add(Filter(
-              fieldFilter: FieldFilter(
+          final fieldFilter = FieldFilter(
             field: FieldReference(fieldPath: quotedFieldPath),
-            op: op,
+            op: filter.comparator.firestoreOperatorName,
             value: _valueToDbValue(filter.value),
-          )));
+          );
+
+          if (filter.comparator == YustFilterComparator.isNull ||
+              filter.comparator == YustFilterComparator.isNotNull) {
+            result.add(Filter(
+                unaryFilter: UnaryFilter(
+                    field: FieldReference(fieldPath: quotedFieldPath),
+                    op: filter.comparator.firestoreOperatorName)));
+          } else {
+            result.add(Filter(fieldFilter: fieldFilter));
+          }
         }
       }
     }

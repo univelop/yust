@@ -204,7 +204,10 @@ class YustAuthService {
       ..authId = authId
       ..authenticationMethod = authenticationMethod
       ..domain = domain ?? email.split('@').last
-      ..gender = gender;
+      ..gender = gender
+      ..lastLogin = DateTime.now()
+      ..lastLoginDomain =
+          Uri.base.scheme.contains('http') ? Uri.base.host : null;
     await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
     return user;
   }

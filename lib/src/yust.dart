@@ -11,6 +11,7 @@ import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
+import 'util/yust_location_helper.dart';
 
 /// Represents the state of the user authentication.
 ///
@@ -68,6 +69,7 @@ class Yust {
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
+  static YustLocationHelper locationHelper = YustLocationHelper();
   static late String projectId;
 
   late YustDatabaseService dbService;

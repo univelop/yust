@@ -1,3 +1,7 @@
+## 3.24.3 - 2024-08-15
+
+- Bump Version
+
 ## 3.24.2 - 2024-08-15
 
 - Further Fixes for YustDatabaseService Filters

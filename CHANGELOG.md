@@ -1,4 +1,8 @@
-## 3.24.1 - 2024-07-29
+## 3.24.2 - 2024-08-15
+
+- Further Fixes for YustDatabaseService Filters
+
+## 3.24.1 - 2024-08-12
 
 - Fixes for YustDatabaseService Filters
 

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
+import '../util/yust_exception.dart';
 import '../yust.dart';
 
 class YustAuthService {
@@ -217,7 +218,13 @@ class YustAuthService {
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
-    await fireAuth.sendPasswordResetEmail(email: email);
+    // ignore: deprecated_member_use
+    final loginMethods = await fireAuth.fetchSignInMethodsForEmail(email);
+    if (loginMethods.contains('password')) {
+      await fireAuth.sendPasswordResetEmail(email: email);
+    } else {
+      throw YustException('Reset password not possible.');
+    }
   }
 
   Future<void> changeEmail(String email, String password) async {

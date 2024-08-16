@@ -1,3 +1,7 @@
+## 3.24.4 - 2024-08-16
+
+- User Authorization Improvements
+
 ## 3.24.3 - 2024-08-15
 
 - Bump Version

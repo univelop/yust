@@ -492,13 +492,8 @@ class YustDatabaseService {
                 _getParentPath(docSetup)));
     final result =
         response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
-    final count = int.parse(response[0]
-            .result
-            ?.aggregateFields?[AggregationType.count.name]
-            ?.integerValue ??
-        '0');
     dbLogCallback?.call(
-        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), 0,
         aggregationResult: result);
     return result;
   }
@@ -885,24 +880,19 @@ class YustDatabaseService {
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
       AggregationType type, YustDocSetup<T> docSetup,
       {String? fieldPath, List<YustFilter>? filters, int? upTo}) {
-    final countAggregation = Aggregation(
-        alias: AggregationType.count.name,
-        count: Count(upTo: upTo?.toString()));
     final quotedFieldPath = YustHelpers().toQuotedFieldPath(fieldPath);
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
         aggregations: [
-          // We always include count to get the number of aggregated documents
-          countAggregation,
+          if (type == AggregationType.count)
+            Aggregation(alias: type.name, count: Count(upTo: upTo?.toString())),
           if (type == AggregationType.sum)
             Aggregation(
                 alias: type.name,
-                count: Count(upTo: upTo?.toString()),
                 sum: Sum(field: FieldReference(fieldPath: quotedFieldPath))),
           if (type == AggregationType.avg)
             Aggregation(
                 alias: type.name,
-                count: Count(upTo: upTo?.toString()),
                 avg: Avg(field: FieldReference(fieldPath: quotedFieldPath))),
         ],
         structuredQuery: StructuredQuery(

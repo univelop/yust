@@ -64,6 +64,9 @@ class YustUser extends YustDoc {
   /// Locale
   String locale;
 
+  /// The boolean flag for a beta user.
+  bool? isBetaUser;
+
   YustUser({
     required this.email,
     required this.firstName,

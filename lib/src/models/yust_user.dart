@@ -64,8 +64,9 @@ class YustUser extends YustDoc {
   /// Locale
   String locale;
 
-  /// The boolean flag for a beta user.
-  bool? isBetaUser;
+  /// The attributes for a user.
+  @JsonKey(defaultValue: {})
+  Map<String, dynamic> userAttributes = {};
 
   YustUser({
     required this.email,
@@ -111,6 +112,14 @@ class YustUser extends YustDoc {
     await (yust?.dbService ?? Yust.databaseService)
         .saveDoc<YustUser>(Yust.userSetup, this);
   }
+
+  /// This method returns the value of the attribute with the given key.
+  dynamic getAttribute(String key) => userAttributes[key];
+
+  /// This method sets the value of the attribute with the given key.
+  void setAttribute(String key, dynamic value) =>
+    userAttributes[key] = value;
+  
 }
 
 enum YustGender {

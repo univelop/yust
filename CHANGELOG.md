@@ -1,3 +1,8 @@
+## 3.24.5 - 2024-09-14
+
+- Geo-Location improvements
+- Database service fixes
+
 ## 3.24.4 - 2024-08-16
 
 - User Authorization Improvements

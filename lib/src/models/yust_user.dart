@@ -114,7 +114,10 @@ class YustUser extends YustDoc {
   }
 
   /// This method returns the value of the attribute with the given key.
-  dynamic getAttribute(String key) => userAttributes[key];
+  T getAttribute<T>(String key, T defaultValue) => userAttributes[key] ?? defaultValue;
+
+  /// This method returns the value of the attribute with the given key or null if the attribute does not exist.
+  T? getAttributeOrNull<T>(String key) => userAttributes[key];
 
   /// This method sets the value of the attribute with the given key.
   void setAttribute(String key, dynamic value) =>

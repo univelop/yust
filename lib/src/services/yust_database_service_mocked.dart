@@ -492,8 +492,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   void clearDb() => _db.clear();
 
+  String _getCollectionName(YustDocSetup docSetup) {
+    if (docSetup.collectionName.contains('/')) {
+      return docSetup.collectionName.split('/').last;
+    } else {
+      return docSetup.collectionName;
+    }
+  }
+
   String _getDocumentPath(YustDocSetup docSetup, [String? id = '']) {
-    return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
+    return '${_getParentPath(docSetup)}/${_getCollectionName(docSetup)}/$id';
   }
 
   List<T> _getList<T extends YustDoc>(

@@ -201,7 +201,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
-  Future<double> sum<T extends YustDoc>(
+  Future<AggregationResult> sum<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
@@ -216,11 +216,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     dbLogCallback?.call(
         DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
         aggregationResult: result);
-    return result;
+    return (count: count, result: result);
   }
 
   @override
-  Future<double> avg<T extends YustDoc>(
+  Future<AggregationResult> avg<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
@@ -236,7 +236,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     dbLogCallback?.call(
         DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
         aggregationResult: result);
-    return result;
+    return (count: count, result: result);
   }
 
   @override

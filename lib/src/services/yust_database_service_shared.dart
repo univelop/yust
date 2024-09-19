@@ -2,6 +2,14 @@ import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../yust.dart';
 
+enum AggregationType {
+  count,
+  sum,
+  avg;
+}
+
+typedef AggregationResult = ({double? result, int count});
+
 Future<void> prepareSaveDoc<T extends YustDoc>(
   YustDocSetup<T> docSetup,
   T doc, {

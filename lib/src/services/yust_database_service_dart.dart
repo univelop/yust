@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
-import 'package:googleapis/firestore/v1.dart';
+import 'package:googleapis/firestore/v1.dart' hide AggregationResult;
 import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
 
@@ -21,12 +21,6 @@ import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
 const firestoreApiUrl = 'https://firestore.googleapis.com/';
-
-enum AggregationType {
-  count,
-  sum,
-  avg;
-}
 
 /// Handles database requests for Cloud Firestore.
 ///
@@ -457,7 +451,7 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
-  Future<double> sum<T extends YustDoc>(
+  Future<AggregationResult> sum<T extends YustDoc>(
       YustDocSetup<T> docSetup, String fieldPath,
       {List<YustFilter>? filters, int? limit}) async {
     return _performAggregation(AggregationType.sum, docSetup, fieldPath,
@@ -472,14 +466,14 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
-  Future<double> avg<T extends YustDoc>(
+  Future<AggregationResult> avg<T extends YustDoc>(
       YustDocSetup<T> docSetup, String fieldPath,
       {List<YustFilter>? filters, int? limit}) async {
     return _performAggregation(AggregationType.avg, docSetup, fieldPath,
         filters: filters, limit: limit);
   }
 
-  Future<double> _performAggregation<T extends YustDoc>(
+  Future<AggregationResult> _performAggregation<T extends YustDoc>(
       AggregationType type, YustDocSetup<T> docSetup, String fieldPath,
       {List<YustFilter>? filters, int? limit}) async {
     final response =
@@ -490,12 +484,19 @@ class YustDatabaseService {
                 _getAggregationQuery(type, docSetup,
                     fieldPath: fieldPath, filters: filters, upTo: limit),
                 _getParentPath(docSetup)));
-    final result =
-        response[0].result?.aggregateFields?[type.name]?.doubleValue ?? 0.0;
+    final resultValue = response[0].result?.aggregateFields?[type.name];
+    final result = resultValue?.doubleValue ??
+        double.tryParse(resultValue?.integerValue ?? '');
+
+    final count = int.parse(response[0]
+            .result
+            ?.aggregateFields?[AggregationType.count.name]
+            ?.integerValue ??
+        '0');
     dbLogCallback?.call(
-        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), 0,
+        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
         aggregationResult: result);
-    return result;
+    return (count: count, result: result);
   }
 
   /// Saves a document.
@@ -880,28 +881,34 @@ class YustDatabaseService {
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(
       AggregationType type, YustDocSetup<T> docSetup,
       {String? fieldPath, List<YustFilter>? filters, int? upTo}) {
+    final countAggregation = Aggregation(
+        alias: AggregationType.count.name,
+        count: Count(upTo: upTo?.toString()));
     final quotedFieldPath = YustHelpers().toQuotedFieldPath(fieldPath);
     return RunAggregationQueryRequest(
       structuredAggregationQuery: StructuredAggregationQuery(
         aggregations: [
-          if (type == AggregationType.count)
-            Aggregation(alias: type.name, count: Count(upTo: upTo?.toString())),
+          // We always include count to get the number of aggregated documents
+          countAggregation,
           if (type == AggregationType.sum)
             Aggregation(
                 alias: type.name,
+                // count: Count(upTo: upTo?.toString()),
                 sum: Sum(field: FieldReference(fieldPath: quotedFieldPath))),
           if (type == AggregationType.avg)
             Aggregation(
                 alias: type.name,
+                count: Count(upTo: upTo?.toString()),
                 avg: Avg(field: FieldReference(fieldPath: quotedFieldPath))),
         ],
         structuredQuery: StructuredQuery(
           from: [CollectionSelector(collectionId: _getCollection(docSetup))],
           where: Filter(
-              compositeFilter: CompositeFilter(
-                  filters: _executeStaticFilters(docSetup) +
-                      _executeFilters(filters),
-                  op: 'AND')),
+            compositeFilter: CompositeFilter(
+                filters:
+                    _executeStaticFilters(docSetup) + _executeFilters(filters),
+                op: 'AND'),
+          ),
         ),
       ),
       readTime: readTime?.toUtc().toIso8601String(),

@@ -893,12 +893,10 @@ class YustDatabaseService {
           if (type == AggregationType.sum)
             Aggregation(
                 alias: type.name,
-                // count: Count(upTo: upTo?.toString()),
                 sum: Sum(field: FieldReference(fieldPath: quotedFieldPath))),
           if (type == AggregationType.avg)
             Aggregation(
                 alias: type.name,
-                count: Count(upTo: upTo?.toString()),
                 avg: Avg(field: FieldReference(fieldPath: quotedFieldPath))),
         ],
         structuredQuery: StructuredQuery(

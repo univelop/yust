@@ -45,7 +45,11 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..profilePicture = json['profilePicture'] == null
           ? null
           : YustFile.fromJson(
-              Map<String, dynamic>.from(json['profilePicture'] as Map));
+              Map<String, dynamic>.from(json['profilePicture'] as Map))
+      ..userAttributes = (json['userAttributes'] as Map?)?.map(
+            (k, e) => MapEntry(k as String, e),
+          ) ??
+          {};
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'id': instance.id,
@@ -70,6 +74,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'authId': instance.authId,
       'profilePicture': instance.profilePicture?.toJson(),
       'locale': instance.locale,
+      'userAttributes': instance.userAttributes,
     };
 
 const _$YustGenderEnumMap = {

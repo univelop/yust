@@ -64,6 +64,10 @@ class YustUser extends YustDoc {
   /// Locale
   String locale;
 
+  /// The attributes for a user.
+  @JsonKey(defaultValue: {})
+  Map<String, dynamic> userAttributes = {};
+
   YustUser({
     required this.email,
     required this.firstName,
@@ -108,6 +112,17 @@ class YustUser extends YustDoc {
     await (yust?.dbService ?? Yust.databaseService)
         .saveDoc<YustUser>(Yust.userSetup, this);
   }
+
+  /// This method returns the value of the attribute with the given key.
+  T getAttribute<T>(String key, T defaultValue) => userAttributes[key] ?? defaultValue;
+
+  /// This method returns the value of the attribute with the given key or null if the attribute does not exist.
+  T? getAttributeOrNull<T>(String key) => userAttributes[key];
+
+  /// This method sets the value of the attribute with the given key.
+  void setAttribute(String key, dynamic value) =>
+    userAttributes[key] = value;
+  
 }
 
 enum YustGender {

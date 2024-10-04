@@ -23,6 +23,14 @@ class YustQueryWithLogging implements Query {
         newOriginalQuery,
       );
 
+  AggregateQuery _mapAggregateQuery(
+    AggregateQuery newOriginalQuery,
+  ) =>
+      YustAggregateQueryWithLogging(
+        _dbLogCallback,
+        newOriginalQuery,
+      );
+
   @override
   Future<QuerySnapshot> get([GetOptions? options]) async {
     final snapshot = await _originalQuery.get(options);
@@ -152,7 +160,7 @@ class YustQueryWithLogging implements Query {
   int get hashCode => Object.hash(runtimeType, _dbLogCallback, _originalQuery);
 
   @override
-  AggregateQuery count() => _originalQuery.count();
+  AggregateQuery count() => _mapAggregateQuery(_originalQuery.count());
 
   @override
   AggregateQuery aggregate(AggregateField aggregateField1,
@@ -185,7 +193,7 @@ class YustQueryWithLogging implements Query {
           AggregateField? aggregateField28,
           AggregateField? aggregateField29,
           AggregateField? aggregateField30]) =>
-      _originalQuery.aggregate(
+      _mapAggregateQuery(_originalQuery.aggregate(
           aggregateField1,
           aggregateField2,
           aggregateField3,
@@ -215,7 +223,7 @@ class YustQueryWithLogging implements Query {
           aggregateField27,
           aggregateField28,
           aggregateField29,
-          aggregateField30);
+          aggregateField30));
 }
 
 extension DatabaseLogActionExtension on DatabaseLogAction {
@@ -224,4 +232,44 @@ extension DatabaseLogActionExtension on DatabaseLogAction {
 
   static DatabaseLogAction fromSnapshotMetadata(SnapshotMetadata meta) =>
       meta.isFromCache ? DatabaseLogAction.getFromCache : DatabaseLogAction.get;
+}
+
+class YustAggregateQueryWithLogging implements AggregateQuery {
+  YustAggregateQueryWithLogging(
+    this._dbLogCallback,
+    this._originalQuery,
+  );
+
+  final AggregateQuery _originalQuery;
+  final DatabaseLogCallback _dbLogCallback;
+
+  AggregateQuery _mapQuery(
+    AggregateQuery newOriginalQuery,
+  ) =>
+      YustAggregateQueryWithLogging(
+        _dbLogCallback,
+        newOriginalQuery,
+      );
+
+  @override
+  AggregateQuery count() => _mapQuery(_originalQuery);
+
+  @override
+  Future<AggregateQuerySnapshot> get(
+      {AggregateSource source = AggregateSource.server}) async {
+    final result = await _originalQuery.get(source: source);
+    final count = result.count;
+
+    // "Hack" to get the path of the query, because it's not exposed by the API
+    final path = (_originalQuery.query as dynamic).path;
+
+    _dbLogCallback(
+      DatabaseLogAction.aggregate,
+      path,
+      count ?? 0,
+    );
+    return result;
+  }
+
+  Query<Object?> get query => this._originalQuery.query;
 }

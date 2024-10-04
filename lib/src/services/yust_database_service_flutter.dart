@@ -288,26 +288,27 @@ class YustDatabaseService {
     return snapshot.count ?? 0;
   }
 
-  Future<double> sum<T extends YustDoc>(
+  Future<AggregationResult> sum<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
   }) async {
     var query = getQuery(docSetup, filters: filters);
-    final snapshot = await query.aggregate(cf.sum(fieldPath)).get();
-    return (snapshot.getSum(fieldPath) ?? 0);
+    final snapshot = await query.aggregate(cf.sum(fieldPath), cf.count()).get();
+    return (count: snapshot.count ?? 0, result: snapshot.getSum(fieldPath));
   }
 
-  Future<double> avg<T extends YustDoc>(
+  Future<AggregationResult> avg<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
     List<YustFilter>? filters,
     int? limit,
   }) async {
     var query = getQuery(docSetup, filters: filters);
-    final snapshot = await query.aggregate(cf.average(fieldPath)).get();
-    return (snapshot.getAverage(fieldPath) ?? 0);
+    final snapshot =
+        await query.aggregate(cf.average(fieldPath), cf.count()).get();
+    return (count: snapshot.count ?? 0, result: snapshot.getAverage(fieldPath));
   }
 
   Future<void> saveDoc<T extends YustDoc>(

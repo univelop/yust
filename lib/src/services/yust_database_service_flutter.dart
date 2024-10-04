@@ -64,8 +64,8 @@ class YustDatabaseService {
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
-  ) {
-    return _fireStore
+  ) async {
+    final result = await _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .get(GetOptions(source: Source.serverAndCache))
@@ -77,6 +77,10 @@ class YustDatabaseService {
       }
       throw e;
     });
+    dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+        result != null ? 1 : 0,
+        id: id);
+    return result;
   }
 
   Future<T?> getFromCache<T extends YustDoc>(
@@ -96,6 +100,10 @@ class YustDatabaseService {
       docSnapshot = await doc.get(GetOptions(source: Source.server));
     }
 
+    dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+        docSnapshot.exists ? 1 : 0,
+        id: id);
+
     return _transformDoc<T>(docSetup, docSnapshot);
   }
 
@@ -103,12 +111,16 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     String id, {
     String? transaction,
-  }) {
-    return _fireStore
+  }) async {
+    final result = await _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .get(GetOptions(source: Source.server))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
+    dbLogCallback?.call(DatabaseLogAction.get, _getCollectionPath(docSetup),
+        result != null ? 1 : 0,
+        id: id);
+    return result;
   }
 
   Stream<T?> getStream<T extends YustDoc>(
@@ -119,7 +131,14 @@ class YustDatabaseService {
         .collection(_getCollectionPath(docSetup))
         .doc(id)
         .snapshots()
-        .map((docSnapshot) => _transformDoc(docSetup, docSnapshot));
+        .map((docSnapshot) {
+      dbLogCallback?.call(
+        DatabaseLogActionExtension.fromSnapshot(docSnapshot),
+        docSnapshot.reference.parent.path,
+        docSnapshot.exists ? 1 : 0,
+      );
+      return _transformDoc(docSetup, docSnapshot);
+    });
   }
 
   Future<T?> getFirst<T extends YustDoc>(

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
@@ -140,6 +141,7 @@ class YustAuthService {
             value: userCredential.user!.uid)
       ]));
 
+  // If modified also modify in yust_auth_service_dart.dart
   Future<bool> _tryLinkYustUser(
     UserCredential userCredential,
     YustAuthenticationMethod? method,
@@ -163,13 +165,17 @@ class YustAuthService {
     return true;
   }
 
-  Future<YustUser?> signUp(
+  Future<YustUser?> createAccount(
     String firstName,
     String lastName,
     String email,
     String password, {
     YustGender? gender,
+    bool useOAuth = true,
   }) async {
+    if (useOAuth == true) {
+      throw YustException('OAuth not supported for createAccount.');
+    }
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     final successfullyLinked =
@@ -187,6 +193,7 @@ class YustAuthService {
     );
   }
 
+  // If modified also modify in yust_auth_service_dart.dart
   Future<YustUser> _createUser({
     required String firstName,
     required String lastName,

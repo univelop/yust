@@ -589,9 +589,11 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    Query query = _fireStore.collection(_getCollectionPath(docSetup));
+    final path = _getCollectionPath(docSetup);
+    Query query = _fireStore.collection(path);
     if (dbLogCallback != null) {
-      query = YustQueryWithLogging(dbLogCallback!, query);
+      query = YustQueryWithLogging(
+          dbLogCallback!, query, path);
     }
     query = _executeStaticFilters(query, docSetup);
     query = _executeFilters(query, filters);

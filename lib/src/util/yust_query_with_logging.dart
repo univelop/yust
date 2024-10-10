@@ -10,10 +10,12 @@ class YustQueryWithLogging implements Query {
   YustQueryWithLogging(
     this._dbLogCallback,
     this._originalQuery,
+    this.path,
   );
 
   final Query _originalQuery;
   final DatabaseLogCallback _dbLogCallback;
+  final String path;
 
   Query _mapQuery(
     Query newOriginalQuery,
@@ -21,15 +23,13 @@ class YustQueryWithLogging implements Query {
       YustQueryWithLogging(
         _dbLogCallback,
         newOriginalQuery,
+        path,
       );
 
   AggregateQuery _mapAggregateQuery(
     AggregateQuery newOriginalQuery,
   ) =>
-      YustAggregateQueryWithLogging(
-        _dbLogCallback,
-        newOriginalQuery,
-      );
+      YustAggregateQueryWithLogging(_dbLogCallback, newOriginalQuery, path);
 
   @override
   Future<QuerySnapshot> get([GetOptions? options]) async {
@@ -238,10 +238,12 @@ class YustAggregateQueryWithLogging implements AggregateQuery {
   YustAggregateQueryWithLogging(
     this._dbLogCallback,
     this._originalQuery,
+    this.path,
   );
 
   final AggregateQuery _originalQuery;
   final DatabaseLogCallback _dbLogCallback;
+  final String path;
 
   AggregateQuery _mapQuery(
     AggregateQuery newOriginalQuery,
@@ -249,6 +251,7 @@ class YustAggregateQueryWithLogging implements AggregateQuery {
       YustAggregateQueryWithLogging(
         _dbLogCallback,
         newOriginalQuery,
+        path,
       );
 
   @override
@@ -259,9 +262,6 @@ class YustAggregateQueryWithLogging implements AggregateQuery {
       {AggregateSource source = AggregateSource.server}) async {
     final result = await _originalQuery.get(source: source);
     final count = result.count;
-
-    // "Hack" to get the path of the query, because it's not exposed by the API
-    final path = (_originalQuery.query as dynamic).path;
 
     _dbLogCallback(
       DatabaseLogAction.aggregate,

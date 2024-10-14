@@ -271,5 +271,6 @@ class YustAggregateQueryWithLogging implements AggregateQuery {
     return result;
   }
 
-  Query<Object?> get query => this._originalQuery.query;
+  @override
+  Query<Object?> get query => _originalQuery.query;
 }

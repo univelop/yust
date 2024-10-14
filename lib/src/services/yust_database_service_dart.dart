@@ -334,6 +334,7 @@ class YustDatabaseService {
     final unequalFilters = (filters ?? [])
         .whereNot((filter) =>
             YustFilterComparator.equalityFilters.contains(filter.comparator))
+        .toSet()
         .toList();
 
     assert(!((unequalFilters.isNotEmpty) && (orderBy?.isNotEmpty ?? false)),
@@ -341,7 +342,10 @@ class YustDatabaseService {
 
     // Calculate orderBy from all unequal filters
     if (unequalFilters.isNotEmpty) {
-      orderBy = unequalFilters.map((e) => YustOrderBy(field: e.field)).toList();
+      orderBy = unequalFilters
+          .map((e) => YustOrderBy(field: e.field))
+          .toSet()
+          .toList();
     }
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {

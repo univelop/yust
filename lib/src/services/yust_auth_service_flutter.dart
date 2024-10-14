@@ -13,7 +13,7 @@ import '../yust.dart';
 class YustAuthService {
   FirebaseAuth fireAuth;
 
-  YustAuthService({String? emulatorAddress})
+  YustAuthService({String? emulatorAddress, String? pathToServiceAccountJson})
       : fireAuth = FirebaseAuth.instance {
     if (emulatorAddress != null) {
       fireAuth.useAuthEmulator(emulatorAddress, 9099);

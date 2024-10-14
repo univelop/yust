@@ -11,9 +11,16 @@ import '../yust.dart';
 
 /// Handles auth request for Firebase Auth.
 class YustAuthService {
-  YustAuthService({String? emulatorAddress});
+  final String? _pathToServiceAccountJson;
+  final String? _emulatorAddress;
 
-  YustAuthService.mocked();
+  YustAuthService({String? emulatorAddress, String? pathToServiceAccountJson})
+      : _pathToServiceAccountJson = pathToServiceAccountJson,
+        _emulatorAddress = emulatorAddress;
+
+  YustAuthService.mocked()
+      : _pathToServiceAccountJson = null,
+        _emulatorAddress = null;
 
   /// Returns the current [AuthState] in a Stream.
   Stream<AuthState> getAuthStateStream() {
@@ -102,8 +109,23 @@ class YustAuthService {
         IdentityToolkitApi.cloudPlatformScope,
         IdentityToolkitApi.firebaseScope,
       ];
-      final client = await GoogleCloudHelpers.createAuthClient(scopes: scopes);
-      final api = IdentityToolkitApi(client);
+      final client = await GoogleCloudHelpers.createAuthClient(
+        scopes: scopes,
+        pathToServiceAccountJson: _pathToServiceAccountJson,
+      );
+      final IdentityToolkitApi api;
+      if (_emulatorAddress != null) {
+        //TODO: Implement correct emulator support
+        api = IdentityToolkitApi(
+          client,
+          rootUrl: 'http://$_emulatorAddress:9099/',
+          servicePath: 'identitytoolkit.googleapis.com/v1/',
+        );
+      } else {
+        api = IdentityToolkitApi(
+          client,
+        );
+      }
 
       final newUserRequest = IdentitytoolkitRelyingpartySignupNewUserRequest(
         localId: uuid,
@@ -129,8 +151,8 @@ class YustAuthService {
       firstName: firstName,
       email: email,
       lastName: lastName,
-      id: response.localId! ?? uuid,
-      authId: response.localId! ?? uuid,
+      id: response?.localId ?? uuid,
+      authId: response?.localId ?? uuid,
       gender: gender,
       authenticationMethod: useOAuth == true
           ? YustAuthenticationMethod.openId

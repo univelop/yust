@@ -302,7 +302,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    var query = getQuery(docSetup, filters: filters);
+    var query = getQuery(docSetup, filters: filters, limit: limit);
     final snapshot = await query.count().get();
 
     return snapshot.count ?? 0;
@@ -314,7 +314,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    var query = getQuery(docSetup, filters: filters);
+    var query = getQuery(docSetup, filters: filters, limit: limit);
     final snapshot = await query.aggregate(cf.sum(fieldPath), cf.count()).get();
     return (count: snapshot.count ?? 0, result: snapshot.getSum(fieldPath));
   }

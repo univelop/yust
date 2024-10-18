@@ -8,6 +8,7 @@ import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../extensions/date_time_extension.dart';
+import '../extensions/server_now.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
@@ -1005,37 +1006,47 @@ class YustDatabaseService {
               values: value
                   .map((childValue) => _valueToDbValue(childValue))
                   .toList()));
-    } else if (value is Map) {
+    }
+    if (value is Map) {
       return Value(
           mapValue: MapValue(
               fields: value.map((key, childValue) =>
                   MapEntry(key, _valueToDbValue(childValue)))));
-    } else if (value is bool) {
+    }
+    if (value is bool) {
       return Value(booleanValue: value);
-    } else if (value is int) {
+    }
+    if (value is int) {
       return Value(integerValue: value.toString());
-    } else if (value is double) {
+    }
+    if (value is double) {
       // Round double values
       return Value(doubleValue: Yust.helpers.roundToDecimalPlaces(value));
-    } else if (value == null) {
-      return Value(nullValue: 'NULL_VALUE');
-    } else if (value is String && value.isIso8601String) {
-      value = DateTime.parse(value).toIso8601StringWithOffset();
-      return Value(timestampValue: value);
-    } else if (value is String) {
-      return Value(stringValue: value);
-    } else if (value is DateTime) {
-      return Value(timestampValue: value.toIso8601StringWithOffset());
-    } else {
-      late String output;
-      try {
-        output = jsonEncode(value);
-      } catch (e) {
-        output = value.toString();
-      }
-      throw (YustException(
-          'Value can not be transformed for Firestore: $output'));
     }
+    if (value == null) {
+      return Value(nullValue: 'NULL_VALUE');
+    }
+    if (value is ServerNow || (value is String && value.isServerNow)) {
+      // server side timestamps do not work with googleapis/firestore/v1, so we use the current time instead
+      return Value(timestampValue: DateTime.now().toIso8601StringWithOffset());
+    }
+    if (value is String && value.isIso8601String) {
+      return Value(timestampValue: DateTime.parse(value).toIso8601StringWithOffset());
+    }
+    if (value is String) {
+      return Value(stringValue: value);
+    }
+    if (value is DateTime) {
+      return Value(timestampValue: value.toIso8601StringWithOffset());
+    }
+    late String output;
+    try {
+      output = jsonEncode(value);
+    } catch (e) {
+      output = value.toString();
+    }
+    throw (YustException(
+        'Value can not be transformed for Firestore: $output'));
   }
 
   dynamic _dbValueToValue(Value dbValue) {

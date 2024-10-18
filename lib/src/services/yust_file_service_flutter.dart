@@ -82,6 +82,10 @@ class YustFileService {
     if (name == null) return;
     try {
       await _fireStorage.ref().child(path).child(name).delete();
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        return;
+      }
     } catch (e) {
       throw YustException(e.toString());
     }

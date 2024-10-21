@@ -410,12 +410,15 @@ class YustDatabaseService {
           currentNode.value == null) {
         return FieldValue.delete();
       }
+      // Parse ServerNow
+      if (currentNode.value is ServerNow ||
+          (currentNode.value is String &&
+              (currentNode.value as String).isServerNow)) {
+        return FieldValue.serverTimestamp();
+      }
       // Parse dart DateTimes
       if (currentNode.value is DateTime) {
         return Timestamp.fromDate(currentNode.value);
-      }
-      if (currentNode.value is ServerNow) {
-        return FieldValue.serverTimestamp();
       }
       // Parse ISO Timestamp Strings
       if (currentNode.value is String &&

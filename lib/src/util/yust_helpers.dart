@@ -71,8 +71,8 @@ class YustHelpers {
       int? second,
       int? millisecond,
       int? microsecond}) {
-    if (mockNowUTC != null) return utcToLocal(mockNowUTC!);
-    final now = TZDateTime.now(local);
+    final now =
+        mockNowUTC != null ? utcToLocal(mockNowUTC!) : TZDateTime.now(local);
     return TZDateTime.local(
       year ?? now.year,
       month ?? now.month,
@@ -94,8 +94,7 @@ class YustHelpers {
       int? second,
       int? millisecond,
       int? microsecond}) {
-    if (mockNowUTC != null) return mockNowUTC!;
-    final now = TZDateTime.now(UTC);
+    final now = mockNowUTC ?? TZDateTime.now(UTC);
     return TZDateTime.utc(
       year ?? now.year,
       month ?? now.month,

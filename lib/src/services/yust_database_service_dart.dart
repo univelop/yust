@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
@@ -18,6 +17,7 @@ import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../util/yust_helpers.dart';
+import '../util/yust_retry_helper.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
@@ -42,22 +42,11 @@ class YustDatabaseService {
   /// Root (aka base) URL for the Firestore REST/GRPC API.
   final String rootUrl;
 
-  /// Maximum number of retries for a request.
-  ///
-  /// 16 means, that the longest (16th) retry waiting period
-  /// is about 1 - 1.5h between requests
-  num maxRetries = 16;
-
   /// Which version of documents to read.
   ///
   /// A timestamp in the past will return the document at that time.
   /// Null will return the most recent version.
   DateTime? readTime;
-
-  /// Maximum for the exponential part of the backoff time,
-  /// this will be multiplied by a random number between 20 and 40.
-  /// For 16384 => 16384ms * ~30 = 491520ms (min 5.4min, max 10.9min)
-  int maxExponentialBackoffMs = 16384;
 
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
@@ -1095,63 +1084,26 @@ class YustDatabaseService {
     String fnName,
     String docPath,
     Future<T> Function() fn, {
-    int numberOfRetries = 0,
     bool shouldRetryOnTransactionErrors = true,
     bool shouldIgnoreNotFound = false,
   }) async {
-    try {
-      return await fn();
-    } catch (e) {
-      if (numberOfRetries >= maxRetries) {
-        print(
-            '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
-        rethrow;
-      } else if (e is YustException) {
-        if (e is YustNotFoundException && shouldIgnoreNotFound) {
-          print(
-              '[[DEBUG]] YustNotFoundException ignored for $fnName call for $docPath, this usually means the document was deleted before saving.');
-          return null as T;
-        }
-        print(
-            '[[DEBUG]] NOT Retrying $fnName call for the ${numberOfRetries + 1} time on YustException ($e) for $docPath, because we don\'t retry YustExceptions');
-        rethrow;
-      } else if (e is TlsException) {
-        print(
-            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on TlsException ($e) for $docPath');
-      } else if (e is ClientException) {
-        print(
-            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
-      } else if (e is DetailedApiRequestError) {
-        if (e.status == 500) {
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on InternalServerError ($e) for $docPath');
-        } else if (e.status == 502) {
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on BadGateway ($e) for $docPath');
-        } else if (e.status == 503) {
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');
-        } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
-          if ((e.message ?? '').contains(
-              'The referenced transaction has expired or is no longer valid')) {
-            throw YustException.fromDetailedApiRequestError(docPath, e);
-          }
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustTransactionFailedException ($e) for $docPath');
-        } else {
-          throw YustException.fromDetailedApiRequestError(docPath, e);
-        }
-      } else {
-        print(
-            '[[WARNING]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unknown Firestore Exception ($e) for $docPath');
-      }
-      return Future.delayed(
-          Duration(
-              milliseconds: min(maxExponentialBackoffMs,
-                      pow(2, numberOfRetries + 3).toInt()) *
-                  (20 + Random().nextInt(20))),
-          () => _retryOnException<T>(fnName, docPath, fn,
-              numberOfRetries: numberOfRetries + 1));
-    }
+    return (await YustRetryHelper.retryOnException<T>(
+      fnName,
+      docPath,
+      fn,
+      maxTries: 16,
+      actionOnExceptionList: [
+        YustRetryHelper.actionOnYustException(
+          shouldIgnoreNotFound: shouldIgnoreNotFound,
+        ),
+        YustRetryHelper.actionOnNetworkException,
+        YustRetryHelper.actionOnDetailedApiRequestError(
+          shouldRetryOnTransactionErrors: shouldRetryOnTransactionErrors,
+          shouldIgnoreNotFound: shouldIgnoreNotFound,
+        ),
+      ],
+      onRetriesExceeded: (lastError, fnName, docPath) => print(
+          '[[ERROR]] Retried $fnName call 16 times, but still failed: $lastError for $docPath'),
+    )) as T;
   }
 }

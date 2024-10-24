@@ -164,13 +164,13 @@ class YustHelpers {
           (second?.millisecondsSinceEpoch ?? 0));
 
   /// Returns the DateTime at the [day] in the [month], with no day overflow. 
-  DateTime getDayOfMonth(int day, DateTime month) {
+  DateTime getDateAtDayOfMonth(int day, DateTime month) {
     final lastDayOfMonth = DateTime(month.year, month.month + 1, 0).day;
     return DateTime(month.year, month.month, min(day, lastDayOfMonth), month.hour, month.minute, month.second, month.millisecond, month.microsecond);
   }
 
   /// Adds [months] to the [date] with no day overflow in the next month.
-  DateTime addMonths(int months, DateTime date) {
+  DateTime addMonthsWithoutOverflow(int months, DateTime date) {
     final newMonth = date.month + months;
     final newYear = date.year + newMonth ~/ 12;
     final newMonthInYear = newMonth % 12;
@@ -179,9 +179,9 @@ class YustHelpers {
   }
 
   /// Returns the DateTime at the day of the current month.
-  DateTime getDayOfCurrentMonth(int day) {
+  DateTime getDateAtDayOfCurrentMonth(int day) {
     final now = localNow();
-    return getDayOfMonth(day, now);
+    return getDateAtDayOfMonth(day, now);
   }
 
   /// Rounds a number to the given amount of decimal places

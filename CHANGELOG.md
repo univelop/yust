@@ -1,3 +1,7 @@
+## 3.25.12 - 2024-10-25
+
+-   Fixes for YustDatabaseServiceMocked
+
 ## 3.25.1 - 2024-10-25
 
 -   Database service fixes

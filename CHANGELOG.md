@@ -1,3 +1,8 @@
+## 3.25.1 - 2024-10-25
+
+-   Database service fixes
+-   Better retry logic
+
 ## 3.25.0 - 2024-10-14
 
 -   Database service fixes

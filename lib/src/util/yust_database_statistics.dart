@@ -30,6 +30,20 @@ class YustDatabaseStatistics {
     _statisticsTwoSegments[collectionNameIncludingParent]![action] ??= 0;
     _statisticsTwoSegments[collectionNameIncludingParent]![action] =
         _statisticsTwoSegments[collectionNameIncludingParent]![action]! + count;
+
+    if (count == 0) {
+      _statistics[collectionGroupName]![DatabaseLogAction
+          .emptyReadOrAggregate] = (_statistics[collectionGroupName]![
+                  DatabaseLogAction.emptyReadOrAggregate] ??
+              0) +
+          1;
+      _statisticsTwoSegments[collectionNameIncludingParent]![
+              DatabaseLogAction.emptyReadOrAggregate] =
+          (_statisticsTwoSegments[collectionNameIncludingParent]![
+                      DatabaseLogAction.emptyReadOrAggregate] ??
+                  0) +
+              1;
+    }
   }
 
   clear() {
@@ -64,8 +78,13 @@ class YustDatabaseStatistics {
       _statistics.values.map((e) => e[action] ?? 0).sum;
 
   /// Gets the total "read" count for the given action.
-  /// This includes the actions "get"
-  int getTotalReadCount() => getActionCount(DatabaseLogAction.get);
+  /// This includes the actions "get", "aggregate" and "emptyReadOrAggregate".
+  ///
+  /// The results are according to the firestore pricing, so this will give you a somehow realistic number of reads.
+  int getTotalReadCount() =>
+      getActionCount(DatabaseLogAction.get) +
+      (getActionCount(DatabaseLogAction.aggregate) / 1000).ceil() +
+      getActionCount(DatabaseLogAction.emptyReadOrAggregate);
 
   /// Gets the total "write" count for the given action.
   /// This includes the actions "transform", "delete", "save" and "saveNew".

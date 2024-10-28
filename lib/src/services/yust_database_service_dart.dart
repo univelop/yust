@@ -1020,7 +1020,8 @@ class YustDatabaseService {
       return Value(timestampValue: DateTime.now().toIso8601StringWithOffset());
     }
     if (value is String && value.isIso8601String) {
-      return Value(timestampValue: DateTime.parse(value).toIso8601StringWithOffset());
+      return Value(
+          timestampValue: DateTime.parse(value).toIso8601StringWithOffset());
     }
     if (value is String) {
       return Value(stringValue: value);

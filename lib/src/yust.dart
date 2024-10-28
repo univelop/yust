@@ -29,7 +29,8 @@ enum DatabaseLogAction {
   saveNew,
   save,
   transform,
-  aggregate;
+  aggregate,
+  emptyReadOrAggregate;
 
   const DatabaseLogAction();
 

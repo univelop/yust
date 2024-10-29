@@ -200,21 +200,30 @@ class YustFileService {
   }
 
   Future<List<Object>> getFilesInFolder({required String path}) async {
-    return (await _retryOnException('List-Files-Of-Folder', '$path/', () => _storageApi.objects.list(bucketName, prefix: path)))?.items ??
+    return (await _retryOnException('List-Files-Of-Folder', '$path/',
+                () => _storageApi.objects.list(bucketName, prefix: path)))
+            ?.items ??
         [];
   }
 
   Future<List<Object>> getFileVersionsInFolder({required String path}) async {
-    return (await _retryOnException('Get-File-Versions-In-Folder', '$path/', () => _storageApi.objects
-                .list(bucketName, prefix: path, versions: true)))
+    return (await _retryOnException(
+                'Get-File-Versions-In-Folder',
+                '$path/',
+                () => _storageApi.objects
+                    .list(bucketName, prefix: path, versions: true)))
             ?.items ??
         [];
   }
 
   Future<Map<String?, List<Object>>> getFileVersionsGrouped(
       {required String path}) async {
-    final objects = groupBy((await _retryOnException('Get-File-Versions-Grouped', '$path/', () => getFileVersionsInFolder(path: path))) ?? <Object>[],
-        (Object object) => object.name,);
+    final objects = groupBy(
+      (await _retryOnException('Get-File-Versions-Grouped', '$path/',
+              () => getFileVersionsInFolder(path: path))) ??
+          <Object>[],
+      (Object object) => object.name,
+    );
     return objects;
   }
 
@@ -256,12 +265,19 @@ class YustFileService {
       {required String path,
       required String name,
       required String generation}) async {
-    final object = await _retryOnException('Recover-Outdated-File-Get', '$path/$name', () => _storageApi.objects
-        .get(bucketName, '$path/$name', generation: generation),);
+    final object = await _retryOnException(
+      'Recover-Outdated-File-Get',
+      '$path/$name',
+      () => _storageApi.objects
+          .get(bucketName, '$path/$name', generation: generation),
+    );
     if (object is Object) {
-      await _retryOnException('Recover-Outdated-File-Rewrite', '$path/$name', () => _storageApi.objects.rewrite(
-          object, bucketName, object.name!, bucketName, object.name!,
-          sourceGeneration: generation));
+      await _retryOnException(
+          'Recover-Outdated-File-Rewrite',
+          '$path/$name',
+          () => _storageApi.objects.rewrite(
+              object, bucketName, object.name!, bucketName, object.name!,
+              sourceGeneration: generation));
     }
   }
 
@@ -274,7 +290,7 @@ class YustFileService {
     bool shouldIgnoreNotFound = false,
   }) async {
     final maxTries = 16;
-    return (await YustRetryHelper.retryOnException<T>(
+    return await YustRetryHelper.retryOnException<T>(
       fnName,
       docPath,
       fn,
@@ -287,6 +303,6 @@ class YustFileService {
       ],
       onRetriesExceeded: (lastError, fnName, docPath) => print(
           '[[ERROR]] Retried $fnName call $maxTries times, but still failed: $lastError for $docPath'),
-    )) as T;
+    );
   }
 }

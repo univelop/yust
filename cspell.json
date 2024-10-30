@@ -1,0 +1,34 @@
+{
+    "ignorePaths": [
+        "package-lock.json",
+        "node_modules",
+        "vscode-extension",
+        ".git/objects",
+        ".gitignore",
+        ".vscode",
+        ".vscode-insiders"
+    ],
+    "dictionaryDefinitions": [
+        {
+            "name": "EN",
+            "description": "More english words. (not included in cspell-dict-en-us)",
+            "path": "../univelop/.vscode/dictionaries/en.txt"
+        },
+        {
+            "name": "Univelop",
+            "description": "Words and names related to the univelop brand.",
+            "path": "../univelop/.vscode/dictionaries/univelop.txt"
+        },
+        {
+            "name": "Abbreviations",
+            "description": "Custom abbreviations.",
+            "path": "../univelop/.vscode/dictionaries/abbreviations.txt"
+        }
+    ],
+    "language": "en,en-US",
+    "dictionaries": [
+        "EN",
+        "Univelop",
+        "Abbreviations"
+    ]
+}

@@ -16,20 +16,14 @@
             "path": "../univelop/.dictionaries/en.txt"
         },
         {
-            "name": "Univelop",
-            "description": "Words and names related to the univelop brand.",
-            "path": "../univelop/.dictionaries/univelop.txt"
-        },
-        {
-            "name": "Abbreviations",
-            "description": "Custom abbreviations.",
-            "path": "../univelop/.dictionaries/abbreviations.txt"
+            "name": "Misc",
+            "description": "Abbreviations, Names, etc.",
+            "path": "../univelop/.dictionaries/misc.txt"
         }
     ],
     "language": "en,en-US",
     "dictionaries": [
         "EN",
-        "Univelop",
-        "Abbreviations"
+        "Misc"
     ]
 }

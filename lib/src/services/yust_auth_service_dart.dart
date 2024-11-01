@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:googleapis/identitytoolkit/v3.dart';
+import 'package:googleapis/identitytoolkit/v1.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/yust_filter.dart';
@@ -13,14 +13,20 @@ import '../yust.dart';
 class YustAuthService {
   final String? _pathToServiceAccountJson;
   final String? _emulatorAddress;
+  final Yust _yust;
 
-  YustAuthService({String? emulatorAddress, String? pathToServiceAccountJson})
-      : _pathToServiceAccountJson = pathToServiceAccountJson,
-        _emulatorAddress = emulatorAddress;
+  YustAuthService(
+    Yust yust, {
+    String? emulatorAddress,
+    String? pathToServiceAccountJson,
+  })  : _pathToServiceAccountJson = pathToServiceAccountJson,
+        _emulatorAddress = emulatorAddress,
+        _yust = yust;
 
-  YustAuthService.mocked()
+  YustAuthService.mocked(Yust yust)
       : _pathToServiceAccountJson = null,
-        _emulatorAddress = null;
+        _emulatorAddress = null,
+        _yust = yust;
 
   /// Returns the current [AuthState] in a Stream.
   Stream<AuthState> getAuthStateStream() {
@@ -101,51 +107,49 @@ class YustAuthService {
     YustGender? gender,
     bool useOAuth = false,
   }) async {
-    final response = null;
+    GoogleCloudIdentitytoolkitV1SignUpResponse response;
     final uuid = Uuid().v4();
 
-    if (useOAuth == true) {
-      final scopes = [
-        IdentityToolkitApi.cloudPlatformScope,
-        IdentityToolkitApi.firebaseScope,
-      ];
-      final client = await GoogleCloudHelpers.createAuthClient(
-        scopes: scopes,
-        pathToServiceAccountJson: _pathToServiceAccountJson,
-      );
-      final IdentityToolkitApi api;
-      if (_emulatorAddress != null) {
-        //TODO: Implement correct emulator support
-        api = IdentityToolkitApi(
-          client,
+    // if (useOAuth == true) {
+    final scopes = [
+      IdentityToolkitApi.cloudPlatformScope,
+      IdentityToolkitApi.firebaseScope,
+    ];
+    final client = await GoogleCloudHelpers.createAuthClient(
+      scopes: scopes,
+      pathToServiceAccountJson: _pathToServiceAccountJson,
+    );
+
+    final IdentityToolkitApi api;
+    if (_emulatorAddress != null) {
+      api = IdentityToolkitApi(client,
           rootUrl: 'http://$_emulatorAddress:9099/',
-          servicePath: 'identitytoolkit.googleapis.com/v1/',
-        );
-      } else {
-        api = IdentityToolkitApi(
-          client,
-        );
-      }
-
-      final newUserRequest = IdentitytoolkitRelyingpartySignupNewUserRequest(
-        localId: uuid,
-        displayName:
-            // ignore: avoid_dynamic_calls
-            ('$firstName $lastName').trim(),
-        email: email,
-        emailVerified: true,
-        password: password,
+          servicePath: 'identitytoolkit.googleapis.com/');
+    } else {
+      api = IdentityToolkitApi(
+        client,
       );
-      final response = await api.relyingparty.signupNewUser(newUserRequest);
-
-      if (response.localId == null) {
-        throw YustException('Error creating user: ${response.toJson()}');
-      }
-
-      final successfullyLinked =
-          await _tryLinkYustUser(response, YustAuthenticationMethod.mail);
-      if (successfullyLinked) return null;
     }
+
+    final newUserRequest = GoogleCloudIdentitytoolkitV1SignUpRequest(
+      localId: uuid,
+      displayName:
+          // ignore: avoid_dynamic_calls
+          ('$firstName $lastName').trim(),
+      email: email,
+      emailVerified: true,
+      password: password,
+    );
+    response = await api.accounts.signUp(newUserRequest);
+
+    if (response.localId == null) {
+      throw YustException('Error creating user: ${response.toJson()}');
+    }
+
+    final successfullyLinked = await _tryLinkYustUser(
+        this._yust, response, YustAuthenticationMethod.mail);
+    if (successfullyLinked) return null;
+    // }
 
     return await _createUser(
       firstName: firstName,
@@ -183,13 +187,14 @@ class YustAuthService {
       ..lastLogin = DateTime.now()
       ..lastLoginDomain =
           Uri.base.scheme.contains('http') ? Uri.base.host : null;
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
+    await this._yust.dbService.saveDoc<YustUser>(Yust.userSetup, user);
     return user;
   }
 
   // If modified also modify in yust_auth_service_flutter.dart
   Future<bool> _tryLinkYustUser(
-    SignupNewUserResponse userCredential,
+    Yust yust,
+    GoogleCloudIdentitytoolkitV1SignUpResponse userCredential,
     YustAuthenticationMethod? method,
   ) async {
     if (userCredential.email == null ||
@@ -198,7 +203,7 @@ class YustAuthService {
         userCredential.localId!.isEmpty) {
       return false;
     }
-    final user = await Yust.databaseService.getFirst<YustUser>(
+    final user = await yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
         YustFilter(

@@ -13,14 +13,15 @@ import '../yust.dart';
 class YustAuthService {
   FirebaseAuth fireAuth;
 
-  YustAuthService({String? emulatorAddress, String? pathToServiceAccountJson})
+  YustAuthService(Yust yust,
+      {String? emulatorAddress, String? pathToServiceAccountJson})
       : fireAuth = FirebaseAuth.instance {
     if (emulatorAddress != null) {
       fireAuth.useAuthEmulator(emulatorAddress, 9099);
     }
   }
 
-  YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
+  YustAuthService.mocked(Yust yust) : fireAuth = MockFirebaseAuth();
 
   Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
@@ -171,7 +172,7 @@ class YustAuthService {
     String email,
     String password, {
     YustGender? gender,
-    bool useOAuth = true,
+    bool useOAuth = false,
   }) async {
     if (useOAuth == true) {
       throw YustException('OAuth not supported for createAccount.');

@@ -225,9 +225,15 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
-    return getListFromDB(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    );
   }
 
   /// Returns [YustDoc]s from the cache, if available, otherwise from the server.
@@ -247,9 +253,15 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
-    return getListFromDB(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    );
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -270,13 +282,19 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) async {
     final response = await _retryOnException<List<RunQueryResponseElement>>(
         'getListFromDB',
         _getDocumentPath(docSetup),
         () => _api.projects.databases.documents.runQuery(
-            getQuery(docSetup,
-                filters: filters, orderBy: orderBy, limit: limit),
+            getQuery(
+              docSetup,
+              filters: filters,
+              orderBy: orderBy,
+              limit: limit,
+              startAfterDocumentName: startAfterDocumentName,
+            ),
             _getParentPath(docSetup)));
     dbLogCallback?.call(
         DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
@@ -319,6 +337,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    String? startAfterDocumentName,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
@@ -342,14 +361,14 @@ class YustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      String? lastDocument;
+      String? lastDocument = startAfterDocumentName;
       while (!isDone) {
         final request = getQuery(docSetup,
             filters: filters,
             // orderBy __name__ is required for pagination
             orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
-            startAfterDocument: lastDocument);
+            startAfterDocumentName: lastDocument);
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -409,9 +428,15 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
-    return Stream.fromFuture(getListFromDB<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit));
+    return Stream.fromFuture(getListFromDB<T>(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    ));
   }
 
   /// Counts the number of documents in a collection.
@@ -859,7 +884,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocument,
+    String? startAfterDocumentName,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -871,10 +896,10 @@ class YustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
-        startAt: startAfterDocument == null
+        startAt: startAfterDocumentName == null
             ? null
             : Cursor(values: [
-                Value(referenceValue: startAfterDocument),
+                Value(referenceValue: startAfterDocumentName),
               ], before: false),
       ),
       readTime: readTime?.toUtc().toIso8601String(),

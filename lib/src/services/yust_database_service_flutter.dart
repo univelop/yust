@@ -223,7 +223,11 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -242,7 +246,11 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) async {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -269,7 +277,11 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) async {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -285,7 +297,11 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -609,6 +625,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DocumentSnapshot? startAfterDocument,
   }) {
     final path = _getCollectionPath(docSetup);
     Query query = _fireStore.collection(path);
@@ -620,6 +637,9 @@ class YustDatabaseService {
     query = _executeOrderByList(query, orderBy);
     if (limit != null) {
       query = query.limit(limit);
+    }
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
     }
 
     return query;

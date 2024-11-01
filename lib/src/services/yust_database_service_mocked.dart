@@ -142,8 +142,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
-    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    );
   }
 
   @override
@@ -152,8 +159,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
-    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    );
   }
 
   @override
@@ -162,9 +176,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) async {
-    final docs =
-        _getList(docSetup, filters: filters, orderBy: orderBy, limit: limit);
+    final docs = _getList(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    );
     dbLogCallback?.call(
         DatabaseLogAction.get, _getDocumentPath(docSetup), docs.length);
     return docs;
@@ -176,9 +196,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    String? startAfterDocumentName,
   }) {
-    return Stream.fromFuture(
-            getList(docSetup, filters: filters, orderBy: orderBy))
+    return Stream.fromFuture(getList(docSetup,
+            filters: filters,
+            orderBy: orderBy,
+            limit: pageSize,
+            startAfterDocumentName: startAfterDocumentName))
         .expand((e) => e);
   }
 
@@ -188,9 +212,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
-    return Stream.fromFuture(getListFromDB<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit));
+    return Stream.fromFuture(getListFromDB<T>(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocumentName: startAfterDocumentName,
+    ));
   }
 
   @override
@@ -515,13 +545,21 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
 
-    final limitedDocs = docs.sublist(0, min(limit ?? docs.length, docs.length));
+    int startAfterIndex = 0;
+    if (startAfterDocumentName != null) {
+      startAfterIndex =
+          max(docs.indexWhere((doc) => doc.id == startAfterDocumentName), 0);
+    }
+
+    final limitedDocs = docs.sublist(startAfterIndex,
+        min((limit ?? docs.length) + startAfterIndex, docs.length));
 
     return limitedDocs;
   }

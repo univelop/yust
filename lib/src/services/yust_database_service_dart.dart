@@ -717,6 +717,9 @@ class YustDatabaseService {
           try {
             updatedDoc = await transaction(doc);
             if (updatedDoc == null) {
+              dbLogCallback?.call(
+                  DatabaseLogAction.save, _getDocumentPath(docSetup), 0,
+                  id: doc.id);
               await commitEmptyTransaction(transactionId);
               return (false, null);
             } else {

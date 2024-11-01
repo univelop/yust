@@ -73,7 +73,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final docs = _getCollection<T>(docSetup);
     try {
       final doc = docs.firstWhereOrNull((doc) => doc.id == id);
-      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup),
+          doc != null ? 1 : 0);
       return doc;
     } catch (e) {
       return null;
@@ -116,10 +117,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
+    dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup),
+        docs.isEmpty ? 0 : 1);
     if (docs.isEmpty) {
       return null;
     } else {
-      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return docs.first;
     }
   }

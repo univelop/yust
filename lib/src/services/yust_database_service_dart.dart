@@ -130,6 +130,7 @@ class YustDatabaseService {
       dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return _transformDoc<T>(docSetup, response);
     } on YustNotFoundException {
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 0);
       return null;
     }
   }
@@ -187,6 +188,7 @@ class YustDatabaseService {
             _getParentPath(docSetup)));
 
     if (response.isEmpty || response.first.document == null) {
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 0);
       return null;
     }
     dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
@@ -715,12 +717,19 @@ class YustDatabaseService {
           try {
             updatedDoc = await transaction(doc);
             if (updatedDoc == null) {
+              dbLogCallback?.call(
+                  DatabaseLogAction.save, _getDocumentPath(docSetup), 0,
+                  id: doc.id);
               await commitEmptyTransaction(transactionId);
               return (false, null);
             } else {
               await commitTransaction(transactionId, docSetup, updatedDoc,
                   useUpdateMask: useUpdateMask);
             }
+            dbLogCallback?.call(
+                DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
+                id: doc.id,
+                updateMask: [if (useUpdateMask) ...updatedDoc.updateMask]);
             break;
           }
           // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here

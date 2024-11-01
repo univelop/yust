@@ -1,3 +1,8 @@
+## 3.25.5 - 2024-11-01
+
+-   Fix for YustFileServiceDart
+-   Activate cSpell
+
 ## 3.25.4 - 2024-10-29
 
 -   Fix for YustFileServiceDart

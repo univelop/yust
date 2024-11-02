@@ -14,12 +14,14 @@ import '../util/object_helper.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service.dart';
+import 'yust_database_service_interface.dart';
 import 'yust_database_service_shared.dart';
 
 typedef MockDB = Map<String, List<Map<String, dynamic>>>;
 
 /// A mock database service for storing docs.
-class YustDatabaseServiceMocked extends YustDatabaseService {
+class YustDatabaseServiceMocked extends YustDatabaseService
+    implements IYustDatabaseService {
   static OnChangeCallback? onChange;
 
   YustDatabaseServiceMocked.mocked({

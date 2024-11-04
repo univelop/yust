@@ -3,11 +3,14 @@ import 'dart:math';
 
 import 'package:collection/collection.dart';
 
+import '../extensions/date_time_extension.dart';
+import '../extensions/server_now.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_order_by.dart';
+import '../util/object_helper.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service.dart';
@@ -70,7 +73,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final docs = _getCollection<T>(docSetup);
     try {
       final doc = docs.firstWhereOrNull((doc) => doc.id == id);
-      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup),
+          doc != null ? 1 : 0);
       return doc;
     } catch (e) {
       return null;
@@ -113,10 +117,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
+    dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup),
+        docs.isEmpty ? 0 : 1);
     if (docs.isEmpty) {
       return null;
     } else {
-      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return docs.first;
     }
   }
@@ -257,27 +262,28 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
+    final docJsonPrepared = _prepareJsonForMockDb(docJsonClone);
     if (index == -1 && !doNotCreate) {
-      jsonDocs.add(docJsonClone);
+      jsonDocs.add(docJsonPrepared);
       await onChange?.call(
         _getParentPath(docSetup, doc: doc),
         null,
-        docJsonClone,
+        docJsonPrepared,
       );
       dbLogCallback?.call(DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
           id: doc.id, updateMask: updateMask ?? []);
     } else {
       final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
       if (updateMask == null) {
-        jsonDocs[index] = docJsonClone;
+        jsonDocs[index] = docJsonPrepared;
         await onChange?.call(
           _getParentPath(docSetup, doc: doc),
           oldDoc,
-          docJsonClone,
+          docJsonPrepared,
         );
       } else {
         var jsonDoc = jsonDocs[index];
-        final newJsonDoc = docJsonClone;
+        final newJsonDoc = docJsonPrepared;
         for (final path in updateMask) {
           final newValue = _readValueInJsonDoc(newJsonDoc, path);
           _changeValueInJsonDoc(jsonDoc, newValue, path);
@@ -450,7 +456,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     String path,
   ) {
     final segments = path.split('.');
-    var subDoc = jsonDoc;
+    Map subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
       subDoc = subDoc[segment];
     }
@@ -459,7 +465,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
 
   dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
     final segments = path.split('.');
-    var subDoc = jsonDoc;
+    Map subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
       subDoc = subDoc[segment];
     }
@@ -518,5 +524,29 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final limitedDocs = docs.sublist(0, min(limit ?? docs.length, docs.length));
 
     return limitedDocs;
+  }
+
+  Map<String, dynamic> _prepareJsonForMockDb(Map<String, dynamic> obj) {
+    final modifiedObj = TraverseObject.traverseObject(obj, (currentNode) {
+      final value = currentNode.value;
+      // Parse ServerNow
+      if (value is ServerNow || (value is String && value.isServerNow)) {
+        return Yust.helpers.utcNow().toIso8601StringWithOffset();
+      }
+      // Parse dart DateTimes
+      if (value is DateTime) {
+        return value.toIso8601StringWithOffset();
+      }
+      // Parse ISO Timestamp Strings
+      if (value is String && value.isIso8601String) {
+        return DateTime.parse(value).toIso8601StringWithOffset();
+      }
+      // Round double values
+      if (value is double) {
+        return Yust.helpers.roundToDecimalPlaces(value);
+      }
+      return value;
+    });
+    return modifiedObj;
   }
 }

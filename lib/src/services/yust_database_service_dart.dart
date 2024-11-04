@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
@@ -8,6 +7,7 @@ import 'package:http/http.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../extensions/date_time_extension.dart';
+import '../extensions/server_now.dart';
 import '../extensions/string_extension.dart';
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
@@ -17,6 +17,7 @@ import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../util/yust_helpers.dart';
+import '../util/yust_retry_helper.dart';
 import '../yust.dart';
 import 'yust_database_service_shared.dart';
 
@@ -41,22 +42,11 @@ class YustDatabaseService {
   /// Root (aka base) URL for the Firestore REST/GRPC API.
   final String rootUrl;
 
-  /// Maximum number of retries for a request.
-  ///
-  /// 16 means, that the longest (16th) retry waiting period
-  /// is about 1 - 1.5h between requests
-  num maxRetries = 16;
-
   /// Which version of documents to read.
   ///
   /// A timestamp in the past will return the document at that time.
   /// Null will return the most recent version.
   DateTime? readTime;
-
-  /// Maximum for the exponential part of the backoff time,
-  /// this will be multiplied by a random number between 20 and 40.
-  /// For 16384 => 16384ms * ~30 = 491520ms (min 5.4min, max 10.9min)
-  int maxExponentialBackoffMs = 16384;
 
   YustDatabaseService({
     DatabaseLogCallback? databaseLogCallback,
@@ -140,6 +130,7 @@ class YustDatabaseService {
       dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
       return _transformDoc<T>(docSetup, response);
     } on YustNotFoundException {
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 0);
       return null;
     }
   }
@@ -197,6 +188,7 @@ class YustDatabaseService {
             _getParentPath(docSetup)));
 
     if (response.isEmpty || response.first.document == null) {
+      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 0);
       return null;
     }
     dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup), 1);
@@ -334,6 +326,7 @@ class YustDatabaseService {
     final unequalFilters = (filters ?? [])
         .whereNot((filter) =>
             YustFilterComparator.equalityFilters.contains(filter.comparator))
+        .toSet()
         .toList();
 
     assert(!((unequalFilters.isNotEmpty) && (orderBy?.isNotEmpty ?? false)),
@@ -341,7 +334,10 @@ class YustDatabaseService {
 
     // Calculate orderBy from all unequal filters
     if (unequalFilters.isNotEmpty) {
-      orderBy = unequalFilters.map((e) => YustOrderBy(field: e.field)).toList();
+      orderBy = unequalFilters
+          .map((e) => YustOrderBy(field: e.field))
+          .toSet()
+          .toList();
     }
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
@@ -721,12 +717,19 @@ class YustDatabaseService {
           try {
             updatedDoc = await transaction(doc);
             if (updatedDoc == null) {
+              dbLogCallback?.call(
+                  DatabaseLogAction.save, _getDocumentPath(docSetup), 0,
+                  id: doc.id);
               await commitEmptyTransaction(transactionId);
               return (false, null);
             } else {
               await commitTransaction(transactionId, docSetup, updatedDoc,
                   useUpdateMask: useUpdateMask);
             }
+            dbLogCallback?.call(
+                DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
+                id: doc.id,
+                updateMask: [if (useUpdateMask) ...updatedDoc.updateMask]);
             break;
           }
           // We are catching DetailedApiRequestError(409) and YustTransactionFailedException here
@@ -1001,37 +1004,48 @@ class YustDatabaseService {
               values: value
                   .map((childValue) => _valueToDbValue(childValue))
                   .toList()));
-    } else if (value is Map) {
+    }
+    if (value is Map) {
       return Value(
           mapValue: MapValue(
               fields: value.map((key, childValue) =>
                   MapEntry(key, _valueToDbValue(childValue)))));
-    } else if (value is bool) {
+    }
+    if (value is bool) {
       return Value(booleanValue: value);
-    } else if (value is int) {
+    }
+    if (value is int) {
       return Value(integerValue: value.toString());
-    } else if (value is double) {
+    }
+    if (value is double) {
       // Round double values
       return Value(doubleValue: Yust.helpers.roundToDecimalPlaces(value));
-    } else if (value == null) {
-      return Value(nullValue: 'NULL_VALUE');
-    } else if (value is String && value.isIso8601String) {
-      value = DateTime.parse(value).toIso8601StringWithOffset();
-      return Value(timestampValue: value);
-    } else if (value is String) {
-      return Value(stringValue: value);
-    } else if (value is DateTime) {
-      return Value(timestampValue: value.toIso8601StringWithOffset());
-    } else {
-      late String output;
-      try {
-        output = jsonEncode(value);
-      } catch (e) {
-        output = value.toString();
-      }
-      throw (YustException(
-          'Value can not be transformed for Firestore: $output'));
     }
+    if (value == null) {
+      return Value(nullValue: 'NULL_VALUE');
+    }
+    if (value is ServerNow || (value is String && value.isServerNow)) {
+      // server side timestamps do not work with googleapis/firestore/v1, so we use the current time instead
+      return Value(timestampValue: DateTime.now().toIso8601StringWithOffset());
+    }
+    if (value is String && value.isIso8601String) {
+      return Value(
+          timestampValue: DateTime.parse(value).toIso8601StringWithOffset());
+    }
+    if (value is String) {
+      return Value(stringValue: value);
+    }
+    if (value is DateTime) {
+      return Value(timestampValue: value.toIso8601StringWithOffset());
+    }
+    late String output;
+    try {
+      output = jsonEncode(value);
+    } catch (e) {
+      output = value.toString();
+    }
+    throw (YustException(
+        'Value can not be transformed for Firestore: $output'));
   }
 
   dynamic _dbValueToValue(Value dbValue) {
@@ -1080,63 +1094,26 @@ class YustDatabaseService {
     String fnName,
     String docPath,
     Future<T> Function() fn, {
-    int numberOfRetries = 0,
     bool shouldRetryOnTransactionErrors = true,
     bool shouldIgnoreNotFound = false,
   }) async {
-    try {
-      return await fn();
-    } catch (e) {
-      if (numberOfRetries >= maxRetries) {
-        print(
-            '[[ERROR]] Retried $fnName call $maxRetries times, but still failed: $e for $docPath');
-        rethrow;
-      } else if (e is YustException) {
-        if (e is YustNotFoundException && shouldIgnoreNotFound) {
-          print(
-              '[[DEBUG]] YustNotFoundException ignored for $fnName call for $docPath, this usually means the document was deleted before saving.');
-          return null as T;
-        }
-        print(
-            '[[DEBUG]] NOT Retrying $fnName call for the ${numberOfRetries + 1} time on YustException ($e) for $docPath, because we don\'t retry YustExceptions');
-        rethrow;
-      } else if (e is TlsException) {
-        print(
-            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on TlsException ($e) for $docPath');
-      } else if (e is ClientException) {
-        print(
-            '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on ClientException) ($e) for $docPath');
-      } else if (e is DetailedApiRequestError) {
-        if (e.status == 500) {
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on InternalServerError ($e) for $docPath');
-        } else if (e.status == 502) {
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on BadGateway ($e) for $docPath');
-        } else if (e.status == 503) {
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unavailable ($e) for $docPath');
-        } else if (e.status == 409 && shouldRetryOnTransactionErrors) {
-          if ((e.message ?? '').contains(
-              'The referenced transaction has expired or is no longer valid')) {
-            throw YustException.fromDetailedApiRequestError(docPath, e);
-          }
-          print(
-              '[[DEBUG]] Retrying $fnName call for the ${numberOfRetries + 1} time on YustTransactionFailedException ($e) for $docPath');
-        } else {
-          throw YustException.fromDetailedApiRequestError(docPath, e);
-        }
-      } else {
-        print(
-            '[[WARNING]] Retrying $fnName call for the ${numberOfRetries + 1} time on Unknown Firestore Exception ($e) for $docPath');
-      }
-      return Future.delayed(
-          Duration(
-              milliseconds: min(maxExponentialBackoffMs,
-                      pow(2, numberOfRetries + 3).toInt()) *
-                  (20 + Random().nextInt(20))),
-          () => _retryOnException<T>(fnName, docPath, fn,
-              numberOfRetries: numberOfRetries + 1));
-    }
+    return (await YustRetryHelper.retryOnException<T>(
+      fnName,
+      docPath,
+      fn,
+      maxTries: 16,
+      actionOnExceptionList: [
+        YustRetryHelper.actionOnYustException(
+          shouldIgnoreNotFound: shouldIgnoreNotFound,
+        ),
+        YustRetryHelper.actionOnNetworkException,
+        YustRetryHelper.actionOnDetailedApiRequestError(
+          shouldRetryOnTransactionErrors: shouldRetryOnTransactionErrors,
+          shouldIgnoreNotFound: shouldIgnoreNotFound,
+        ),
+      ],
+      onRetriesExceeded: (lastError, fnName, docPath) => print(
+          '[[ERROR]] Retried $fnName call 16 times, but still failed: $lastError for $docPath'),
+    )) as T;
   }
 }

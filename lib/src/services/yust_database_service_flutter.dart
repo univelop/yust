@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
+import 'package:collection/collection.dart';
 import 'package:http/http.dart';
 
 import '../extensions/server_now.dart';
@@ -301,7 +302,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    var query = getQuery(docSetup, filters: filters);
+    var query = getQuery(docSetup, filters: filters, limit: limit);
     final snapshot = await query.count().get();
 
     return snapshot.count ?? 0;
@@ -313,7 +314,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     int? limit,
   }) async {
-    var query = getQuery(docSetup, filters: filters);
+    var query = getQuery(docSetup, filters: filters, limit: limit);
     final snapshot = await query.aggregate(cf.sum(fieldPath), cf.count()).get();
     return (count: snapshot.count ?? 0, result: snapshot.getSum(fieldPath));
   }
@@ -409,12 +410,15 @@ class YustDatabaseService {
           currentNode.value == null) {
         return FieldValue.delete();
       }
+      // Parse ServerNow
+      if (currentNode.value is ServerNow ||
+          (currentNode.value is String &&
+              (currentNode.value as String).isServerNow)) {
+        return FieldValue.serverTimestamp();
+      }
       // Parse dart DateTimes
       if (currentNode.value is DateTime) {
         return Timestamp.fromDate(currentNode.value);
-      }
-      if (currentNode.value is ServerNow) {
-        return FieldValue.serverTimestamp();
       }
       // Parse ISO Timestamp Strings
       if (currentNode.value is String &&
@@ -436,6 +440,23 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
   }) async* {
+    final unequalFilters = (filters ?? [])
+        .whereNot((filter) =>
+            YustFilterComparator.equalityFilters.contains(filter.comparator))
+        .toSet()
+        .toList();
+
+    assert(!((unequalFilters.isNotEmpty) && (orderBy?.isNotEmpty ?? false)),
+        'You can\'t use orderBy and unequal filters at the same time');
+
+    // Calculate orderBy from all unequal filters
+    if (unequalFilters.isNotEmpty) {
+      orderBy = unequalFilters
+          .map((e) => YustOrderBy(field: e.field))
+          .toSet()
+          .toList();
+    }
+
     var isDone = false;
     DocumentSnapshot? lastDoc;
     while (!isDone) {
@@ -589,9 +610,10 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) {
-    Query query = _fireStore.collection(_getCollectionPath(docSetup));
+    final path = _getCollectionPath(docSetup);
+    Query query = _fireStore.collection(path);
     if (dbLogCallback != null) {
-      query = YustQueryWithLogging(dbLogCallback!, query);
+      query = YustQueryWithLogging(dbLogCallback!, query, path);
     }
     query = _executeStaticFilters(query, docSetup);
     query = _executeFilters(query, filters);

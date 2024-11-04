@@ -146,8 +146,8 @@ class YustAuthService {
       throw YustException('Error creating user: ${response.toJson()}');
     }
 
-    final successfullyLinked = await _tryLinkYustUser(
-        this._yust, response, YustAuthenticationMethod.mail);
+    final successfullyLinked =
+        await _tryLinkYustUser(_yust, response, YustAuthenticationMethod.mail);
     if (successfullyLinked) return null;
     // }
 
@@ -155,8 +155,8 @@ class YustAuthService {
       firstName: firstName,
       email: email,
       lastName: lastName,
-      id: response?.localId ?? uuid,
-      authId: response?.localId ?? uuid,
+      id: response.localId ?? uuid,
+      authId: response.localId ?? uuid,
       gender: gender,
       authenticationMethod: useOAuth == true
           ? YustAuthenticationMethod.openId
@@ -187,7 +187,7 @@ class YustAuthService {
       ..lastLogin = DateTime.now()
       ..lastLoginDomain =
           Uri.base.scheme.contains('http') ? Uri.base.host : null;
-    await this._yust.dbService.saveDoc<YustUser>(Yust.userSetup, user);
+    await _yust.dbService.saveDoc<YustUser>(Yust.userSetup, user);
     return user;
   }
 

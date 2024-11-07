@@ -8,18 +8,18 @@ part 'yust_filter.g.dart';
 
 /// All types a filter can compare a brick value with a constant
 enum YustFilterComparator {
-  equal('EQUAL'),
-  notEqual('NOT_EQUAL'),
-  lessThan('LESS_THAN'),
-  lessThanEqual('LESS_THAN_OR_EQUAL'),
-  greaterThan('GREATER_THAN'),
-  greaterThanEqual('GREATER_THAN_OR_EQUAL'),
   arrayContains('ARRAY_CONTAINS'),
   arrayContainsAny('ARRAY_CONTAINS_ANY'),
+  equal('EQUAL'),
+  greaterThan('GREATER_THAN'),
+  greaterThanEqual('GREATER_THAN_OR_EQUAL'),
   inList('IN'),
-  notInList('NOT_IN'),
+  isNotNull('IS_NOT_NULL'),
   isNull('IS_NULL'),
-  isNotNull('IS_NOT_NULL');
+  lessThan('LESS_THAN'),
+  lessThanEqual('LESS_THAN_OR_EQUAL'),
+  notEqual('NOT_EQUAL'),
+  notInList('NOT_IN');
 
   final String firestoreOperatorName;
 
@@ -44,6 +44,30 @@ class YustFilter {
   YustFilter.empty()
       : field = '',
         comparator = YustFilterComparator.equal;
+
+  YustFilter.arrayContains(this.field, this.value)
+      : comparator = YustFilterComparator.arrayContains;
+  YustFilter.arrayContainsAny(this.field, this.value)
+      : comparator = YustFilterComparator.arrayContainsAny;
+  YustFilter.equal(this.field, this.value)
+      : comparator = YustFilterComparator.equal;
+  YustFilter.greaterThan(this.field, this.value)
+      : comparator = YustFilterComparator.greaterThan;
+  YustFilter.greaterThanEqual(this.field, this.value)
+      : comparator = YustFilterComparator.greaterThanEqual;
+  YustFilter.inList(this.field, this.value)
+      : comparator = YustFilterComparator.inList;
+  YustFilter.isNotNull(this.field)
+      : comparator = YustFilterComparator.isNotNull;
+  YustFilter.isNull(this.field) : comparator = YustFilterComparator.isNull;
+  YustFilter.lessThan(this.field, this.value)
+      : comparator = YustFilterComparator.lessThan;
+  YustFilter.lessThanEqual(this.field, this.value)
+      : comparator = YustFilterComparator.lessThanEqual;
+  YustFilter.notEqual(this.field, this.value)
+      : comparator = YustFilterComparator.notEqual;
+  YustFilter.notInList(this.field, this.value)
+      : comparator = YustFilterComparator.notInList;
 
   /// The ID of the brick this filter refers to
   String field;

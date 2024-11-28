@@ -129,7 +129,7 @@ class YustFilter {
       return value.map((v) => _handleTZDateTimeValue(v)).toList();
     } else if (value is TZDateTime || value is DateTime) {
       final date = helpers.localToUtc(value);
-      // needs to be parsed to DateTime, beacuse TZDateTime is not comparable with DateTime
+      // needs to be parsed to DateTime, because TZDateTime is not comparable with DateTime
       return DateTime.utc(date.year, date.month, date.day, date.hour,
           date.minute, date.second, date.millisecond, date.microsecond);
     }
@@ -169,7 +169,7 @@ class YustFilter {
         YustFilterComparator.isNull
       ].contains(comparator);
 
-  /// A map with the [YustFilterComparator] and the string repesentation.
+  /// A map with the [YustFilterComparator] and the string representation.
   static Map<YustFilterComparator, String> comparatorStrings = {
     YustFilterComparator.equal: '=',
     YustFilterComparator.notEqual: '!=',
@@ -190,11 +190,11 @@ class YustFilter {
   ///
   static String? comparatorToString(YustFilterComparator? comparator,
       {bool useDoubleEqual = false}) {
-    var comperatorString = YustFilter.comparatorStrings[comparator];
-    if (useDoubleEqual && comperatorString == '=') {
-      comperatorString = '==';
+    var comparatorString = YustFilter.comparatorStrings[comparator];
+    if (useDoubleEqual && comparatorString == '=') {
+      comparatorString = '==';
     }
-    return comperatorString;
+    return comparatorString;
   }
 
   /// Get the FilterComparator from a string (e.g. '=' => [YustFilterComparator.equal])

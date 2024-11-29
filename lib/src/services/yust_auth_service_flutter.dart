@@ -12,14 +12,15 @@ import '../yust.dart';
 class YustAuthService {
   FirebaseAuth fireAuth;
 
-  YustAuthService({String? emulatorAddress})
+  YustAuthService(Yust yust,
+      {String? emulatorAddress, String? pathToServiceAccountJson})
       : fireAuth = FirebaseAuth.instance {
     if (emulatorAddress != null) {
       fireAuth.useAuthEmulator(emulatorAddress, 9099);
     }
   }
 
-  YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
+  YustAuthService.mocked(Yust yust) : fireAuth = MockFirebaseAuth();
 
   Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
@@ -141,6 +142,7 @@ class YustAuthService {
             value: userCredential.user!.uid)
       ]));
 
+  // If modified also modify in yust_auth_service_dart.dart
   Future<bool> _tryLinkYustUser(
     UserCredential userCredential,
     YustAuthenticationMethod? method,
@@ -164,13 +166,17 @@ class YustAuthService {
     return true;
   }
 
-  Future<YustUser?> signUp(
+  Future<YustUser?> createAccount(
     String firstName,
     String lastName,
     String email,
     String password, {
     YustGender? gender,
+    bool useOAuth = false,
   }) async {
+    if (useOAuth == true) {
+      throw YustException('OAuth not supported for createAccount.');
+    }
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     final successfullyLinked =
@@ -188,6 +194,7 @@ class YustAuthService {
     );
   }
 
+  // If modified also modify in yust_auth_service_dart.dart
   Future<YustUser> _createUser({
     required String firstName,
     required String lastName,

@@ -134,7 +134,7 @@ class Yust {
           onChange: onChange,
           useSubcollections: useSubcollections,
           envCollectionName: envCollectionName);
-      Yust.authService = YustAuthService.mocked();
+      Yust.authService = YustAuthService.mocked(this);
       Yust.fileService = YustFileServiceMocked();
       return;
     }
@@ -154,7 +154,9 @@ class Yust {
       emulatorAddress: emulatorAddress,
     );
 
-    Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
+    Yust.authService = YustAuthService(this,
+        emulatorAddress: emulatorAddress,
+        pathToServiceAccountJson: pathToServiceAccountJson);
     Yust.fileService = YustFileService(
       authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,

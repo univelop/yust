@@ -114,7 +114,13 @@ class YustUser extends YustDoc {
   }
 
   /// This method returns the value of the attribute with the given key.
-  T getAttribute<T>(String key, T defaultValue) => userAttributes[key] ?? defaultValue;
+  T getAttribute<T>(String key, T defaultValue) {
+    if(userAttributes[key] == null) return defaultValue;
+    if(T == DateTime){
+      return DateTime.parse(userAttributes[key] as String) as T;
+    }
+    return userAttributes[key];
+    }
 
   /// This method returns the value of the attribute with the given key or null if the attribute does not exist.
   T? getAttributeOrNull<T>(String key) => userAttributes[key];

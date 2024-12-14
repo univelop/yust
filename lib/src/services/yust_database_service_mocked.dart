@@ -471,6 +471,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     final segments = path.split('.');
     Map subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
+      if (subDoc[segment] == null) {
+        return null;
+      }
       subDoc = subDoc[segment];
     }
     return subDoc[segments.last];

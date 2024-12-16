@@ -8,6 +8,7 @@ import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
+import 'yust_auth_service_shared.dart';
 
 class YustAuthService {
   FirebaseAuth fireAuth;
@@ -81,7 +82,9 @@ class YustAuthService {
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
-    final successfullyLinked = await _tryLinkYustUser(userCredential, method);
+
+    final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+        _getEmail(userCredential), _getId(userCredential), method);
     if (successfullyLinked) return null;
 
     final nameParts = _extractNameParts(userCredential);
@@ -142,30 +145,6 @@ class YustAuthService {
             value: userCredential.user!.uid)
       ]));
 
-  // If modified also modify in yust_auth_service_dart.dart
-  Future<bool> _tryLinkYustUser(
-    UserCredential userCredential,
-    YustAuthenticationMethod? method,
-  ) async {
-    if (userCredential.user?.email == null ||
-        userCredential.user?.email == '') {
-      return false;
-    }
-    final user = await Yust.databaseService.getFirst<YustUser>(
-      Yust.userSetup,
-      filters: [
-        YustFilter(
-          field: 'email',
-          comparator: YustFilterComparator.equal,
-          value: userCredential.user!.email,
-        ),
-      ],
-    );
-    if (user == null) return false;
-    await user.linkAuth(userCredential.user!.uid, method);
-    return true;
-  }
-
   Future<YustUser?> createAccount(
     String firstName,
     String lastName,
@@ -179,8 +158,8 @@ class YustAuthService {
     }
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final successfullyLinked =
-        await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
+    final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+        email, userCredential.user!.uid, YustAuthenticationMethod.mail);
     if (successfullyLinked) return null;
 
     return await _createUser(

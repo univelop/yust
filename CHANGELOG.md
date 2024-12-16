@@ -1,3 +1,7 @@
+## 3.25.6 - 2024-12-13
+
+-   Fixes
+
 ## 3.25.5 - 2024-11-01
 
 -   Fix for YustFileServiceDart

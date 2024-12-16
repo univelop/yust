@@ -134,7 +134,8 @@ class YustAuthService {
   Future<YustUser?> _maybeGetConnectedYustUser(
     UserCredential userCredential,
   ) async =>
-      (await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
+      (await Yust.databaseService
+          .getFirstFromDB<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',
             comparator: YustFilterComparator.equal,

@@ -44,6 +44,11 @@ class YustAuthService {
     );
   }
 
+  /// Sign in with a custom token.
+  Future<void> signInWithCustomToken(String customToken) async {
+    await fireAuth.signInWithCustomToken(customToken);
+  }
+
   Future<YustUser?> signInWithMicrosoft() async {
     final microsoftProvider = MicrosoftAuthProvider();
     return _signInWithProvider(

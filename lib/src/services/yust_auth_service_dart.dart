@@ -24,6 +24,13 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
+  /// Sign in with a custom token.
+  Future<void> signInWithCustomToken(
+    String customToken,
+  ) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
   /// Sign in with Microsoft. If a new user was created, return the user.
   /// A Microsoft app must be registered in the Firebase console.
   Future<YustUser?> signInWithMicrosoft() async {

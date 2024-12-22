@@ -284,4 +284,19 @@ class YustAuthService {
       }
     }
   }
+
+  /// Returns the custom claims of the current user.
+  ///
+  /// If [forceRefresh] is set to true, the custom claims will be refreshed.
+  ///
+  /// Returns null if the user is not signed in.
+  Future<Map<String, dynamic>?> getCustomClaims(
+      [bool forceRefresh = false]) async {
+    final user = fireAuth.currentUser;
+    if (user == null) {
+      return null;
+    }
+    final idTokenResult = await user.getIdTokenResult(forceRefresh);
+    return idTokenResult.claims;
+  }
 }

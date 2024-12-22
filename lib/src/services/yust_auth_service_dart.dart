@@ -101,4 +101,14 @@ class YustAuthService {
   Future<void> deleteAccount([String? password]) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
+
+  /// Returns the custom claims of the current user.
+  ///
+  /// If [forceRefresh] is set to true, the custom claims will be refreshed.
+  ///
+  /// Returns null if the user is not signed in.
+  Future<Map<String, dynamic>?> getCustomClaims(
+      [bool forceRefresh = false]) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
 }

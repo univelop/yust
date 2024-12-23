@@ -31,6 +31,15 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
+  /// Change persistence of the current user session.
+  ///
+  /// This will take affect for the current session and new sessions on the current auth instance.
+  ///
+  /// Call with `true` to enable persistence and `false` to disable it.
+  Future<void> setSessionPersistence(bool persist) async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
   /// Sign in with Microsoft. If a new user was created, return the user.
   /// A Microsoft app must be registered in the Firebase console.
   Future<YustUser?> signInWithMicrosoft() async {

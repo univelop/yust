@@ -49,6 +49,16 @@ class YustAuthService {
     await fireAuth.signInWithCustomToken(customToken);
   }
 
+  /// Change persistence of the current user session.
+  ///
+  /// This will take affect for the current session and new sessions on the current auth instance.
+  ///
+  /// Call with `true` to enable persistence and `false` to disable it.
+  Future<void> setSessionPersistence(bool persist) async {
+    await fireAuth
+        .setPersistence(persist ? Persistence.LOCAL : Persistence.NONE);
+  }
+
   Future<YustUser?> signInWithMicrosoft() async {
     final microsoftProvider = MicrosoftAuthProvider();
     return _signInWithProvider(

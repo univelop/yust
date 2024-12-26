@@ -76,7 +76,12 @@ class YustNotification extends YustDoc {
   }
 
   /// Whether the notification has been read by the user.
-  get isRead => readAt != null;
+  bool get isRead => readAt != null;
+
+  /// Whether the notification has not been read by the user.
+  ///
+  /// (Or marked unread again afterwards)
+  bool get isUnread => readAt == null;
 
   @override
   Map<String, dynamic> toJson() => _$YustNotificationToJson(this);

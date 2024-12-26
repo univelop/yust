@@ -31,7 +31,10 @@ YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
           : DateTime.parse(json['modifiedAt'] as String)
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
-      ..envId = json['envId'] as String?;
+      ..envId = json['envId'] as String?
+      ..readAt = json['readAt'] == null
+          ? null
+          : DateTime.parse(json['readAt'] as String);
 
 Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
     <String, dynamic>{
@@ -50,4 +53,5 @@ Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
       'dispatchAt': instance.dispatchAt?.toIso8601String(),
       'delivered': instance.delivered,
       'data': instance.data,
+      'readAt': instance.readAt?.toIso8601String(),
     };

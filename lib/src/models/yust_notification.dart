@@ -37,10 +37,7 @@ class YustNotification extends YustDoc {
   /// Date and time the notification should be dispatched.
   ///
   /// If not set, the notification will be dispatched immediately.
-  @JsonKey(defaultValue: _dispatchAtDefault)
-  DateTime dispatchAt;
-
-  static DateTime _dispatchAtDefault() => TZDateTime.now(UTC);
+  DateTime? dispatchAt;
 
   /// Whether the notification has been delivered successfully.
   bool delivered;
@@ -62,8 +59,7 @@ class YustNotification extends YustDoc {
     DateTime? dispatchAt,
     this.delivered = false,
     this.data = const {},
-  })  : dispatchAt = dispatchAt ?? TZDateTime.now(UTC),
-        super();
+  }) : super();
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>
       _$YustNotificationFromJson(json);

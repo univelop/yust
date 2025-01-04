@@ -13,7 +13,7 @@ YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
       title: json['title'] as String?,
       body: json['body'] as String?,
       dispatchAt: json['dispatchAt'] == null
-          ? null
+          ? YustNotification._dispatchAtDefault()
           : DateTime.parse(json['dispatchAt'] as String),
       delivered: json['delivered'] as bool? ?? false,
       data: (json['data'] as Map?)?.map(
@@ -50,7 +50,7 @@ Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
       'deepLink': instance.deepLink,
       'title': instance.title,
       'body': instance.body,
-      'dispatchAt': instance.dispatchAt?.toIso8601String(),
+      'dispatchAt': instance.dispatchAt.toIso8601String(),
       'delivered': instance.delivered,
       'data': instance.data,
       'readAt': instance.readAt?.toIso8601String(),

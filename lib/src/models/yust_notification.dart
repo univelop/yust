@@ -1,12 +1,11 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:timezone/timezone.dart';
 
 import '../yust.dart';
 import 'yust_doc.dart';
 import 'yust_doc_setup.dart';
 
 part 'yust_notification.g.dart';
-
-dataFromJson(data) => Map<String, dynamic>.from(data);
 
 /// A representation of a push notification.
 @JsonSerializable()
@@ -38,7 +37,10 @@ class YustNotification extends YustDoc {
   /// Date and time the notification should be dispatched.
   ///
   /// If not set, the notification will be dispatched immediately.
-  DateTime? dispatchAt;
+  @JsonKey(defaultValue: _dispatchAtDefault)
+  DateTime dispatchAt;
+
+  static DateTime _dispatchAtDefault() => TZDateTime.now(UTC);
 
   /// Whether the notification has been delivered successfully.
   bool delivered;
@@ -57,10 +59,11 @@ class YustNotification extends YustDoc {
     this.deepLink,
     this.title,
     this.body,
-    this.dispatchAt,
+    DateTime? dispatchAt,
     this.delivered = false,
     this.data = const {},
-  }) : super();
+  })  : dispatchAt = dispatchAt ?? TZDateTime.now(UTC),
+        super();
 
   factory YustNotification.fromJson(Map<String, dynamic> json) =>
       _$YustNotificationFromJson(json);

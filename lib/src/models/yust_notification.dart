@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:timezone/timezone.dart';
 
 import '../yust.dart';
 import 'yust_doc.dart';

@@ -55,7 +55,7 @@ class YustNotification extends YustDoc {
     this.deepLink,
     this.title,
     this.body,
-    DateTime? dispatchAt,
+    this.dispatchAt,
     this.delivered = false,
     this.data = const {},
   }) : super();

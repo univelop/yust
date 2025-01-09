@@ -134,7 +134,7 @@ class YustFile {
     };
   }
 
-  dynamic operator [] (String key) {
+  dynamic operator [](String key) {
     switch (key) {
       case 'name':
         return name;
@@ -170,4 +170,7 @@ class YustFile {
 
     return name!.contains('.') ? name!.split('.').last : '';
   }
+
+  bool isNullish() =>
+      (name ?? '').isEmpty && (url ?? '').isEmpty && (hash).isEmpty;
 }

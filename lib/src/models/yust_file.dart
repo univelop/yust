@@ -138,7 +138,7 @@ class YustFile {
     switch (key) {
       case 'name':
         return name;
-      case 'hash_code':
+      case 'hash':
         return hash;
       case 'url':
         return url;
@@ -170,7 +170,4 @@ class YustFile {
 
     return name!.contains('.') ? name!.split('.').last : '';
   }
-
-  bool isNullish() =>
-      (name ?? '').isEmpty && (url ?? '').isEmpty && (hash).isEmpty;
 }

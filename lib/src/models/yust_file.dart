@@ -112,7 +112,7 @@ class YustFile {
   /// Converts JSON from device to a file. Only relevant attributes are included.
   Map<String, String?> toLocalJson() {
     if (name == null) {
-      throw ('Error: Each cached file needs a name. Should be unique for each address!');
+      throw ('Error: Each cached file needs a name. Should be unique for each path!');
     }
     if (devicePath == null) {
       throw ('Error: Device Path has to be a String.');

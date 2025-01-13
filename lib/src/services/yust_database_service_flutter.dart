@@ -15,16 +15,20 @@ import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
 import '../util/yust_query_with_logging.dart';
 import '../yust.dart';
+import 'yust_database_service_interface.dart';
 import 'yust_database_service_shared.dart';
 
-class YustDatabaseService {
+class YustDatabaseService implements IYustDatabaseService {
   // The _fireStore is late because we don't want to init if, if initialized mocked.
   // (in this case the _firsStore is not used in in the mocked service and a
   // exception is a good indicator for the developer )
   late final FirebaseFirestore _fireStore;
+  @override
   DatabaseLogCallback? dbLogCallback;
+  @override
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
+  @override
   DateTime? readTime;
 
   YustDatabaseService({
@@ -44,9 +48,11 @@ class YustDatabaseService {
   }
 
   /// Represents the collection name for the tenants.
+  @override
   final String envCollectionName;
 
   /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  @override
   final bool useSubcollections;
 
   YustDatabaseService.mocked({
@@ -57,11 +63,13 @@ class YustDatabaseService {
     throw UnsupportedError('Not supported in Flutter Environment');
   }
 
+  @override
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
     return doInitDoc(docSetup, id, doc);
   }
 
+  @override
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -84,6 +92,7 @@ class YustDatabaseService {
     return result;
   }
 
+  @override
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -108,6 +117,7 @@ class YustDatabaseService {
     return _transformDoc<T>(docSetup, docSnapshot);
   }
 
+  @override
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id, {
@@ -124,6 +134,7 @@ class YustDatabaseService {
     return result;
   }
 
+  @override
   Stream<T?> getStream<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -142,6 +153,7 @@ class YustDatabaseService {
     });
   }
 
+  @override
   Future<T?> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -158,6 +170,7 @@ class YustDatabaseService {
     return doc;
   }
 
+  @override
   Future<T?> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -185,6 +198,7 @@ class YustDatabaseService {
     return doc;
   }
 
+  @override
   Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -201,6 +215,7 @@ class YustDatabaseService {
     return doc;
   }
 
+  @override
   Stream<T?> getFirstStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -218,12 +233,17 @@ class YustDatabaseService {
     });
   }
 
+  @override
   Future<List<T>> getList<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -237,12 +257,17 @@ class YustDatabaseService {
     });
   }
 
+  @override
   Future<List<T>> getListFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) async {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -264,12 +289,17 @@ class YustDatabaseService {
         .toList();
   }
 
+  @override
   Future<List<T>> getListFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) async {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -280,12 +310,17 @@ class YustDatabaseService {
         .toList();
   }
 
+  @override
   Stream<List<T>> getListStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    String? startAfterDocumentName,
   }) {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
 
@@ -297,7 +332,8 @@ class YustDatabaseService {
     });
   }
 
-  Future<int?> count<T extends YustDoc>(
+  @override
+  Future<int> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     int? limit,
@@ -308,6 +344,7 @@ class YustDatabaseService {
     return snapshot.count ?? 0;
   }
 
+  @override
   Future<AggregationResult> sum<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
@@ -319,6 +356,7 @@ class YustDatabaseService {
     return (count: snapshot.count ?? 0, result: snapshot.getSum(fieldPath));
   }
 
+  @override
   Future<AggregationResult> avg<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String fieldPath, {
@@ -331,6 +369,7 @@ class YustDatabaseService {
     return (count: snapshot.count ?? 0, result: snapshot.getAverage(fieldPath));
   }
 
+  @override
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -382,6 +421,7 @@ class YustDatabaseService {
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
+  @override
   Future<void> updateDocByTransform<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -434,12 +474,17 @@ class YustDatabaseService {
     return modifiedObj;
   }
 
+  @override
   Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    String? startAfterDocumentName,
   }) async* {
+    if (startAfterDocumentName != null) {
+      print('startAfterDocumentName is not supported in Flutter');
+    }
     final unequalFilters = (filters ?? [])
         .whereNot((filter) =>
             YustFilterComparator.equalityFilters.contains(filter.comparator))
@@ -481,6 +526,7 @@ class YustDatabaseService {
     }
   }
 
+  @override
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -491,6 +537,7 @@ class YustDatabaseService {
     }
   }
 
+  @override
   Future<int> deleteDocsAsBatch<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -523,6 +570,7 @@ class YustDatabaseService {
         id: doc.id);
   }
 
+  @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
     await (await get(docSetup, docId))?.onDelete();
@@ -534,6 +582,7 @@ class YustDatabaseService {
         id: docId);
   }
 
+  @override
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     required T doc,
@@ -560,6 +609,7 @@ class YustDatabaseService {
   }
 
   /// Reads a document, executes a function and saves the document as a transaction.
+  @override
   Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
@@ -572,21 +622,25 @@ class YustDatabaseService {
   }
 
   /// Begins a transaction.
+  @override
   Future<String> beginTransaction() async {
     throw YustException('Not implemented for flutter');
   }
 
   /// Saves a YustDoc and finishes a transaction.
+  @override
   Future<void> commitTransaction(
       String transaction, YustDocSetup docSetup, YustDoc doc,
       {bool useUpdateMask = false}) async {
     throw YustException('Not implemented for flutter');
   }
 
+  @override
   Future<void> commitEmptyTransaction(String transaction) async {
     throw YustException('Not implemented for flutter');
   }
 
+  @override
   T? transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     dynamic document,
@@ -609,6 +663,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    DocumentSnapshot? startAfterDocument,
   }) {
     final path = _getCollectionPath(docSetup);
     Query query = _fireStore.collection(path);
@@ -620,6 +675,9 @@ class YustDatabaseService {
     query = _executeOrderByList(query, orderBy);
     if (limit != null) {
       query = query.limit(limit);
+    }
+    if (startAfterDocument != null) {
+      query = query.startAfterDocument(startAfterDocument);
     }
 
     return query;

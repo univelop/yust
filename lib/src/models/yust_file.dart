@@ -9,7 +9,7 @@ typedef YustFileJson = Map<String, dynamic>;
 typedef YustFilesJson = List<YustFileJson>;
 
 /// A binary file handled by database and file storage.
-/// A file is stored in Firebase Storeage and linked to a document in the database.
+/// A file is stored in Firebase Storage and linked to a document in the database.
 /// For offline caching a file can also be stored on the device.
 @JsonSerializable()
 class YustFile {
@@ -19,14 +19,14 @@ class YustFile {
   /// The name of the file with extension.
   String? name;
 
-  /// The name of the file with extension.
+  /// The last modification time stamp.
   DateTime? modifiedAt;
 
   /// The URL to download the file.
   String? url;
   String hash;
 
-  /// The binary file. This attibute is used for iOS and Android. For web [bytes] is used instead.
+  /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
   File? file;
 
@@ -81,11 +81,11 @@ class YustFile {
     this.lastError,
   });
 
-  /// Converts the file to JSON for Firebase. Only relevant attributs are converted.
+  /// Converts the file to JSON for Firebase. Only relevant attributes are converted.
   factory YustFile.fromJson(Map<String, dynamic> json) =>
       _$YustFileFromJson(json);
 
-  /// Converts JSON from Firebase to a file. Only relevant attributs are included.
+  /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
   void update(YustFile file) {
@@ -94,7 +94,7 @@ class YustFile {
     hash = file.hash;
   }
 
-  /// Converts the file to JSON for local device. Only relevant attributs are converted.
+  /// Converts the file to JSON for local device. Only relevant attributes are converted.
   factory YustFile.fromLocalJson(Map<String, dynamic> json) {
     return YustFile(
       name: json['name'] as String,
@@ -109,10 +109,10 @@ class YustFile {
     );
   }
 
-  /// Converts JSON from device to a file. Only relevant attributs are included.
+  /// Converts JSON from device to a file. Only relevant attributes are included.
   Map<String, String?> toLocalJson() {
     if (name == null) {
-      throw ('Error: Each cached file needs a name. Should be unique for each adress!');
+      throw ('Error: Each cached file needs a name. Should be unique for each path!');
     }
     if (devicePath == null) {
       throw ('Error: Device Path has to be a String.');
@@ -132,6 +132,19 @@ class YustFile {
       'lastError': lastError,
       'modifiedAt': modifiedAt?.toIso8601String(),
     };
+  }
+
+  dynamic operator [](String key) {
+    switch (key) {
+      case 'name':
+        return name;
+      case 'hash':
+        return hash;
+      case 'url':
+        return url;
+      default:
+        throw ArgumentError();
+    }
   }
 
   bool isValid() {

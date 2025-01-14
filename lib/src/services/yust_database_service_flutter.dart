@@ -688,8 +688,6 @@ class YustDatabaseService {
             case YustFilterComparator.isNotNull:
               query = query.where(filter.field, isNull: false);
               break;
-            default:
-              throw 'The comparator "${filter.comparator}" is not supported.';
           }
         }
       }

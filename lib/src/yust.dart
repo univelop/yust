@@ -154,7 +154,6 @@ class Yust {
             ],
             pathToServiceAccountJson: pathToServiceAccountJson,
           );
-    ;
 
     dbService = YustDatabaseService(
       client: Yust.authClient,

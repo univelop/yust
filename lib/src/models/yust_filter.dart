@@ -113,8 +113,6 @@ class YustFilter {
           return fieldValue == null;
         case YustFilterComparator.isNotNull:
           return fieldValue != null;
-        default:
-          return false;
       }
     } catch (e) {
       print(

@@ -61,7 +61,10 @@ class YustAuthService {
   }
 
   Future<YustUser?> signInWithApple() async {
-    final appleProvider = AppleAuthProvider();
+    final appleProvider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+    
     return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
   }
 

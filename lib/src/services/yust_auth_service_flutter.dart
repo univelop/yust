@@ -12,16 +12,20 @@ import 'yust_auth_service_shared.dart';
 
 class YustAuthService {
   FirebaseAuth fireAuth;
+  final Yust _yust;
 
   YustAuthService(Yust yust,
       {String? emulatorAddress, String? pathToServiceAccountJson})
-      : fireAuth = FirebaseAuth.instance {
+      : fireAuth = FirebaseAuth.instance,
+        _yust = yust {
     if (emulatorAddress != null) {
       fireAuth.useAuthEmulator(emulatorAddress, 9099);
     }
   }
 
-  YustAuthService.mocked(Yust yust) : fireAuth = MockFirebaseAuth();
+  YustAuthService.mocked(Yust yust)
+      : fireAuth = MockFirebaseAuth(),
+        _yust = yust;
 
   Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
@@ -91,7 +95,8 @@ class YustAuthService {
     final lastName = _getLastName(nameParts);
     final firstName = _getFirstName(nameParts);
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       lastName: lastName,
       email: _getEmail(userCredential),
@@ -162,7 +167,8 @@ class YustAuthService {
         email, userCredential.user!.uid, YustAuthenticationMethod.mail);
     if (successfullyLinked) return null;
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       email: email,
       lastName: lastName,
@@ -171,33 +177,6 @@ class YustAuthService {
       gender: gender,
       authenticationMethod: YustAuthenticationMethod.mail,
     );
-  }
-
-  // If modified also modify in yust_auth_service_dart.dart
-  Future<YustUser> _createUser({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String id,
-    required String authId,
-    YustAuthenticationMethod? authenticationMethod,
-    String? domain,
-    YustGender? gender,
-  }) async {
-    final user = Yust.userSetup.newDoc()
-      ..email = email
-      ..firstName = firstName
-      ..lastName = lastName
-      ..id = id
-      ..authId = authId
-      ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
-      ..gender = gender
-      ..lastLogin = DateTime.now()
-      ..lastLoginDomain =
-          Uri.base.scheme.contains('http') ? Uri.base.host : null;
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-    return user;
   }
 
   Future<void> signOut() async {

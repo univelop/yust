@@ -21,7 +21,7 @@ class YustAuthServiceShared {
     return true;
   }
 
-  static Future<YustUser> createUser({
+  static Future<YustUser> createYustUser({
     required Yust yust,
     required String firstName,
     required String lastName,

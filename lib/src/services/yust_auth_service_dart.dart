@@ -130,7 +130,8 @@ class YustAuthService {
       if (successfullyLinked) return null;
     }
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       email: email,
       lastName: lastName,
@@ -141,33 +142,6 @@ class YustAuthService {
           ? YustAuthenticationMethod.openId
           : YustAuthenticationMethod.mail,
     );
-  }
-
-  // If modified also modify in yust_auth_service_flutter.dart
-  Future<YustUser> _createUser({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String id,
-    required String authId,
-    YustAuthenticationMethod? authenticationMethod,
-    String? domain,
-    YustGender? gender,
-  }) async {
-    final user = Yust.userSetup.newDoc()
-      ..email = email
-      ..firstName = firstName
-      ..lastName = lastName
-      ..id = id
-      ..authId = authId
-      ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
-      ..gender = gender
-      ..lastLogin = DateTime.now()
-      ..lastLoginDomain =
-          Uri.base.scheme.contains('http') ? Uri.base.host : null;
-    await _yust.dbService.saveDoc<YustUser>(Yust.userSetup, user);
-    return user;
   }
 
   Future<void> deleteAccount([String? password]) async {

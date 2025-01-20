@@ -1,5 +1,4 @@
 import 'package:collection/collection.dart';
-import 'package:googleapis/identitytoolkit/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart';
 
@@ -132,34 +131,22 @@ class Yust {
 
     if (mocked) {
       dbService = YustDatabaseServiceMocked.mocked(
-          onChange: onChange,
-          useSubcollections: useSubcollections,
-          envCollectionName: envCollectionName);
+        yust: this,
+      );
       Yust.authService = YustAuthService.mocked(this);
       Yust.fileService = YustFileServiceMocked();
       return;
     }
 
-    Yust.authClient = forUI
-        ? await GoogleCloudHelpers.initializeFirebase(
-            firebaseOptions: firebaseOptions,
-            pathToServiceAccountJson: pathToServiceAccountJson,
-            emulatorAddress: emulatorAddress,
-            authClient: Yust.authClient,
-          )
-        : await GoogleCloudHelpers.createAuthClient(
-            scopes: [
-              IdentityToolkitApi.cloudPlatformScope,
-              IdentityToolkitApi.firebaseScope,
-            ],
-            pathToServiceAccountJson: pathToServiceAccountJson,
-          );
+    Yust.authClient = await GoogleCloudHelpers.initializeFirebase(
+      firebaseOptions: firebaseOptions,
+      pathToServiceAccountJson: pathToServiceAccountJson,
+      emulatorAddress: emulatorAddress,
+      authClient: Yust.authClient,
+    );
 
     dbService = YustDatabaseService(
-      client: Yust.authClient,
-      databaseLogCallback: dbLogCallback,
-      useSubcollections: useSubcollections,
-      envCollectionName: envCollectionName,
+      yust: this,
       emulatorAddress: emulatorAddress,
     );
 

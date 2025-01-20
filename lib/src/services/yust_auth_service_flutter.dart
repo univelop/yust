@@ -282,4 +282,9 @@ class YustAuthService {
       }
     }
   }
+
+  Future<String?> getJWTToken() async {
+    final jwtObject = await fireAuth.currentUser?.getIdTokenResult();
+    return jwtObject?.token;
+  }
 }

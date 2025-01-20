@@ -94,4 +94,8 @@ class YustAuthService {
   Future<void> deleteAccount([String? password]) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
+
+  Future<String?> getJWTToken() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
 }

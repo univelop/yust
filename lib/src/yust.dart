@@ -131,10 +131,9 @@ class Yust {
 
     if (mocked) {
       dbService = YustDatabaseServiceMocked.mocked(
-          onChange: onChange,
-          useSubcollections: useSubcollections,
-          envCollectionName: envCollectionName);
-      Yust.authService = YustAuthService.mocked();
+        yust: this,
+      );
+      Yust.authService = YustAuthService.mocked(this);
       Yust.fileService = YustFileServiceMocked();
       return;
     }
@@ -147,14 +146,14 @@ class Yust {
     );
 
     dbService = YustDatabaseService(
-      client: Yust.authClient,
-      databaseLogCallback: dbLogCallback,
-      useSubcollections: useSubcollections,
-      envCollectionName: envCollectionName,
+      yust: this,
       emulatorAddress: emulatorAddress,
     );
 
-    Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
+    Yust.authService = YustAuthService(
+      this,
+      emulatorAddress: emulatorAddress,
+    );
     Yust.fileService = YustFileService(
       authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,

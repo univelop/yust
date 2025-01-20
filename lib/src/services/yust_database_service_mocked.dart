@@ -23,9 +23,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   static OnChangeCallback? onChange;
 
   YustDatabaseServiceMocked.mocked({
-    OnChangeCallback? onChange,
-    required super.envCollectionName,
-    required super.useSubcollections,
+    required super.yust,
   }) : super.mocked() {
     dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
             {String? id, List<String>? updateMask, num? aggregationResult}) =>

@@ -8,18 +8,24 @@ import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
+import 'yust_auth_service_shared.dart';
 
 class YustAuthService {
   FirebaseAuth fireAuth;
+  final Yust _yust;
 
-  YustAuthService({String? emulatorAddress})
-      : fireAuth = FirebaseAuth.instance {
+  YustAuthService(Yust yust,
+      {String? emulatorAddress, String? pathToServiceAccountJson})
+      : fireAuth = FirebaseAuth.instance,
+        _yust = yust {
     if (emulatorAddress != null) {
       fireAuth.useAuthEmulator(emulatorAddress, 9099);
     }
   }
 
-  YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
+  YustAuthService.mocked(Yust yust)
+      : fireAuth = MockFirebaseAuth(),
+        _yust = yust;
 
   Stream<AuthState> getAuthStateStream() {
     return fireAuth.authStateChanges().map<AuthState>((user) {
@@ -83,14 +89,17 @@ class YustAuthService {
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
-    final successfullyLinked = await _tryLinkYustUser(userCredential, method);
+
+    final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+        _getEmail(userCredential), _getId(userCredential), method);
     if (successfullyLinked) return null;
 
     final nameParts = _extractNameParts(userCredential);
     final lastName = _getLastName(nameParts);
     final firstName = _getFirstName(nameParts);
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       lastName: lastName,
       email: _getEmail(userCredential),
@@ -144,43 +153,25 @@ class YustAuthService {
             value: userCredential.user!.uid)
       ]));
 
-  Future<bool> _tryLinkYustUser(
-    UserCredential userCredential,
-    YustAuthenticationMethod? method,
-  ) async {
-    if (userCredential.user?.email == null ||
-        userCredential.user?.email == '') {
-      return false;
-    }
-    final user = await Yust.databaseService.getFirst<YustUser>(
-      Yust.userSetup,
-      filters: [
-        YustFilter(
-          field: 'email',
-          comparator: YustFilterComparator.equal,
-          value: userCredential.user!.email,
-        ),
-      ],
-    );
-    if (user == null) return false;
-    await user.linkAuth(userCredential.user!.uid, method);
-    return true;
-  }
-
-  Future<YustUser?> signUp(
+  Future<YustUser?> createAccount(
     String firstName,
     String lastName,
     String email,
     String password, {
     YustGender? gender,
+    bool useOAuth = false,
   }) async {
+    if (useOAuth == true) {
+      throw YustException('OAuth not supported for createAccount.');
+    }
     final userCredential = await fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final successfullyLinked =
-        await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
+    final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+        email, userCredential.user!.uid, YustAuthenticationMethod.mail);
     if (successfullyLinked) return null;
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       email: email,
       lastName: lastName,
@@ -189,32 +180,6 @@ class YustAuthService {
       gender: gender,
       authenticationMethod: YustAuthenticationMethod.mail,
     );
-  }
-
-  Future<YustUser> _createUser({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String id,
-    required String authId,
-    YustAuthenticationMethod? authenticationMethod,
-    String? domain,
-    YustGender? gender,
-  }) async {
-    final user = Yust.userSetup.newDoc()
-      ..email = email
-      ..firstName = firstName
-      ..lastName = lastName
-      ..id = id
-      ..authId = authId
-      ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
-      ..gender = gender
-      ..lastLogin = DateTime.now()
-      ..lastLoginDomain =
-          Uri.base.scheme.contains('http') ? Uri.base.host : null;
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-    return user;
   }
 
   Future<void> signOut() async {

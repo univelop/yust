@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:googleapis/firestore/v1.dart';
+import 'package:googleapis/identitytoolkit/v1.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
 // ignore: implementation_imports
@@ -35,6 +36,8 @@ class GoogleCloudHelpers {
     final scopes = [
       FirestoreApi.datastoreScope,
       StorageApi.devstorageFullControlScope,
+      IdentityToolkitApi.cloudPlatformScope,
+      IdentityToolkitApi.firebaseScope,
     ];
 
     authClient = await createAuthClient(
@@ -93,7 +96,7 @@ class GoogleCloudHelpers {
 
   /// Converts a timestamp to a DateTime.
   ///
-  /// If the value is not a timestamp the origianal value is returned.
+  /// If the value is not a timestamp the original value is returned.
   static dynamic convertTimestamp(dynamic value) {
     return value;
   }

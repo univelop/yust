@@ -31,6 +31,8 @@ class YustDatabaseService {
   DatabaseLogCallback? dbLogCallback;
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
+  final Yust _yust;
+
   /// Represents the collection name for the tenants.
   final String envCollectionName;
 
@@ -49,12 +51,12 @@ class YustDatabaseService {
   DateTime? readTime;
 
   YustDatabaseService({
-    DatabaseLogCallback? databaseLogCallback,
-    Client? client,
-    required this.envCollectionName,
-    required this.useSubcollections,
+    required Yust yust,
     String? emulatorAddress,
-  })  : authClient = client!,
+  })  : _yust = yust,
+        authClient = Yust.authClient!,
+        envCollectionName = yust.envCollectionName,
+        useSubcollections = yust.useSubcollections,
         rootUrl = emulatorAddress != null
             ? 'http://$emulatorAddress:8080/'
             : firestoreApiUrl {
@@ -67,16 +69,17 @@ class YustDatabaseService {
         {String? id, List<String>? updateMask, num? aggregationResult}) {
       statistics.dbStatisticsCallback(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
-      databaseLogCallback?.call(action, documentPath, count,
+      _yust.dbLogCallback?.call(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
     };
   }
 
   YustDatabaseService.mocked({
-    required this.envCollectionName,
-    required this.useSubcollections,
-    this.dbLogCallback,
-  })  : rootUrl = '',
+    required Yust yust,
+  })  : _yust = yust,
+        envCollectionName = yust.envCollectionName,
+        useSubcollections = yust.useSubcollections,
+        rootUrl = '',
         authClient = Client();
 
   /// Initializes a document with an id and the time it was created.

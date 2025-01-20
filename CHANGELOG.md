@@ -1,3 +1,7 @@
+## 3.26.2 - 2024-01-20
+
+-   Fix for AuthService login with Apple
+
 ## 3.26.1 - 2024-01-13
 
 -   Improve YustFile

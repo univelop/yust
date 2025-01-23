@@ -67,7 +67,10 @@ class YustAuthService {
   }
 
   Future<YustUser?> signInWithApple() async {
-    final appleProvider = AppleAuthProvider();
+    final appleProvider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+    
     return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
   }
 
@@ -243,5 +246,10 @@ class YustAuthService {
         rethrow;
       }
     }
+  }
+
+  Future<String?> getJWTToken() async {
+    final jwtObject = await fireAuth.currentUser?.getIdTokenResult();
+    return jwtObject?.token;
   }
 }

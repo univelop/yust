@@ -1,3 +1,11 @@
+## 3.26.3 - 2024-01-21
+
+-   Getting ready for flutter version upgrade
+
+## 3.26.2 - 2024-01-20
+
+-   Fix for AuthService login with Apple
+
 ## 3.26.1 - 2024-01-13
 
 -   Improve YustFile

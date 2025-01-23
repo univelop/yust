@@ -9,6 +9,7 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../util/yust_retry_helper.dart';
+import 'yust_file_service_shared.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
@@ -191,6 +192,19 @@ class YustFileService {
       return _createDownloadUrl(path, name, token);
     }
     throw Exception('Unknown response Object');
+  }
+
+  Future<YustFileMetadata> getMetadata(
+      {required String path, required String name}) async {
+    final Object object = await _retryOnException<dynamic>(
+        'Get-Storage-Obj-For-File-Url',
+        '$path/$name',
+        () => _storageApi.objects.get(bucketName, '$path/$name'));
+
+    return YustFileMetadata(
+      size: int.parse(object.size ?? '0'),
+      token: object.metadata?['firebaseStorageDownloadTokens'] ?? '',
+    );
   }
 
   String _createDownloadUrl(String path, String name, String token) {

@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as cf;
 import 'package:collection/collection.dart';
-import 'package:http/http.dart';
 
 import '../extensions/server_now.dart';
 import '../extensions/string_extension.dart';
@@ -27,18 +26,21 @@ class YustDatabaseService {
 
   DateTime? readTime;
 
+  // ignore: unused_field
+  final Yust _yust;
+
   YustDatabaseService({
-    DatabaseLogCallback? databaseLogCallback,
-    Client? client,
-    required this.envCollectionName,
-    required this.useSubcollections,
+    required Yust yust,
     String? emulatorAddress,
-  }) : _fireStore = FirebaseFirestore.instance {
+  })  : _yust = yust,
+        envCollectionName = yust.envCollectionName,
+        useSubcollections = yust.useSubcollections,
+        _fireStore = FirebaseFirestore.instance {
     dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
         {String? id, List<String>? updateMask, num? aggregationResult}) {
       statistics.dbStatisticsCallback(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
-      databaseLogCallback?.call(action, documentPath, count,
+      yust.dbLogCallback?.call(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
     };
   }
@@ -50,10 +52,12 @@ class YustDatabaseService {
   final bool useSubcollections;
 
   YustDatabaseService.mocked({
-    this.dbLogCallback,
-    required this.envCollectionName,
-    required this.useSubcollections,
-  }) {
+    required Yust yust,
+    String? emulatorAddress,
+  })  : _yust = yust,
+        envCollectionName = yust.envCollectionName,
+        useSubcollections = yust.useSubcollections,
+        dbLogCallback = yust.dbLogCallback {
     throw UnsupportedError('Not supported in Flutter Environment');
   }
 

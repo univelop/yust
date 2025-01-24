@@ -79,6 +79,7 @@ class YustDatabaseService {
   })  : _yust = yust,
         envCollectionName = yust.envCollectionName,
         useSubcollections = yust.useSubcollections,
+        dbLogCallback = yust.dbLogCallback,
         rootUrl = '',
         authClient = Client();
 

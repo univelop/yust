@@ -23,10 +23,6 @@ class YustAuthService {
                 servicePath: 'identitytoolkit.googleapis.com/')
             : IdentityToolkitApi(Yust.authClient!);
 
-  YustAuthService.mocked(Yust yust)
-      : _yust = yust,
-        _api = IdentityToolkitApi(Yust.authClient!);
-
   /// Returns the current [AuthState] in a Stream.
   Stream<AuthState> getAuthStateStream() {
     throw UnsupportedError('Not supported. No UI available.');

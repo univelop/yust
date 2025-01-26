@@ -52,12 +52,20 @@ class GoogleCloudHelpers {
   ///
   /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
   static Future<AuthClient> createAuthClient(
-      {required List<String> scopes, String? pathToServiceAccountJson}) async {
-    if (pathToServiceAccountJson == null) {
+      {required List<String> scopes,
+      String? pathToServiceAccountJson,
+      String? serviceAccountJsonRaw}) async {
+    assert(!(pathToServiceAccountJson != null && serviceAccountJsonRaw != null),
+        'Only one of pathToServiceAccountJson or serviceAccountJson can be provided.');
+
+    if (pathToServiceAccountJson == null && serviceAccountJsonRaw == null) {
       return await clientViaApplicationDefaultCredentials(scopes: scopes);
     } else {
-      final serviceAccountJson =
-          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+      final serviceAccountJson = pathToServiceAccountJson != null
+          ? jsonDecode(await File(pathToServiceAccountJson).readAsString())
+          : serviceAccountJsonRaw != null
+              ? jsonDecode(serviceAccountJsonRaw)
+              : null;
 
       final accountCredentials =
           ServiceAccountCredentials.fromJson(serviceAccountJson);

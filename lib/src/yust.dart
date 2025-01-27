@@ -131,7 +131,6 @@ class Yust {
     Yust.userSetup = userSetup ?? YustUser.setup();
 
     if (mocked) {
-      Yust.authClient = Client();
       dbService = YustDatabaseServiceMocked.mocked(yust: this);
       Yust.authService = YustAuthServiceMocked(this);
       Yust.fileService = YustFileServiceMocked();

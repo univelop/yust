@@ -13,7 +13,7 @@ import 'yust_file_service_shared.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
-/// Handels Filestorage requests for Google Cloud Storage.
+/// Handles Filestorage requests for Google Cloud Storage.
 ///
 /// Uses the GoogleApi for Flutter Platforms (Android, iOS, Web)
 /// and GoogleAPIs for **Dart-only environments**.

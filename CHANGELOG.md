@@ -1,3 +1,7 @@
+## 3.26.5 - 2024-01-31
+
+-   Fixes for AuthService Mocked
+
 ## 3.26.4 - 2024-01-31
 
 -   Improved AuthService & AuthService Mocked

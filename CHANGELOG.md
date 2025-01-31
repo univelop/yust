@@ -1,3 +1,7 @@
+## 3.26.4 - 2024-01-31
+
+-   Improved AuthService & AuthService Mocked
+
 ## 3.26.3 - 2024-01-21
 
 -   Getting ready for flutter version upgrade

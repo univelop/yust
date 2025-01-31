@@ -5,6 +5,7 @@ import 'package:http/http.dart';
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
 import 'services/yust_auth_service.dart';
+import 'services/yust_auth_service_mocked.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
@@ -130,11 +131,8 @@ class Yust {
     Yust.userSetup = userSetup ?? YustUser.setup();
 
     if (mocked) {
-      dbService = YustDatabaseServiceMocked.mocked(
-          onChange: onChange,
-          useSubcollections: useSubcollections,
-          envCollectionName: envCollectionName);
-      Yust.authService = YustAuthService.mocked();
+      dbService = YustDatabaseServiceMocked.mocked(yust: this);
+      Yust.authService = YustAuthServiceMocked(this);
       Yust.fileService = YustFileServiceMocked();
       return;
     }
@@ -147,14 +145,14 @@ class Yust {
     );
 
     dbService = YustDatabaseService(
-      client: Yust.authClient,
-      databaseLogCallback: dbLogCallback,
-      useSubcollections: useSubcollections,
-      envCollectionName: envCollectionName,
+      yust: this,
       emulatorAddress: emulatorAddress,
     );
 
-    Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
+    Yust.authService = YustAuthService(
+      this,
+      emulatorAddress: emulatorAddress,
+    );
     Yust.fileService = YustFileService(
       authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,

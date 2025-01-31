@@ -1,13 +1,27 @@
 import 'dart:async';
 
+import 'package:googleapis/identitytoolkit/v1.dart';
+import 'package:uuid/uuid.dart';
+
 import '../models/yust_user.dart';
+import '../util/yust_exception.dart';
 import '../yust.dart';
+import 'yust_auth_service_shared.dart';
 
 /// Handles auth request for Firebase Auth.
 class YustAuthService {
-  YustAuthService({String? emulatorAddress});
+  final IdentityToolkitApi _api;
+  final Yust _yust;
 
-  YustAuthService.mocked();
+  YustAuthService(
+    Yust yust, {
+    String? emulatorAddress,
+  })  : _yust = yust,
+        _api = emulatorAddress != null
+            ? IdentityToolkitApi(Yust.authClient!,
+                rootUrl: 'http://$emulatorAddress:9099/',
+                servicePath: 'identitytoolkit.googleapis.com/')
+            : IdentityToolkitApi(Yust.authClient!);
 
   /// Returns the current [AuthState] in a Stream.
   Stream<AuthState> getAuthStateStream() {
@@ -54,17 +68,6 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
-  /// Sign up a new user. Returns the new user.
-  Future<YustUser?> signUp(
-    String firstName,
-    String lastName,
-    String email,
-    String password, {
-    YustGender? gender,
-  }) async {
-    throw UnsupportedError('Not supported. No UI available.');
-  }
-
   /// Sign out the current user.
   Future<void> signOut() async {
     throw UnsupportedError('Not supported. No UI available.');
@@ -89,6 +92,52 @@ class YustAuthService {
   /// Throws an error if the password is invalid or the user does not exist / has no email.
   Future<void> checkPassword(String password) async {
     throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  Future<YustUser?> createAccount(
+    String firstName,
+    String lastName,
+    String email,
+    String password, {
+    YustGender? gender,
+    bool useOAuth = false,
+  }) async {
+    GoogleCloudIdentitytoolkitV1SignUpResponse? response;
+    final uuid = Uuid().v4();
+
+    if (useOAuth == true) {
+      final newUserRequest = GoogleCloudIdentitytoolkitV1SignUpRequest(
+        localId: uuid,
+        displayName:
+            // ignore: avoid_dynamic_calls
+            ('$firstName $lastName').trim(),
+        email: email,
+        emailVerified: true,
+        password: password,
+      );
+      response = await _api.accounts.signUp(newUserRequest);
+
+      if (response.localId == null) {
+        throw YustException('Error creating user: ${response.toJson()}');
+      }
+
+      final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+          email, response.localId ?? uuid, YustAuthenticationMethod.mail);
+      if (successfullyLinked) return null;
+    }
+
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
+      firstName: firstName,
+      email: email,
+      lastName: lastName,
+      id: response?.localId ?? uuid,
+      authId: response?.localId ?? uuid,
+      gender: gender,
+      authenticationMethod: useOAuth == true
+          ? YustAuthenticationMethod.openId
+          : YustAuthenticationMethod.mail,
+    );
   }
 
   Future<void> deleteAccount([String? password]) async {

@@ -6,13 +6,14 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import 'yust_file_service.dart';
+import 'yust_file_service_shared.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
 /// Mocked Filestorage service.
 class YustFileServiceMocked extends YustFileService {
   // In-memory storage for the files.
-  final Map<String, Map<String, MockedFile>> _storage = {};
+  static final Map<String, Map<String, MockedFile>> _storage = {};
 
   YustFileServiceMocked() : super.mocked();
 
@@ -100,6 +101,17 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     return _createDownloadUrl(path, name, token);
+  }
+
+  @override
+  Future<YustFileMetadata> getMetadata(
+      {required String path, required String name}) async {
+    final object = _storage[path]?[name];
+
+    return YustFileMetadata(
+      size: object?.data.length ?? 0,
+      token: object?.metadata['firebaseStorageDownloadTokens'] ?? '',
+    );
   }
 
   String _createDownloadUrl(String path, String name, String token) {

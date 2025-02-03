@@ -1,3 +1,7 @@
+## 3.26.6 - 2024-02-03
+
+-   Improvements for YustFileService
+
 ## 3.26.5 - 2024-01-31
 
 -   Fixes for AuthService Mocked

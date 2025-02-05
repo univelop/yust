@@ -6,8 +6,23 @@ part 'yust_image.g.dart';
 
 @JsonSerializable()
 class YustImage extends YustFile {
-  YustImage({super.name, super.url, this.geoLocation, String? hash})
-      : super(hash: hash ?? '');
+  YustImage({
+    super.key,
+    super.name,
+    super.modifiedAt,
+    super.url,
+    super.hash,
+    super.file,
+    super.bytes,
+    super.devicePath,
+    super.storageFolderPath,
+    super.linkedDocPath,
+    super.linkedDocAttribute,
+    super.processing = false,
+    super.lastError,
+    this.geoLocation,
+  });
+
   factory YustImage.fromJson(Map<String, dynamic> json) =>
       _$YustImageFromJson(json);
 

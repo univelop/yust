@@ -105,9 +105,8 @@ class YustAuthService {
     GoogleCloudIdentitytoolkitV1SignUpResponse? response;
     final uuid = Uuid().v4();
 
-    if (useOAuth == true) {
+    if (useOAuth != true) {
       final newUserRequest = GoogleCloudIdentitytoolkitV1SignUpRequest(
-        localId: uuid,
         displayName:
             // ignore: avoid_dynamic_calls
             ('$firstName $lastName').trim(),
@@ -122,7 +121,11 @@ class YustAuthService {
       }
 
       final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
-          email, response.localId ?? uuid, YustAuthenticationMethod.mail);
+        _yust,
+        email,
+        response.localId ?? uuid,
+        YustAuthenticationMethod.mail,
+      );
       if (successfullyLinked) return null;
     }
 

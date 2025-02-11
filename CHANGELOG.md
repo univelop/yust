@@ -1,3 +1,7 @@
+## 3.26.7 - 2024-02-11
+
+-   Improvements for YustAuthService
+
 ## 3.26.6 - 2024-02-03
 
 -   Improvements for YustFileService

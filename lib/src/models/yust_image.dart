@@ -20,13 +20,13 @@ class YustImage extends YustFile {
     super.linkedDocAttribute,
     super.processing = false,
     super.lastError,
-    this.geoLocation,
+    this.location,
   });
 
   factory YustImage.fromJson(Map<String, dynamic> json) =>
       _$YustImageFromJson(json);
 
-  YustGeoLocation? geoLocation;
+  YustGeoLocation? location;
 
   @override
   Map<String, String?> toJson() =>

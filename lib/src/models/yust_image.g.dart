@@ -13,7 +13,7 @@ YustImage _$YustImageFromJson(Map json) => YustImage(
           : DateTime.parse(json['modifiedAt'] as String),
       url: json['url'] as String?,
       hash: json['hash'] as String? ?? '',
-      geoLocation: json['geoLocation'] == null
+      location: json['location'] == null
           ? null
           : YustGeoLocation.fromJson(
               Map<String, dynamic>.from(json['geoLocation'] as Map)),
@@ -24,5 +24,5 @@ Map<String, dynamic> _$YustImageToJson(YustImage instance) => <String, dynamic>{
       'modifiedAt': instance.modifiedAt?.toIso8601String(),
       'url': instance.url,
       'hash': instance.hash,
-      'geoLocation': instance.geoLocation?.toJson(),
+      'geoLocation': instance.location?.toJson(),
     };

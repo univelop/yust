@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 import '../yust.dart';
 import 'yust_doc.dart';
 import 'yust_doc_setup.dart';
-import 'yust_file.dart';
+import 'yust_image.dart';
 
 part 'yust_user.g.dart';
 
@@ -59,7 +59,7 @@ class YustUser extends YustDoc {
   String? authId;
 
   /// Profile picture.
-  YustFile? profilePicture;
+  YustImage? profilePicture;
 
   /// Locale
   String locale;
@@ -115,20 +115,18 @@ class YustUser extends YustDoc {
 
   /// This method returns the value of the attribute with the given key.
   T getAttribute<T>(String key, T defaultValue) {
-    if(userAttributes[key] == null) return defaultValue;
-    if(T == DateTime){
+    if (userAttributes[key] == null) return defaultValue;
+    if (T == DateTime) {
       return DateTime.parse(userAttributes[key] as String) as T;
     }
     return userAttributes[key];
-    }
+  }
 
   /// This method returns the value of the attribute with the given key or null if the attribute does not exist.
   T? getAttributeOrNull<T>(String key) => userAttributes[key];
 
   /// This method sets the value of the attribute with the given key.
-  void setAttribute(String key, dynamic value) =>
-    userAttributes[key] = value;
-  
+  void setAttribute(String key, dynamic value) => userAttributes[key] = value;
 }
 
 enum YustGender {

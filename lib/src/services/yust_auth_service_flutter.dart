@@ -30,7 +30,16 @@ class YustAuthService {
     return _fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
         Yust.databaseService
-            .getFromDB<YustUser>(Yust.userSetup, user.uid)
+            .getFirstFromDB<YustUser>(
+              Yust.userSetup,
+              filters: [
+                YustFilter(
+                  comparator: YustFilterComparator.equal,
+                  field: 'authId',
+                  value: user.uid,
+                ),
+              ],
+            )
             .then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;

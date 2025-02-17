@@ -30,7 +30,16 @@ class YustAuthService {
     return _fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
         Yust.databaseService
-            .getFromDB<YustUser>(Yust.userSetup, user.uid)
+            .getFirstFromDB<YustUser>(
+              Yust.userSetup,
+              filters: [
+                YustFilter(
+                  comparator: YustFilterComparator.equal,
+                  field: 'authId',
+                  value: user.uid,
+                ),
+              ],
+            )
             .then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
@@ -90,7 +99,11 @@ class YustAuthService {
     if (_yustUserWasLinked(connectedYustUser)) return null;
 
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
-        _getEmail(userCredential), _getId(userCredential), method);
+      _yust,
+      _getEmail(userCredential),
+      _getId(userCredential),
+      method,
+    );
     if (successfullyLinked) return null;
 
     final nameParts = _extractNameParts(userCredential);
@@ -166,7 +179,11 @@ class YustAuthService {
     final userCredential = await _fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
-        email, userCredential.user!.uid, YustAuthenticationMethod.mail);
+      _yust,
+      email,
+      userCredential.user!.uid,
+      YustAuthenticationMethod.mail,
+    );
     if (successfullyLinked) return null;
 
     return await YustAuthServiceShared.createYustUser(

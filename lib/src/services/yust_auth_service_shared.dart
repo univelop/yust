@@ -2,11 +2,12 @@ import '../../yust.dart';
 
 class YustAuthServiceShared {
   static Future<bool> tryLinkYustUser(
+    Yust yust,
     String email,
     String authUserId,
     YustAuthenticationMethod? method,
   ) async {
-    final user = await Yust.databaseService.getFirst<YustUser>(
+    final user = await yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
         YustFilter(

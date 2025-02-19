@@ -26,27 +26,48 @@ class YustImage extends YustFile {
     this.location,
   });
 
-  factory YustImage.fromYustFile(YustFile file) => YustImage(
-        key: file.key,
-        name: file.name,
-        modifiedAt: file.modifiedAt,
-        url: file.url,
-        hash: file.hash,
-        file: file.file,
-        bytes: file.bytes,
-        devicePath: file.devicePath,
-        storageFolderPath: file.storageFolderPath,
-        linkedDocPath: file.linkedDocPath,
-        linkedDocAttribute: file.linkedDocAttribute,
-        processing: file.processing,
-        lastError: file.lastError,
-      );
+  factory YustImage.fromYustFile(YustFile file) => file is YustImage
+      ? file
+      : YustImage(
+          key: file.key,
+          name: file.name,
+          modifiedAt: file.modifiedAt,
+          url: file.url,
+          hash: file.hash,
+          file: file.file,
+          bytes: file.bytes,
+          devicePath: file.devicePath,
+          storageFolderPath: file.storageFolderPath,
+          linkedDocPath: file.linkedDocPath,
+          linkedDocAttribute: file.linkedDocAttribute,
+          processing: file.processing,
+          lastError: file.lastError,
+        );
 
+  /// Create a list of images from a list of files
   static List<YustImage> fromYustFiles(List<YustFile> files) =>
       files.map((file) => YustImage.fromYustFile(file)).toList();
 
   factory YustImage.fromJson(Map<String, dynamic> json) =>
       _$YustImageFromJson(json);
+
+  /// Converts JSON from device to a file. Only relevant attributes are included.
+  factory YustImage.fromLocalJson(Map<String, dynamic> json) {
+    return YustImage.fromYustFile(YustFile.fromLocalJson(json))
+      ..location = json['location'] != null
+          ? YustGeoLocation.fromJson(
+              Map<String, dynamic>.from(json['location']))
+          : null;
+  }
+
+  /// Converts the file to JSON for local device. Only relevant attributes are converted.
+  @override
+  Map<String, String?> toLocalJson() {
+    return super.toLocalJson()
+      ..addAll({
+        'location': location?.toJson().toString(),
+      });
+  }
 
   YustGeoLocation? location;
 

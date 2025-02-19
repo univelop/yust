@@ -23,8 +23,11 @@ class YustImage extends YustFile {
     super.linkedDocAttribute,
     super.processing = false,
     super.lastError,
+    super.createdAt,
     this.location,
   });
+
+  YustGeoLocation? location;
 
   factory YustImage.fromYustFile(YustFile file) => file is YustImage
       ? file
@@ -42,6 +45,7 @@ class YustImage extends YustFile {
           linkedDocAttribute: file.linkedDocAttribute,
           processing: file.processing,
           lastError: file.lastError,
+          createdAt: file.createdAt,
         );
 
   /// Create a list of images from a list of files
@@ -69,7 +73,15 @@ class YustImage extends YustFile {
       });
   }
 
-  YustGeoLocation? location;
+  @override
+  dynamic operator [](String key) {
+    switch (key) {
+      case 'location':
+        return location;
+      default:
+        super[key];
+    }
+  }
 
   @override
   Map<String, String?> toJson() =>

@@ -26,6 +26,11 @@ class YustFile {
   String? url;
   String hash;
 
+  /// Date and time when the file was created in univelop.
+  ///
+  /// On mobile devices, this can also be the time the file was uploaded into device cache.
+  DateTime? createdAt;
+
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
   File? file;
@@ -79,6 +84,7 @@ class YustFile {
     this.linkedDocAttribute,
     this.processing = false,
     this.lastError,
+    this.createdAt,
   });
 
   /// Converts the file to JSON for Firebase. Only relevant attributes are converted.
@@ -92,6 +98,7 @@ class YustFile {
     url = file.url;
     name = file.name;
     hash = file.hash;
+    createdAt = file.createdAt;
   }
 
   /// Converts the file to JSON for local device. Only relevant attributes are converted.
@@ -105,6 +112,9 @@ class YustFile {
       lastError: json['lastError'] as String?,
       modifiedAt: json['modifiedAt'] != null
           ? DateTime.parse(json['modifiedAt'] as String)
+          : null,
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
           : null,
     );
   }
@@ -131,6 +141,7 @@ class YustFile {
       'devicePath': devicePath,
       'lastError': lastError,
       'modifiedAt': modifiedAt?.toIso8601String(),
+      'createdAt': createdAt?.toIso8601String(),
     };
   }
 
@@ -142,6 +153,8 @@ class YustFile {
         return hash;
       case 'url':
         return url;
+      case 'createdAt':
+        return createdAt;
       default:
         throw ArgumentError();
     }

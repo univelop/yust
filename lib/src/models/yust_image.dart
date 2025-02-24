@@ -4,9 +4,6 @@ import 'yust_geo_location.dart';
 
 part 'yust_image.g.dart';
 
-typedef YustImageJson = Map<String, dynamic>;
-typedef YustImagesJson = List<YustFileJson>;
-
 @JsonSerializable()
 class YustImage extends YustFile {
   YustImage({
@@ -87,36 +84,4 @@ class YustImage extends YustFile {
   @override
   Map<String, String?> toJson() =>
       Map<String, String?>.from(_$YustImageToJson(this));
-}
-
-/// Helper class to convert images to and from JSON
-class YustImageHelper {
-  YustImageHelper._();
-
-  static YustImage? imageFromJson(dynamic image) {
-    if (image is Map) {
-      // Ensure it's a Map<String, Dynamic>
-      if (image.keys.every((k) => k is String)) {
-        return YustImage.fromJson(Map<String, dynamic>.from(image));
-      }
-    }
-    return null;
-  }
-
-  static List<YustImage> imagesFromJson(dynamic value) {
-    final files = <YustImage>[];
-    if (value == null) return [];
-    if (value is List) {
-      for (final file in value) {
-        final yustFile = imageFromJson(file);
-        if (yustFile != null) files.add(yustFile);
-      }
-    }
-    return files;
-  }
-
-  static List<YustImageJson> imagesToJson(List<YustImage>? images) {
-    if (images == null) return [];
-    return images.map((image) => image.toJson()).toList();
-  }
 }

@@ -142,6 +142,7 @@ class YustFile {
       'lastError': lastError,
       'modifiedAt': modifiedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
+      'type': 'YustFile',
     };
   }
 

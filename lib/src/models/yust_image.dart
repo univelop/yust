@@ -70,6 +70,7 @@ class YustImage extends YustFile {
     return super.toLocalJson()
       ..addAll({
         'location': location?.toJson().toString(),
+        'type': 'YustImage',
       });
   }
 

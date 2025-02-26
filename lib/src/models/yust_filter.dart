@@ -26,6 +26,16 @@ enum YustFilterComparator {
   const YustFilterComparator(this.firestoreOperatorName);
   static List<YustFilterComparator> get equalityFilters =>
       const [equal, arrayContains, arrayContainsAny, inList, isNull];
+
+  static List<YustFilterComparator> get arrayContainsOneOrAny => const [
+        arrayContains,
+        arrayContainsAny,
+      ];
+
+  bool get isEqualityFilter => equalityFilters.contains(this);
+
+  bool get isArrayContainsOneOrAny =>
+      [arrayContains, arrayContainsAny].contains(this);
 }
 
 /// The Filter class represents a document filter

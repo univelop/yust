@@ -1,3 +1,11 @@
+## 3.26.10 - 2024-02-24
+
+-   Fixes for YustDatabaseServiceMocked
+
+## 3.26.9 - 2024-02-21
+
+-   Improved YustFilterComparator
+
 ## 3.26.8 - 2024-02-11
 
 -   Fix for getAuthStateStream

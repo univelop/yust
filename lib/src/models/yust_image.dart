@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 import 'yust_file.dart';
 import 'yust_geo_location.dart';
@@ -57,7 +59,7 @@ class YustImage extends YustFile {
     return YustImage.fromYustFile(YustFile.fromLocalJson(json))
       ..location = json['location'] != null
           ? YustGeoLocation.fromJson(
-              Map<String, dynamic>.from(json['location']))
+              Map<String, dynamic>.from(jsonDecode(json['location'])))
           : null;
   }
 
@@ -66,7 +68,7 @@ class YustImage extends YustFile {
   Map<String, String?> toLocalJson() {
     return super.toLocalJson()
       ..addAll({
-        'location': location?.toJson().toString(),
+        'location': jsonEncode(location?.toJson()),
         'type': 'YustImage',
       });
   }

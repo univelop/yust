@@ -84,6 +84,6 @@ class YustImage extends YustFile {
   }
 
   @override
-  Map<String, String?> toJson() =>
-      Map<String, String?>.from(_$YustImageToJson(this));
+  Map<String, dynamic> toJson() =>
+      Map<String, dynamic>.from(_$YustImageToJson(this));
 }

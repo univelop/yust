@@ -68,7 +68,7 @@ class YustImage extends YustFile {
   Map<String, String?> toLocalJson() {
     return super.toLocalJson()
       ..addAll({
-        'location': jsonEncode(location?.toJson()),
+        'location': location != null ? jsonEncode(location?.toJson()) : null,
         'type': 'YustImage',
       });
   }

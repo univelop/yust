@@ -65,6 +65,11 @@ class YustImage extends YustFile {
           : null;
   }
 
+  /// Type identifier for this class
+  ///
+  /// Used for local caching on mobile devices
+  static String type = 'YustImage';
+
   /// Converts the file to JSON for local device. Only relevant attributes are converted.
   ///
   /// This is used for offline file handling only (Caching on mobile devices)
@@ -73,7 +78,7 @@ class YustImage extends YustFile {
     return super.toLocalJson()
       ..addAll({
         'location': location != null ? jsonEncode(location?.toJson()) : null,
-        'type': 'YustImage',
+        'type': type,
       });
   }
 

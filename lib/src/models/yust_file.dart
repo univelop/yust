@@ -91,6 +91,11 @@ class YustFile {
   factory YustFile.fromJson(Map<String, dynamic> json) =>
       _$YustFileFromJson(json);
 
+  /// Type identifier for this class
+  ///
+  /// Used for local caching on mobile devices
+  static String type = 'YustFile';
+
   /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
@@ -146,7 +151,7 @@ class YustFile {
       'lastError': lastError,
       'modifiedAt': modifiedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
-      'type': 'YustFile',
+      'type': type,
     };
   }
 

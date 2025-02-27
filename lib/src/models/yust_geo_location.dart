@@ -10,7 +10,7 @@ class YustGeoLocation {
     this.latitude,
     this.longitude,
     this.accuracy,
-    this.address = const YustAddress(),
+    this.address,
   });
   factory YustGeoLocation.withValueByKey(
     YustGeoLocation location,

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class YustLocationHelper {
   String _formatCoordinateToDMS(double decimalDegree, String degreeSymbol) {
     int degrees = decimalDegree.truncate();
@@ -29,4 +31,8 @@ class YustLocationHelper {
 
     return '$longitudeDMS $longitudeDirection';
   }
+
+  /// Formats the given coordinate to a string in decimal format
+  String formatDecimalCoordinate(double coordinate) =>
+      NumberFormat('0.######', 'en_US').format(coordinate);
 }

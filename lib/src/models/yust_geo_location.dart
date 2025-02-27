@@ -28,23 +28,23 @@ class YustGeoLocation {
         return location.copyWithAddress(value);
       case 'address_street':
         return location.copyWithAddress(
-          location.address.copyWithStreet(value),
+          (location.address ?? YustAddress()).copyWithStreet(value),
         );
       case 'address_number':
         return location.copyWithAddress(
-          location.address.copyWithNumber(value),
+          (location.address ?? YustAddress()).copyWithNumber(value),
         );
       case 'address_city':
         return location.copyWithAddress(
-          location.address.copyWithCity(value),
+          (location.address ?? YustAddress()).copyWithCity(value),
         );
       case 'address_postcode':
         return location.copyWithAddress(
-          location.address.copyWithPostcode(value),
+          (location.address ?? YustAddress()).copyWithPostcode(value),
         );
       case 'address_country':
         return location.copyWithAddress(
-          location.address.copyWithCountry(value),
+          (location.address ?? YustAddress()).copyWithCountry(value),
         );
       default:
         return location;
@@ -87,13 +87,13 @@ class YustGeoLocation {
 
   final double? accuracy;
 
-  final YustAddress address;
+  final YustAddress? address;
 
   bool hasValue() =>
       latitude != null ||
       longitude != null ||
       accuracy != null ||
-      address.hasValue() == true;
+      (address?.hasValue() ?? true) == true;
 
   dynamic operator [](String key) {
     switch (key) {

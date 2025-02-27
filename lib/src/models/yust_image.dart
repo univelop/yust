@@ -55,6 +55,8 @@ class YustImage extends YustFile {
       _$YustImageFromJson(json);
 
   /// Converts JSON from device to a file. Only relevant attributes are included.
+  ///
+  /// This is used for offline file handling only (Caching on mobile devices)
   factory YustImage.fromLocalJson(Map<String, dynamic> json) {
     return YustImage.fromYustFile(YustFile.fromLocalJson(json))
       ..location = json['location'] != null
@@ -64,6 +66,8 @@ class YustImage extends YustFile {
   }
 
   /// Converts the file to JSON for local device. Only relevant attributes are converted.
+  ///
+  /// This is used for offline file handling only (Caching on mobile devices)
   @override
   Map<String, String?> toLocalJson() {
     return super.toLocalJson()

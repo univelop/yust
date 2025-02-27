@@ -11,7 +11,7 @@ YustGeoLocation _$YustGeoLocationFromJson(Map json) => YustGeoLocation(
       longitude: (json['longitude'] as num?)?.toDouble(),
       accuracy: (json['accuracy'] as num?)?.toDouble(),
       address: json['address'] == null
-          ? const YustAddress()
+          ? null
           : YustAddress.fromJson(
               Map<String, dynamic>.from(json['address'] as Map)),
     );
@@ -21,5 +21,5 @@ Map<String, dynamic> _$YustGeoLocationToJson(YustGeoLocation instance) =>
       'latitude': instance.latitude,
       'longitude': instance.longitude,
       'accuracy': instance.accuracy,
-      'address': instance.address.toJson(),
+      'address': instance.address?.toJson(),
     };

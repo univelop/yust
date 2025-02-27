@@ -102,6 +102,8 @@ class YustFile {
   }
 
   /// Converts the file to JSON for local device. Only relevant attributes are converted.
+  ///
+  /// This is used for offline file handling only (Caching on mobile devices)
   factory YustFile.fromLocalJson(Map<String, dynamic> json) {
     return YustFile(
       name: json['name'] as String,
@@ -120,6 +122,8 @@ class YustFile {
   }
 
   /// Converts JSON from device to a file. Only relevant attributes are included.
+  ///
+  /// This is used for offline file handling only (Caching on mobile devices)
   Map<String, String?> toLocalJson() {
     if (name == null) {
       throw ('Error: Each cached file needs a name. Should be unique for each path!');

@@ -11,7 +11,7 @@ typedef YustFilesJson = List<YustFileJson>;
 /// A binary file handled by database and file storage.
 /// A file is stored in Firebase Storage and linked to a document in the database.
 /// For offline caching a file can also be stored on the device.
-@JsonSerializable()
+@JsonSerializable(createFactory: false)
 class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   String? key;
@@ -64,12 +64,18 @@ class YustFile {
   bool processing;
 
   /// True if image can be stored in cache. Each cached file needs a name
+  @JsonKey(includeFromJson: false, includeToJson: false)
   bool get cacheable =>
       linkedDocPath != null && linkedDocAttribute != null && name != null;
 
   /// True if image is cached locally.
+  @JsonKey(includeFromJson: false, includeToJson: false)
   bool get cached => devicePath != null;
 
+  /// Creates a new file.
+  ///
+  /// Set [setCreatedAtToNow] to false, if it should not be set automatically.
+  /// This is used for json deserializing so that old files do not get a new creation date.
   YustFile({
     this.key,
     this.name,
@@ -85,11 +91,29 @@ class YustFile {
     this.processing = false,
     this.lastError,
     this.createdAt,
-  });
+    bool setCreatedAtToNow = true,
+  }) {
+    if (setCreatedAtToNow) {
+      createdAt ??= DateTime.now();
+    }
+  }
 
   /// Converts the file to JSON for Firebase. Only relevant attributes are converted.
-  factory YustFile.fromJson(Map<String, dynamic> json) =>
-      _$YustFileFromJson(json);
+  factory YustFile.fromJson(Map<String, dynamic> json) {
+    // This is implemented as a custom function so that createdAt will not be set for deserialized files.
+    return YustFile(
+      name: json['name'] as String?,
+      modifiedAt: json['modifiedAt'] == null
+          ? null
+          : DateTime.parse(json['modifiedAt'] as String),
+      url: json['url'] as String?,
+      hash: json['hash'] as String? ?? '',
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      setCreatedAtToNow: false,
+    );
+  }
 
   /// Type identifier for this class
   ///

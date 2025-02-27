@@ -147,6 +147,7 @@ class YustFile {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
+      setCreatedAtToNow: false,
     );
   }
 

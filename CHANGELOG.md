@@ -1,3 +1,8 @@
+## 3.27.0 - 2024-03-04
+
+-   Add YustImage Class
+-   Add createdAt for YustFiles
+
 ## 3.26.10 - 2024-02-24
 
 -   Fixes for YustDatabaseServiceMocked

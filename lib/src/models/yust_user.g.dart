@@ -44,7 +44,7 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..domain = json['domain'] as String?
       ..profilePicture = json['profilePicture'] == null
           ? null
-          : YustFile.fromJson(
+          : YustImage.fromJson(
               Map<String, dynamic>.from(json['profilePicture'] as Map))
       ..userAttributes = (json['userAttributes'] as Map?)?.map(
             (k, e) => MapEntry(k as String, e),

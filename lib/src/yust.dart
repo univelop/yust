@@ -10,6 +10,7 @@ import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
+import 'services/yust_push_service.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
 import 'util/yust_location_helper.dart';
@@ -67,6 +68,7 @@ class Yust {
   static YustDatabaseService get databaseService => instance.dbService;
   static Client? authClient;
 
+  static late YustPushService notificationService;
   static late YustAuthService authService;
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
@@ -158,6 +160,7 @@ class Yust {
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );
+    Yust.notificationService = YustPushService();
   }
 
   closeClient() {

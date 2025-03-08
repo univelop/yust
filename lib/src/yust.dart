@@ -68,7 +68,7 @@ class Yust {
   static YustDatabaseService get databaseService => instance.dbService;
   static Client? authClient;
 
-  static late YustPushService notificationService;
+  static late YustPushService pushService;
   static late YustAuthService authService;
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
@@ -160,7 +160,7 @@ class Yust {
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );
-    Yust.notificationService = YustPushService();
+    Yust.pushService = YustPushService();
   }
 
   closeClient() {

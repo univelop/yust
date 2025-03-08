@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../models/yust_user.dart';
 
 /// Handles auth request for Firebase Auth.
@@ -18,7 +20,7 @@ class YustPushService {
     required String title,
     required String body,
     String? image,
-    Future<void> Function(String deviceId)? onErrorForDevice,
+    FutureOr<void> Function(String deviceId, Object error)? onErrorForDevice,
   }) async {
     throw UnimplementedError();
   }

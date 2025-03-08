@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:googleapis/fcm/v1.dart';
 import 'package:http/http.dart';
 
@@ -39,7 +41,7 @@ class YustPushService {
     required String title,
     required String body,
     String? image,
-    Future<void> Function(String deviceId)? onErrorForDevice,
+    FutureOr<void> Function(String deviceId, Object error)? onErrorForDevice,
   }) async {
     for (final deviceId in user.deviceIds!) {
       try {
@@ -50,7 +52,7 @@ class YustPushService {
           image: image,
         );
       } catch (e) {
-        await onErrorForDevice?.call(deviceId);
+        await onErrorForDevice?.call(deviceId, e);
       }
     }
   }

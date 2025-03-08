@@ -41,7 +41,9 @@ class YustPushService {
     required String title,
     required String body,
     String? image,
-    FutureOr<void> Function(String deviceId, Object error)? onErrorForDevice,
+    FutureOr<void> Function(
+            String deviceId, Object error, StackTrace stackTrace)?
+        onErrorForDevice,
   }) async {
     for (final deviceId in user.deviceIds!) {
       try {
@@ -51,8 +53,8 @@ class YustPushService {
           body: body,
           image: image,
         );
-      } catch (e) {
-        await onErrorForDevice?.call(deviceId, e);
+      } catch (e, s) {
+        await onErrorForDevice?.call(deviceId, e, s);
       }
     }
   }

@@ -11,6 +11,7 @@ import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
 import 'services/yust_push_service.dart';
+import 'services/yust_push_service_mocked.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
 import 'util/yust_location_helper.dart';
@@ -79,6 +80,7 @@ class Yust {
   late YustDatabaseService dbService;
 
   bool mocked = false;
+  static bool _mockInitialized = false;
 
   bool forUI;
 
@@ -134,8 +136,12 @@ class Yust {
 
     if (mocked) {
       dbService = YustDatabaseServiceMocked.mocked(yust: this);
-      Yust.authService = YustAuthServiceMocked(this);
-      Yust.fileService = YustFileServiceMocked();
+      if (!_mockInitialized) {
+        Yust.authService = YustAuthServiceMocked(this);
+        Yust.fileService = YustFileServiceMocked();
+        Yust.pushService = YustPushServiceMocked();
+        _mockInitialized = true;
+      }
       return;
     }
 

@@ -9,14 +9,16 @@ import '../yust.dart';
 /// Handles push notifications via Firebase Cloud Messaging.
 class YustPushService {
   late final FirebaseCloudMessagingApi _api;
-  final Client _authClient;
-  final String _projectId;
+  late final Client _authClient;
+  late final String _projectId;
 
   YustPushService()
       : _authClient = Yust.authClient!,
         _projectId = Yust.projectId {
     _api = FirebaseCloudMessagingApi(_authClient);
   }
+
+  YustPushService.mocked();
 
   Future<void> sendToDevice({
     required String token,

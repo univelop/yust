@@ -6,7 +6,7 @@ import 'package:http/http.dart';
 import '../models/yust_user.dart';
 import '../yust.dart';
 
-/// Handles push notifications via Firebase Cloud Messaging.
+/// Sends out Push notifications via Firebase Cloud Messaging
 class YustPushService {
   late final FirebaseCloudMessagingApi _api;
   late final Client _authClient;
@@ -20,8 +20,12 @@ class YustPushService {
 
   YustPushService.mocked();
 
+  /// Sends a Push Notification to the device with token [deviceId]
+  /// You can specify a title and body.
+  /// Additionally you can specify a image that is shown in the Notification
+  /// by specifying a Url to the [image].
   Future<void> sendToDevice({
-    required String token,
+    required String deviceId,
     required String title,
     required String body,
     String? image,
@@ -32,12 +36,13 @@ class YustPushService {
         body: body,
         image: image,
       ),
-      token: token,
+      token: deviceId,
     );
     final request = SendMessageRequest(message: message);
     await _api.projects.messages.send(request, 'projects/$_projectId');
   }
 
+  /// Sends Push Notifications to all devices of a user.
   Future<void> sendToUser({
     required YustUser user,
     required String title,
@@ -47,10 +52,10 @@ class YustPushService {
             String deviceId, Object error, StackTrace stackTrace)?
         onErrorForDevice,
   }) async {
-    for (final deviceId in user.deviceIds!) {
+    for (final deviceId in user.deviceIds ?? []) {
       try {
         await sendToDevice(
-          token: deviceId,
+          deviceId: deviceId,
           title: title,
           body: body,
           image: image,

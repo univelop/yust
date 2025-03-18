@@ -80,7 +80,6 @@ class Yust {
   late YustPushService pushService;
 
   bool mocked = false;
-  static bool _mockInitialized = false;
 
   bool forUI;
 
@@ -136,12 +135,9 @@ class Yust {
 
     if (mocked) {
       dbService = YustDatabaseServiceMocked.mocked(yust: this);
-      if (!_mockInitialized) {
-        Yust.authService = YustAuthServiceMocked(this);
-        Yust.fileService = YustFileServiceMocked();
-        pushService = YustPushServiceMocked();
-        Yust._mockInitialized = true;
-      }
+      pushService = YustPushServiceMocked();
+      Yust.authService = YustAuthServiceMocked(this);
+      Yust.fileService = YustFileServiceMocked();
       return;
     }
 

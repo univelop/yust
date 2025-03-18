@@ -4,7 +4,14 @@ import 'yust_push_service.dart';
 
 /// Sends out Push notifications via Firebase Cloud Messaging
 class YustPushServiceMocked extends YustPushService {
-  YustPushServiceMocked() : super.mocked();
+  static YustPushServiceMocked? instance;
+
+  YustPushServiceMocked._() : super.mocked();
+
+  factory YustPushServiceMocked() {
+    instance ??= YustPushServiceMocked._();
+    return instance!;
+  }
 
   @override
   Future<void> sendToDevice({

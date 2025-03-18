@@ -69,7 +69,6 @@ class Yust {
   static YustDatabaseService get databaseService => instance.dbService;
   static Client? authClient;
 
-  static late YustPushService pushService;
   static late YustAuthService authService;
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
@@ -78,6 +77,7 @@ class Yust {
   static late String projectId;
 
   late YustDatabaseService dbService;
+  late YustPushService pushService;
 
   bool mocked = false;
   static bool _mockInitialized = false;
@@ -139,8 +139,8 @@ class Yust {
       if (!_mockInitialized) {
         Yust.authService = YustAuthServiceMocked(this);
         Yust.fileService = YustFileServiceMocked();
-        Yust.pushService = YustPushServiceMocked();
-        _mockInitialized = true;
+        pushService = YustPushServiceMocked();
+        Yust._mockInitialized = true;
       }
       return;
     }
@@ -166,7 +166,7 @@ class Yust {
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );
-    Yust.pushService = YustPushService();
+    pushService = YustPushService();
   }
 
   closeClient() {

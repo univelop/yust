@@ -4,6 +4,7 @@ import 'package:googleapis/fcm/v1.dart';
 import 'package:http/http.dart';
 
 import '../models/yust_user.dart';
+import '../util/yust_retry_helper.dart';
 import '../yust.dart';
 
 /// Sends out Push notifications via Firebase Cloud Messaging
@@ -39,7 +40,8 @@ class YustPushService {
       token: deviceId,
     );
     final request = SendMessageRequest(message: message);
-    await _api.projects.messages.send(request, 'projects/$_projectId');
+    await _retryOnException('FCM:SendMessageRequest', 'deviceIds/$deviceId',
+        () => _api.projects.messages.send(request, 'projects/$_projectId'));
   }
 
   /// Sends Push Notifications to all devices of a user.
@@ -64,5 +66,29 @@ class YustPushService {
         await onErrorForDevice?.call(deviceId, e, s);
       }
     }
+  }
+
+  /// Retries the given function if a TlsException, ClientException or BadGatewayException occurs.
+  /// Those are network errors that can occur when the firestore is rate-limiting.
+  Future<T> _retryOnException<T>(
+    String fnName,
+    String docPath,
+    Future<T> Function() fn,
+  ) async {
+    return (await YustRetryHelper.retryOnException<T>(
+      fnName,
+      docPath,
+      fn,
+      maxTries: 16,
+      actionOnExceptionList: [
+        YustRetryHelper.actionOnNetworkException,
+        YustRetryHelper.actionOnDetailedApiRequestError(
+          shouldRetryOnTransactionErrors: true,
+          shouldIgnoreNotFound: false,
+        ),
+      ],
+      onRetriesExceeded: (lastError, fnName, docPath) => print(
+          '[[ERROR]] Retried $fnName call 16 times, but still failed: $lastError for $docPath'),
+    )) as T;
   }
 }

@@ -9,8 +9,7 @@ class YustPushServiceMocked extends YustPushService {
   YustPushServiceMocked._() : super.mocked();
 
   factory YustPushServiceMocked() {
-    instance ??= YustPushServiceMocked._();
-    return instance!;
+    return instance ?? YustPushServiceMocked._();
   }
 
   @override

@@ -996,7 +996,7 @@ class YustDatabaseService {
       return doc;
     } catch (e) {
       print(
-          '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}: $e ($json)');
+          '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Name ${document.name}: $e ($json)');
       return null;
     }
   }

@@ -18,23 +18,24 @@ class YustException implements Exception {
             e.message!
                 .contains('Aborted due to cross-transaction contention.'))) {
       return YustDocumentLockedException(
-          'Can not save the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+          'Can not save the document $docPath. ${detailedApiRequestErrorToString(e)}');
     }
     if (e.status == 404) {
       return YustNotFoundException(
-          'The document $docPath was not found. ${_detailedApiRequestErrorToString(e)}');
+          'The document $docPath was not found. ${detailedApiRequestErrorToString(e)}');
     }
     if (e.status == 409) {
       return YustTransactionFailedException(
-          'Failed save transaction for the document $docPath. ${_detailedApiRequestErrorToString(e)}');
+          'Failed save transaction for the document $docPath. ${detailedApiRequestErrorToString(e)}');
     }
     return YustException(
-        'Something went wrong with $docPath. ${_detailedApiRequestErrorToString(e)}');
+        'Something went wrong with $docPath. ${detailedApiRequestErrorToString(e)}');
   }
 
-  static String _detailedApiRequestErrorToString(DetailedApiRequestError e) {
+  static String detailedApiRequestErrorToString(DetailedApiRequestError e) {
     return 'Message: ${e.message}, Status: ${e.status}, '
-        'Response: ${jsonEncode(e.jsonResponse)}';
+        'Response: ${jsonEncode(e.jsonResponse)},\n'
+        'Error details: ${e.errors.map((e) => 'ApiRequestErrorDetail(domain: ${e.domain}, extendedHelp: ${e.extendedHelp}, location: ${e.location}, locationType: ${e.locationType}, message: ${e.message}, reason: ${e.reason}, sendReport: ${e.sendReport})')}';
   }
 }
 

@@ -6,6 +6,8 @@ import '../models/yust_user.dart';
 class YustPushService {
   YustPushService();
 
+  YustPushService.mocked();
+
   /// Sends a Push Notification to the device with token [deviceId]
   /// You can specify a title and body.
   /// Additionally you can specify a image that is shown in the Notification
@@ -25,7 +27,9 @@ class YustPushService {
     required String title,
     required String body,
     String? image,
-    FutureOr<void> Function(String deviceId, Object error)? onErrorForDevice,
+    FutureOr<void> Function(
+            String deviceId, Object error, StackTrace stackTrace)?
+        onErrorForDevice,
   }) async {
     throw UnimplementedError();
   }

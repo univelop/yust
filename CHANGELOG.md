@@ -1,3 +1,7 @@
+## 3.27.2 - 2024-03-21
+
+-   Fix for PushNotificationService Flutter Interface
+
 ## 3.27.1 - 2024-03-21
 
 -   Add new Yust Push Notification Service

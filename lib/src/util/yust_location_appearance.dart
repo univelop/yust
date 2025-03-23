@@ -9,7 +9,7 @@ enum YustLocationAppearance {
   /// Converts a JSON string to the appearance
   ///
   /// Defaults to [YustLocationAppearance.decimalDegree]
-  static YustLocationAppearance fromJson(String value) =>
+  static YustLocationAppearance fromJson(String? value) =>
       YustLocationAppearance.values.firstWhere(
         (e) => e._jsonKey == value,
         orElse: () => YustLocationAppearance.decimalDegree,

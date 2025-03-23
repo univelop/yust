@@ -60,3 +60,7 @@ class YustBadGatewayException extends YustException {
 class YustNotFoundException extends YustException {
   YustNotFoundException(super.message);
 }
+
+class YustInvalidCoordinatesException extends YustException {
+  YustInvalidCoordinatesException(super.message);
+}

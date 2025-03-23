@@ -2,20 +2,36 @@ import 'package:coordinate_converter/coordinate_converter.dart';
 import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
-import '../util/yust_dms_coordinates.dart';
-import '../util/yust_location_appearance.dart';
-import 'yust_address.dart';
+import '../../yust.dart';
 part 'yust_geo_location.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(createFactory: false)
 @immutable
 class YustGeoLocation {
-  const YustGeoLocation({
+  /// Creates a new instance of [YustGeoLocation].
+  ///
+  /// [latitude] must be between -90 and 90.
+  /// [longitude] must be between -180 and 180.
+  ///
+  /// If [validateCoordinates] is set to false, the coordinates will not be validated.
+  YustGeoLocation({
     this.latitude,
     this.longitude,
     this.accuracy,
     this.address,
-  });
+    bool validateCoordinates = true,
+  }) {
+    if (validateCoordinates) {
+      if (latitude != null && (latitude! < -90 || latitude! > 90)) {
+        throw YustInvalidCoordinatesException(
+            'Latitude must be between -90 and 90');
+      }
+      if (longitude != null && (longitude! < -180 || longitude! > 180)) {
+        throw YustInvalidCoordinatesException(
+            'Longitude must be between -180 and 180');
+      }
+    }
+  }
 
   factory YustGeoLocation.withValueByKey(
     YustGeoLocation location,
@@ -55,8 +71,18 @@ class YustGeoLocation {
         return location;
     }
   }
+
   factory YustGeoLocation.fromJson(Map<String, dynamic> json) =>
-      _$YustGeoLocationFromJson(json);
+      YustGeoLocation(
+        latitude: (json['latitude'] as num?)?.toDouble(),
+        longitude: (json['longitude'] as num?)?.toDouble(),
+        accuracy: (json['accuracy'] as num?)?.toDouble(),
+        address: json['address'] == null
+            ? null
+            : YustAddress.fromJson(
+                Map<String, dynamic>.from(json['address'] as Map)),
+        validateCoordinates: false,
+      );
 
   YustGeoLocation copyWithLatitude(double? value) => YustGeoLocation(
         latitude: value,

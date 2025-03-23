@@ -24,11 +24,11 @@ class YustGeoLocation {
     if (validateCoordinates) {
       if (latitude != null && (latitude! < -90 || latitude! > 90)) {
         throw YustInvalidCoordinatesException(
-            'Latitude must be between -90 and 90');
+            'Latitude must be between -90 and 90', latitude, longitude);
       }
       if (longitude != null && (longitude! < -180 || longitude! > 180)) {
         throw YustInvalidCoordinatesException(
-            'Longitude must be between -180 and 180');
+            'Longitude must be between -180 and 180', latitude, longitude);
       }
     }
   }

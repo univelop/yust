@@ -62,5 +62,8 @@ class YustNotFoundException extends YustException {
 }
 
 class YustInvalidCoordinatesException extends YustException {
-  YustInvalidCoordinatesException(super.message);
+  YustInvalidCoordinatesException(super.message, this.latitude, this.longitude);
+
+  final double? latitude;
+  final double? longitude;
 }

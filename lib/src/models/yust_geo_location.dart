@@ -1,5 +1,9 @@
+import 'package:coordinate_converter/coordinate_converter.dart';
+import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
+import '../util/yust_dms_coordinates.dart';
+import '../util/yust_location_appearance.dart';
 import 'yust_address.dart';
 part 'yust_geo_location.g.dart';
 
@@ -12,6 +16,7 @@ class YustGeoLocation {
     this.accuracy,
     this.address,
   });
+
   factory YustGeoLocation.withValueByKey(
     YustGeoLocation location,
     String key,
@@ -93,7 +98,7 @@ class YustGeoLocation {
       latitude != null ||
       longitude != null ||
       accuracy != null ||
-      (address?.hasValue() ?? true) == true;
+      (address?.hasValue() ?? false) == true;
 
   dynamic operator [](String key) {
     switch (key) {
@@ -122,4 +127,55 @@ class YustGeoLocation {
   int get hashCode => Object.hash(longitude, latitude, accuracy, address);
 
   Map<String, dynamic> toJson() => _$YustGeoLocationToJson(this);
+
+  /// Returns a user readable string representation of the current instance.
+  ///
+  /// Use [appearance] to set the appearance of the coordinates.
+  String toReadableString(
+          {YustLocationAppearance appearance =
+              YustLocationAppearance.decimalDegree,
+          String? degreeSymbol}) =>
+      '${formatLatitude(appearance: appearance, degreeSymbol: degreeSymbol)}, ${formatLongitude(appearance: appearance, degreeSymbol: degreeSymbol)}';
+
+  /// Returns a user readable string of the latitude.
+  String formatLatitude(
+      {YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
+      String? degreeSymbol}) {
+    if (appearance == YustLocationAppearance.decimalDegree) {
+      return NumberFormat('0.######', 'en_US').format(latitude ?? 0);
+    }
+
+    return toYustDmsCoordinates().formatLatitude();
+  }
+
+  /// Returns a user readable string of the longitude.
+  String formatLongitude(
+      {YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
+      String? degreeSymbol}) {
+    if (appearance == YustLocationAppearance.decimalDegree) {
+      return NumberFormat('0.######', 'en_US').format(longitude ?? 0);
+    }
+
+    return toYustDmsCoordinates().formatLongitude();
+  }
+
+  /// Creates a [NullableDmsCoordinates] from a [YustGeoLocation].
+  YustDmsCoordinates toYustDmsCoordinates() {
+    final ddCoords = DDCoordinates(
+      latitude: latitude ?? 0,
+      longitude: longitude ?? 0,
+    );
+    final dmsCoords = ddCoords.toDMS();
+
+    return YustDmsCoordinates(
+      latDegrees: latitude != null ? dmsCoords.latDegrees : null,
+      latMinutes: latitude != null ? dmsCoords.latMinutes : null,
+      latSeconds: latitude != null ? dmsCoords.latSeconds : null,
+      latDirection: dmsCoords.latDirection,
+      longDegrees: longitude != null ? dmsCoords.longDegrees : null,
+      longMinutes: longitude != null ? dmsCoords.longMinutes : null,
+      longSeconds: longitude != null ? dmsCoords.longSeconds : null,
+      longDirection: dmsCoords.longDirection,
+    );
+  }
 }

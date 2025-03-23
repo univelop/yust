@@ -11,6 +11,7 @@ dependencies:
         sdk: flutter
     cloud_firestore: ^5.4.4
     collection: ^1.18.0
+    coordinate_converter: ^1.2.3
     firebase_auth_mocks: ^0.14.1
     firebase_auth_platform_interface: ^7.0.9
     firebase_auth: ^5.3.1

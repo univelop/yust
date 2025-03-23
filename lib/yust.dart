@@ -32,10 +32,11 @@ export 'src/util/yust_database_statistics.dart'
         YustStatisticsMap,
         YustAggregatedStatisticsMap,
         YustEnhancedStatisticsMap;
+export 'src/util/yust_dms_coordinates.dart';
 export 'src/util/yust_exception.dart';
 export 'src/util/yust_field_transform.dart';
 export 'src/util/yust_helpers.dart';
-export 'src/util/yust_location_helper.dart';
+export 'src/util/yust_location_appearance.dart';
 export 'src/util/yust_retry_helper.dart';
 export 'src/util/yust_snapshot.dart';
 export 'src/yust.dart';

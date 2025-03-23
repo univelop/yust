@@ -161,21 +161,25 @@ class YustGeoLocation {
 
   /// Creates a [NullableDmsCoordinates] from a [YustGeoLocation].
   YustDmsCoordinates toYustDmsCoordinates() {
-    final ddCoords = DDCoordinates(
-      latitude: latitude ?? 0,
-      longitude: longitude ?? 0,
-    );
-    final dmsCoords = ddCoords.toDMS();
+    try {
+      final ddCoords = DDCoordinates(
+        latitude: latitude ?? 0,
+        longitude: longitude ?? 0,
+      );
+      final dmsCoords = ddCoords.toDMS();
 
-    return YustDmsCoordinates(
-      latDegrees: latitude != null ? dmsCoords.latDegrees : null,
-      latMinutes: latitude != null ? dmsCoords.latMinutes : null,
-      latSeconds: latitude != null ? dmsCoords.latSeconds : null,
-      latDirection: dmsCoords.latDirection,
-      longDegrees: longitude != null ? dmsCoords.longDegrees : null,
-      longMinutes: longitude != null ? dmsCoords.longMinutes : null,
-      longSeconds: longitude != null ? dmsCoords.longSeconds : null,
-      longDirection: dmsCoords.longDirection,
-    );
+      return YustDmsCoordinates(
+        latDegrees: latitude != null ? dmsCoords.latDegrees : null,
+        latMinutes: latitude != null ? dmsCoords.latMinutes : null,
+        latSeconds: latitude != null ? dmsCoords.latSeconds : null,
+        latDirection: dmsCoords.latDirection,
+        longDegrees: longitude != null ? dmsCoords.longDegrees : null,
+        longMinutes: longitude != null ? dmsCoords.longMinutes : null,
+        longSeconds: longitude != null ? dmsCoords.longSeconds : null,
+        longDirection: dmsCoords.longDirection,
+      );
+    } catch (_) {
+      return YustDmsCoordinates();
+    }
   }
 }

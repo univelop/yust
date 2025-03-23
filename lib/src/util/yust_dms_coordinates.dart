@@ -1,5 +1,7 @@
 import 'package:coordinate_converter/coordinate_converter.dart';
 
+import '../../yust.dart';
+
 /// Class to store DMS coordinates as nullable properties.
 class YustDmsCoordinates {
   /// Latitude degrees in [int].
@@ -43,7 +45,35 @@ class YustDmsCoordinates {
     this.longDirection,
   });
 
-  /// Converts [NullableDmsCoordinates] to [DMSCoordinates].
+  /// Returns true if the coordinates are valid.
+  ///
+  /// Warning: Uses try-catch to determine if the coordinates are valid, should be used with caution.
+  bool isValid() {
+    try {
+      final _ = toDMSCoordinates().toDD();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Converts [YustDmsCoordinates] to [YustGeoLocation].
+  YustGeoLocation toYustGeoLocation() {
+    try {
+      final dmsCoords = toDMSCoordinates();
+      final ddCoords = DDCoordinates.fromDMS(dmsCoords);
+
+      return YustGeoLocation(
+        latitude: ddCoords.latitude,
+        longitude: ddCoords.longitude,
+        accuracy: -1,
+      );
+    } catch (_) {
+      return YustGeoLocation();
+    }
+  }
+
+  /// Converts [YustDmsCoordinates] to [DMSCoordinates].
   DMSCoordinates toDMSCoordinates() {
     return DMSCoordinates(
       latDegrees: latDegrees ?? 0,

@@ -126,6 +126,11 @@ class YustGeoLocation {
       accuracy != null ||
       (address?.hasValue() ?? false) == true;
 
+  /// Returns true if the coordinates are valid.
+  bool isValid() =>
+      (latitude == null || (latitude! >= -90 || latitude! <= 90)) &&
+      (longitude == null || (longitude! >= -180 || longitude! <= 180));
+
   dynamic operator [](String key) {
     switch (key) {
       case 'latitude':

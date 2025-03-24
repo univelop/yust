@@ -186,19 +186,21 @@ class YustGeoLocation {
     final direction = {
           YustCardinalDirection.north: northAbbreviation,
           YustCardinalDirection.south: southAbbreviation,
-        }[dmsCoordinates.longDirection] ??
+        }[dmsCoordinates.latDirection] ??
         '';
+
     return "${dmsCoordinates.latDegrees}${degreeSymbol ?? '°'} ${dmsCoordinates.latMinutes}' ${dmsCoordinates.latSeconds?.toStringAsFixed(2)}"
         '" '
         '$direction';
   }
 
   /// Returns a user readable string of the longitude.
-  String? formatLongitude(
-      {YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
-      String? degreeSymbol,
-      String? westAbbreviation = 'W',
-      String? eastAbbreviation = 'E'}) {
+  String? formatLongitude({
+    YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
+    String? degreeSymbol,
+    String? westAbbreviation = 'W',
+    String? eastAbbreviation = 'E',
+  }) {
     if (longitude == null) return null;
     if (appearance == YustLocationAppearance.decimalDegree) {
       return NumberFormat('0.######', 'en_US').format(longitude ?? 0);

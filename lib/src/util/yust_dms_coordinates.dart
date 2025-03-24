@@ -1,8 +1,12 @@
 import 'package:coordinate_converter/coordinate_converter.dart';
 
 import '../../yust.dart';
+import 'yust_cardinal_direction.dart';
 
 /// Class to store DMS coordinates as nullable properties.
+///
+/// This class just stores form data and should not be used for any calculations
+/// or further business logic.
 class YustDmsCoordinates {
   /// Latitude degrees in [int].
   /// Latitude degrees must be between -90 and 90.
@@ -16,8 +20,8 @@ class YustDmsCoordinates {
   /// Latitude seconds must be between 0 and 59.
   double? latSeconds;
 
-  /// Latitude direction in [DirectionY] enum.
-  DirectionY? latDirection;
+  /// Latitude direction in [YustCardinalDirection] enum.
+  YustCardinalDirection? latDirection;
 
   /// Longitude minutes in [int].
   /// Longitude degrees must be between -180 and 180.
@@ -31,8 +35,8 @@ class YustDmsCoordinates {
   /// Longitude seconds must be between 0 and 59.
   double? longSeconds;
 
-  /// Latitude direction in [DirectionX] enum.
-  DirectionX? longDirection;
+  /// Latitude direction in [YustCardinalDirection] enum.
+  YustCardinalDirection? longDirection;
 
   YustDmsCoordinates({
     this.latDegrees,
@@ -79,27 +83,11 @@ class YustDmsCoordinates {
       latDegrees: latDegrees ?? 0,
       latMinutes: latMinutes ?? 0,
       latSeconds: latSeconds ?? 0,
-      latDirection: latDirection ?? DirectionY.north,
+      latDirection: latDirection?.toDirectionY() ?? DirectionY.north,
       longDegrees: longDegrees ?? 0,
       longMinutes: longMinutes ?? 0,
       longSeconds: longSeconds ?? 0,
-      longDirection: longDirection ?? DirectionX.east,
+      longDirection: longDirection?.toDirectionX() ?? DirectionX.east,
     );
   }
-
-  /// Returns a user readable string of the coordinates.
-  String toReadableString({String? degreeSymbol}) =>
-      '${formatLatitude(degreeSymbol: degreeSymbol)}, ${formatLongitude(degreeSymbol: degreeSymbol)}';
-
-  /// Returns a user readable string of the latitude.
-  String formatLatitude({String? degreeSymbol}) =>
-      "$latDegrees${degreeSymbol ?? '°'} $latMinutes' ${latSeconds?.toStringAsFixed(2)}"
-      '" '
-      '${latDirection?.abbreviation}';
-
-  /// Returns a user readable string of the longitude.
-  String formatLongitude({String? degreeSymbol}) =>
-      "$longDegrees${degreeSymbol ?? '°'} $longMinutes' ${longSeconds?.toStringAsFixed(2)}"
-      '" '
-      '${longDirection?.abbreviation}';
 }

@@ -2,8 +2,11 @@ import 'package:coordinate_converter/coordinate_converter.dart';
 import 'package:intl/intl.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
-import '../../yust.dart';
 import '../util/yust_cardinal_direction.dart';
+import '../util/yust_dms_coordinates.dart';
+import '../util/yust_exception.dart';
+import '../util/yust_location_appearance.dart';
+import 'yust_address.dart';
 part 'yust_geo_location.g.dart';
 
 @JsonSerializable()
@@ -144,53 +147,69 @@ class YustGeoLocation {
   /// Returns a user readable string representation of the current instance.
   ///
   /// Use [appearance] to set the appearance of the coordinates.
-  String toReadableString({
+  String? toReadableString({
     YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
     String? degreeSymbol,
     String? northAbbreviation = 'N',
     String? southAbbreviation = 'S',
     String? westAbbreviation = 'W',
     String? eastAbbreviation = 'E',
-  }) =>
-      '${formatLatitude(appearance: appearance, degreeSymbol: degreeSymbol, westAbbreviation: westAbbreviation, eastAbbreviation: eastAbbreviation)}, '
-      '${formatLongitude(appearance: appearance, degreeSymbol: degreeSymbol, northAbbreviation: northAbbreviation, southAbbreviation: southAbbreviation)}';
+  }) {
+    final lat = formatLatitude(
+        appearance: appearance,
+        degreeSymbol: degreeSymbol,
+        westAbbreviation: westAbbreviation,
+        eastAbbreviation: eastAbbreviation);
+    final long = formatLongitude(
+        appearance: appearance,
+        degreeSymbol: degreeSymbol,
+        northAbbreviation: northAbbreviation,
+        southAbbreviation: southAbbreviation);
+
+    return lat == null && long == null ? null : '$lat, $long';
+  }
 
   /// Returns a user readable string of the latitude.
-  String formatLatitude(
+  String? formatLatitude(
       {YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
       String? degreeSymbol,
       String? westAbbreviation = 'W',
       String? eastAbbreviation = 'E'}) {
+    if (latitude == null) return null;
     if (appearance == YustLocationAppearance.decimalDegree) {
       return NumberFormat('0.######', 'en_US').format(latitude ?? 0);
     }
 
     final dmsCoordinates = toYustDmsCoordinates();
     final direction = {
-      YustCardinalDirection.west: westAbbreviation,
-      YustCardinalDirection.east: eastAbbreviation,
-    }[dmsCoordinates.longDirection];
+          YustCardinalDirection.west: westAbbreviation,
+          YustCardinalDirection.east: eastAbbreviation,
+        }[dmsCoordinates.longDirection] ??
+        '';
+
     return "${dmsCoordinates.latDegrees}${degreeSymbol ?? '°'} ${dmsCoordinates.latMinutes}' ${dmsCoordinates.latSeconds?.toStringAsFixed(2)}"
         '" '
         '$direction';
   }
 
   /// Returns a user readable string of the longitude.
-  String formatLongitude({
+  String? formatLongitude({
     YustLocationAppearance appearance = YustLocationAppearance.decimalDegree,
     String? degreeSymbol,
     String? northAbbreviation = 'N',
     String? southAbbreviation = 'S',
   }) {
+    if (longitude == null) return null;
     if (appearance == YustLocationAppearance.decimalDegree) {
       return NumberFormat('0.######', 'en_US').format(longitude ?? 0);
     }
 
     final dmsCoordinates = toYustDmsCoordinates();
     final direction = {
-      YustCardinalDirection.north: northAbbreviation,
-      YustCardinalDirection.south: southAbbreviation,
-    }[dmsCoordinates.longDirection];
+          YustCardinalDirection.north: northAbbreviation,
+          YustCardinalDirection.south: southAbbreviation,
+        }[dmsCoordinates.longDirection] ??
+        '';
 
     return "${dmsCoordinates.longDegrees}${degreeSymbol ?? '°'} ${dmsCoordinates.longMinutes}' ${dmsCoordinates.longSeconds?.toStringAsFixed(2)}"
         '" '
@@ -210,13 +229,15 @@ class YustGeoLocation {
         latDegrees: latitude != null ? dmsCoords.latDegrees : null,
         latMinutes: latitude != null ? dmsCoords.latMinutes : null,
         latSeconds: latitude != null ? dmsCoords.latSeconds : null,
-        latDirection:
-            YustCardinalDirection.fromDirectionY(dmsCoords.latDirection),
+        latDirection: latitude != null
+            ? YustCardinalDirection.fromDirectionY(dmsCoords.latDirection)
+            : null,
         longDegrees: longitude != null ? dmsCoords.longDegrees : null,
         longMinutes: longitude != null ? dmsCoords.longMinutes : null,
         longSeconds: longitude != null ? dmsCoords.longSeconds : null,
-        longDirection:
-            YustCardinalDirection.fromDirectionX(dmsCoords.longDirection),
+        longDirection: longitude != null
+            ? YustCardinalDirection.fromDirectionX(dmsCoords.longDirection)
+            : null,
       );
     } catch (_) {
       return YustDmsCoordinates();

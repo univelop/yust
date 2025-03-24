@@ -1,7 +1,6 @@
 import 'package:coordinate_converter/coordinate_converter.dart';
 
 import '../../yust.dart';
-import 'yust_cardinal_direction.dart';
 
 /// Class to store DMS coordinates as nullable properties.
 ///

@@ -315,7 +315,9 @@ class YustAuthService {
           'iss': issuerAccountMail,
           'sub': subjectServiceAccountMail,
           'aud':
-              'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit'
+              'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+          'iat': DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000,
+          'exp': (DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000) + 3600
         }));
         final SignJwtResponse signingResponse;
         try {

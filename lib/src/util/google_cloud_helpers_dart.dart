@@ -40,7 +40,6 @@ class GoogleCloudHelpers {
       StorageApi.devstorageFullControlScope,
       IdentityToolkitApi.cloudPlatformScope,
       IdentityToolkitApi.firebaseScope,
-      IAMCredentialsApi.cloudPlatformScope,
       // IAM Scope is not exported by IAMCredentialsApi
       'https://www.googleapis.com/auth/iam',
     ];

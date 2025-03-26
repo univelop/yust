@@ -93,7 +93,8 @@ class YustFileService {
 
     // Use the Google Storage API to insert (upload) the file
     await _retryOnException(
-      'Upload-File',
+      'Upload-Stream',
+
       '$path/$name',
       () => _storageApi.objects.insert(object, bucketName,
           uploadMedia: media, uploadOptions: UploadOptions.resumable),

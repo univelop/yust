@@ -74,6 +74,33 @@ class YustFileService {
     return _createDownloadUrl(path, name, token);
   }
 
+  /// Uploads a file from a [Stream] of [List<int>]
+  /// to the given [path] and [name].
+  ///
+  /// Returns the download url of the uploaded file.
+  Future<String> uploadStream({
+    required String path,
+    required String name,
+    required Stream<List<int>> stream,
+  }) async {
+    final token = Uuid().v4();
+    final object = Object(
+        name: '$path/$name',
+        bucket: bucketName,
+        metadata: {'firebaseStorageDownloadTokens': token});
+    final media = Media(stream, null,
+        contentType: lookupMimeType(name) ?? 'application/octet-stream');
+
+    // Use the Google Storage API to insert (upload) the file
+    await _retryOnException(
+      'Upload-File',
+      '$path/$name',
+      () => _storageApi.objects.insert(object, bucketName,
+          uploadMedia: media, uploadOptions: UploadOptions.resumable),
+    );
+    return _createDownloadUrl(path, name, token);
+  }
+
   /// Downloads a file from a given [path] and [name] and returns it as [Uint8List].
   /// The [maxSize] parameter can be used to limit the size of the downloaded file.
   Future<Uint8List?> downloadFile(

@@ -17,6 +17,21 @@ class YustFileServiceMocked extends YustFileService {
 
   YustFileServiceMocked() : super.mocked();
 
+  @override
+  Future<String> uploadStream({
+    required String path,
+    required String name,
+    required Stream<List<int>> stream,
+  }) async {
+    final collected = <int>[];
+    await for (final chunk in stream) {
+      collected.addAll(chunk);
+    }
+    final bytes = Uint8List.fromList(collected);
+
+    return uploadFile(path: path, name: name, bytes: bytes);
+  }
+
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
   ///

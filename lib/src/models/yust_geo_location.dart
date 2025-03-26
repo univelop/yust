@@ -179,7 +179,7 @@ class YustGeoLocation {
   }) {
     if (latitude == null) return null;
     if (appearance == YustLocationAppearance.decimalDegree) {
-      return NumberFormat('0.######', 'en_US').format(latitude ?? 0);
+      return NumberFormat('0.#######', 'en_US').format(latitude ?? 0);
     }
 
     final dmsCoordinates = toYustDmsCoordinates();

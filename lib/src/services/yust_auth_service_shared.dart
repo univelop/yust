@@ -49,3 +49,12 @@ class YustAuthServiceShared {
     return user;
   }
 }
+
+class YustUserAlreadyHasPasswordException extends YustException {
+  YustUserAlreadyHasPasswordException(super.message);
+}
+
+class YustProviderNotAllowed extends YustException {
+  final List<String> providerIds;
+  YustProviderNotAllowed(super.message, {required this.providerIds});
+}

@@ -1,16 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis/identitytoolkit/v1.dart';
 import 'package:googleapis/storage/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
+import 'package:googleapis/iamcredentials/v1.dart';
 // ignore: implementation_imports
 
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
-import 'google_cloud_helpers_shared.dart';
-import 'yust_exception.dart';
+import '../../yust.dart';
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
@@ -38,6 +39,9 @@ class GoogleCloudHelpers {
       StorageApi.devstorageFullControlScope,
       IdentityToolkitApi.cloudPlatformScope,
       IdentityToolkitApi.firebaseScope,
+      IAMCredentialsApi.cloudPlatformScope,
+      // IAM Scope is not exported by IAMCredentialsApi
+      'https://www.googleapis.com/auth/iam',
     ];
 
     authClient = await createAuthClient(

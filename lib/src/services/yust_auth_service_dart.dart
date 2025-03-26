@@ -247,11 +247,12 @@ class YustAuthService {
   }
 
   /// Create an unsigned JWT for a given authId.
-  JWT _createUnsignedJWTForAuthId(String authId, String serviceAccountEmail) {
+  JWT _createUnsignedJWTForAuthId(
+      String authId, String subjectAccountMail, String issuerAccountMail) {
     return JWT(
       {'uid': authId},
-      subject: serviceAccountEmail,
-      issuer: serviceAccountEmail,
+      subject: subjectAccountMail,
+      issuer: issuerAccountMail,
       header: {'alg': 'RS256', 'typ': 'JWT'},
       audience: Audience([
         'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
@@ -275,7 +276,8 @@ class YustAuthService {
   /// Else we use credentials from the cloud run environment
   Future<String> getAuthTokenForAuthId(String authId,
       {String? overrideEmail}) async {
-    String? serviceAccountEmail = overrideEmail;
+    String issuerAccountMail;
+    String? subjectServiceAccountMail = overrideEmail;
     Map? serviceAccountKey;
 
     if (_pathToServiceAccountJson != null) {
@@ -286,21 +288,12 @@ class YustAuthService {
         throw YustException('Could not read service account key');
       }
       serviceAccountKey = decodedKey;
-      serviceAccountEmail ??= serviceAccountKey['client_email'];
-    } else {
-      try {
-        serviceAccountEmail ??= await _getServiceAccountEmailFromMetadata();
-      } catch (e) {
-        throw YustException(
-            'Could not get service account email from metadata: $e');
-      }
-    }
-
-    final jwt = _createUnsignedJWTForAuthId(authId, serviceAccountEmail!);
-
-    if (serviceAccountKey != null) {
+      subjectServiceAccountMail ??= serviceAccountKey['client_email'];
+      issuerAccountMail = serviceAccountKey['client_email'];
       // If we got a service account key file, we can just use the private key provided
       // for signing.
+      final jwt = _createUnsignedJWTForAuthId(authId,
+          subjectServiceAccountMail ?? issuerAccountMail, issuerAccountMail);
       final signedJwt = jwt.sign(
         RSAPrivateKey(serviceAccountKey['private_key']),
         algorithm: JWTAlgorithm.RS256,
@@ -308,25 +301,39 @@ class YustAuthService {
       );
       return signedJwt;
     } else {
-      // If we don't have a service account key (and therefore run in an google cloud environment)
-      // we use the IAMCredentials API to sign the JWT
-
-      final iamClient = IAMCredentialsApi(Yust.authClient!);
-      final delegate = 'projects/-/serviceAccounts/$serviceAccountEmail';
-      final signRequest = SignJwtRequest(payload: jsonEncode(jwt.payload));
-      final SignJwtResponse signingResponse;
       try {
-        signingResponse = await iamClient.projects.serviceAccounts
-            .signJwt(signRequest, delegate);
-      } catch (e) {
-        throw YustException('Could not sign JWT: $e');
-      }
-      final signedJwt = signingResponse.signedJwt;
-      if (signedJwt == null) {
-        throw YustException('Could not sign JWT');
-      }
+        final metadataEmail = await _getServiceAccountEmailFromMetadata();
+        subjectServiceAccountMail ??= metadataEmail;
+        issuerAccountMail = metadataEmail;
 
-      return signedJwt;
+        final iamClient = IAMCredentialsApi(Yust.authClient!);
+        final delegate =
+            'projects/-/serviceAccounts/$subjectServiceAccountMail';
+        final signRequest = SignJwtRequest(
+            payload: jsonEncode({
+          'uid': authId,
+          'iss': issuerAccountMail,
+          'sub': subjectServiceAccountMail,
+          'aud':
+              'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit'
+        }));
+        final SignJwtResponse signingResponse;
+        try {
+          signingResponse = await iamClient.projects.serviceAccounts
+              .signJwt(signRequest, delegate);
+        } catch (e) {
+          throw YustException('Could not sign JWT: $e');
+        }
+        final signedJwt = signingResponse.signedJwt;
+        if (signedJwt == null) {
+          throw YustException('Could not sign JWT');
+        }
+
+        return signedJwt;
+      } catch (e) {
+        throw YustException(
+            'Could not get service account email from metadata: $e');
+      }
     }
   }
 

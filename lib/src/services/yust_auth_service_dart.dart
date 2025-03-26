@@ -157,6 +157,14 @@ class YustAuthService {
     );
   }
 
+  /// Add a username and password to an existing account.
+  ///
+  /// The user account is identified by the email address provided.
+  /// This is only allowed if the user account does not already have a password.
+  /// If [allowedProviderIds] is provided, the user mustn't
+  /// have one of the specified providers.
+  /// This can be used to restrict the use of password login to users that
+  /// have only been created with a 3rd party provider.
   Future<YustUser> addUserNamePasswordToAccount(String email, String password,
       {List<String> allowedProviderIds = const []}) async {
     final user = await _yust.dbService.getFirst<YustUser>(
@@ -175,7 +183,7 @@ class YustAuthService {
     }
 
     if (user.authenticationMethod == YustAuthenticationMethod.mail) {
-      throw YustException('User already has a password');
+      throw YustUserAlreadyHasPasswordException('User already has a password');
     }
 
     if (user.authId == null) {
@@ -233,10 +241,12 @@ class YustAuthService {
       localId: firebaseUser.localId,
       password: password,
     );
+    // Simply updating the user with the password is enough to enable password login
     await _api.projects.accounts_1.update(info, Yust.projectId);
     return user;
   }
 
+  /// Create an unsigned JWT for a given authId.
   JWT _createUnsignedJWTForAuthId(String authId, serviceAccountEmail) {
     return JWT(
       {'uid': authId},
@@ -249,6 +259,8 @@ class YustAuthService {
     );
   }
 
+  /// Get the service account email from the metadata server.
+  /// This is only available in Google Cloud environments.
   Future<String> _getServiceAccountEmailFromMetadata() async {
     final uri = Uri.parse(
         'http://metadata/computeMetadata/v1/instance/service-accounts/default/email');
@@ -256,9 +268,15 @@ class YustAuthService {
     return result.body;
   }
 
+  /// Get a valid sign in token for a given auth Id
+  ///
+  ///  If a Service Account File exists (e.g. in tools & emulator),
+  /// we private key & email from the file to create the JWT.
+  /// Else we use credentials from the cloud run environment
   Future<String> getAuthTokenForAuthId(String authId) async {
     final String serviceAccountEmail;
     Map? serviceAccountKey;
+
     if (_pathToServiceAccountJson != null) {
       final rawFileText = await File(_pathToServiceAccountJson).readAsString();
       final decodedKey = jsonDecode(rawFileText);
@@ -280,13 +298,18 @@ class YustAuthService {
     final jwt = _createUnsignedJWTForAuthId(authId, serviceAccountEmail);
 
     if (serviceAccountKey != null) {
-      final jwtToken = jwt.sign(
+      // If we got a service account key file, we can just use the private key provided
+      // for signing.
+      final signedJwt = jwt.sign(
         RSAPrivateKey(serviceAccountKey['private_key']),
         algorithm: JWTAlgorithm.RS256,
         expiresIn: const Duration(seconds: 3600),
       );
-      return jwtToken;
+      return signedJwt;
     } else {
+      // If we don't have a service account key (and therefore run in an google cloud environment)
+      // we use the IAMCredentials API to sign the JWT
+
       final iamClient = IAMCredentialsApi(Yust.authClient!);
       final delegate = 'projects/-/serviceAccounts/$serviceAccountEmail';
       final signRequest = SignJwtRequest(payload: jsonEncode(jwt.payload));
@@ -301,6 +324,7 @@ class YustAuthService {
       if (signedJwt == null) {
         throw YustException('Could not sign JWT');
       }
+
       return signedJwt;
     }
   }

@@ -247,7 +247,7 @@ class YustAuthService {
   }
 
   /// Create an unsigned JWT for a given authId.
-  JWT _createUnsignedJWTForAuthId(String authId, serviceAccountEmail) {
+  JWT _createUnsignedJWTForAuthId(String authId, String serviceAccountEmail) {
     return JWT(
       {'uid': authId},
       subject: serviceAccountEmail,
@@ -273,8 +273,9 @@ class YustAuthService {
   ///  If a Service Account File exists (e.g. in tools & emulator),
   /// we private key & email from the file to create the JWT.
   /// Else we use credentials from the cloud run environment
-  Future<String> getAuthTokenForAuthId(String authId) async {
-    final String serviceAccountEmail;
+  Future<String> getAuthTokenForAuthId(String authId,
+      {String? overrideEmail}) async {
+    String? serviceAccountEmail = overrideEmail;
     Map? serviceAccountKey;
 
     if (_pathToServiceAccountJson != null) {
@@ -285,17 +286,17 @@ class YustAuthService {
         throw YustException('Could not read service account key');
       }
       serviceAccountKey = decodedKey;
-      serviceAccountEmail = serviceAccountKey['client_email'];
+      serviceAccountEmail ??= serviceAccountKey['client_email'];
     } else {
       try {
-        serviceAccountEmail = await _getServiceAccountEmailFromMetadata();
+        serviceAccountEmail ??= await _getServiceAccountEmailFromMetadata();
       } catch (e) {
         throw YustException(
             'Could not get service account email from metadata: $e');
       }
     }
 
-    final jwt = _createUnsignedJWTForAuthId(authId, serviceAccountEmail);
+    final jwt = _createUnsignedJWTForAuthId(authId, serviceAccountEmail!);
 
     if (serviceAccountKey != null) {
       // If we got a service account key file, we can just use the private key provided

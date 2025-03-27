@@ -1,3 +1,7 @@
+## 3.27.3 - 2024-03-26
+
+-   Add `addUserNamePasswordToAccount` Method to `YustAuthService`
+
 ## 3.27.2 - 2024-03-21
 
 -   Fix for PushNotificationService Flutter Interface

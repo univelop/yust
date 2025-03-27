@@ -154,6 +154,7 @@ class Yust {
     Yust.authService = YustAuthService(
       this,
       emulatorAddress: emulatorAddress,
+      pathToServiceAccountJson: pathToServiceAccountJson,
     );
     Yust.fileService = YustFileService(
       authClient: Yust.authClient,

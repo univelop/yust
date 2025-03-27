@@ -29,18 +29,16 @@ class YustAuthService {
   Stream<AuthState> getAuthStateStream() {
     return _fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
-        Yust.databaseService
-            .getFirstFromDB<YustUser>(
-              Yust.userSetup,
-              filters: [
-                YustFilter(
-                  comparator: YustFilterComparator.equal,
-                  field: 'authId',
-                  value: user.uid,
-                ),
-              ],
-            )
-            .then((yustUser) => yustUser?.setLoginFields());
+        Yust.databaseService.getFirstFromDB<YustUser>(
+          Yust.userSetup,
+          filters: [
+            YustFilter(
+              comparator: YustFilterComparator.equal,
+              field: 'authId',
+              value: user.uid,
+            ),
+          ],
+        ).then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
@@ -56,6 +54,10 @@ class YustAuthService {
       email: email,
       password: password,
     );
+  }
+
+  Future<void> signInWithToken(String token) async {
+    await _fireAuth.signInWithCustomToken(token);
   }
 
   Future<YustUser?> signInWithMicrosoft() async {
@@ -267,5 +269,15 @@ class YustAuthService {
   Future<String?> getJWTToken() async {
     final jwtObject = await _fireAuth.currentUser?.getIdTokenResult();
     return jwtObject?.token;
+  }
+
+  Future<void> addUserNamePasswordToAccount(String email, String password,
+      {List<String> allowedProviderIds = const []}) async {
+    throw UnimplementedError();
+  }
+
+  Future<String> getAuthTokenForAuthId(String authId,
+      {String? overrideEmail}) async {
+    throw UnimplementedError();
   }
 }

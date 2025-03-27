@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:googleapis/firestore/v1.dart';
 import 'package:googleapis/identitytoolkit/v1.dart';
 import 'package:googleapis/storage/v1.dart';
@@ -38,6 +39,8 @@ class GoogleCloudHelpers {
       StorageApi.devstorageFullControlScope,
       IdentityToolkitApi.cloudPlatformScope,
       IdentityToolkitApi.firebaseScope,
+      // IAM Scope is not exported by IAMCredentialsApi
+      'https://www.googleapis.com/auth/iam',
     ];
 
     authClient = await createAuthClient(

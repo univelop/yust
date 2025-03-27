@@ -57,6 +57,9 @@ class YustAuthServiceMocked implements YustAuthService {
       throw UnimplementedError();
 
   @override
+  Future<void> signInWithToken(String token) => throw UnimplementedError();
+
+  @override
   Future<YustUser?> signInWithApple() => throw UnimplementedError();
 
   @override
@@ -74,4 +77,14 @@ class YustAuthServiceMocked implements YustAuthService {
 
   @override
   Future<void> signOut() => throw UnimplementedError();
+
+  @override
+  Future<YustUser> addUserNamePasswordToAccount(String email, String password,
+          {List<String> allowedProviderIds = const []}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<String> getAuthTokenForAuthId(String authId,
+          {String? overrideEmail}) =>
+      throw UnimplementedError();
 }

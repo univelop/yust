@@ -162,19 +162,35 @@ class YustHelpers {
       milliseconds: (first?.millisecondsSinceEpoch ?? 0) -
           (second?.millisecondsSinceEpoch ?? 0));
 
-  /// Returns the DateTime at the [day] in the [month], with no day overflow. 
+  /// Returns the DateTime at the [day] in the [month], with no day overflow.
   DateTime getDateAtDayOfMonth(int day, DateTime month) {
     final lastDayOfMonth = DateTime(month.year, month.month + 1, 0).day;
-    return DateTime(month.year, month.month, min(day, lastDayOfMonth), month.hour, month.minute, month.second, month.millisecond, month.microsecond);
+    return DateTime(
+        month.year,
+        month.month,
+        min(day, lastDayOfMonth),
+        month.hour,
+        month.minute,
+        month.second,
+        month.millisecond,
+        month.microsecond);
   }
 
   /// Adds [months] to the [date] with no day overflow in the next month.
   DateTime addMonthsWithoutOverflow(int months, DateTime date) {
     final newMonth = date.month + months;
-    final newYear = date.year + newMonth ~/ 12;
+    final newYear = date.year + (newMonth / 12).floor();
     final newMonthInYear = newMonth % 12;
     final lastDayOfMonth = DateTime(newYear, newMonthInYear + 1, 0).day;
-    return DateTime(newYear, newMonthInYear, min(date.day, lastDayOfMonth), date.hour, date.minute, date.second, date.millisecond, date.microsecond);
+    return DateTime(
+        newYear,
+        newMonthInYear,
+        min(date.day, lastDayOfMonth),
+        date.hour,
+        date.minute,
+        date.second,
+        date.millisecond,
+        date.microsecond);
   }
 
   /// Returns the DateTime at the day of the current month.

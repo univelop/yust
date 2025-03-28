@@ -1,3 +1,8 @@
+## 3.27.4 - 2024-03-28
+
+-   Improvements for Location Handling
+-   Improvements for File Handling
+
 ## 3.27.3 - 2024-03-26
 
 -   Add `addUserNamePasswordToAccount` Method to `YustAuthService`

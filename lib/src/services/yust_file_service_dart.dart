@@ -100,7 +100,7 @@ class YustFileService {
       '$path/$name',
       () => _storageApi.objects.insert(object, bucketName,
           uploadMedia: media,
-          uploadOptions: ResumableUploadOptions(chunkSize: 32 * 1024 * 1024)),
+          uploadOptions: ResumableUploadOptions(chunkSize: 64 * 1024 * 1024)),
     );
     return _createDownloadUrl(path, name, token);
   }

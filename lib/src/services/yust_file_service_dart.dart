@@ -82,12 +82,15 @@ class YustFileService {
     required String path,
     required String name,
     required Stream<List<int>> stream,
+    String? contentDisposition,
   }) async {
     final token = Uuid().v4();
     final object = Object(
-        name: '$path/$name',
-        bucket: bucketName,
-        metadata: {'firebaseStorageDownloadTokens': token});
+      name: '$path/$name',
+      bucket: bucketName,
+      metadata: {'firebaseStorageDownloadTokens': token},
+      contentDisposition: contentDisposition,
+    );
     final media = Media(stream, null,
         contentType: lookupMimeType(name) ?? 'application/octet-stream');
 
@@ -96,7 +99,8 @@ class YustFileService {
       'Upload-Stream',
       '$path/$name',
       () => _storageApi.objects.insert(object, bucketName,
-          uploadMedia: media, uploadOptions: UploadOptions.resumable),
+          uploadMedia: media,
+          uploadOptions: ResumableUploadOptions(chunkSize: 64 * 1024 * 1024)),
     );
     return _createDownloadUrl(path, name, token);
   }

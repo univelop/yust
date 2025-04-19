@@ -8,6 +8,7 @@ import 'services/yust_auth_service.dart';
 import 'services/yust_auth_service_mocked.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
+import 'services/yust_database_service_supabase.dart';
 import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
 import 'services/yust_push_service.dart';
@@ -77,6 +78,12 @@ class Yust {
   late YustDatabaseService dbService;
   late YustPushService pushService;
 
+  static String? supabaseUrl;
+
+  static String? supabaseKey;
+
+  late YustDatabaseServiceSupabase dbServiceSupabase;
+
   bool mocked = false;
 
   bool forUI;
@@ -125,6 +132,8 @@ class Yust {
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
     AccessCredentials? credentials,
+    String? supabaseUrl,
+    String? supabaseKey,
   }) async {
     if (forUI) _instance = this;
 
@@ -149,6 +158,13 @@ class Yust {
     dbService = YustDatabaseService(
       yust: this,
       emulatorAddress: emulatorAddress,
+    );
+
+    Yust.supabaseUrl = supabaseUrl;
+    Yust.supabaseKey = supabaseKey;
+
+    dbServiceSupabase = YustDatabaseServiceSupabase(
+      yust: this,
     );
 
     Yust.authService = YustAuthService(

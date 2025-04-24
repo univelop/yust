@@ -1,3 +1,7 @@
+## 3.27.6 - 2024-04-24
+
+-   Fix for DateTime Regex
+
 ## 3.27.5 - 2024-04-07
 
 -   Improvements for YustFileService

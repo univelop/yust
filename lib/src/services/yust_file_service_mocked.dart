@@ -22,6 +22,7 @@ class YustFileServiceMocked extends YustFileService {
     required String path,
     required String name,
     required Stream<List<int>> stream,
+    String? contentDisposition,
   }) async {
     final collected = <int>[];
     await for (final chunk in stream) {

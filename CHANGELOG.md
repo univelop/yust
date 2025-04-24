@@ -1,3 +1,7 @@
+## 3.27.5 - 2024-04-07
+
+-   Improvements for YustFileService
+
 ## 3.27.4 - 2024-03-28
 
 -   Improvements for Location Handling

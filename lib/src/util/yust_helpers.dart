@@ -37,6 +37,27 @@ class YustHelpers {
     object.removeWhere((key, _) => !keys.contains(key));
   }
 
+  /// Get the value of a map by path.
+  /// The path is a dot-separated path of keys, which may be escaped with backticks.
+  ///
+  /// Example:
+  /// ```dart
+  /// final value = YustHelpers().getValueByPath({'foo': {'bar': 'baz'}}, 'foo.bar');
+  /// print(value); // baz
+  /// ```
+  dynamic getValueByPath(Map<String, dynamic> object, String path) {
+    final keys = path.split('.').map((e) => e.replaceAll('`', ''));
+    dynamic current = object;
+    for (final key in keys) {
+      if (current is Map<String, dynamic>) {
+        current = current[key];
+      } else {
+        return null;
+      }
+    }
+    return current;
+  }
+
   /// Return a string representing [dateTime] in the German or English date
   /// format or another given [format].
   String formatDate(DateTime? dateTime,

@@ -529,22 +529,48 @@ class YustDatabaseService {
     // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
     // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
     final quotedUpdateMask = updateMask
-        ?.map((path) => YustHelpers().toQuotedFieldPath(path)!)
+        ?.toSet()
+        .map((path) => YustHelpers().toQuotedFieldPath(path)!)
         .toList();
     final docPath = _getDocumentPath(docSetup, doc.id);
+
+    // The updateMask will be part of the URL, in the save request.
+    // Since there is is a limit on the URL length, we need to ignore the updateMask
+    // if it would make the URL too big.
+    // Additionally there is a limit on the length of each element in the updateMask.
+    final maxUrlLengthFromTesting = 16416;
+    final estimatedUrlLength =
+        _calcEstimatedUrlLength(quotedUpdateMask, docPath);
+    final characterTolerance = 100;
+    final ignoreUpdateMask =
+        maxUrlLengthFromTesting - characterTolerance < estimatedUrlLength;
+    if (ignoreUpdateMask) {
+      print(
+        '[[WARNING]] saveDoc: Estimated URL length ($estimatedUrlLength) is greater than max URL length '
+        '($maxUrlLengthFromTesting) - tolerance ($characterTolerance). Saving without updateMask!',
+      );
+    }
+
     await _retryOnException('saveDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.patch(
         dbDoc,
         docPath,
-        updateMask_fieldPaths: quotedUpdateMask,
+        updateMask_fieldPaths: ignoreUpdateMask ? null : quotedUpdateMask,
         currentDocument_exists: doNotCreate ? true : null,
       );
       if (!skipLog) {
         dbLogCallback?.call(
             DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
-            id: doc.id, updateMask: updateMask ?? []);
+            id: doc.id, updateMask: ignoreUpdateMask ? [] : updateMask ?? []);
       }
     }, shouldIgnoreNotFound: doNotCreate);
+  }
+
+  /// Calculates the estimated length of the URL for a saveDoc request.
+  int _calcEstimatedUrlLength(List<String>? updateMask, String docPath) {
+    final url =
+        'https://firestore.googleapis.com/v1/$docPath?${updateMask?.map((item) => 'updateMask.fieldPaths=``$item``').join('&')}&alt=json';
+    return url.length;
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.

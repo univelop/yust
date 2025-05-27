@@ -538,16 +538,17 @@ class YustDatabaseService {
     // Since there is is a limit on the URL length, we need to ignore the updateMask
     // if it would make the URL too big.
     // Additionally there is a limit on the length of each element in the updateMask.
-    final maxUrlLengthFromTesting = 16416;
+    // The [maxUrlCharacterLength] was determined by testing the length of the URL with different updateMasks.
+    final maxUrlCharacterLength = 16416;
     final estimatedUrlLength =
         _calcEstimatedUrlLength(quotedUpdateMask, docPath);
     final characterTolerance = 100;
     final ignoreUpdateMask =
-        maxUrlLengthFromTesting - characterTolerance < estimatedUrlLength;
+        maxUrlCharacterLength - characterTolerance < estimatedUrlLength;
     if (ignoreUpdateMask) {
       print(
         '[[WARNING]] saveDoc: Estimated URL length ($estimatedUrlLength) is greater than max URL length '
-        '($maxUrlLengthFromTesting) - tolerance ($characterTolerance). Saving without updateMask!',
+        '($maxUrlCharacterLength) - tolerance ($characterTolerance). Saving without updateMask!',
       );
     }
 

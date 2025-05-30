@@ -542,7 +542,7 @@ class YustDatabaseService {
     final maxUrlCharacterLength = 16416;
     final estimatedUrlLength =
         _calcEstimatedUrlLength(quotedUpdateMask, docPath);
-    final characterTolerance = 100;
+    final characterTolerance = 500;
     final ignoreUpdateMask =
         maxUrlCharacterLength - characterTolerance < estimatedUrlLength;
     if (ignoreUpdateMask) {

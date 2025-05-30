@@ -346,7 +346,7 @@ class YustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      String? lastDocument;
+      Map<String, dynamic>? lastDocument;
       while (!isDone) {
         final request = getQuery(docSetup,
             filters: filters,
@@ -383,7 +383,7 @@ class YustDatabaseService {
             DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastDocument = response.last['document']['name'];
+        if (!isDone) lastDocument = response.last['document'];
 
         yield* Stream.fromIterable(response);
       }
@@ -890,7 +890,7 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocument,
+    Map<String, dynamic>? startAfterDocument,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -904,9 +904,20 @@ class YustDatabaseService {
         limit: limit,
         startAt: startAfterDocument == null
             ? null
-            : Cursor(values: [
-                Value(referenceValue: startAfterDocument),
-              ], before: false),
+            : Cursor(
+                // The cursor is a list of values, which are used to order the documents.
+                // It needs to contain the value of every ordered field.
+                values: orderBy
+                        ?.map((e) => e.field == '__name__'
+                            ? Value(referenceValue: startAfterDocument['name'])
+                            // Because we are getting the value from the raw json,
+                            // we do not need to use the valueToDbValue function,
+                            // but can just get the json [Value] directly
+                            : Value.fromJson(YustHelpers().getValueByPath(
+                                startAfterDocument['fields'], e.field)))
+                        .toList() ??
+                    [],
+                before: false),
       ),
       readTime: readTime?.toUtc().toIso8601String(),
     );

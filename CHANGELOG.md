@@ -1,3 +1,7 @@
+## 3.27.8 - 2025-05-30
+
+-   Fallback for too long update masks
+
 ## 3.27.7 - 2025-04-30
 
 -   Fix getListChunked with unequal filters

@@ -9,9 +9,13 @@ class YustHelpers {
   static TZDateTime? mockNowUTC;
 
   /// Returns a random String with a specific length.
-  String randomString({int length = 8}) {
+  ///
+  /// Will include uppercase letters by default, set [includeUpperCase] to false
+  /// to only include lowercase letters and numbers.
+  String randomString({int length = 8, bool includeUpperCase = true}) {
     final rnd = Random();
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final chars =
+        'abcdefghijklmnopqrstuvwxyz0123456789${includeUpperCase ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : ''}'; // ignore: lines_longer_than_80_chars
     var result = '';
     for (var i = 0; i < length; i++) {
       result += chars[rnd.nextInt(chars.length)];

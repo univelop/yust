@@ -15,7 +15,7 @@ class YustHelpers {
   String randomString({int length = 8, bool includeCapitalLetters = true}) {
     final rnd = Random();
     final chars =
-        'abcdefghijklmnopqrstuvwxyz0123456789${includeCapitalLetters ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : ''}'; // ignore: lines_longer_than_80_chars
+        'abcdefghijklmnopqrstuvwxyz0123456789${includeCapitalLetters ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : ''}';
     var result = '';
     for (var i = 0; i < length; i++) {
       result += chars[rnd.nextInt(chars.length)];

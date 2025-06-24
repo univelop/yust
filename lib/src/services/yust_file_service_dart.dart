@@ -9,10 +9,11 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../util/yust_retry_helper.dart';
+import 'yust_file_service_shared.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
-/// Handels Filestorage requests for Google Cloud Storage.
+/// Handles Filestorage requests for Google Cloud Storage.
 ///
 /// Uses the GoogleApi for Flutter Platforms (Android, iOS, Web)
 /// and GoogleAPIs for **Dart-only environments**.
@@ -69,6 +70,37 @@ class YustFileService {
       'Upload-File',
       '$path/$name',
       () => _storageApi.objects.insert(object, bucketName, uploadMedia: media),
+    );
+    return _createDownloadUrl(path, name, token);
+  }
+
+  /// Uploads a file from a [Stream] of [List<int>]
+  /// to the given [path] and [name].
+  ///
+  /// Returns the download url of the uploaded file.
+  Future<String> uploadStream({
+    required String path,
+    required String name,
+    required Stream<List<int>> stream,
+    String? contentDisposition,
+  }) async {
+    final token = Uuid().v4();
+    final object = Object(
+      name: '$path/$name',
+      bucket: bucketName,
+      metadata: {'firebaseStorageDownloadTokens': token},
+      contentDisposition: contentDisposition,
+    );
+    final media = Media(stream, null,
+        contentType: lookupMimeType(name) ?? 'application/octet-stream');
+
+    // Use the Google Storage API to insert (upload) the file
+    await _retryOnException(
+      'Upload-Stream',
+      '$path/$name',
+      () => _storageApi.objects.insert(object, bucketName,
+          uploadMedia: media,
+          uploadOptions: ResumableUploadOptions(chunkSize: 64 * 1024 * 1024)),
     );
     return _createDownloadUrl(path, name, token);
   }
@@ -191,6 +223,19 @@ class YustFileService {
       return _createDownloadUrl(path, name, token);
     }
     throw Exception('Unknown response Object');
+  }
+
+  Future<YustFileMetadata> getMetadata(
+      {required String path, required String name}) async {
+    final Object object = await _retryOnException<dynamic>(
+        'Get-Storage-Obj-For-File-Url',
+        '$path/$name',
+        () => _storageApi.objects.get(bucketName, '$path/$name'));
+
+    return YustFileMetadata(
+      size: int.parse(object.size ?? '0'),
+      token: object.metadata?['firebaseStorageDownloadTokens'] ?? '',
+    );
   }
 
   String _createDownloadUrl(String path, String name, String token) {

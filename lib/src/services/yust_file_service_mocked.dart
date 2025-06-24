@@ -6,15 +6,32 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import 'yust_file_service.dart';
+import 'yust_file_service_shared.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
 
 /// Mocked Filestorage service.
 class YustFileServiceMocked extends YustFileService {
   // In-memory storage for the files.
-  final Map<String, Map<String, MockedFile>> _storage = {};
+  static final Map<String, Map<String, MockedFile>> _storage = {};
 
   YustFileServiceMocked() : super.mocked();
+
+  @override
+  Future<String> uploadStream({
+    required String path,
+    required String name,
+    required Stream<List<int>> stream,
+    String? contentDisposition,
+  }) async {
+    final collected = <int>[];
+    await for (final chunk in stream) {
+      collected.addAll(chunk);
+    }
+    final bytes = Uint8List.fromList(collected);
+
+    return uploadFile(path: path, name: name, bytes: bytes);
+  }
 
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
@@ -100,6 +117,17 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     return _createDownloadUrl(path, name, token);
+  }
+
+  @override
+  Future<YustFileMetadata> getMetadata(
+      {required String path, required String name}) async {
+    final object = _storage[path]?[name];
+
+    return YustFileMetadata(
+      size: object?.data.length ?? 0,
+      token: object?.metadata['firebaseStorageDownloadTokens'] ?? '',
+    );
   }
 
   String _createDownloadUrl(String path, String name, String token) {

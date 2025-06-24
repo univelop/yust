@@ -34,6 +34,8 @@ class YustDatabaseService implements IYustDatabaseService {
   @override
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
+  final Yust _yust;
+
   /// Represents the collection name for the tenants.
   @override
   final String envCollectionName;
@@ -55,12 +57,12 @@ class YustDatabaseService implements IYustDatabaseService {
   DateTime? readTime;
 
   YustDatabaseService({
-    DatabaseLogCallback? databaseLogCallback,
-    Client? client,
-    required this.envCollectionName,
-    required this.useSubcollections,
+    required Yust yust,
     String? emulatorAddress,
-  })  : _authClient = client!,
+  })  : _yust = yust,
+        _authClient = Yust.authClient!,
+        envCollectionName = yust.envCollectionName,
+        useSubcollections = yust.useSubcollections,
         _rootUrl = emulatorAddress != null
             ? 'http://$emulatorAddress:8080/'
             : firestoreApiUrl {
@@ -73,16 +75,18 @@ class YustDatabaseService implements IYustDatabaseService {
         {String? id, List<String>? updateMask, num? aggregationResult}) {
       statistics.dbStatisticsCallback(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
-      databaseLogCallback?.call(action, documentPath, count,
+      _yust.dbLogCallback?.call(action, documentPath, count,
           id: id, updateMask: updateMask, aggregationResult: aggregationResult);
     };
   }
 
   YustDatabaseService.mocked({
-    required this.envCollectionName,
-    required this.useSubcollections,
-    this.dbLogCallback,
-  })  : _rootUrl = '',
+    required Yust yust,
+  })  : _yust = yust,
+        envCollectionName = yust.envCollectionName,
+        useSubcollections = yust.useSubcollections,
+        dbLogCallback = yust.dbLogCallback,
+        _rootUrl = '',
         _authClient = Client();
 
   /// Initializes a document with an id and the time it was created.
@@ -380,14 +384,16 @@ class YustDatabaseService implements IYustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      String? lastDocument = startAfterDocumentName;
+      String? lastDocumentName = startAfterDocumentName;
+      Map<String, dynamic>? lastDocument;
       while (!isDone) {
         final request = getQuery(docSetup,
             filters: filters,
             // orderBy __name__ is required for pagination
             orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
-            startAfterDocumentName: lastDocument);
+            startAfterDocument: lastDocument,
+            startAfterDocumentName: lastDocumentName);
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -417,7 +423,7 @@ class YustDatabaseService implements IYustDatabaseService {
             DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastDocument = response.last['document']['name'];
+        if (!isDone) lastDocumentName = response.last['document'];
 
         yield* Stream.fromIterable(response);
       }
@@ -574,22 +580,49 @@ class YustDatabaseService implements IYustDatabaseService {
     // Because the Firestore REST-Api (used in the background) can't handle attributes starting with numbers,
     // e.g. 'foo.0bar', we need to escape the path-parts by using '´': '`foo`.`0bar`'
     final quotedUpdateMask = updateMask
-        ?.map((path) => YustHelpers().toQuotedFieldPath(path)!)
+        ?.toSet()
+        .map((path) => YustHelpers().toQuotedFieldPath(path)!)
         .toList();
     final docPath = _getDocumentPath(docSetup, doc.id);
+
+    // The updateMask will be part of the URL, in the save request.
+    // Since there is is a limit on the URL length, we need to ignore the updateMask
+    // if it would make the URL too big.
+    // Additionally there is a limit on the length of each element in the updateMask.
+    // The [maxUrlCharacterLength] was determined by testing the length of the URL with different updateMasks.
+    final maxUrlCharacterLength = 16416;
+    final estimatedUrlLength =
+        _calcEstimatedUrlLength(quotedUpdateMask, docPath);
+    final characterTolerance = 500;
+    final ignoreUpdateMask =
+        maxUrlCharacterLength - characterTolerance < estimatedUrlLength;
+    if (ignoreUpdateMask) {
+      print(
+        '[[WARNING]] saveDoc: Estimated URL length ($estimatedUrlLength) is greater than max URL length '
+        '($maxUrlCharacterLength) - tolerance ($characterTolerance). Saving without updateMask!',
+      );
+    }
+
     await _retryOnException('saveDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.patch(
         dbDoc,
         docPath,
-        updateMask_fieldPaths: quotedUpdateMask,
+        updateMask_fieldPaths: ignoreUpdateMask ? null : quotedUpdateMask,
         currentDocument_exists: doNotCreate ? true : null,
       );
       if (!skipLog) {
         dbLogCallback?.call(
             DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
-            id: doc.id, updateMask: updateMask ?? []);
+            id: doc.id, updateMask: ignoreUpdateMask ? [] : updateMask ?? []);
       }
     }, shouldIgnoreNotFound: doNotCreate);
+  }
+
+  /// Calculates the estimated length of the URL for a saveDoc request.
+  int _calcEstimatedUrlLength(List<String>? updateMask, String docPath) {
+    final url =
+        'https://firestore.googleapis.com/v1/$docPath?${updateMask?.map((item) => 'updateMask.fieldPaths=``$item``').join('&')}&alt=json';
+    return url.length;
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -919,6 +952,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
     String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -930,11 +964,25 @@ class YustDatabaseService implements IYustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
-        startAt: startAfterDocumentName == null
-            ? null
-            : Cursor(values: [
+        startAt: startAfterDocument != null
+            ? Cursor(
+                // The cursor is a list of values, which are used to order the documents.
+                // It needs to contain the value of every ordered field.
+                values: orderBy
+                        ?.map((e) => e.field == '__name__'
+                            ? Value(referenceValue: startAfterDocument['name'])
+                            // Because we are getting the value from the raw json,
+                            // we do not need to use the valueToDbValue function,
+                            // but can just get the json [Value] directly
+                            : Value.fromJson(YustHelpers().getValueByPath(
+                                startAfterDocument['fields'], e.field)))
+                        .toList() ??
+                    [],
+                before: false)
+: startAfterDocumentName != null
+            ? Cursor(values: [
                 Value(referenceValue: startAfterDocumentName),
-              ], before: false),
+              ], before: false) : null, //TODO: Do we only need one of startAfterDocument and startAfterDocumentName?
       ),
       readTime: readTime?.toUtc().toIso8601String(),
     );
@@ -1051,7 +1099,7 @@ class YustDatabaseService implements IYustDatabaseService {
       return doc;
     } catch (e) {
       print(
-          '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Workspace ${docSetup.envId}: $e ($json)');
+          '[[WARNING]] Error Transforming JSON. Collection ${docSetup.collectionName}, Name ${document.name}: $e ($json)');
       return null;
     }
   }

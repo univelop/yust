@@ -5,13 +5,15 @@ import 'package:http/http.dart';
 import 'models/yust_doc_setup.dart';
 import 'models/yust_user.dart';
 import 'services/yust_auth_service.dart';
+import 'services/yust_auth_service_mocked.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
 import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
+import 'services/yust_push_service.dart';
+import 'services/yust_push_service_mocked.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
-import 'util/yust_location_helper.dart';
 
 /// Represents the state of the user authentication.
 ///
@@ -70,10 +72,10 @@ class Yust {
   static late YustFileService fileService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
-  static YustLocationHelper locationHelper = YustLocationHelper();
   static late String projectId;
 
   late YustDatabaseService dbService;
+  late YustPushService pushService;
 
   bool mocked = false;
 
@@ -130,11 +132,9 @@ class Yust {
     Yust.userSetup = userSetup ?? YustUser.setup();
 
     if (mocked) {
-      dbService = YustDatabaseServiceMocked.mocked(
-          onChange: onChange,
-          useSubcollections: useSubcollections,
-          envCollectionName: envCollectionName);
-      Yust.authService = YustAuthService.mocked();
+      dbService = YustDatabaseServiceMocked.mocked(yust: this);
+      pushService = YustPushServiceMocked();
+      Yust.authService = YustAuthServiceMocked(this);
       Yust.fileService = YustFileServiceMocked();
       return;
     }
@@ -147,19 +147,21 @@ class Yust {
     );
 
     dbService = YustDatabaseService(
-      client: Yust.authClient,
-      databaseLogCallback: dbLogCallback,
-      useSubcollections: useSubcollections,
-      envCollectionName: envCollectionName,
+      yust: this,
       emulatorAddress: emulatorAddress,
     );
 
-    Yust.authService = YustAuthService(emulatorAddress: emulatorAddress);
+    Yust.authService = YustAuthService(
+      this,
+      emulatorAddress: emulatorAddress,
+      pathToServiceAccountJson: pathToServiceAccountJson,
+    );
     Yust.fileService = YustFileService(
       authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );
+    pushService = YustPushService();
   }
 
   closeClient() {

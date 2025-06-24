@@ -25,10 +25,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   static OnChangeCallback? onChange;
 
   YustDatabaseServiceMocked.mocked({
-    OnChangeCallback? onChange,
-    required super.envCollectionName,
-    required super.useSubcollections,
-  }) : super.mocked() {
+    required Yust yust,
+  }) : super.mocked(yust: yust) {
     dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
             {String? id, List<String>? updateMask, num? aggregationResult}) =>
         statistics.dbStatisticsCallback(action, documentPath, count,
@@ -37,7 +35,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
             aggregationResult: aggregationResult);
 
     YustDatabaseServiceMocked.onChange =
-        onChange ?? YustDatabaseServiceMocked.onChange;
+        yust.onChange ?? YustDatabaseServiceMocked.onChange;
   }
 
   static final MockDB _db = {};
@@ -490,6 +488,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     final segments = path.split('.');
     Map subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
+      if (subDoc[segment] == null) {
+        subDoc[segment] = <String, dynamic>{};
+      }
+
       subDoc = subDoc[segment];
     }
     subDoc[segments.last] = newValue;
@@ -499,6 +501,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     final segments = path.split('.');
     Map subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
+      if (subDoc[segment] == null) {
+        return null;
+      }
       subDoc = subDoc[segment];
     }
     return subDoc[segments.last];

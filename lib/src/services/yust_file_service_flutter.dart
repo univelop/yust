@@ -8,6 +8,7 @@ import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
+import 'yust_file_service_shared.dart';
 
 class YustFileService {
   YustFileService({
@@ -25,6 +26,21 @@ class YustFileService {
   }
 
   final FirebaseStorage _fireStorage;
+
+  Future<String> uploadStream({
+    required String path,
+    required String name,
+    required Stream<List<int>> stream,
+    String? contentDisposition,
+  }) async {
+    final collected = <int>[];
+    await for (final chunk in stream) {
+      collected.addAll(chunk);
+    }
+    final bytes = Uint8List.fromList(collected);
+
+    return uploadFile(path: path, name: name, bytes: bytes);
+  }
 
   Future<String> uploadFile(
       {required String path,
@@ -99,6 +115,17 @@ class YustFileService {
   Future<String> getFileDownloadUrl(
       {required String path, required String name}) async {
     return await _fireStorage.ref().child(path).child(name).getDownloadURL();
+  }
+
+  Future<YustFileMetadata> getMetadata(
+      {required String path, required String name}) async {
+    final metadata =
+        await _fireStorage.ref().child(path).child(name).getMetadata();
+
+    return YustFileMetadata(
+      size: metadata.size ?? 0,
+      token: metadata.customMetadata?['firebaseStorageDownloadTokens'] ?? '',
+    );
   }
 
   Future<void> deleteFolder({required String path}) async {

@@ -1,3 +1,90 @@
+## 3.27.8 - 2025-05-30
+
+-   Fallback for too long update masks
+
+## 3.27.7 - 2025-04-30
+
+-   Fix getListChunked with unequal filters
+
+## 3.27.6 - 2024-04-24
+
+-   Fix for DateTime Regex
+
+## 3.27.5 - 2024-04-07
+
+-   Improvements for YustFileService
+
+## 3.27.4 - 2024-03-28
+
+-   Improvements for Location Handling
+-   Improvements for File Handling
+
+## 3.27.3 - 2024-03-26
+
+-   Add `addUserNamePasswordToAccount` Method to `YustAuthService`
+
+## 3.27.2 - 2024-03-21
+
+-   Fix for PushNotificationService Flutter Interface
+
+## 3.27.1 - 2024-03-21
+
+-   Add new Yust Push Notification Service
+
+## 3.27.0 - 2024-03-04
+
+-   Add YustImage Class
+-   Add createdAt for YustFiles
+
+## 3.26.10 - 2024-02-24
+
+-   Fixes for YustDatabaseServiceMocked
+
+## 3.26.9 - 2024-02-21
+
+-   Improved YustFilterComparator
+
+## 3.26.8 - 2024-02-11
+
+-   Fix for getAuthStateStream
+
+## 3.26.7 - 2024-02-11
+
+-   Improvements for YustAuthService
+
+## 3.26.6 - 2024-02-03
+
+-   Improvements for YustFileService
+
+## 3.26.5 - 2024-01-31
+
+-   Fixes for AuthService Mocked
+
+## 3.26.4 - 2024-01-31
+
+-   Improved AuthService & AuthService Mocked
+
+## 3.26.3 - 2024-01-21
+
+-   Getting ready for flutter version upgrade
+
+## 3.26.2 - 2024-01-20
+
+-   Fix for AuthService login with Apple
+
+## 3.26.1 - 2024-01-13
+
+-   Improve YustFile
+
+## 3.26.0 - 2024-12-16
+
+-   Fixes for YustDatabaseServiceMocked
+-   Version Bump
+
+## 3.25.6 - 2024-12-13
+
+-   Fixes
+
 ## 3.25.5 - 2024-11-01
 
 -   Fix for YustFileServiceDart

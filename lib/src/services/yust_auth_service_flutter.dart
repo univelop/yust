@@ -1,47 +1,63 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
+import 'yust_auth_service_shared.dart';
 
 class YustAuthService {
-  FirebaseAuth fireAuth;
+  late final FirebaseAuth _fireAuth;
+  late final Yust _yust;
 
-  YustAuthService({String? emulatorAddress})
-      : fireAuth = FirebaseAuth.instance {
+  YustAuthService(Yust yust,
+      {String? emulatorAddress, String? pathToServiceAccountJson})
+      : _fireAuth = FirebaseAuth.instance,
+        _yust = yust {
     if (emulatorAddress != null) {
-      fireAuth.useAuthEmulator(emulatorAddress, 9099);
+      _fireAuth.useAuthEmulator(emulatorAddress, 9099);
     }
   }
 
-  YustAuthService.mocked() : fireAuth = MockFirebaseAuth();
+  YustAuthService.mocked(Yust yust) {
+    throw UnsupportedError('Not supported in Flutter Environment');
+  }
 
   Stream<AuthState> getAuthStateStream() {
-    return fireAuth.authStateChanges().map<AuthState>((user) {
+    return _fireAuth.authStateChanges().map<AuthState>((user) {
       if (user != null) {
-        Yust.databaseService
-            .getFromDB<YustUser>(Yust.userSetup, user.uid)
-            .then((yustUser) => yustUser?.setLoginFields());
+        Yust.databaseService.getFirstFromDB<YustUser>(
+          Yust.userSetup,
+          filters: [
+            YustFilter(
+              comparator: YustFilterComparator.equal,
+              field: 'authId',
+              value: user.uid,
+            ),
+          ],
+        ).then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
   }
 
-  String? getCurrentUserId() => fireAuth.currentUser?.uid;
+  String? getCurrentUserId() => _fireAuth.currentUser?.uid;
 
   Future<void> signIn(
     String email,
     String password,
   ) async {
-    await fireAuth.signInWithEmailAndPassword(
+    await _fireAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+  }
+
+  Future<void> signInWithToken(String token) async {
+    await _fireAuth.signInWithCustomToken(token);
   }
 
   Future<YustUser?> signInWithMicrosoft() async {
@@ -61,7 +77,10 @@ class YustAuthService {
   }
 
   Future<YustUser?> signInWithApple() async {
-    final appleProvider = AppleAuthProvider();
+    final appleProvider = AppleAuthProvider()
+      ..addScope('email')
+      ..addScope('name');
+
     return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
   }
 
@@ -80,14 +99,21 @@ class YustAuthService {
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
-    final successfullyLinked = await _tryLinkYustUser(userCredential, method);
+
+    final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+      _yust,
+      _getEmail(userCredential),
+      _getId(userCredential),
+      method,
+    );
     if (successfullyLinked) return null;
 
     final nameParts = _extractNameParts(userCredential);
     final lastName = _getLastName(nameParts);
     final firstName = _getFirstName(nameParts);
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       lastName: lastName,
       email: _getEmail(userCredential),
@@ -124,59 +150,46 @@ class YustAuthService {
           {bool redirect = false}) async =>
       kIsWeb
           ? redirect
-              ? await fireAuth
+              ? await _fireAuth
                   .signInWithRedirect(provider)
-                  .then((value) => fireAuth.getRedirectResult())
-              : await fireAuth.signInWithPopup(provider)
+                  .then((value) => _fireAuth.getRedirectResult())
+              : await _fireAuth.signInWithPopup(provider)
           : await FirebaseAuth.instance.signInWithProvider(provider);
 
   Future<YustUser?> _maybeGetConnectedYustUser(
     UserCredential userCredential,
   ) async =>
-      (await Yust.databaseService.getFirst<YustUser>(Yust.userSetup, filters: [
+      (await Yust.databaseService
+          .getFirstFromDB<YustUser>(Yust.userSetup, filters: [
         YustFilter(
             field: 'authId',
             comparator: YustFilterComparator.equal,
             value: userCredential.user!.uid)
       ]));
 
-  Future<bool> _tryLinkYustUser(
-    UserCredential userCredential,
-    YustAuthenticationMethod? method,
-  ) async {
-    if (userCredential.user?.email == null ||
-        userCredential.user?.email == '') {
-      return false;
-    }
-    final user = await Yust.databaseService.getFirst<YustUser>(
-      Yust.userSetup,
-      filters: [
-        YustFilter(
-          field: 'email',
-          comparator: YustFilterComparator.equal,
-          value: userCredential.user!.email,
-        ),
-      ],
-    );
-    if (user == null) return false;
-    await user.linkAuth(userCredential.user!.uid, method);
-    return true;
-  }
-
-  Future<YustUser?> signUp(
+  Future<YustUser?> createAccount(
     String firstName,
     String lastName,
     String email,
     String password, {
     YustGender? gender,
+    bool useOAuth = false,
   }) async {
-    final userCredential = await fireAuth.createUserWithEmailAndPassword(
+    if (useOAuth == true) {
+      throw YustException('OAuth not supported for createAccount.');
+    }
+    final userCredential = await _fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
-    final successfullyLinked =
-        await _tryLinkYustUser(userCredential, YustAuthenticationMethod.mail);
+    final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
+      _yust,
+      email,
+      userCredential.user!.uid,
+      YustAuthenticationMethod.mail,
+    );
     if (successfullyLinked) return null;
 
-    return await _createUser(
+    return await YustAuthServiceShared.createYustUser(
+      yust: _yust,
       firstName: firstName,
       email: email,
       lastName: lastName,
@@ -187,41 +200,15 @@ class YustAuthService {
     );
   }
 
-  Future<YustUser> _createUser({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String id,
-    required String authId,
-    YustAuthenticationMethod? authenticationMethod,
-    String? domain,
-    YustGender? gender,
-  }) async {
-    final user = Yust.userSetup.newDoc()
-      ..email = email
-      ..firstName = firstName
-      ..lastName = lastName
-      ..id = id
-      ..authId = authId
-      ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
-      ..gender = gender
-      ..lastLogin = DateTime.now()
-      ..lastLoginDomain =
-          Uri.base.scheme.contains('http') ? Uri.base.host : null;
-    await Yust.databaseService.saveDoc<YustUser>(Yust.userSetup, user);
-    return user;
-  }
-
   Future<void> signOut() async {
-    await fireAuth.signOut();
+    await _fireAuth.signOut();
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
     // ignore: deprecated_member_use
-    final loginMethods = await fireAuth.fetchSignInMethodsForEmail(email);
+    final loginMethods = await _fireAuth.fetchSignInMethodsForEmail(email);
     if (loginMethods.contains('password')) {
-      await fireAuth.sendPasswordResetEmail(email: email);
+      await _fireAuth.sendPasswordResetEmail(email: email);
     } else {
       throw YustException('Reset password not possible.');
     }
@@ -229,11 +216,11 @@ class YustAuthService {
 
   Future<void> changeEmail(String email, String password) async {
     final user = await Yust.databaseService
-        .getFromDB<YustUser>(Yust.userSetup, fireAuth.currentUser!.uid);
+        .getFromDB<YustUser>(Yust.userSetup, _fireAuth.currentUser!.uid);
     if (user?.authenticationMethod == null ||
         user?.authenticationMethod == YustAuthenticationMethod.mail) {
-      final userCredential = await fireAuth.signInWithEmailAndPassword(
-        email: fireAuth.currentUser!.email!,
+      final userCredential = await _fireAuth.signInWithEmailAndPassword(
+        email: _fireAuth.currentUser!.email!,
         password: password,
       );
       await userCredential.user!.verifyBeforeUpdateEmail(email);
@@ -246,29 +233,29 @@ class YustAuthService {
   }
 
   Future<void> changePassword(String newPassword, String oldPassword) async {
-    final userCredential = await fireAuth.signInWithEmailAndPassword(
-      email: fireAuth.currentUser!.email!,
+    final userCredential = await _fireAuth.signInWithEmailAndPassword(
+      email: _fireAuth.currentUser!.email!,
       password: oldPassword,
     );
     await userCredential.user!.updatePassword(newPassword);
   }
 
   Future<void> checkPassword(String password) async {
-    await fireAuth.currentUser!
+    await _fireAuth.currentUser!
         .reauthenticateWithCredential(EmailAuthProvider.credential(
-      email: fireAuth.currentUser!.email!,
+      email: _fireAuth.currentUser!.email!,
       password: password,
     ));
   }
 
   Future<void> deleteAccount([String? password]) async {
     try {
-      final user = fireAuth.currentUser;
+      final user = _fireAuth.currentUser;
       await user?.delete();
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login' && password != null) {
-        final user = (await fireAuth.signInWithEmailAndPassword(
-          email: fireAuth.currentUser!.email!,
+        final user = (await _fireAuth.signInWithEmailAndPassword(
+          email: _fireAuth.currentUser!.email!,
           password: password,
         ))
             .user;
@@ -277,5 +264,20 @@ class YustAuthService {
         rethrow;
       }
     }
+  }
+
+  Future<String?> getJWTToken() async {
+    final jwtObject = await _fireAuth.currentUser?.getIdTokenResult();
+    return jwtObject?.token;
+  }
+
+  Future<void> addUserNamePasswordToAccount(String email, String password,
+      {List<String> allowedProviderIds = const []}) async {
+    throw UnimplementedError();
+  }
+
+  Future<String> getAuthTokenForAuthId(String authId,
+      {String? overrideEmail}) async {
+    throw UnimplementedError();
   }
 }

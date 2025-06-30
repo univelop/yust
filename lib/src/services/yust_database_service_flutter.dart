@@ -243,10 +243,10 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
-    if (startAfterDocumentName != null) {
-      print('startAfterDocumentName is not supported in Flutter');
+    if (startAfterDocument != null) {
+      print('startAfterDocument is not supported in Flutter');
     }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -267,10 +267,10 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) async {
-    if (startAfterDocumentName != null) {
-      print('startAfterDocumentName is not supported in Flutter');
+    if (startAfterDocument != null) {
+      print('startAfterDocument is not supported in Flutter');
     }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -299,10 +299,10 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) async {
-    if (startAfterDocumentName != null) {
-      print('startAfterDocumentName is not supported in Flutter');
+    if (startAfterDocument != null) {
+      print('startAfterDocument is not supported in Flutter');
     }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -320,10 +320,10 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
-    if (startAfterDocumentName != null) {
-      print('startAfterDocumentName is not supported in Flutter');
+    if (startAfterDocument != null) {
+      print('startAfterDocument is not supported in Flutter');
     }
     var query =
         getQuery(docSetup, orderBy: orderBy, filters: filters, limit: limit);
@@ -484,10 +484,10 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) async* {
-    if (startAfterDocumentName != null) {
-      print('startAfterDocumentName is not supported in Flutter');
+    if (startAfterDocument != null) {
+      print('startAfterDocument is not supported in Flutter');
     }
     final unequalFilters = (filters ?? [])
         .whereNot((filter) =>

@@ -245,14 +245,14 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
     return getListFromDB(
       docSetup,
       filters: filters,
       orderBy: orderBy,
       limit: limit,
-      startAfterDocumentName: startAfterDocumentName,
+      startAfterDocument: startAfterDocument,
     );
   }
 
@@ -274,14 +274,14 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
     return getListFromDB(
       docSetup,
       filters: filters,
       orderBy: orderBy,
       limit: limit,
-      startAfterDocumentName: startAfterDocumentName,
+      startAfterDocument: startAfterDocument,
     );
   }
 
@@ -304,7 +304,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) async {
     final response = await _retryOnException<List<RunQueryResponseElement>>(
         'getListFromDB',
@@ -315,7 +315,7 @@ class YustDatabaseService implements IYustDatabaseService {
               filters: filters,
               orderBy: orderBy,
               limit: limit,
-              startAfterDocumentName: startAfterDocumentName,
+              startAfterDocument: startAfterDocument,
             ),
             _getParentPath(docSetup)));
     dbLogCallback?.call(
@@ -360,7 +360,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${_rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
@@ -384,7 +384,6 @@ class YustDatabaseService implements IYustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      String? lastDocumentName = startAfterDocumentName;
       Map<String, dynamic>? lastDocument;
       while (!isDone) {
         final request = getQuery(docSetup,
@@ -392,8 +391,7 @@ class YustDatabaseService implements IYustDatabaseService {
             // orderBy __name__ is required for pagination
             orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
             limit: pageSize,
-            startAfterDocument: lastDocument,
-            startAfterDocumentName: lastDocumentName);
+            startAfterDocument: lastDocument);
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -423,7 +421,7 @@ class YustDatabaseService implements IYustDatabaseService {
             DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastDocumentName = response.last['document'];
+        if (!isDone) lastDocument = response.last['document'];
 
         yield* Stream.fromIterable(response);
       }
@@ -454,14 +452,14 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
+    Map<String, dynamic>? startAfterDocument,
   }) {
     return Stream.fromFuture(getListFromDB<T>(
       docSetup,
       filters: filters,
       orderBy: orderBy,
       limit: limit,
-      startAfterDocumentName: startAfterDocumentName,
+      startAfterDocument: startAfterDocument,
     ));
   }
 
@@ -951,7 +949,6 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    String? startAfterDocumentName,
     Map<String, dynamic>? startAfterDocument,
   }) {
     return RunQueryRequest(
@@ -964,8 +961,9 @@ class YustDatabaseService implements IYustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
-        startAt: startAfterDocument != null
-            ? Cursor(
+        startAt: startAfterDocument == null
+            ? null
+            : Cursor(
                 // The cursor is a list of values, which are used to order the documents.
                 // It needs to contain the value of every ordered field.
                 values: orderBy
@@ -978,11 +976,7 @@ class YustDatabaseService implements IYustDatabaseService {
                                 startAfterDocument['fields'], e.field)))
                         .toList() ??
                     [],
-                before: false)
-: startAfterDocumentName != null
-            ? Cursor(values: [
-                Value(referenceValue: startAfterDocumentName),
-              ], before: false) : null, //TODO: Do we only need one of startAfterDocument and startAfterDocumentName?
+                before: false),
       ),
       readTime: readTime?.toUtc().toIso8601String(),
     );

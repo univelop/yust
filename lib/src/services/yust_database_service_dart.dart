@@ -245,7 +245,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return getListFromDB(
       docSetup,
@@ -274,7 +274,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return getListFromDB(
       docSetup,
@@ -304,7 +304,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) async {
     final response = await _retryOnException<List<RunQueryResponseElement>>(
         'getListFromDB',
@@ -360,7 +360,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${_rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
@@ -384,7 +384,7 @@ class YustDatabaseService implements IYustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      Map<String, dynamic>? lastDocument;
+      T? lastDocument;
       while (!isDone) {
         final request = getQuery(docSetup,
             filters: filters,
@@ -452,7 +452,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return Stream.fromFuture(getListFromDB<T>(
       docSetup,
@@ -949,8 +949,9 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
+    final startAfterDocumentJson = startAfterDocument?.toJson();
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
         from: [CollectionSelector(collectionId: _getCollection(docSetup))],
@@ -961,19 +962,20 @@ class YustDatabaseService implements IYustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
-        startAt: startAfterDocument == null
+        startAt: startAfterDocumentJson == null
             ? null
             : Cursor(
                 // The cursor is a list of values, which are used to order the documents.
                 // It needs to contain the value of every ordered field.
                 values: orderBy
                         ?.map((e) => e.field == '__name__'
-                            ? Value(referenceValue: startAfterDocument['name'])
+                            ? Value(
+                                referenceValue: startAfterDocumentJson['name'])
                             // Because we are getting the value from the raw json,
                             // we do not need to use the valueToDbValue function,
                             // but can just get the json [Value] directly
                             : Value.fromJson(YustHelpers().getValueByPath(
-                                startAfterDocument['fields'], e.field)))
+                                startAfterDocumentJson['fields'], e.field)))
                         .toList() ??
                     [],
                 before: false),

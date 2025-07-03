@@ -243,7 +243,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     if (startAfterDocument != null) {
       print('startAfterDocument is not supported in Flutter');
@@ -267,7 +267,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) async {
     if (startAfterDocument != null) {
       print('startAfterDocument is not supported in Flutter');
@@ -299,7 +299,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) async {
     if (startAfterDocument != null) {
       print('startAfterDocument is not supported in Flutter');
@@ -320,7 +320,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     if (startAfterDocument != null) {
       print('startAfterDocument is not supported in Flutter');
@@ -484,7 +484,7 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) async* {
     if (startAfterDocument != null) {
       print('startAfterDocument is not supported in Flutter');
@@ -510,10 +510,10 @@ class YustDatabaseService implements IYustDatabaseService {
     DocumentSnapshot? lastDoc;
     while (!isDone) {
       var query = getQuery(docSetup,
-          filters: filters, orderBy: orderBy, limit: pageSize);
-      if (lastDoc != null) {
-        query = query.startAfterDocument(lastDoc);
-      }
+          filters: filters,
+          orderBy: orderBy,
+          limit: pageSize,
+          startAfterDocument: lastDoc);
 
       final snapshot =
           await query.get(GetOptions(source: Source.serverAndCache));

@@ -142,7 +142,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return getListFromDB(
       docSetup,
@@ -159,7 +159,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return getListFromDB(
       docSetup,
@@ -176,7 +176,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) async {
     final docs = _getList(
       docSetup,
@@ -196,7 +196,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return Stream.fromFuture(getList(docSetup,
             filters: filters,
@@ -212,7 +212,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     return Stream.fromFuture(getListFromDB<T>(
       docSetup,
@@ -552,7 +552,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs = _filter(jsonDocs, filters);
@@ -562,7 +562,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int startAfterIndex = 0;
     if (startAfterDocument != null) {
       startAfterIndex =
-          max(docs.indexWhere((doc) => doc.id == startAfterDocument['id']), 0);
+          max(docs.indexWhere((doc) => doc.id == startAfterDocument.id), 0);
     }
 
     final limitedDocs = docs.sublist(startAfterIndex,

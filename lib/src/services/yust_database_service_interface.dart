@@ -128,7 +128,7 @@ abstract interface class IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   });
 
   /// Returns [YustDoc]s from the cache, if available, otherwise from the server.
@@ -148,7 +148,7 @@ abstract interface class IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   });
 
   /// Returns [YustDoc]s directly from the database.
@@ -169,7 +169,7 @@ abstract interface class IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   });
 
   /// Returns [YustDoc]s as a lazy, chunked Stream from the database.
@@ -199,7 +199,7 @@ abstract interface class IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   });
 
   /// Returns a stream of a [YustDoc]s.
@@ -220,7 +220,7 @@ abstract interface class IYustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   });
 
   /// Counts the number of documents in a collection.

@@ -14,12 +14,14 @@ import '../util/object_helper.dart';
 import '../util/yust_field_transform.dart';
 import '../yust.dart';
 import 'yust_database_service.dart';
+import 'yust_database_service_interface.dart';
 import 'yust_database_service_shared.dart';
 
 typedef MockDB = Map<String, List<Map<String, dynamic>>>;
 
 /// A mock database service for storing docs.
-class YustDatabaseServiceMocked extends YustDatabaseService {
+class YustDatabaseServiceMocked extends YustDatabaseService
+    implements IYustDatabaseService {
   static OnChangeCallback? onChange;
 
   YustDatabaseServiceMocked.mocked({
@@ -140,8 +142,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
-    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    );
   }
 
   @override
@@ -150,8 +159,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
-    return getListFromDB(docSetup, filters: filters, orderBy: orderBy);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    );
   }
 
   @override
@@ -160,9 +176,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) async {
-    final docs =
-        _getList(docSetup, filters: filters, orderBy: orderBy, limit: limit);
+    final docs = _getList(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    );
     dbLogCallback?.call(
         DatabaseLogAction.get, _getDocumentPath(docSetup), docs.length);
     return docs;
@@ -174,9 +196,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    T? startAfterDocument,
   }) {
-    return Stream.fromFuture(
-            getList(docSetup, filters: filters, orderBy: orderBy))
+    return Stream.fromFuture(getList(docSetup,
+            filters: filters,
+            orderBy: orderBy,
+            limit: pageSize,
+            startAfterDocument: startAfterDocument))
         .expand((e) => e);
   }
 
@@ -186,9 +212,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
-    return Stream.fromFuture(getListFromDB<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit));
+    return Stream.fromFuture(getListFromDB<T>(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    ));
   }
 
   @override
@@ -520,13 +552,21 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
 
-    final limitedDocs = docs.sublist(0, min(limit ?? docs.length, docs.length));
+    int startAfterIndex = 0;
+    if (startAfterDocument != null) {
+      startAfterIndex =
+          max(docs.indexWhere((doc) => doc.id == startAfterDocument.id), 0);
+    }
+
+    final limitedDocs = docs.sublist(startAfterIndex,
+        min((limit ?? docs.length) + startAfterIndex, docs.length));
 
     return limitedDocs;
   }

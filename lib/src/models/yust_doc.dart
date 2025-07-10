@@ -63,6 +63,8 @@ abstract class YustDoc {
 
   /// The expiration timestamp (TTL) of the document.
   DateTime? _expiresAt;
+
+  @JsonKey(includeIfNull: false)
   DateTime? get expiresAt => _expiresAt;
   set expiresAt(DateTime? s) {
     if (s != _expiresAt) updateMask.add('expiresAt');

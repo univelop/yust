@@ -64,12 +64,19 @@ class YustNotification extends YustDoc {
       _$YustNotificationFromJson(json);
 
   /// Mark the notification as read.
+  ///
+  /// NOTE: This will automatically delete the notification after 30 days.
   void markRead() {
+    // Auto-Delete after 30 days
+    expiresAt = Yust.helpers.utcNow().add(const Duration(days: 30));
     readAt = Yust.helpers.utcNow();
   }
 
   /// Mark the notification as unread.
+  ///
+  /// This will also remove the auto-delete.
   void markUnread() {
+    expiresAt = null;
     readAt = null;
   }
 

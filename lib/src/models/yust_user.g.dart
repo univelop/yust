@@ -26,6 +26,9 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
       ..envId = json['envId'] as String?
+      ..expiresAt = json['expiresAt'] == null
+          ? null
+          : DateTime.parse(json['expiresAt'] as String)
       ..envIds = (json['envIds'] as Map?)?.map(
             (k, e) => MapEntry(k as String, e as bool?),
           ) ??
@@ -59,6 +62,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'modifiedBy': instance.modifiedBy,
       'userId': instance.userId,
       'envId': instance.envId,
+      'expiresAt': instance.expiresAt?.toIso8601String(),
       'email': instance.email,
       'firstName': instance.firstName,
       'lastName': instance.lastName,

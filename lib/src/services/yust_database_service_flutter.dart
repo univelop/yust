@@ -61,9 +61,18 @@ class YustDatabaseService {
     throw UnsupportedError('Not supported in Flutter Environment');
   }
 
-  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
+  /// Initializes a document with an id and the time it was created.
+  ///
+  /// Optionally an existing document can be given, which will still be
+  /// assigned a new id becoming a new document if it had an id previously.
+  ///
+  /// [expiresAfter] can be passed to set the expiration timestamp (TTL) of the document.
+  /// Firestore will automatically delete the document after the specified duration.
+  /// Note that this will override the [docSetup.expiresAfter] if set.
+  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup,
+      {T? doc, Duration? expiresAfter}) {
     final id = _fireStore.collection(_getCollectionPath(docSetup)).doc().id;
-    return doInitDoc(docSetup, id, doc);
+    return doInitDoc(docSetup, id, doc: doc, expiresAfter: expiresAfter);
   }
 
   Future<T?> get<T extends YustDoc>(
@@ -536,31 +545,6 @@ class YustDatabaseService {
     dbLogCallback?.call(
         DatabaseLogAction.delete, _getCollectionPath(docSetup), 1,
         id: docId);
-  }
-
-  Future<T> saveNewDoc<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    required T doc,
-    Future<void> Function(T)? onInitialised,
-    bool? removeNullValues,
-  }) async {
-    doc = initDoc<T>(docSetup, doc);
-
-    if (onInitialised != null) {
-      await onInitialised(doc);
-    }
-
-    await saveDoc<T>(
-      docSetup,
-      doc,
-      removeNullValues: removeNullValues ?? docSetup.removeNullValues,
-      skipLog: true,
-    );
-    dbLogCallback?.call(
-        DatabaseLogAction.saveNew, _getCollectionPath(docSetup), 1,
-        id: doc.id);
-
-    return doc;
   }
 
   /// Reads a document, executes a function and saves the document as a transaction.

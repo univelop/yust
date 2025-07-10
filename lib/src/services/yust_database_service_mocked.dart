@@ -41,9 +41,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   Map<String, List<Map<String, dynamic>>> get db => _db;
 
   @override
-  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
+  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup,
+      {T? doc, Duration? expiresAfter}) {
     final id = _createDocumentId();
-    return doInitDoc(docSetup, id, doc);
+    return doInitDoc(docSetup, id, doc: doc, expiresAfter: expiresAfter);
   }
 
   @override

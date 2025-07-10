@@ -87,9 +87,14 @@ class YustDatabaseService {
   ///
   /// Optionally an existing document can be given, which will still be
   /// assigned a new id becoming a new document if it had an id previously.
-  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
+  ///
+  /// [expiresAfter] can be passed to set the expiration timestamp (TTL) of the document.
+  /// Firestore will automatically delete the document after the specified duration.
+  /// Note that this will override the [docSetup.expiresAfter] if set.
+  T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup,
+      {T? doc, Duration? expiresAfter}) {
     final id = _createDocumentId();
-    return doInitDoc(docSetup, id, doc);
+    return doInitDoc(docSetup, id, doc: doc, expiresAfter: expiresAfter);
   }
 
   /// Returns a [YustDoc] from the server, if available, otherwise from the cache.
@@ -677,36 +682,6 @@ class YustDatabaseService {
           DatabaseLogAction.delete, _getDocumentPath(docSetup), 1,
           id: id);
     });
-  }
-
-  /// Initializes a [YustDoc] and saves it.
-  ///
-  /// If [onInitialised] is provided, it will be called and
-  /// waited for after the document is initialized.
-  ///
-  /// An existing document can be given which will instead be initialized.
-  Future<T> saveNewDoc<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    required T doc,
-    Future<void> Function(T)? onInitialised,
-    bool? removeNullValues,
-  }) async {
-    doc = initDoc<T>(docSetup, doc);
-
-    if (onInitialised != null) {
-      await onInitialised(doc);
-    }
-
-    await saveDoc<T>(
-      docSetup,
-      doc,
-      removeNullValues: removeNullValues ?? docSetup.removeNullValues,
-      skipLog: true,
-    );
-    dbLogCallback?.call(
-        DatabaseLogAction.saveNew, _getDocumentPath(docSetup), 1,
-        id: doc.id);
-    return doc;
   }
 
   /// Reads a document, executes a function and saves the document as a transaction.

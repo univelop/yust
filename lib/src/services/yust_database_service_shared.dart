@@ -39,7 +39,8 @@ Future<void> prepareSaveDoc<T extends YustDoc>(
   if (!skipOnSave) await docSetup.onSave?.call(doc);
 }
 
-T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
+T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id,
+    {T? doc, Duration? expiresAfter}) {
   doc ??= docSetup.newDoc();
 
   doc.id = id;
@@ -50,6 +51,9 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
   if (docSetup.forEnvironment) doc.envId = docSetup.envId;
   if (docSetup.expiresAfter != null) {
     doc.expiresAt = Yust.helpers.utcNow().add(docSetup.expiresAfter!);
+  }
+  if (expiresAfter != null) {
+    doc.expiresAt = Yust.helpers.utcNow().add(expiresAfter);
   }
 
   docSetup.onInit?.call(doc);

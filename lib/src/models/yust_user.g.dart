@@ -54,42 +54,32 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
           ) ??
           {};
 
-Map<String, dynamic> _$YustUserToJson(YustUser instance) {
-  final val = <String, dynamic>{
-    'id': instance.id,
-    'createdAt': instance.createdAt?.toIso8601String(),
-    'createdBy': instance.createdBy,
-    'modifiedAt': instance.modifiedAt?.toIso8601String(),
-    'modifiedBy': instance.modifiedBy,
-    'userId': instance.userId,
-    'envId': instance.envId,
-  };
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('expiresAt', instance.expiresAt?.toIso8601String());
-  val['email'] = instance.email;
-  val['firstName'] = instance.firstName;
-  val['lastName'] = instance.lastName;
-  val['gender'] = _$YustGenderEnumMap[instance.gender];
-  val['envIds'] = instance.envIds;
-  val['currEnvId'] = instance.currEnvId;
-  val['deviceIds'] = instance.deviceIds;
-  val['lastLogin'] = instance.lastLogin?.toIso8601String();
-  val['lastLoginDomain'] = instance.lastLoginDomain;
-  val['authenticationMethod'] =
-      _$YustAuthenticationMethodEnumMap[instance.authenticationMethod];
-  val['domain'] = instance.domain;
-  val['authId'] = instance.authId;
-  val['profilePicture'] = instance.profilePicture?.toJson();
-  val['locale'] = instance.locale;
-  val['userAttributes'] = instance.userAttributes;
-  return val;
-}
+Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
+      'id': instance.id,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'createdBy': instance.createdBy,
+      'modifiedAt': instance.modifiedAt?.toIso8601String(),
+      'modifiedBy': instance.modifiedBy,
+      'userId': instance.userId,
+      'envId': instance.envId,
+      'expiresAt': instance.expiresAt?.toIso8601String(),
+      'email': instance.email,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
+      'gender': _$YustGenderEnumMap[instance.gender],
+      'envIds': instance.envIds,
+      'currEnvId': instance.currEnvId,
+      'deviceIds': instance.deviceIds,
+      'lastLogin': instance.lastLogin?.toIso8601String(),
+      'lastLoginDomain': instance.lastLoginDomain,
+      'authenticationMethod':
+          _$YustAuthenticationMethodEnumMap[instance.authenticationMethod],
+      'domain': instance.domain,
+      'authId': instance.authId,
+      'profilePicture': instance.profilePicture?.toJson(),
+      'locale': instance.locale,
+      'userAttributes': instance.userAttributes,
+    };
 
 const _$YustGenderEnumMap = {
   YustGender.male: 'male',

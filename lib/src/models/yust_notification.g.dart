@@ -39,32 +39,23 @@ YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
           ? null
           : DateTime.parse(json['readAt'] as String);
 
-Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) {
-  final val = <String, dynamic>{
-    'id': instance.id,
-    'createdAt': instance.createdAt?.toIso8601String(),
-    'createdBy': instance.createdBy,
-    'modifiedAt': instance.modifiedAt?.toIso8601String(),
-    'modifiedBy': instance.modifiedBy,
-    'userId': instance.userId,
-    'envId': instance.envId,
-  };
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('expiresAt', instance.expiresAt?.toIso8601String());
-  val['forCollection'] = instance.forCollection;
-  val['forDocId'] = instance.forDocId;
-  val['deepLink'] = instance.deepLink;
-  val['title'] = instance.title;
-  val['body'] = instance.body;
-  val['dispatchAt'] = instance.dispatchAt?.toIso8601String();
-  val['delivered'] = instance.delivered;
-  val['data'] = instance.data;
-  val['readAt'] = instance.readAt?.toIso8601String();
-  return val;
-}
+Map<String, dynamic> _$YustNotificationToJson(YustNotification instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'createdBy': instance.createdBy,
+      'modifiedAt': instance.modifiedAt?.toIso8601String(),
+      'modifiedBy': instance.modifiedBy,
+      'userId': instance.userId,
+      'envId': instance.envId,
+      'expiresAt': instance.expiresAt?.toIso8601String(),
+      'forCollection': instance.forCollection,
+      'forDocId': instance.forDocId,
+      'deepLink': instance.deepLink,
+      'title': instance.title,
+      'body': instance.body,
+      'dispatchAt': instance.dispatchAt?.toIso8601String(),
+      'delivered': instance.delivered,
+      'data': instance.data,
+      'readAt': instance.readAt?.toIso8601String(),
+    };

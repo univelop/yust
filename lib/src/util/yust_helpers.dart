@@ -271,4 +271,58 @@ class YustHelpers {
         return aString.compareTo(bString);
       });
   }
+
+  /// Formats a number to a string.
+  /// If [decimalCount] is null, the number is rounded to [maxPrecision] decimal places.
+  /// If [decimalCount] is given, the number is rounded to exactly [decimalCount] decimal places and optionally padded with zeros.
+  /// If [thousandsSeparator] is true, the number is formatted with a thousands separator.
+  /// Use [locale] to specify the thousands separator and decimal separator.
+  /// If [minWholeCount] is given, the number is padded with zeros to the left to reach at least [minWholeCount] digits.
+  /// The [minWholeCount] does not work with [thousandsSeparator] set to true.
+  String numToString(
+    num number, {
+    bool thousandsSeparator = false,
+    int minWholeCount = 1,
+    int? decimalCount,
+    int maxPrecision = 2,
+    String locale = 'de-DE',
+    String? unit,
+  }) {
+    assert((minWholeCount == 1) || !thousandsSeparator,
+        'minWholeCount does not work with thousandsSeparator set to true');
+    final wholePattern = thousandsSeparator ? '#,##0' : '0' * minWholeCount;
+    final decimalPattern =
+        decimalCount == null ? '#' * maxPrecision : '0' * decimalCount;
+    final format = NumberFormat(
+      '$wholePattern${decimalCount == 0 ? '' : '.'}$decimalPattern',
+      locale,
+    );
+    return unit == null || unit.isEmpty
+        ? format.format(number)
+        : '${format.format(number)} $unit';
+  }
+
+  /// Parse a string to a number.
+  /// If [maxPrecision] is null, the number is parsed as is.
+  /// If [maxPrecision] is 0, the number is rounded to the nearest integer.
+  /// If [maxPrecision] is given, the number is rounded to exactly [maxPrecision] decimal places.
+  /// Use [locale] to specify the thousands separator and decimal separator.
+  num? stringToNumber(String text,
+      {int? maxPrecision, String locale = 'de-DE'}) {
+    if (text.isEmpty) return null;
+    final format = NumberFormat.decimalPattern(locale);
+    try {
+      final number = format.parse(text);
+      if (maxPrecision == null) {
+        return number;
+      }
+      if (maxPrecision == 0) {
+        return number.round();
+      }
+      num mod = pow(10.0, maxPrecision);
+      return ((number * mod).round().toDouble() / mod);
+    } catch (e) {
+      return null;
+    }
+  }
 }

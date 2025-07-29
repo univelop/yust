@@ -273,28 +273,27 @@ class YustHelpers {
   }
 
   /// Formats a number to a string.
-  /// If [decimalCount] is null, the number is rounded to [maxPrecision] decimal places.
-  /// If [decimalCount] is given, the number is rounded to exactly [decimalCount] decimal places and optionally padded with zeros.
+  /// The number is rounded to [decimalDigitCount] decimal places
+  /// and optionally padded with zeros if [padDecimalDigits] is true.
   /// If [thousandsSeparator] is true, the number is formatted with a thousands separator.
   /// Use [locale] to specify the thousands separator and decimal separator.
-  /// If [minWholeCount] is given, the number is padded with zeros to the left to reach at least [minWholeCount] digits.
-  /// The [minWholeCount] does not work with [thousandsSeparator] set to true.
+  /// The number is padded with zeros to the left to reach at least [wholeDigitCount] whole digits.
+  /// The [wholeDigitCount]>1 does not work with [thousandsSeparator] set to true.
   String numToString(
     num number, {
     bool thousandsSeparator = false,
-    int minWholeCount = 1,
-    int? decimalCount,
-    int maxPrecision = 2,
+    int wholeDigitCount = 1,
+    int decimalDigitCount = 2,
+    bool padDecimalDigits = false,
     String locale = 'de-DE',
     String? unit,
   }) {
-    assert((minWholeCount == 1) || !thousandsSeparator,
+    assert((wholeDigitCount == 1) || !thousandsSeparator,
         'minWholeCount does not work with thousandsSeparator set to true');
-    final wholePattern = thousandsSeparator ? '#,##0' : '0' * minWholeCount;
-    final decimalPattern =
-        decimalCount == null ? '#' * maxPrecision : '0' * decimalCount;
+    final wholePattern = thousandsSeparator ? '#,##0' : '0' * wholeDigitCount;
+    final decimalPattern = (padDecimalDigits ? '0' : '#') * decimalDigitCount;
     final format = NumberFormat(
-      '$wholePattern${decimalCount == 0 ? '' : '.'}$decimalPattern',
+      '$wholePattern${decimalDigitCount == 0 ? '' : '.'}$decimalPattern',
       locale,
     );
     return unit == null || unit.isEmpty
@@ -303,23 +302,22 @@ class YustHelpers {
   }
 
   /// Parse a string to a number.
-  /// If [maxPrecision] is null, the number is parsed as is.
-  /// If [maxPrecision] is 0, the number is rounded to the nearest integer.
-  /// If [maxPrecision] is given, the number is rounded to exactly [maxPrecision] decimal places.
+  /// If [precision] is null, the number is parsed as is.
+  /// If [precision] is 0, the number is rounded to the nearest integer.
+  /// If [precision] is given, the number is rounded to exactly [precision] decimal places.
   /// Use [locale] to specify the thousands separator and decimal separator.
-  num? stringToNumber(String text,
-      {int? maxPrecision, String locale = 'de-DE'}) {
+  num? stringToNumber(String text, {int? precision, String locale = 'de-DE'}) {
     if (text.isEmpty) return null;
     final format = NumberFormat.decimalPattern(locale);
     try {
       final number = format.parse(text);
-      if (maxPrecision == null) {
+      if (precision == null) {
         return number;
       }
-      if (maxPrecision == 0) {
+      if (precision == 0) {
         return number.round();
       }
-      num mod = pow(10.0, maxPrecision);
+      num mod = pow(10.0, precision);
       return ((number * mod).round().toDouble() / mod);
     } catch (e) {
       return null;

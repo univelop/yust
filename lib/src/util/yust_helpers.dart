@@ -271,4 +271,57 @@ class YustHelpers {
         return aString.compareTo(bString);
       });
   }
+
+  /// Formats a number to a string.
+  /// The number is rounded to [decimalDigitCount] decimal places
+  /// and optionally padded with zeros if [padDecimalDigits] is true.
+  /// If [thousandsSeparator] is true, the number is formatted with a thousands separator.
+  /// Use [locale] to specify the thousands separator and decimal separator.
+  /// The number is padded with zeros to the left to reach at least [wholeDigitCount] whole digits.
+  String numToString(
+    num number, {
+    bool thousandsSeparator = false,
+    int wholeDigitCount = 1,
+    int decimalDigitCount = 2,
+    bool padDecimalDigits = false,
+    String locale = 'de-DE',
+    String? unit,
+  }) {
+    final formatter = NumberFormat.decimalPattern(locale)
+      ..significantDigitsInUse
+      ..minimumIntegerDigits = wholeDigitCount
+      ..maximumFractionDigits = decimalDigitCount;
+    if (padDecimalDigits) {
+      formatter.minimumFractionDigits = decimalDigitCount;
+    }
+    if (!thousandsSeparator) {
+      formatter.turnOffGrouping();
+    }
+    return unit == null || unit.isEmpty
+        ? formatter.format(number)
+        : '${formatter.format(number)} $unit';
+  }
+
+  /// Parse a string to a number.
+  /// If [precision] is null, the number is parsed as is.
+  /// If [precision] is 0, the number is rounded to the nearest integer.
+  /// If [precision] is given, the number is rounded to exactly [precision] decimal places.
+  /// Use [locale] to specify the thousands separator and decimal separator.
+  num? stringToNumber(String text, {int? precision, String locale = 'de-DE'}) {
+    if (text.isEmpty) return null;
+    final format = NumberFormat.decimalPattern(locale);
+    try {
+      final number = format.parse(text);
+      if (precision == null) {
+        return number;
+      }
+      if (precision == 0) {
+        return number.round();
+      }
+      num mod = pow(10.0, precision);
+      return ((number * mod).round().toDouble() / mod);
+    } catch (e) {
+      return null;
+    }
+  }
 }

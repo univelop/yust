@@ -324,6 +324,7 @@ class YustAuthService {
       await firebaseUser.verifyBeforeUpdateEmail(user.email);
     }
   }
-
+  
+  /// Reloads the current user to ensure the latest information is fetched from Firebase.
   Future<void> reloadCurrentUser() async => await _fireAuth.currentUser?.reload();
 }

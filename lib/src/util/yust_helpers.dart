@@ -278,7 +278,6 @@ class YustHelpers {
   /// If [thousandsSeparator] is true, the number is formatted with a thousands separator.
   /// Use [locale] to specify the thousands separator and decimal separator.
   /// The number is padded with zeros to the left to reach at least [wholeDigitCount] whole digits.
-  /// The [wholeDigitCount]>1 does not work with [thousandsSeparator] set to true.
   String numToString(
     num number, {
     bool thousandsSeparator = false,
@@ -288,17 +287,19 @@ class YustHelpers {
     String locale = 'de-DE',
     String? unit,
   }) {
-    assert((wholeDigitCount == 1) || !thousandsSeparator,
-        'minWholeCount does not work with thousandsSeparator set to true');
-    final wholePattern = thousandsSeparator ? '#,##0' : '0' * wholeDigitCount;
-    final decimalPattern = (padDecimalDigits ? '0' : '#') * decimalDigitCount;
-    final format = NumberFormat(
-      '$wholePattern${decimalDigitCount == 0 ? '' : '.'}$decimalPattern',
-      locale,
-    );
+    final formatter = NumberFormat.decimalPattern(locale)
+      ..significantDigitsInUse
+      ..minimumIntegerDigits = wholeDigitCount
+      ..maximumFractionDigits = decimalDigitCount;
+    if (padDecimalDigits) {
+      formatter.minimumFractionDigits = decimalDigitCount;
+    }
+    if (!thousandsSeparator) {
+      formatter.turnOffGrouping();
+    }
     return unit == null || unit.isEmpty
-        ? format.format(number)
-        : '${format.format(number)} $unit';
+        ? formatter.format(number)
+        : '${formatter.format(number)} $unit';
   }
 
   /// Parse a string to a number.

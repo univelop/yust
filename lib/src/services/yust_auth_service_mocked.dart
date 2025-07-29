@@ -87,4 +87,13 @@ class YustAuthServiceMocked implements YustAuthService {
   Future<String> getAuthTokenForAuthId(String authId,
           {String? overrideEmail}) =>
       throw UnimplementedError();
+
+  @override
+  Future<bool?> isEmailVerified() => throw UnimplementedError();
+
+  @override
+  Future<void> sendEmailVerification() => throw UnimplementedError();
+
+  @override
+  Future<void> reloadCurrentUser() => throw UnimplementedError();
 }

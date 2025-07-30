@@ -192,6 +192,30 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
   }
 
   @override
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) async {
+    final docs =
+        _getList(docSetup, filters: filters, orderBy: orderBy, limit: limit);
+    return docs.map((e) => e.id).toList();
+  }
+
+  @override
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 300,
+  }) {
+    return Stream.fromFuture(
+            getDocumentIds(docSetup, filters: filters, orderBy: orderBy))
+        .expand((e) => e);
+  }
+
+  @override
   Future<int> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -254,7 +278,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
@@ -334,7 +357,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == doc.id);
     await onChange?.call(
@@ -351,7 +373,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService {
       YustDocSetup<T> docSetup, String id) async {
     final doc = await get(docSetup, id);
     if (doc == null) return;
-    await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == id);
     await onChange?.call(

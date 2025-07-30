@@ -275,15 +275,12 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    final response = await _retryOnException<List<RunQueryResponseElement>>(
-        'getListFromDB',
-        _getDocumentPath(docSetup),
-        () => _api.projects.databases.documents.runQuery(
-            getQuery(docSetup,
-                filters: filters, orderBy: orderBy, limit: limit),
-            _getParentPath(docSetup)));
-    dbLogCallback?.call(
-        DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
+    final response = await _runListQuery(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+    );
 
     return response
         .map((e) {
@@ -323,6 +320,143 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+  }) =>
+      _runListChunkedQuery(docSetup,
+          filters: filters, orderBy: orderBy, fields: ['id']).map<T?>((e) {
+        if (e['document'] == null) return null;
+        return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
+      }).whereType<T>();
+
+  /// Returns a stream of a [YustDoc]s.
+  ///
+  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [orderBy] orders the returned records.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to only get at most n documents.
+  Stream<List<T>> getListStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) {
+    return Stream.fromFuture(getListFromDB<T>(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit));
+  }
+
+  /// Returns the document ids directly from the database.
+  /// This is more memory efficient than getList since it only fetches the id field.
+  ///
+  /// Be careful with offline functionality.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [orderBy] orders the returned records.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to only get at most n documents.
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) async {
+    final response = await _runListQuery(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      fields: ['id'],
+    );
+
+    return response
+        .map((e) {
+          if (e.document == null) {
+            return null;
+          }
+          return e.document?.fields?['id']?.stringValue;
+        })
+        .whereType<String>()
+        .toList();
+  }
+
+  /// Returns the document ids as a lazy, chunked Stream from the database.
+  ///
+  /// This is much more memory efficient in comparison to other methods,
+  /// because of three reasons:
+  /// 1. It gets the data in multiple requests ([pageSize] each); the raw json
+  ///    strings and raw maps are only in memory while one chunk is processed.
+  /// 2. It loads the records *lazily*, meaning only one chunk is in memory while
+  ///    the records worked with (e.g. via a `await for(...)`)
+  /// 3. It doesn't use the google_apis package for the request, because that
+  ///    has a huge memory leak
+  /// 4. It only fetches the id field, which is much smaller than the full document.
+  ///
+  /// NOTE: Because this is a Stream you may only iterate over it once,
+  /// listening to it multiple times will result in a runtime-exception!
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [orderBy] orders the returned records.
+  /// Multiple of those entries can be repeated.
+  ///
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 300,
+  }) =>
+      _runListChunkedQuery(docSetup,
+          filters: filters, orderBy: orderBy, fields: ['id']).map<String?>((e) {
+        if (e['document'] == null) return null;
+        final document = Document.fromJson(e['document']);
+        return document.fields?['id']?.stringValue;
+      }).whereType<String>();
+
+  Future<List<RunQueryResponseElement>> _runListQuery<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+    List<String>? fields,
+  }) async {
+    final response = await _retryOnException<List<RunQueryResponseElement>>(
+      'getListFromDB',
+      _getDocumentPath(docSetup),
+      () => _api.projects.databases.documents.runQuery(
+        getQuery(
+          docSetup,
+          filters: filters,
+          orderBy: orderBy,
+          limit: limit,
+          fields: fields,
+        ),
+        _getParentPath(docSetup),
+      ),
+    );
+    dbLogCallback?.call(
+        DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
+    return response;
+  }
+
+  Stream<Map<dynamic, dynamic>> _runListChunkedQuery<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    List<String>? fields,
+    int pageSize = 300,
   }) {
     final parent = _getParentPath(docSetup);
     final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
@@ -348,12 +482,15 @@ class YustDatabaseService {
       var isDone = false;
       Map<String, dynamic>? lastDocument;
       while (!isDone) {
-        final request = getQuery(docSetup,
-            filters: filters,
-            // orderBy __name__ is required for pagination
-            orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
-            limit: pageSize,
-            startAfterDocument: lastDocument);
+        final request = getQuery(
+          docSetup,
+          filters: filters,
+          // orderBy __name__ is required for pagination
+          orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
+          limit: pageSize,
+          startAfterDocument: lastDocument,
+          fields: fields,
+        );
         final body = jsonEncode(request);
 
         final result = await _retryOnException(
@@ -389,33 +526,7 @@ class YustDatabaseService {
       }
     }
 
-    return lazyPaginationGenerator().map<T?>((e) {
-      if (e['document'] == null) return null;
-      return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
-    }).whereType<T>();
-  }
-
-  /// Returns a stream of a [YustDoc]s.
-  ///
-  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
-  ///
-  /// [docSetup] is used to read the collection path.
-  ///
-  /// [filters] Each entry represents a condition that has to be met.
-  /// All of those conditions must be true for each returned entry.
-  ///
-  /// [orderBy] orders the returned records.
-  /// Multiple of those entries can be repeated.
-  ///
-  /// [limit] can be passed to only get at most n documents.
-  Stream<List<T>> getListStream<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
-    int? limit,
-  }) {
-    return Stream.fromFuture(getListFromDB<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit));
+    return lazyPaginationGenerator();
   }
 
   /// Counts the number of documents in a collection.
@@ -515,7 +626,6 @@ class YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
     final yustUpdateMask = doc.updateMask;
@@ -556,6 +666,7 @@ class YustDatabaseService {
       await _api.projects.databases.documents.patch(
         dbDoc,
         docPath,
+        mask_fieldPaths: ['id'], // to reduce the size of the request
         updateMask_fieldPaths: ignoreUpdateMask ? null : quotedUpdateMask,
         currentDocument_exists: doNotCreate ? true : null,
       );
@@ -613,9 +724,9 @@ class YustDatabaseService {
     List<YustFilter>? filters,
   }) async {
     // (No logs here, because getListFromDB, and deleteDoc already log)
-    final docs = await getListFromDB<T>(docSetup, filters: filters);
-    for (var doc in docs) {
-      await deleteDoc<T>(docSetup, doc);
+    final docsIds = getDocumentIdsChunked<T>(docSetup, filters: filters);
+    await for (var docId in docsIds) {
+      await deleteDocById<T>(docSetup, docId);
     }
   }
 
@@ -627,7 +738,13 @@ class YustDatabaseService {
     int? limit,
   }) async {
     final response = await _api.projects.databases.documents.runQuery(
-      getQuery(docSetup, filters: filters, orderBy: orderBy, limit: limit),
+      getQuery(
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: limit,
+        fields: [],
+      ),
       _getParentPath(docSetup),
     );
 
@@ -656,7 +773,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final docPath = _getDocumentPath(docSetup, doc.id);
     await _retryOnException('deleteDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.delete(docPath);
@@ -668,7 +784,6 @@ class YustDatabaseService {
   /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String id) async {
-    await (await get(docSetup, id))?.onDelete();
     final docPath = _getDocumentPath(docSetup, id);
     await _retryOnException('deleteDocById', _getDocumentPath(docSetup, id),
         () async {
@@ -891,6 +1006,7 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
     Map<String, dynamic>? startAfterDocument,
+    List<String>? fields,
   }) {
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
@@ -902,6 +1018,13 @@ class YustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
+        select: fields == null
+            ? null
+            : Projection(
+                fields: fields
+                    .map((field) => FieldReference(fieldPath: field))
+                    .toList(),
+              ),
         startAt: startAfterDocument == null
             ? null
             : Cursor(

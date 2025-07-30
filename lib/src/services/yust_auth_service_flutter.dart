@@ -180,6 +180,7 @@ class YustAuthService {
     }
     final userCredential = await _fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
+    await userCredential.user?.updateDisplayName('$firstName $lastName');
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
       email,

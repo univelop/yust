@@ -180,6 +180,7 @@ class YustAuthService {
     }
     final userCredential = await _fireAuth.createUserWithEmailAndPassword(
         email: email, password: password);
+    await userCredential.user?.updateDisplayName('$firstName $lastName');
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
       email,
@@ -280,4 +281,51 @@ class YustAuthService {
       {String? overrideEmail}) async {
     throw UnimplementedError();
   }
+
+  /// Checks if the email of the current user is verified.
+  /// Returns null if the user is not authenticated or if the authentication method is not email.
+  Future<bool?> isEmailVerified() async {
+    final firebaseUser = _fireAuth.currentUser;
+    if (firebaseUser == null) return null;
+
+    final user = await Yust.databaseService
+        .getFromDB<YustUser>(Yust.userSetup, firebaseUser.uid);
+    if (user == null) return null;
+
+    // Only relevant for email authentication
+    if (user.authenticationMethod != YustAuthenticationMethod.mail) return null;
+
+    // Reload to get the latest user information from Firebase.
+    // Note: If the user's email was changed and is now verified, this reload may invalidate the session.
+    // In that case, `authStateStream` can emit null, resulting in `AuthState.signedOut`.
+    await reloadCurrentUser();
+    final refreshedUser = _fireAuth.currentUser;
+
+    // If the emails match, return the verified status.
+    // Note: We do not rely solely on emailVerified because, during a pending email change,
+    // Firebase still shows the old (already verified) email, which would always return true.
+    if (refreshedUser?.email == user.email) {
+      return refreshedUser?.emailVerified;
+    }
+
+    // If emails differ, the new email is pending verification
+    return false;
+  }
+
+  /// Sends a verification email to the current user.
+  /// Throws an exception if no user is currently signed in.
+  /// This method is only applicable for users authenticated via email.
+  Future<void> sendEmailVerification() async {
+    final firebaseUser = _fireAuth.currentUser;
+    final user = await Yust.databaseService
+        .getFromDB<YustUser>(Yust.userSetup, _fireAuth.currentUser!.uid);
+    if (firebaseUser != null &&
+        user != null &&
+        user.authenticationMethod == YustAuthenticationMethod.mail) {
+      await firebaseUser.verifyBeforeUpdateEmail(user.email);
+    }
+  }
+  
+  /// Reloads the current user to ensure the latest information is fetched from Firebase.
+  Future<void> reloadCurrentUser() async => await _fireAuth.currentUser?.reload();
 }

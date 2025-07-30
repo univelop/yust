@@ -307,7 +307,11 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
   }) async {
-    throw UnimplementedError();
+    // We just implement the functionality to also work in the frontend.
+    // But this is not efficient since we cant mask our fields in the frontend.
+    final documents = await getList<T>(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit);
+    return documents.map((e) => e.id).toList();
   }
 
   Stream<String> getDocumentIdsChunked<T extends YustDoc>(
@@ -316,7 +320,11 @@ class YustDatabaseService {
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
   }) {
-    throw UnimplementedError();
+    // We just implement the functionality to also work in the frontend.
+    // But this is not efficient since we cant mask our fields in the frontend.
+    final documentsStream = getListChunked<T>(docSetup,
+        filters: filters, orderBy: orderBy, pageSize: pageSize);
+    return documentsStream.map((e) => e.id);
   }
 
   Future<int?> count<T extends YustDoc>(

@@ -301,6 +301,32 @@ class YustDatabaseService {
     });
   }
 
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+  }) async {
+    // We just implement the functionality to also work in the frontend.
+    // But this is not efficient since we cant mask our fields in the frontend.
+    final documents = await getList<T>(docSetup,
+        filters: filters, orderBy: orderBy, limit: limit);
+    return documents.map((e) => e.id).toList();
+  }
+
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 300,
+  }) {
+    // We just implement the functionality to also work in the frontend.
+    // But this is not efficient since we cant mask our fields in the frontend.
+    final documentsStream = getListChunked<T>(docSetup,
+        filters: filters, orderBy: orderBy, pageSize: pageSize);
+    return documentsStream.map((e) => e.id);
+  }
+
   Future<int?> count<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -346,7 +372,6 @@ class YustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
     await prepareSaveDoc(docSetup, doc,
         trackModification: trackModification, skipOnSave: skipOnSave);
@@ -518,7 +543,6 @@ class YustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
     await docRef.delete();
@@ -529,7 +553,6 @@ class YustDatabaseService {
 
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String docId) async {
-    await (await get(docSetup, docId))?.onDelete();
     final docRef =
         _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
     await docRef.delete();

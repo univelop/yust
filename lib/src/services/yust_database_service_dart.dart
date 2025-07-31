@@ -719,15 +719,18 @@ class YustDatabaseService {
   }
 
   /// Delete all [YustDoc]s in the filter.
-  Future<void> deleteDocs<T extends YustDoc>(
+  Future<int> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
     // (No logs here, because getListFromDB, and deleteDoc already log)
+    var counter = 0;
     final docsIds = getDocumentIdsChunked<T>(docSetup, filters: filters);
     await for (var docId in docsIds) {
       await deleteDocById<T>(docSetup, docId);
+      counter++;
     }
+    return counter;
   }
 
   /// Delete all [YustDoc]s in the filter as a batch.

@@ -1,6 +1,6 @@
 name: yust
 description: Build awesome apps with Flutter and Firebase - this package allows communication with Firebase to be a breeze.
-version: 3.27.8
+version: 3.28.1
 homepage: https://github.com/univelop/yust
 
 environment:
@@ -32,5 +32,5 @@ dependencies:
 dev_dependencies:
     build_runner: ^2.0.3
     flutter_lints: ^3.0.1
-    json_serializable: ^6.5.4
+    json_serializable: 6.8.0
     test: ^1.25.8

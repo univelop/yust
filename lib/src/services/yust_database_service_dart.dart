@@ -422,7 +422,7 @@ class YustDatabaseService implements IYustDatabaseService {
               startAfterDocument: startAfterDocument,
               forCollectionGroup: true,
             ),
-            _getDatabasePath()));
+            '${_getDatabasePath()}/documents'));
     dbLogCallback?.call(
         DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
@@ -447,7 +447,7 @@ class YustDatabaseService implements IYustDatabaseService {
   }) =>
       _getDocumentsListChunked(
         docSetup: docSetup,
-        parent: _getDatabasePath(),
+        parent: '${_getDatabasePath()}/documents',
         fnName: 'getListChunkedForAllEnvironments',
         filters: filters,
         orderBy: orderBy,

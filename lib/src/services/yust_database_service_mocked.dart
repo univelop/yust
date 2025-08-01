@@ -231,7 +231,14 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int? limit,
     T? startAfterDocument,
   }) {
-    return Future.value([]);
+    return Future.value(_getList(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+      forAllEnvironments: true,
+    ));
   }
 
   @override
@@ -242,7 +249,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int pageSize = 300,
     T? startAfterDocument,
   }) {
-    return Stream.empty();
+    return Stream.fromFuture(getListForAllEnvironments(docSetup,
+            filters: filters,
+            orderBy: orderBy,
+            limit: pageSize,
+            startAfterDocument: startAfterDocument))
+        .expand((e) => e);
   }
 
   @override
@@ -575,8 +587,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustOrderBy>? orderBy,
     int? limit,
     T? startAfterDocument,
+    bool forAllEnvironments = false,
   }) {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
+
+    // Apply static filters (envId) only if not querying all environments
+    if (!forAllEnvironments) {
+      jsonDocs = _applyStaticFilters(jsonDocs, docSetup);
+    }
+
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
@@ -591,6 +610,20 @@ class YustDatabaseServiceMocked extends YustDatabaseService
         min((limit ?? docs.length) + startAfterIndex, docs.length));
 
     return limitedDocs;
+  }
+
+  List<Map<String, dynamic>> _applyStaticFilters(
+    List<Map<String, dynamic>> collection,
+    YustDocSetup docSetup,
+  ) {
+    // Apply envId filter when not using subcollections and for environment-specific collections
+    if (!useSubcollections && docSetup.forEnvironment) {
+      collection = collection.where((e) {
+        final envId = _readValueInJsonDoc(e, 'envId');
+        return envId == docSetup.envId;
+      }).toList();
+    }
+    return collection;
   }
 
   Map<String, dynamic> _prepareJsonForMockDb(Map<String, dynamic> obj) {

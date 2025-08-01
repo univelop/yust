@@ -1,3 +1,12 @@
+## 3.28.1 - 2025-07-14
+
+-   Add support for Time-To-Live (via expireAt) in YustDoc
+
+## 3.28.0 - 2025-07-08
+
+-   Improve randomString method
+-   Update dependencies
+
 ## 3.27.8 - 2025-05-30
 
 -   Fallback for too long update masks

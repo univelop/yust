@@ -42,6 +42,10 @@ class YustDocSetup<T extends YustDoc> {
   /// Can be overriden in the db-calls directly e.g. [saveDoc].
   bool trackModification;
 
+  /// If set, this will be used to set the [YustDoc.expiresAt] (TTL) of the document.
+  /// Firestore will automatically delete the document after the specified duration.
+  Duration? expiresAfter;
+
   /// Callback when initialising a new [YustDoc].
   void Function(T doc)? onInit;
 
@@ -62,6 +66,7 @@ class YustDocSetup<T extends YustDoc> {
     this.onSave,
     this.removeNullValues = true,
     this.trackModification = true,
+    this.expiresAfter,
   });
 
   @override

@@ -612,6 +612,28 @@ class YustDatabaseService implements IYustDatabaseService {
     return doc;
   }
 
+  @override
+  Future<List<T>> getListForAllEnvironments<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+    T? startAfterDocument,
+  }) {
+    throw YustException('Not implemented for flutter');
+  }
+
+  @override
+  Stream<T> getListChunkedForAllEnvironments<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 300,
+    T? startAfterDocument,
+  }) {
+    throw YustException('Not implemented for flutter');
+  }
+
   /// Reads a document, executes a function and saves the document as a transaction.
   @override
   Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(

@@ -1,64 +1,80 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import '../util/firebase_helpers.dart';
+import '../util/google_cloud_helpers.dart';
 import '../yust.dart';
 
 /// A document, what can be saved to the Firestore database.
 abstract class YustDoc {
-  /// The ID of the document.
   String _id;
+
+  /// The ID of the document.
   String get id => _id;
   set id(String s) {
     if (s != _id) updateMask.add('id');
     _id = s;
   }
 
-  /// The creation timestamp of the document.
   DateTime? _createdAt;
+
+  /// The creation timestamp of the document.
   DateTime? get createdAt => _createdAt;
   set createdAt(DateTime? s) {
     if (s != _createdAt) updateMask.add('createdAt');
     _createdAt = s;
   }
 
-  /// The user ID of the document creator.
   String? _createdBy;
+
+  /// The user ID of the document creator.
   String? get createdBy => _createdBy;
   set createdBy(String? s) {
     if (s != _createdBy) updateMask.add('createdBy');
     _createdBy = s;
   }
 
-  /// The latest modification timestamp of the document.
   DateTime? _modifiedAt;
+
+  /// The latest modification timestamp of the document.
   DateTime? get modifiedAt => _modifiedAt;
   set modifiedAt(DateTime? s) {
     if (s != _modifiedAt) updateMask.add('modifiedAt');
     _modifiedAt = s;
   }
 
-  /// The latest modification user ID.
   String? _modifiedBy;
+
+  /// The latest modification user ID.
   String? get modifiedBy => _modifiedBy;
   set modifiedBy(String? s) {
     if (s != _modifiedBy) updateMask.add('modifiedBy');
     _modifiedBy = s;
   }
 
-  /// The user ID of the document owner.
   String? _userId;
+
+  /// The user ID of the document owner.
   String? get userId => _userId;
   set userId(String? s) {
     if (s != _userId) updateMask.add('userId');
     _userId = s;
   }
 
-  /// The tennant ID where the document belongs to.
   String? _envId;
+
+  /// The tenant ID where the document belongs to.
   String? get envId => _envId;
   set envId(String? s) {
     if (s != _envId) updateMask.add('envId');
     _envId = s;
+  }
+
+  DateTime? _expiresAt;
+
+  /// The expiration timestamp (TTL) of the document.
+  DateTime? get expiresAt => _expiresAt;
+  set expiresAt(DateTime? s) {
+    if (s != _expiresAt) updateMask.add('expiresAt');
+    _expiresAt = s;
   }
 
   final Set<String> _updateMask = {};
@@ -78,13 +94,15 @@ abstract class YustDoc {
     String? modifiedBy,
     String? userId,
     String? envId,
+    DateTime? expiresAt,
   })  : _id = id,
         _createdAt = createdAt,
         _createdBy = createdBy,
         _modifiedAt = modifiedAt,
         _modifiedBy = modifiedBy,
         _userId = userId,
-        _envId = envId;
+        _envId = envId,
+        _expiresAt = expiresAt;
 
   YustDoc.fromJson(Map<String, dynamic> json) : _id = '';
 
@@ -92,22 +110,22 @@ abstract class YustDoc {
 
   Map<String, dynamic> toExportJson() {
     final filteredJson = toJson();
-    Yust.helpers.removeKeysFromMap(
-        filteredJson, ['createdBy', 'modifiedBy', 'userId', 'envId']);
+    Yust.helpers.removeKeysFromMap(filteredJson,
+        ['createdBy', 'modifiedBy', 'userId', 'envId', 'expiresAt']);
     return filteredJson;
   }
 
   /// Converts a firebase timestamp to a [DateTime].
   static dynamic convertTimestamp(dynamic value) {
-    return FirebaseHelpers.convertTimestamp(value);
+    return GoogleCloudHelpers.convertTimestamp(value);
   }
 
-  /// is triggerd when the document is saved
+  /// is triggered when the document is saved
   Future<void> onSave() async {}
 
-  /// is triggerd when the document is removed
+  /// is triggered when the document is removed
   Future<void> onDelete() async {}
 
   /// clear the update mask
-  void clearUpdateMask() => _updateMask.clear();
+  void clearUpdateMask() => updateMask.clear();
 }

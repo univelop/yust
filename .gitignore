@@ -28,6 +28,7 @@
 .pub/
 .fvm/
 build/
+pubspec.lock
 pubspec_overrides.yaml
 
 # Android related

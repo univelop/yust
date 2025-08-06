@@ -3,20 +3,44 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
+import 'yust_file_service_shared.dart';
 
 class YustFileService {
-  YustFileService({String? emulatorAddress})
-      : _fireStorage = firebase_storage.FirebaseStorage.instance {
+  YustFileService({
+    Client? authClient,
+    required String? emulatorAddress,
+    required String projectId,
+  }) : _fireStorage = FirebaseStorage.instance {
     if (emulatorAddress != null) {
       _fireStorage.useStorageEmulator(emulatorAddress, 9199);
     }
   }
 
-  final firebase_storage.FirebaseStorage _fireStorage;
+  YustFileService.mocked() : _fireStorage = FirebaseStorage.instance {
+    throw UnsupportedError('Not supported in Flutter Environment');
+  }
+
+  final FirebaseStorage _fireStorage;
+
+  Future<String> uploadStream({
+    required String path,
+    required String name,
+    required Stream<List<int>> stream,
+    String? contentDisposition,
+  }) async {
+    final collected = <int>[];
+    await for (final chunk in stream) {
+      collected.addAll(chunk);
+    }
+    final bytes = Uint8List.fromList(collected);
+
+    return uploadFile(path: path, name: name, bytes: bytes);
+  }
 
   Future<String> uploadFile(
       {required String path,
@@ -27,14 +51,14 @@ class YustFileService {
       final storageReference = _fireStorage.ref().child(path).child(name);
 
       var size = _calcMaxUploadRetryTime(bytes, file);
-      firebase_storage.FirebaseStorage.instance
+      FirebaseStorage.instance
           .setMaxUploadRetryTime(Duration(seconds: size * 30));
 
-      firebase_storage.UploadTask uploadTask;
+      UploadTask uploadTask;
       if (file != null) {
         uploadTask = storageReference.putFile(file);
       } else {
-        var metadata = firebase_storage.SettableMetadata(
+        var metadata = SettableMetadata(
           contentType: lookupMimeType(name),
         );
         uploadTask = storageReference.putData(bytes!, metadata);
@@ -60,13 +84,11 @@ class YustFileService {
   }
 
   Future<Uint8List?> downloadFile(
-      {required String path, required String name, int? maxSize}) async {
+      {required String path,
+      required String name,
+      int maxSize = 20 * 1024 * 1024}) async {
     try {
-      return await _fireStorage
-          .ref()
-          .child(path)
-          .child(name)
-          .getData(maxSize ?? 20 * 1024 * 1024);
+      return await _fireStorage.ref().child(path).child(name).getData(maxSize);
     } catch (e) {
       return Uint8List(0);
     }
@@ -76,22 +98,74 @@ class YustFileService {
     if (name == null) return;
     try {
       await _fireStorage.ref().child(path).child(name).delete();
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        return;
+      }
     } catch (e) {
       throw YustException(e.toString());
     }
   }
 
   Future<bool> fileExist({required String path, required String name}) async {
-    try {
-      await _fireStorage.ref().child(path).child(name).getDownloadURL();
-    } on firebase_storage.FirebaseException catch (_) {
-      return false;
-    }
-    return true;
+    final fileList = await _fireStorage.ref().child(path).list();
+    return fileList.items.any((element) => element.name == name);
   }
 
   Future<String> getFileDownloadUrl(
       {required String path, required String name}) async {
     return await _fireStorage.ref().child(path).child(name).getDownloadURL();
+  }
+
+  Future<YustFileMetadata> getMetadata(
+      {required String path, required String name}) async {
+    final metadata =
+        await _fireStorage.ref().child(path).child(name).getMetadata();
+
+    return YustFileMetadata(
+      size: metadata.size ?? 0,
+      token: metadata.customMetadata?['firebaseStorageDownloadTokens'] ?? '',
+    );
+  }
+
+  Future<void> deleteFolder({required String path}) async {
+    final fileList = await _fireStorage.ref().child(path).list();
+    for (final file in fileList.items) {
+      await file.delete();
+    }
+  }
+
+  Future<List<Object>> getFilesInFolder({required String path}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<List<Object>> getFileVersionsInFolder({required String path}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped(
+      {required String path}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<String?> getLatestFileVersion(
+      {required String path, required String name}) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<String?> getLatestInvalidFileVersion({
+    required String path,
+    required String name,
+    DateTime? beforeDeletion,
+    DateTime? afterDeletion,
+  }) async {
+    throw YustException('Not implemented for flutter');
+  }
+
+  Future<void> recoverOutdatedFile(
+      {required String path,
+      required String name,
+      required String generation}) async {
+    throw YustException('Not implemented for flutter');
   }
 }

@@ -10,8 +10,10 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       email: json['email'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String,
-      gender: $enumDecodeNullable(_$YustGenderEnumMap, json['gender']),
+      gender: $enumDecodeNullable(_$YustGenderEnumMap, json['gender'],
+          unknownValue: JsonKey.nullForUndefinedEnumValue),
       authId: json['authId'] as String?,
+      locale: json['locale'] as String?,
     )
       ..id = json['id'] as String
       ..createdAt = json['createdAt'] == null
@@ -24,6 +26,9 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..modifiedBy = json['modifiedBy'] as String?
       ..userId = json['userId'] as String?
       ..envId = json['envId'] as String?
+      ..expiresAt = json['expiresAt'] == null
+          ? null
+          : DateTime.parse(json['expiresAt'] as String)
       ..envIds = (json['envIds'] as Map?)?.map(
             (k, e) => MapEntry(k as String, e as bool?),
           ) ??
@@ -35,9 +40,19 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..lastLogin = json['lastLogin'] == null
           ? null
           : DateTime.parse(json['lastLogin'] as String)
+      ..lastLoginDomain = json['lastLoginDomain'] as String?
       ..authenticationMethod = $enumDecodeNullable(
-          _$YustAuthenticationMethodEnumMap, json['authenticationMethod'])
-      ..domain = json['domain'] as String?;
+          _$YustAuthenticationMethodEnumMap, json['authenticationMethod'],
+          unknownValue: JsonKey.nullForUndefinedEnumValue)
+      ..domain = json['domain'] as String?
+      ..profilePicture = json['profilePicture'] == null
+          ? null
+          : YustImage.fromJson(
+              Map<String, dynamic>.from(json['profilePicture'] as Map))
+      ..userAttributes = (json['userAttributes'] as Map?)?.map(
+            (k, e) => MapEntry(k as String, e),
+          ) ??
+          {};
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'id': instance.id,
@@ -47,6 +62,7 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'modifiedBy': instance.modifiedBy,
       'userId': instance.userId,
       'envId': instance.envId,
+      'expiresAt': instance.expiresAt?.toIso8601String(),
       'email': instance.email,
       'firstName': instance.firstName,
       'lastName': instance.lastName,
@@ -55,10 +71,14 @@ Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'currEnvId': instance.currEnvId,
       'deviceIds': instance.deviceIds,
       'lastLogin': instance.lastLogin?.toIso8601String(),
+      'lastLoginDomain': instance.lastLoginDomain,
       'authenticationMethod':
           _$YustAuthenticationMethodEnumMap[instance.authenticationMethod],
       'domain': instance.domain,
       'authId': instance.authId,
+      'profilePicture': instance.profilePicture?.toJson(),
+      'locale': instance.locale,
+      'userAttributes': instance.userAttributes,
     };
 
 const _$YustGenderEnumMap = {
@@ -70,5 +90,6 @@ const _$YustAuthenticationMethodEnumMap = {
   YustAuthenticationMethod.mail: 'mail',
   YustAuthenticationMethod.microsoft: 'microsoft',
   YustAuthenticationMethod.google: 'google',
+  YustAuthenticationMethod.apple: 'apple',
   YustAuthenticationMethod.openId: 'openId',
 };

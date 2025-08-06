@@ -291,7 +291,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
         trackModification: trackModification, skipOnSave: skipOnSave);
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
-    final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
+    final docJsonClone =
+        jsonDecode(jsonEncode(doc.toJson()), reviver: _decodeDateTime);
     final docJsonPrepared = _prepareJsonForMockDb(docJsonClone);
     if (index == -1 && !doNotCreate) {
       jsonDocs.add(docJsonPrepared);
@@ -303,7 +304,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       dbLogCallback?.call(DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
           id: doc.id, updateMask: updateMask ?? []);
     } else {
-      final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
+      final oldDoc =
+          jsonDecode(jsonEncode(jsonDocs[index]), reviver: _decodeDateTime);
       if (updateMask == null) {
         jsonDocs[index] = docJsonPrepared;
         await onChange?.call(
@@ -340,8 +342,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }) async {
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
-    final jsonDocClone = jsonDecode(jsonEncode(jsonDocs[index]));
-    final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
+    final jsonDocClone =
+        jsonDecode(jsonEncode(jsonDocs[index]), reviver: _decodeDateTime);
+    final oldDoc =
+        jsonDecode(jsonEncode(jsonDocs[index]), reviver: _decodeDateTime);
 
     for (final t in fieldTransforms) {
       final unescapedPath = t.fieldPath.replaceAll('`', '');
@@ -442,7 +446,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       List<Map<String, dynamic>> collection, YustDocSetup<T> docSetup) {
     return collection
         // We clone the maps here by using jsonDecode/jsonEncode
-        .map<T>((e) => docSetup.fromJson(jsonDecode(jsonEncode(e))))
+        .map<T>((e) => docSetup
+            .fromJson(jsonDecode(jsonEncode(e), reviver: _decodeDateTime)))
         .toList();
   }
 
@@ -467,13 +472,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
   List<Map<String, dynamic>> _orderBy(
     List<Map<String, dynamic>> collection,
-    List<YustOrderBy>? orderBy,
+    List<YustOrderBy>? orderBys,
   ) {
-    for (final o in (orderBy ?? []).reversed) {
-      collection.sort((a, b) {
-        final compare = (_readValueInJsonDoc(a, o.field) as Comparable)
-            .compareTo(_readValueInJsonDoc(b, o.field) as Comparable);
-        final order = o.descending ? -1 : 1;
+    for (final orderBy in (orderBys ?? []).reversed) {
+      collection.sort((docA, docB) {
+        final compare = (_readValueInJsonDoc(docA, orderBy.field) as Comparable)
+            .compareTo(_readValueInJsonDoc(docB, orderBy.field) as Comparable);
+        final order = orderBy.descending ? -1 : 1;
         return order * compare;
       });
     }
@@ -506,7 +511,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       }
       subDoc = subDoc[segment];
     }
-    return subDoc[segments.last];
+    final value = subDoc[segments.last];
+    final decoded = jsonDecode(value, reviver: _decodeDateTime);
+    return decoded;
   }
 
   String _createDocumentId() {
@@ -593,5 +600,17 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       return value;
     });
     return modifiedObj;
+  }
+
+  dynamic _decodeDateTime(dynamic key, dynamic item) {
+    if (item is String) {
+      if (RegExp(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}').hasMatch(item)) {
+        final dateTime = DateTime.tryParse(item);
+        if (dateTime != null) {
+          return dateTime;
+        }
+      }
+    }
+    return item;
   }
 }

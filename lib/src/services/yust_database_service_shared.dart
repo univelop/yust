@@ -48,6 +48,9 @@ T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
   if (docSetup.hasAuthor) doc.createdBy = docSetup.userId;
   if (docSetup.hasOwner) doc.userId = docSetup.userId;
   if (docSetup.forEnvironment) doc.envId = docSetup.envId;
+  if (docSetup.expiresAfter != null) {
+    doc.expiresAt = Yust.helpers.utcNow().add(docSetup.expiresAfter!);
+  }
 
   docSetup.onInit?.call(doc);
 

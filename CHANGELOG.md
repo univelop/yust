@@ -1,3 +1,24 @@
+## 3.28.1 - 2025-07-14
+
+-   Add support for Time-To-Live (via expireAt) in YustDoc
+
+## 3.28.0 - 2025-07-08
+
+-   Improve randomString method
+-   Update dependencies
+
+## 3.27.8 - 2025-05-30
+
+-   Fallback for too long update masks
+
+## 3.27.7 - 2025-04-30
+
+-   Fix getListChunked with unequal filters
+
+## 3.27.6 - 2024-04-24
+
+-   Fix for DateTime Regex
+
 ## 3.27.5 - 2024-04-07
 
 -   Improvements for YustFileService

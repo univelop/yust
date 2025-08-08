@@ -1,3 +1,7 @@
+## 3.28.3 - 2025-08-08
+
+-   Fix `isIso8601String` extension
+
 ## 3.28.2 - 2025-08-06
 
 -   Improve Number Formatting

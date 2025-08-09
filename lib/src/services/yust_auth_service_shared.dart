@@ -33,7 +33,13 @@ class YustAuthServiceShared {
     String? domain,
     YustGender? gender,
   }) async {
-    final user = Yust.userSetup.newDoc()
+    if (Yust.userSetup.newDoc == null) {
+      throw YustException(
+        'No newDoc function provided for ${Yust.userSetup.collectionName}, cannot initialize user.',
+      );
+    }
+
+    final user = Yust.userSetup.newDoc!()
       ..email = email
       ..firstName = firstName
       ..lastName = lastName

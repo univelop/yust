@@ -1,3 +1,7 @@
+## 3.28.4 - 2025-08-11
+
+-   Fix `startAfterDocument` in YustDatabaseService
+
 ## 3.28.3 - 2025-08-08
 
 -   Fix `isIso8601String` extension

@@ -8,4 +8,10 @@ extension StringExtension on String {
 
   String toCapitalized() =>
       isNotEmpty ? '${this[0].toUpperCase()}${substring(1)}' : '';
+
+  /// Returns a truncated string.
+  /// The max returned length of string is 'size'.
+  /// If size is 0 or less or size greater than string length, then returns empty string.
+  String truncate({int size = 10}) =>
+      (size <= 0) || (size > length) ? '' : substring(0, size);
 }

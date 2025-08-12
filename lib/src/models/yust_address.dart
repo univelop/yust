@@ -13,7 +13,8 @@ class YustAddress {
     this.country,
   });
 
-  factory YustAddress.withValueByKey(YustAddress address, String key, dynamic value) {
+  factory YustAddress.withValueByKey(
+      YustAddress address, String key, dynamic value) {
     switch (key) {
       case 'street':
         return address.copyWithStreet(value);
@@ -92,23 +93,35 @@ class YustAddress {
   final String? country;
 
   /// Returns true if any of the fields are NULL or empty ('')
-  bool hasEmptyValues({bool includeCountry = true}) =>
+  bool hasEmptyValues({
+    bool includeCountry = true,
+    bool includeNumber = true,
+  }) =>
       (street?.isEmpty ?? true) ||
-      (number?.isEmpty ?? true) ||
       (postcode?.isEmpty ?? true) ||
       (city?.isEmpty ?? true) ||
+      (includeNumber && (number?.isEmpty ?? true)) ||
       (includeCountry && (country?.isEmpty ?? true));
 
-  bool hasValue({bool includeCountry = true}) =>
+  /// Returns true if any of the fields are not NULL
+  bool hasValue({
+    bool includeCountry = true,
+    bool includeNumber = true,
+  }) =>
       street != null ||
-      number != null ||
       postcode != null ||
       city != null ||
+      (includeNumber && number != null) ||
       (includeCountry && country != null);
 
-  String toReadableString({bool includeCountry = false}) {
+  /// Returns a readable string representation of the address
+  String toReadableString({
+    bool includeCountry = true,
+    bool includeNumber = true,
+  }) {
     final parts = [
-      if (street != null && number != null) '${street ?? ''} ${number ?? ''}',
+      if (street != null && number != null)
+        '${street ?? ''} ${includeNumber ? (number ?? '') : ''}',
       if (postcode != null && city != null) '${postcode ?? ''} ${city ?? ''}',
       if (includeCountry && country != null) country,
     ];
@@ -147,5 +160,9 @@ class YustAddress {
   @override
   int get hashCode => Object.hash(street, number, postcode, city, country);
 
+  @override
+  String toString() => toReadableString();
+
+  /// Returns a JSON representation of the address
   Map<String, dynamic> toJson() => _$YustAddressToJson(this);
 }

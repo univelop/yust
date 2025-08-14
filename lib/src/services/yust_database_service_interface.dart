@@ -223,7 +223,7 @@ abstract interface class IYustDatabaseService {
     T? startAfterDocument,
   });
 
-  Future<List<T>> getListForAllEnvironments<T extends YustDoc>(
+  Future<List<T>> getListForCollectionGroup<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -231,7 +231,7 @@ abstract interface class IYustDatabaseService {
     T? startAfterDocument,
   });
 
-  Stream<T> getListChunkedForAllEnvironments<T extends YustDoc>(
+  Stream<T> getListChunkedForCollectionGroup<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,

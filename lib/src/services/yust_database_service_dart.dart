@@ -403,7 +403,7 @@ class YustDatabaseService implements IYustDatabaseService {
   }
 
   @override
-  Future<List<T>> getListForAllEnvironments<T extends YustDoc>(
+  Future<List<T>> getListForCollectionGroup<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -438,7 +438,7 @@ class YustDatabaseService implements IYustDatabaseService {
   }
 
   @override
-  Stream<T> getListChunkedForAllEnvironments<T extends YustDoc>(
+  Stream<T> getListChunkedForCollectionGroup<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,

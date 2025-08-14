@@ -224,7 +224,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }
 
   @override
-  Future<List<T>> getListForAllEnvironments<T extends YustDoc>(
+  Future<List<T>> getListForCollectionGroup<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
@@ -242,14 +242,14 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }
 
   @override
-  Stream<T> getListChunkedForAllEnvironments<T extends YustDoc>(
+  Stream<T> getListChunkedForCollectionGroup<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
     T? startAfterDocument,
   }) {
-    return Stream.fromFuture(getListForAllEnvironments(docSetup,
+    return Stream.fromFuture(getListForCollectionGroup(docSetup,
             filters: filters,
             orderBy: orderBy,
             limit: pageSize,

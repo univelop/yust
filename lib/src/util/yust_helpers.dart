@@ -87,6 +87,7 @@ class YustHelpers {
     return formatter.format(utcToLocal(dateTime));
   }
 
+  /// Returns the current date and time in the local timezone.
   DateTime localNow(
       {int? year,
       int? month,
@@ -110,6 +111,11 @@ class YustHelpers {
     );
   }
 
+  /// Returns the current date in the local timezone.
+  DateTime localToday() =>
+      localNow(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+
+  /// Returns the current date and time in UTC.
   DateTime utcNow(
       {int? year,
       int? month,
@@ -129,6 +135,20 @@ class YustHelpers {
       second ?? now.second,
       millisecond ?? now.millisecond,
       microsecond ?? now.microsecond,
+    );
+  }
+
+  /// Returns the current date in UTC.
+  DateTime utcToday() =>
+      utcNow(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+
+  /// Removes any local time from the given [dateTime] by converting the given utc date time to local,
+  /// removing the time part and converting back to utc.
+  DateTime clearTime(DateTime dateTime) {
+    final localDateTime = dateTime.isUtc ? utcToLocal(dateTime) : dateTime;
+
+    return localToUtc(
+      DateTime(localDateTime.year, localDateTime.month, localDateTime.day),
     );
   }
 

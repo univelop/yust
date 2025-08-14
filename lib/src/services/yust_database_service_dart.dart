@@ -19,6 +19,7 @@ import '../util/yust_field_transform.dart';
 import '../util/yust_helpers.dart';
 import '../util/yust_retry_helper.dart';
 import '../yust.dart';
+import 'yust_database_service_interface.dart';
 import 'yust_database_service_shared.dart';
 
 const firestoreApiUrl = 'https://firestore.googleapis.com/';
@@ -26,43 +27,48 @@ const firestoreApiUrl = 'https://firestore.googleapis.com/';
 /// Handles database requests for Cloud Firestore.
 ///
 /// Using FlutterFire for Flutter Platforms (Android, iOS, Web) and GoogleAPIs for Dart-only environments.
-class YustDatabaseService {
+class YustDatabaseService implements IYustDatabaseService {
   late final FirestoreApi _api;
+  @override
   DatabaseLogCallback? dbLogCallback;
+  @override
   YustDatabaseStatistics statistics = YustDatabaseStatistics();
 
   final Yust _yust;
 
   /// Represents the collection name for the tenants.
+  @override
   final String envCollectionName;
 
   /// If [useSubcollections] is set to true (default), Yust is creating Subcollections for each tenant automatically.
+  @override
   final bool useSubcollections;
 
-  final Client authClient;
+  final Client _authClient;
 
   /// Root (aka base) URL for the Firestore REST/GRPC API.
-  final String rootUrl;
+  final String _rootUrl;
 
   /// Which version of documents to read.
   ///
   /// A timestamp in the past will return the document at that time.
   /// Null will return the most recent version.
+  @override
   DateTime? readTime;
 
   YustDatabaseService({
     required Yust yust,
     String? emulatorAddress,
   })  : _yust = yust,
-        authClient = Yust.authClient!,
+        _authClient = Yust.authClient!,
         envCollectionName = yust.envCollectionName,
         useSubcollections = yust.useSubcollections,
-        rootUrl = emulatorAddress != null
+        _rootUrl = emulatorAddress != null
             ? 'http://$emulatorAddress:8080/'
             : firestoreApiUrl {
     _api = FirestoreApi(
-      authClient,
-      rootUrl: rootUrl,
+      _authClient,
+      rootUrl: _rootUrl,
     );
 
     dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
@@ -80,13 +86,14 @@ class YustDatabaseService {
         envCollectionName = yust.envCollectionName,
         useSubcollections = yust.useSubcollections,
         dbLogCallback = yust.dbLogCallback,
-        rootUrl = '',
-        authClient = Client();
+        _rootUrl = '',
+        _authClient = Client();
 
   /// Initializes a document with an id and the time it was created.
   ///
   /// Optionally an existing document can be given, which will still be
   /// assigned a new id becoming a new document if it had an id previously.
+  @override
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _createDocumentId();
     return doInitDoc(docSetup, id, doc);
@@ -96,6 +103,7 @@ class YustDatabaseService {
   /// The cached documents may not be up to date!
   ///
   /// Be careful with offline functionality.
+  @override
   Future<T?> get<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -107,6 +115,7 @@ class YustDatabaseService {
   /// Be careful: The cached documents may not be up to date!
   ///
   /// Be careful with offline functionality.
+  @override
   Future<T?> getFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -117,6 +126,7 @@ class YustDatabaseService {
   /// Returns a [YustDoc] directly from the server.
   ///
   /// Be careful with offline functionality.
+  @override
   Future<T?> getFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id, {
@@ -142,6 +152,7 @@ class YustDatabaseService {
   /// Returns a stream of a [YustDoc].
   ///
   /// Whenever another user makes a change, a new version of the document is returned.
+  @override
   Stream<T?> getStream<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -154,6 +165,7 @@ class YustDatabaseService {
   ///
   /// Be careful with offline functionality.
   /// The result is null if no document was found.
+  @override
   Future<T?> getFirst<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -167,6 +179,7 @@ class YustDatabaseService {
   ///
   /// Be careful with offline functionality.
   /// The result is null if no document was found.
+  @override
   Future<T?> getFirstFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -179,6 +192,7 @@ class YustDatabaseService {
   ///
   /// Be careful with offline functionality.
   /// The result is null if no document was found.
+  @override
   Future<T?> getFirstFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -203,6 +217,7 @@ class YustDatabaseService {
   ///
   /// Whenever another user make a change, a new version of the document is returned.
   /// The result is null if no document was found.
+  @override
   Stream<T?> getFirstStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -224,14 +239,21 @@ class YustDatabaseService {
   /// Multiple of those entries can be repeated.
   ///
   /// [limit] can be passed to only get at most n documents.
+  @override
   Future<List<T>> getList<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
-    return getListFromDB(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    );
   }
 
   /// Returns [YustDoc]s from the cache, if available, otherwise from the server.
@@ -246,14 +268,21 @@ class YustDatabaseService {
   /// Multiple of those entries can be repeated.
   ///
   /// [limit] can be passed to only get at most n documents.
+  @override
   Future<List<T>> getListFromCache<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
-    return getListFromDB(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit);
+    return getListFromDB(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    );
   }
 
   /// Returns [YustDoc]s directly from the database.
@@ -269,18 +298,25 @@ class YustDatabaseService {
   /// Multiple of those entries can be repeated.
   ///
   /// [limit] can be passed to only get at most n documents.
+  @override
   Future<List<T>> getListFromDB<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) async {
     final response = await _retryOnException<List<RunQueryResponseElement>>(
         'getListFromDB',
         _getDocumentPath(docSetup),
         () => _api.projects.databases.documents.runQuery(
-            getQuery(docSetup,
-                filters: filters, orderBy: orderBy, limit: limit),
+            getQuery(
+              docSetup,
+              filters: filters,
+              orderBy: orderBy,
+              limit: limit,
+              startAfterDocument: startAfterDocument,
+            ),
             _getParentPath(docSetup)));
     dbLogCallback?.call(
         DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
@@ -318,14 +354,16 @@ class YustDatabaseService {
   /// [orderBy] orders the returned records.
   /// Multiple of those entries can be repeated.
   ///
+  @override
   Stream<T> getListChunked<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
+    T? startAfterDocument,
   }) {
     final parent = _getParentPath(docSetup);
-    final url = '${rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
+    final url = '${_rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
     final unequalFilters = (filters ?? [])
         .whereNot((filter) =>
@@ -346,7 +384,7 @@ class YustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      Map<String, dynamic>? lastDocument;
+      T? lastDocument = startAfterDocument;
       while (!isDone) {
         final request = getQuery(docSetup,
             filters: filters,
@@ -358,7 +396,7 @@ class YustDatabaseService {
 
         final result = await _retryOnException(
             'getListChunked', _getDocumentPath(docSetup), () async {
-          final response = await authClient.post(
+          final response = await _authClient.post(
             Uri.parse(url),
             body: body,
           );
@@ -383,7 +421,13 @@ class YustDatabaseService {
             DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastDocument = response.last['document'];
+        if (!isDone) {
+          final lastDocumentJson = response.last['document'];
+
+          lastDocument = lastDocumentJson == null
+              ? null
+              : _transformDoc<T>(docSetup, Document.fromJson(lastDocumentJson));
+        }
 
         yield* Stream.fromIterable(response);
       }
@@ -408,14 +452,21 @@ class YustDatabaseService {
   /// Multiple of those entries can be repeated.
   ///
   /// [limit] can be passed to only get at most n documents.
+  @override
   Stream<List<T>> getListStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
+    T? startAfterDocument,
   }) {
-    return Stream.fromFuture(getListFromDB<T>(docSetup,
-        filters: filters, orderBy: orderBy, limit: limit));
+    return Stream.fromFuture(getListFromDB<T>(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    ));
   }
 
   /// Counts the number of documents in a collection.
@@ -424,6 +475,7 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
+  @override
   Future<int> count<T extends YustDoc>(YustDocSetup<T> docSetup,
       {List<YustFilter>? filters, int? limit}) async {
     final type = AggregationType.count;
@@ -451,6 +503,7 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
+  @override
   Future<AggregationResult> sum<T extends YustDoc>(
       YustDocSetup<T> docSetup, String fieldPath,
       {List<YustFilter>? filters, int? limit}) async {
@@ -466,6 +519,7 @@ class YustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
+  @override
   Future<AggregationResult> avg<T extends YustDoc>(
       YustDocSetup<T> docSetup, String fieldPath,
       {List<YustFilter>? filters, int? limit}) async {
@@ -504,6 +558,7 @@ class YustDatabaseService {
   /// If [merge] is false a document with the same name
   /// will be overwritten instead of trying to merge the data.
   /// Use [doNotCreate] to ensure that no new record is created
+  @override
   Future<void> saveDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     T doc, {
@@ -575,6 +630,7 @@ class YustDatabaseService {
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
+  @override
   Future<void> updateDocByTransform<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String id,
@@ -608,6 +664,7 @@ class YustDatabaseService {
   }
 
   /// Delete all [YustDoc]s in the filter.
+  @override
   Future<void> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -620,6 +677,7 @@ class YustDatabaseService {
   }
 
   /// Delete all [YustDoc]s in the filter as a batch.
+  @override
   Future<int> deleteDocsAsBatch<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -666,6 +724,7 @@ class YustDatabaseService {
   }
 
   /// Delete a [YustDoc] by the ID.
+  @override
   Future<void> deleteDocById<T extends YustDoc>(
       YustDocSetup<T> docSetup, String id) async {
     await (await get(docSetup, id))?.onDelete();
@@ -685,6 +744,7 @@ class YustDatabaseService {
   /// waited for after the document is initialized.
   ///
   /// An existing document can be given which will instead be initialized.
+  @override
   Future<T> saveNewDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     required T doc,
@@ -720,6 +780,7 @@ class YustDatabaseService {
   /// - Transactions are only auto-retried by the google client libraries, so we need to do it manually
   /// - Transactions will only fail if a document was changed by a other transaction.
   ///   _Not_ if the document was changed by a normal save
+  @override
   Future<(bool, T?)> runTransactionForDocument<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     String docId,
@@ -797,6 +858,7 @@ class YustDatabaseService {
       }, shouldRetryOnTransactionErrors: false);
 
   /// Begins a transaction.
+  @override
   Future<String> beginTransaction() async {
     final response = await _retryOnException<BeginTransactionResponse>(
         'beginTransaction',
@@ -811,6 +873,7 @@ class YustDatabaseService {
   }
 
   /// Saves a YustDoc and finishes a transaction.
+  @override
   Future<void> commitTransaction(
       String transaction, YustDocSetup docSetup, YustDoc doc,
       {bool useUpdateMask = false}) async {
@@ -840,6 +903,7 @@ class YustDatabaseService {
   }
 
   // Makes an empty commit, thereby releasing the lock on the document.
+  @override
   Future<void> commitEmptyTransaction(String transaction) async {
     final commitRequest = CommitRequest(transaction: transaction);
     await _retryOnException<void>(
@@ -851,6 +915,7 @@ class YustDatabaseService {
   }
 
   /// Transforms a json to a [YustDoc]
+  @override
   T? transformDoc<T extends YustDoc>(
     YustDocSetup<T> docSetup,
     dynamic document,
@@ -890,8 +955,10 @@ class YustDatabaseService {
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
     int? limit,
-    Map<String, dynamic>? startAfterDocument,
+    T? startAfterDocument,
   }) {
+    final startAfterDocumentJson = startAfterDocument?.toJson();
+
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
         from: [CollectionSelector(collectionId: _getCollection(docSetup))],
@@ -902,19 +969,24 @@ class YustDatabaseService {
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,
-        startAt: startAfterDocument == null
+        startAt: startAfterDocumentJson == null
             ? null
             : Cursor(
                 // The cursor is a list of values, which are used to order the documents.
                 // It needs to contain the value of every ordered field.
                 values: orderBy
-                        ?.map((e) => e.field == '__name__'
-                            ? Value(referenceValue: startAfterDocument['name'])
-                            // Because we are getting the value from the raw json,
-                            // we do not need to use the valueToDbValue function,
-                            // but can just get the json [Value] directly
-                            : Value.fromJson(YustHelpers().getValueByPath(
-                                startAfterDocument['fields'], e.field)))
+                        ?.map(
+                          (e) => e.field == '__name__'
+                              ? Value(
+                                  referenceValue: _getDocumentPath(
+                                  docSetup,
+                                  startAfterDocument?.id,
+                                ))
+                              : _valueToDbValue(
+                                  YustHelpers().getValueByPath(
+                                      startAfterDocumentJson, e.field),
+                                ),
+                        )
                         .toList() ??
                     [],
                 before: false),

@@ -138,10 +138,6 @@ class YustHelpers {
     );
   }
 
-  /// Returns the current date in UTC.
-  DateTime utcToday() =>
-      utcNow(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
-
   /// Removes any local time from the given [dateTime] by converting the given utc date time to local,
   /// removing the time part and converting back to utc.
   DateTime clearTime(DateTime dateTime) {

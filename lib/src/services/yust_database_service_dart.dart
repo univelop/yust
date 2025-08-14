@@ -361,8 +361,111 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustOrderBy>? orderBy,
     int pageSize = 300,
     T? startAfterDocument,
+  }) =>
+      _getDocumentsListChunked(
+        docSetup: docSetup,
+        parent: _getParentPath(docSetup),
+        fnName: 'getListChunked',
+        filters: filters,
+        orderBy: orderBy,
+        pageSize: pageSize,
+        startAfterDocument: startAfterDocument,
+      );
+
+  /// Returns a stream of a [YustDoc]s.
+  ///
+  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [orderBy] orders the returned records.
+  /// Multiple of those entries can be repeated.
+  ///
+  /// [limit] can be passed to only get at most n documents.
+  @override
+  Stream<List<T>> getListStream<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+    T? startAfterDocument,
   }) {
-    final parent = _getParentPath(docSetup);
+    return Stream.fromFuture(getListFromDB<T>(
+      docSetup,
+      filters: filters,
+      orderBy: orderBy,
+      limit: limit,
+      startAfterDocument: startAfterDocument,
+    ));
+  }
+
+  @override
+  Future<List<T>> getListForCollectionGroup<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+    T? startAfterDocument,
+  }) async {
+    final response = await _retryOnException<List<RunQueryResponseElement>>(
+        'getListForAllEnvironments',
+        docSetup.collectionName,
+        () => _api.projects.databases.documents.runQuery(
+            getQuery(
+              docSetup,
+              filters: filters,
+              orderBy: orderBy,
+              limit: limit,
+              startAfterDocument: startAfterDocument,
+              forCollectionGroup: true,
+            ),
+            '${_getDatabasePath()}/documents'));
+    dbLogCallback?.call(
+        DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
+
+    return response
+        .map((e) {
+          if (e.document == null) {
+            return null;
+          }
+          return _transformDoc<T>(docSetup, e.document!);
+        })
+        .whereType<T>()
+        .toList();
+  }
+
+  @override
+  Stream<T> getListChunkedForCollectionGroup<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 300,
+    T? startAfterDocument,
+  }) =>
+      _getDocumentsListChunked(
+        docSetup: docSetup,
+        parent: '${_getDatabasePath()}/documents',
+        fnName: 'getListChunkedForAllEnvironments',
+        filters: filters,
+        orderBy: orderBy,
+        pageSize: pageSize,
+        startAfterDocument: startAfterDocument,
+        forCollectionGroup: true,
+      );
+
+  Stream<T> _getDocumentsListChunked<T extends YustDoc>({
+    required YustDocSetup<T> docSetup,
+    required String parent,
+    required String fnName,
+    required List<YustFilter>? filters,
+    required List<YustOrderBy>? orderBy,
+    required int pageSize,
+    required T? startAfterDocument,
+    bool forCollectionGroup = false,
+  }) {
     final url = '${_rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
     final unequalFilters = (filters ?? [])
@@ -386,16 +489,18 @@ class YustDatabaseService implements IYustDatabaseService {
       var isDone = false;
       T? lastDocument = startAfterDocument;
       while (!isDone) {
-        final request = getQuery(docSetup,
-            filters: filters,
-            // orderBy __name__ is required for pagination
-            orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
-            limit: pageSize,
-            startAfterDocument: lastDocument);
+        final request = getQuery(
+          docSetup,
+          filters: filters,
+          // orderBy __name__ is required for pagination
+          orderBy: [...?orderBy, YustOrderBy(field: '__name__')],
+          limit: pageSize,
+          startAfterDocument: lastDocument,
+          forCollectionGroup: forCollectionGroup,
+        );
         final body = jsonEncode(request);
 
-        final result = await _retryOnException(
-            'getListChunked', _getDocumentPath(docSetup), () async {
+        final result = await _retryOnException(fnName, parent, () async {
           final response = await _authClient.post(
             Uri.parse(url),
             body: body,
@@ -437,36 +542,6 @@ class YustDatabaseService implements IYustDatabaseService {
       if (e['document'] == null) return null;
       return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
     }).whereType<T>();
-  }
-
-  /// Returns a stream of a [YustDoc]s.
-  ///
-  /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
-  ///
-  /// [docSetup] is used to read the collection path.
-  ///
-  /// [filters] Each entry represents a condition that has to be met.
-  /// All of those conditions must be true for each returned entry.
-  ///
-  /// [orderBy] orders the returned records.
-  /// Multiple of those entries can be repeated.
-  ///
-  /// [limit] can be passed to only get at most n documents.
-  @override
-  Stream<List<T>> getListStream<T extends YustDoc>(
-    YustDocSetup<T> docSetup, {
-    List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
-    int? limit,
-    T? startAfterDocument,
-  }) {
-    return Stream.fromFuture(getListFromDB<T>(
-      docSetup,
-      filters: filters,
-      orderBy: orderBy,
-      limit: limit,
-      startAfterDocument: startAfterDocument,
-    ));
   }
 
   /// Counts the number of documents in a collection.
@@ -773,7 +848,6 @@ class YustDatabaseService implements IYustDatabaseService {
   /// Returns true if the transaction was successful.
   ///
   /// If the transaction fails, it will be retried up to [maxTries] - 1 times.
-  /// If [ignore409Error] is true, no error will be thrown on 409 (Unsuccessful Transaction) Errors.
   /// [transaction] should return the updated document, if it returns null, nothing will be saved to the db.
   ///
   /// Some general Notes on Transactions:
@@ -956,16 +1030,24 @@ class YustDatabaseService implements IYustDatabaseService {
     List<YustOrderBy>? orderBy,
     int? limit,
     T? startAfterDocument,
+    bool forCollectionGroup = false,
   }) {
     final startAfterDocumentJson = startAfterDocument?.toJson();
 
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
-        from: [CollectionSelector(collectionId: _getCollection(docSetup))],
+        from: [
+          CollectionSelector(
+            collectionId: _getCollection(docSetup),
+            allDescendants: forCollectionGroup == true ? true : null,
+          )
+        ],
         where: Filter(
             compositeFilter: CompositeFilter(
-                filters:
-                    _executeStaticFilters(docSetup) + _executeFilters(filters),
+                filters: (forCollectionGroup
+                        ? <Filter>[]
+                        : _executeStaticFilters(docSetup)) +
+                    _executeFilters(filters),
                 op: 'AND')),
         orderBy: _executeOrderByList(orderBy),
         limit: limit,

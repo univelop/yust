@@ -223,6 +223,22 @@ abstract interface class IYustDatabaseService {
     T? startAfterDocument,
   });
 
+  Future<List<T>> getListForCollectionGroup<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int? limit,
+    T? startAfterDocument,
+  });
+
+  Stream<T> getListChunkedForCollectionGroup<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    List<YustOrderBy>? orderBy,
+    int pageSize = 300,
+    T? startAfterDocument,
+  });
+
   /// Counts the number of documents in a collection.
   ///
   /// [docSetup] is used to read the collection path.

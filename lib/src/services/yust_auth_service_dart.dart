@@ -346,4 +346,16 @@ class YustAuthService {
   Future<String?> getJWTToken() async {
     throw UnsupportedError('Not supported. No UI available.');
   }
+
+  Future<bool?> isEmailVerified() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  Future<void> sendEmailVerification() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
+
+  Future<void> reloadCurrentUser() async {
+    throw UnsupportedError('Not supported. No UI available.');
+  }
 }

@@ -487,7 +487,7 @@ class YustDatabaseService implements IYustDatabaseService {
 
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
-      T? lastDocument;
+      T? lastDocument = startAfterDocument;
       while (!isDone) {
         final request = getQuery(
           docSetup,
@@ -526,7 +526,13 @@ class YustDatabaseService implements IYustDatabaseService {
             DatabaseLogAction.get, _getDocumentPath(docSetup), response.length);
 
         isDone = response.length < pageSize;
-        if (!isDone) lastDocument = response.last['document'];
+        if (!isDone) {
+          final lastDocumentJson = response.last['document'];
+
+          lastDocument = lastDocumentJson == null
+              ? null
+              : _transformDoc<T>(docSetup, Document.fromJson(lastDocumentJson));
+        }
 
         yield* Stream.fromIterable(response);
       }
@@ -1027,6 +1033,7 @@ class YustDatabaseService implements IYustDatabaseService {
     bool forCollectionGroup = false,
   }) {
     final startAfterDocumentJson = startAfterDocument?.toJson();
+
     return RunQueryRequest(
       structuredQuery: StructuredQuery(
         from: [
@@ -1050,14 +1057,18 @@ class YustDatabaseService implements IYustDatabaseService {
                 // The cursor is a list of values, which are used to order the documents.
                 // It needs to contain the value of every ordered field.
                 values: orderBy
-                        ?.map((e) => e.field == '__name__'
-                            ? Value(
-                                referenceValue: startAfterDocumentJson['name'])
-                            // Because we are getting the value from the raw json,
-                            // we do not need to use the valueToDbValue function,
-                            // but can just get the json [Value] directly
-                            : Value.fromJson(YustHelpers().getValueByPath(
-                                startAfterDocumentJson['fields'], e.field)))
+                        ?.map(
+                          (e) => e.field == '__name__'
+                              ? Value(
+                                  referenceValue: _getDocumentPath(
+                                  docSetup,
+                                  startAfterDocument?.id,
+                                ))
+                              : _valueToDbValue(
+                                  YustHelpers().getValueByPath(
+                                      startAfterDocumentJson, e.field),
+                                ),
+                        )
                         .toList() ??
                     [],
                 before: false),

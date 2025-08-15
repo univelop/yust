@@ -87,15 +87,27 @@ class YustHelpers {
     return formatter.format(utcToLocal(dateTime));
   }
 
-  DateTime localNow(
-      {int? year,
-      int? month,
-      int? day,
-      int? hour,
-      int? minute,
-      int? second,
-      int? millisecond,
-      int? microsecond}) {
+  /// Returns the current date and time in the local timezone.
+  ///
+  /// Set [minuteGranularity] to true to return the current date and time with
+  /// minute granularity. If set, you cannot specify a value for [second],
+  /// [millisecond] or [microsecond].
+  DateTime localNow({
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+    bool minuteGranularity = false,
+  }) {
+    assert(
+        minuteGranularity == false ||
+            (second == null && millisecond == null && microsecond == null),
+        'minuteGranularity is only allowed if second, millisecond and microsecond are null');
+
     final now =
         mockNowUTC != null ? utcToLocal(mockNowUTC!) : TZDateTime.now(local);
     return TZDateTime.local(
@@ -104,12 +116,17 @@ class YustHelpers {
       day ?? now.day,
       hour ?? now.hour,
       minute ?? now.minute,
-      second ?? now.second,
-      millisecond ?? now.millisecond,
-      microsecond ?? now.microsecond,
+      minuteGranularity ? 0 : (second ?? now.second),
+      minuteGranularity ? 0 : (millisecond ?? now.millisecond),
+      minuteGranularity ? 0 : (microsecond ?? now.microsecond),
     );
   }
 
+  /// Returns the current date in the local timezone.
+  DateTime localToday() =>
+      localNow(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
+
+  /// Returns the current date and time in UTC.
   DateTime utcNow(
       {int? year,
       int? month,
@@ -129,6 +146,16 @@ class YustHelpers {
       second ?? now.second,
       millisecond ?? now.millisecond,
       microsecond ?? now.microsecond,
+    );
+  }
+
+  /// Removes any local time from the given [dateTime] by converting the given utc date time to local,
+  /// removing the time part and converting back to utc.
+  DateTime clearTime(DateTime dateTime) {
+    final localDateTime = dateTime.isUtc ? utcToLocal(dateTime) : dateTime;
+
+    return localToUtc(
+      DateTime(localDateTime.year, localDateTime.month, localDateTime.day),
     );
   }
 

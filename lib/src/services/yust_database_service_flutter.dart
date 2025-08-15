@@ -441,10 +441,7 @@ class YustDatabaseService implements IYustDatabaseService {
     final yustHelpers = YustHelpers();
 
     for (final path in updateMaskPaths) {
-      final value = yustHelpers.getValueByPath(modifiedDoc, path);
-      if (value != null) {
-        doc[path] = value;
-      }
+      doc[path] = yustHelpers.getValueByPath(modifiedDoc, path);
     }
     return doc;
   }

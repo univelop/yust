@@ -12,6 +12,7 @@ import '../util/object_helper.dart';
 import '../util/yust_database_statistics.dart';
 import '../util/yust_exception.dart';
 import '../util/yust_field_transform.dart';
+import '../util/yust_helpers.dart';
 import '../util/yust_query_with_logging.dart';
 import '../yust.dart';
 import 'yust_database_service_interface.dart';
@@ -398,10 +399,17 @@ class YustDatabaseService implements IYustDatabaseService {
     final jsonDoc = doc.toJson();
 
     final modifiedDoc = _prepareJsonForFirebase(
-      jsonDoc,
+      doNotCreate ? _getValuesByUpdateMask(jsonDoc, updateMask ?? []) : jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
+
     if (doNotCreate) {
+      if (updateMask?.contains('id') ?? false) {
+        throw YustException(
+          'Cannot create new documents if doNotCreate is true. '
+          'The updateMask should not contain the id field if you are updating existing documents.',
+        );
+      }
       try {
         await collection.doc(doc.id).update(modifiedDoc);
       } on FirebaseException catch (e) {
@@ -422,6 +430,23 @@ class YustDatabaseService implements IYustDatabaseService {
           DatabaseLogAction.save, _getCollectionPath(docSetup), 1,
           id: doc.id, updateMask: updateMask ?? []);
     }
+  }
+
+  /// Returns a new map with only the values that are in the updateMask.
+  Map<String, Object?> _getValuesByUpdateMask(
+    Map<String, Object?> modifiedDoc,
+    Iterable<String> updateMaskPaths,
+  ) {
+    final doc = <String, Object?>{};
+    final yustHelpers = YustHelpers();
+
+    for (final path in updateMaskPaths) {
+      final value = yustHelpers.getValueByPath(modifiedDoc, path);
+      if (value != null) {
+        doc[path] = value;
+      }
+    }
+    return doc;
   }
 
   /// Transforms (e.g. increment, decrement) a documents fields.
@@ -487,7 +512,7 @@ class YustDatabaseService implements IYustDatabaseService {
     T? startAfterDocument,
   }) async* {
     if (startAfterDocument != null) {
-      print('startAfterDocument is not supported in Flutter');
+      throw YustException('startAfterDocument is not supported in Flutter');
     }
     final unequalFilters = (filters ?? [])
         .whereNot((filter) =>

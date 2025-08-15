@@ -90,8 +90,8 @@ class YustHelpers {
   /// Returns the current date and time in the local timezone.
   ///
   /// Set [minuteGranularity] to true to return the current date and time with
-  /// minute granularity. If set, dont specify any time related parameters except
-  /// for [year], [month] and [day].
+  /// minute granularity. If set, you cannot specify a value for [second],
+  /// [millisecond] or [microsecond].
   DateTime localNow({
     int? year,
     int? month,
@@ -105,12 +105,8 @@ class YustHelpers {
   }) {
     assert(
         minuteGranularity == false ||
-            (hour == null &&
-                minute == null &&
-                second == null &&
-                millisecond == null &&
-                microsecond == null),
-        'minuteGranularity is only allowed if hour, minute, second, millisecond and microsecond are null');
+            (second == null && millisecond == null && microsecond == null),
+        'minuteGranularity is only allowed if second, millisecond and microsecond are null');
 
     final now =
         mockNowUTC != null ? utcToLocal(mockNowUTC!) : TZDateTime.now(local);

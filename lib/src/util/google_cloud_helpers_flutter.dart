@@ -89,7 +89,9 @@ class GoogleCloudHelpers {
 
   /// Just a stub for now. See google_cloud_helpers_dart.dart for documentation.
   static Future<AutoRefreshingAuthClient> createAuthClient(
-      {required List<String> scopes, String? pathToServiceAccountJson}) async {
+      {required List<String> scopes,
+      String? pathToServiceAccountJson,
+      String? serviceAccountJsonRaw}) async {
     throw UnimplementedError();
   }
 

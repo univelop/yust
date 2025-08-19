@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:googleapis/firestore/v1.dart' hide AggregationResult;
 import 'package:http/http.dart';
-import 'package:stream_transform/stream_transform.dart';
 
 import '../extensions/date_time_extension.dart';
 import '../extensions/server_now.dart';
@@ -538,10 +537,13 @@ class YustDatabaseService implements IYustDatabaseService {
       }
     }
 
-    return lazyPaginationGenerator().map<T?>((e) {
-      if (e['document'] == null) return null;
-      return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
-    }).whereType<T>();
+    return lazyPaginationGenerator()
+        .map<T?>((e) {
+          if (e['document'] == null) return null;
+          return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
+        })
+        .where((e) => e is T)
+        .cast<T>();
   }
 
   /// Counts the number of documents in a collection.

@@ -206,11 +206,9 @@ class YustAuthService {
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
-    // ignore: deprecated_member_use
-    final loginMethods = await _fireAuth.fetchSignInMethodsForEmail(email);
-    if (loginMethods.contains('password')) {
+    try {
       await _fireAuth.sendPasswordResetEmail(email: email);
-    } else {
+    } catch (e) {
       throw YustException('Reset password not possible.');
     }
   }

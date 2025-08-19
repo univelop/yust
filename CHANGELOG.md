@@ -1,3 +1,12 @@
+## 3.28.5 - 2025-08-19
+
+-   Add `includeNumber` property to YustAddress for better address display control
+-   Refactor datetime handling and add new datetime helper functions
+-   Add email verification functions to YustAuthService (isEmailVerified, sendEmailVerification, reloadCurrentUser)
+-   Update display name during user creation
+-   Add minute granularity flag for datetime operations
+-   Fix YustDatabaseService Flutter ignoring updateMask when doNotCreate is true
+
 ## 3.28.4 - 2025-08-11
 
 -   Fix `startAfterDocument` in YustDatabaseService

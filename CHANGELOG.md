@@ -1,3 +1,9 @@
+## 3.29.0 - 2025-08-20
+
+-   Upgrade Flutter version to 3.32
+-   Add collection group support to database service for cross-collection queries
+-   Upgrade package versions and remove deprecated dependencies
+
 ## 3.28.5 - 2025-08-19
 
 -   Add `includeNumber` property to YustAddress for better address display control

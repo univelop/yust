@@ -1,5 +1,6 @@
 import '../models/yust_doc.dart';
 import '../models/yust_doc_setup.dart';
+import '../util/yust_exception.dart';
 import '../yust.dart';
 
 enum AggregationType {
@@ -40,7 +41,12 @@ Future<void> prepareSaveDoc<T extends YustDoc>(
 }
 
 T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
-  doc ??= docSetup.newDoc();
+  if (docSetup.newDoc == null) {
+    throw YustException(
+      'No newDoc function provided for ${docSetup.collectionName}, cannot initialize doc.',
+    );
+  }
+  doc ??= docSetup.newDoc!();
 
   doc.id = id;
   doc.createdAt = Yust.helpers.utcNow();

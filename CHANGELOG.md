@@ -1,3 +1,7 @@
+## 3.29.1 - 2025-08-21
+
+-   Add redirect parameter to auth service methods
+
 ## 3.29.0 - 2025-08-20
 
 -   Upgrade Flutter version to 3.32

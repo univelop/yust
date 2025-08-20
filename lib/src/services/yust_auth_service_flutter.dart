@@ -60,33 +60,44 @@ class YustAuthService {
     await _fireAuth.signInWithCustomToken(token);
   }
 
-  Future<YustUser?> signInWithMicrosoft() async {
+  Future<YustUser?> signInWithMicrosoft({bool redirect = false}) async {
     final microsoftProvider = MicrosoftAuthProvider();
     return _signInWithProvider(
-        microsoftProvider, YustAuthenticationMethod.microsoft);
+      microsoftProvider,
+      YustAuthenticationMethod.microsoft,
+      redirect: redirect,
+    );
   }
 
-  // Future<YustUser?> signInWithGithub() async {
-  //   final githubProvider = GithubAuthProvider();
-  //   return _signInWithProvider(githubProvider, YustAuthenticationMethod.github);
-  // }
-
-  Future<YustUser?> signInWithGoogle() async {
+  Future<YustUser?> signInWithGoogle({bool redirect = false}) async {
     final googleProvider = GoogleAuthProvider();
-    return _signInWithProvider(googleProvider, YustAuthenticationMethod.google);
+    return _signInWithProvider(
+      googleProvider,
+      YustAuthenticationMethod.google,
+      redirect: redirect,
+    );
   }
 
-  Future<YustUser?> signInWithApple() async {
+  Future<YustUser?> signInWithApple({bool redirect = false}) async {
     final appleProvider = AppleAuthProvider()
       ..addScope('email')
       ..addScope('name');
 
-    return _signInWithProvider(appleProvider, YustAuthenticationMethod.apple);
+    return _signInWithProvider(
+      appleProvider,
+      YustAuthenticationMethod.apple,
+      redirect: redirect,
+    );
   }
 
-  Future<YustUser?> signInWithOpenId(String providerId) async {
+  Future<YustUser?> signInWithOpenId(String providerId,
+      {bool redirect = false}) async {
     final provider = OAuthProvider(providerId);
-    return _signInWithProvider(provider, YustAuthenticationMethod.openId);
+    return _signInWithProvider(
+      provider,
+      YustAuthenticationMethod.openId,
+      redirect: redirect,
+    );
   }
 
   Future<YustUser?> _signInWithProvider(
@@ -323,7 +334,8 @@ class YustAuthService {
       await firebaseUser.verifyBeforeUpdateEmail(user.email);
     }
   }
-  
+
   /// Reloads the current user to ensure the latest information is fetched from Firebase.
-  Future<void> reloadCurrentUser() async => await _fireAuth.currentUser?.reload();
+  Future<void> reloadCurrentUser() async =>
+      await _fireAuth.currentUser?.reload();
 }

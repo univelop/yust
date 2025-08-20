@@ -54,31 +54,32 @@ class YustAuthService {
 
   /// Sign in with Microsoft. If a new user was created, return the user.
   /// A Microsoft app must be registered in the Firebase console.
-  Future<YustUser?> signInWithMicrosoft() async {
+  Future<YustUser?> signInWithMicrosoft({bool redirect = false}) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
   /// Sign in with GitHub. If a new user was created, return the user.
   /// A GitHub app must be registered in the Firebase console.
-  Future<YustUser?> signInWithGithub() async {
+  Future<YustUser?> signInWithGithub({bool redirect = false}) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
   /// Sign in with Google. If a new user was created, return the user.
   /// The Google Authentication method must be activated in the Firebase console.
-  Future<YustUser?> signInWithGoogle() async {
+  Future<YustUser?> signInWithGoogle({bool redirect = false}) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
   /// Sign in with Apple. If a new user was created, return the user.
   /// The Apple Authentication method must be activated in the Firebase console.
-  Future<YustUser?> signInWithApple() async {
+  Future<YustUser?> signInWithApple({bool redirect = false}) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
   /// Sign in with a configured OpenID. If a new user was created, return the user.
   /// The Authentication method must be configured in the Firebase console.
-  Future<YustUser?> signInWithOpenId(String providerId) async {
+  Future<YustUser?> signInWithOpenId(String providerId,
+      {bool redirect = false}) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 

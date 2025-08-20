@@ -60,19 +60,24 @@ class YustAuthServiceMocked implements YustAuthService {
   Future<void> signInWithToken(String token) => throw UnimplementedError();
 
   @override
-  Future<YustUser?> signInWithApple() => throw UnimplementedError();
+  Future<YustUser?> signInWithApple({bool redirect = false}) =>
+      throw UnimplementedError();
 
   @override
-  Future<YustUser?> signInWithGithub() => throw UnimplementedError();
+  Future<YustUser?> signInWithGithub({bool redirect = false}) =>
+      throw UnimplementedError();
 
   @override
-  Future<YustUser?> signInWithGoogle() => throw UnimplementedError();
+  Future<YustUser?> signInWithGoogle({bool redirect = false}) =>
+      throw UnimplementedError();
 
   @override
-  Future<YustUser?> signInWithMicrosoft() => throw UnimplementedError();
+  Future<YustUser?> signInWithMicrosoft({bool redirect = false}) =>
+      throw UnimplementedError();
 
   @override
-  Future<YustUser?> signInWithOpenId(String providerId) =>
+  Future<YustUser?> signInWithOpenId(String providerId,
+          {bool redirect = false}) =>
       throw UnimplementedError();
 
   @override

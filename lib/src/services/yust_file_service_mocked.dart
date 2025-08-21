@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
+import '../util/yust_exception.dart';
 import 'yust_file_service.dart';
 import 'yust_file_service_shared.dart';
 
@@ -120,14 +121,60 @@ class YustFileServiceMocked extends YustFileService {
   }
 
   @override
-  Future<YustFileMetadata> getMetadata(
-      {required String path, required String name}) async {
+  Future<YustFileMetadata> getMetadata({
+    required String path,
+    required String name,
+  }) async {
     final object = _storage[path]?[name];
 
     return YustFileMetadata(
       size: object?.data.length ?? 0,
       token: object?.metadata['firebaseStorageDownloadTokens'] ?? '',
     );
+  }
+
+  @override
+  Future<List<dynamic>> getFilesInFolder({required String path}) async {
+    throw YustException('Not implemented for mocked');
+  }
+
+  @override
+  Future<List<dynamic>> getFileVersionsInFolder({required String path}) async {
+    throw YustException('Not implemented for mocked');
+  }
+
+  @override
+  Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
+    required String path,
+  }) async {
+    throw YustException('Not implemented for mocked');
+  }
+
+  @override
+  Future<String?> getLatestFileVersion({
+    required String path,
+    required String name,
+  }) async {
+    throw YustException('Not implemented for mocked');
+  }
+
+  @override
+  Future<String?> getLatestInvalidFileVersion({
+    required String path,
+    required String name,
+    DateTime? beforeDeletion,
+    DateTime? afterDeletion,
+  }) async {
+    throw YustException('Not implemented for mocked');
+  }
+
+  @override
+  Future<void> recoverOutdatedFile({
+    required String path,
+    required String name,
+    required String generation,
+  }) async {
+    throw YustException('Not implemented for mocked');
   }
 
   String _createDownloadUrl(String path, String name, String token) {

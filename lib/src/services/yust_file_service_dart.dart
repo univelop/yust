@@ -9,6 +9,7 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../util/yust_retry_helper.dart';
+import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
 
 const firebaseStorageUrl = 'https://storage.googleapis.com/';
@@ -17,7 +18,7 @@ const firebaseStorageUrl = 'https://storage.googleapis.com/';
 ///
 /// Uses the GoogleApi for Flutter Platforms (Android, iOS, Web)
 /// and GoogleAPIs for **Dart-only environments**.
-class YustFileService {
+class YustFileService implements IYustFileService {
   late StorageApi _storageApi;
   late String bucketName;
   late String rootUrl;
@@ -43,11 +44,13 @@ class YustFileService {
   /// to the given [path] and [name].
   ///
   /// It returns the download url of the uploaded file.
-  Future<String> uploadFile(
-      {required String path,
-      required String name,
-      File? file,
-      Uint8List? bytes}) async {
+  @override
+  Future<String> uploadFile({
+    required String path,
+    required String name,
+    File? file,
+    Uint8List? bytes,
+  }) async {
     // Check if either a file or bytes are provided
     if (file == null && bytes == null) {
       throw Exception('No file or bytes provided');
@@ -59,11 +62,15 @@ class YustFileService {
         : Stream<List<int>>.value(bytes!.toList());
     final token = Uuid().v4();
     final object = Object(
-        name: '$path/$name',
-        bucket: bucketName,
-        metadata: {'firebaseStorageDownloadTokens': token});
-    final media = Media(data, file?.lengthSync() ?? bytes!.length,
-        contentType: lookupMimeType(name) ?? 'application/octet-stream');
+      name: '$path/$name',
+      bucket: bucketName,
+      metadata: {'firebaseStorageDownloadTokens': token},
+    );
+    final media = Media(
+      data,
+      file?.lengthSync() ?? bytes!.length,
+      contentType: lookupMimeType(name) ?? 'application/octet-stream',
+    );
 
     // Using the Google Storage API to insert (upload) the file
     await _retryOnException(
@@ -78,6 +85,7 @@ class YustFileService {
   /// to the given [path] and [name].
   ///
   /// Returns the download url of the uploaded file.
+  @override
   Future<String> uploadStream({
     required String path,
     required String name,
@@ -91,33 +99,44 @@ class YustFileService {
       metadata: {'firebaseStorageDownloadTokens': token},
       contentDisposition: contentDisposition,
     );
-    final media = Media(stream, null,
-        contentType: lookupMimeType(name) ?? 'application/octet-stream');
+    final media = Media(
+      stream,
+      null,
+      contentType: lookupMimeType(name) ?? 'application/octet-stream',
+    );
 
     // Use the Google Storage API to insert (upload) the file
     await _retryOnException(
       'Upload-Stream',
       '$path/$name',
-      () => _storageApi.objects.insert(object, bucketName,
-          uploadMedia: media,
-          uploadOptions: ResumableUploadOptions(chunkSize: 64 * 1024 * 1024)),
+      () => _storageApi.objects.insert(
+        object,
+        bucketName,
+        uploadMedia: media,
+        uploadOptions: ResumableUploadOptions(chunkSize: 64 * 1024 * 1024),
+      ),
     );
     return _createDownloadUrl(path, name, token);
   }
 
   /// Downloads a file from a given [path] and [name] and returns it as [Uint8List].
   /// The [maxSize] parameter can be used to limit the size of the downloaded file.
-  Future<Uint8List?> downloadFile(
-      {required String path,
-      required String name,
-      int maxSize = 20 * 1024 * 1024}) async {
+  @override
+  Future<Uint8List?> downloadFile({
+    required String path,
+    required String name,
+    int maxSize = 20 * 1024 * 1024,
+  }) async {
     print('[[DEBUG]] Downloading File from $path/$name');
 
     final object = await _retryOnException(
       'Download-File',
       '$path/$name',
-      () => _storageApi.objects.get(bucketName, '$path/$name',
-          downloadOptions: DownloadOptions.fullMedia),
+      () => _storageApi.objects.get(
+        bucketName,
+        '$path/$name',
+        downloadOptions: DownloadOptions.fullMedia,
+      ),
     );
 
     if (object is Media) {
@@ -128,25 +147,31 @@ class YustFileService {
       int totalBytes = 0;
 
       StreamSubscription<List<int>>? subscription;
-      subscription = mediaStream.listen((List<int> data) {
-        if (totalBytes + data.length > maxSize) {
-          final leftOverBytes = maxSize - totalBytes;
-          bytesBuilder.add(data.sublist(0, leftOverBytes));
-          completer.complete(bytesBuilder.takeBytes());
-          print(
-              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes');
-          subscription?.cancel();
-        } else {
-          bytesBuilder.add(data);
-          totalBytes += data.length;
-        }
-      }, onDone: () {
-        if (!completer.isCompleted) {
-          print(
-              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes');
-          completer.complete(bytesBuilder.takeBytes());
-        }
-      }, onError: completer.completeError);
+      subscription = mediaStream.listen(
+        (List<int> data) {
+          if (totalBytes + data.length > maxSize) {
+            final leftOverBytes = maxSize - totalBytes;
+            bytesBuilder.add(data.sublist(0, leftOverBytes));
+            completer.complete(bytesBuilder.takeBytes());
+            print(
+              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes',
+            );
+            subscription?.cancel();
+          } else {
+            bytesBuilder.add(data);
+            totalBytes += data.length;
+          }
+        },
+        onDone: () {
+          if (!completer.isCompleted) {
+            print(
+              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes',
+            );
+            completer.complete(bytesBuilder.takeBytes());
+          }
+        },
+        onError: completer.completeError,
+      );
 
       return completer.future;
     }
@@ -154,6 +179,7 @@ class YustFileService {
   }
 
   /// Deletes a existing file at [path] and filename [name].
+  @override
   Future<void> deleteFile({required String path, String? name}) async {
     await _retryOnException(
       'deleteFile',
@@ -163,6 +189,7 @@ class YustFileService {
     );
   }
 
+  @override
   Future<void> deleteFolder({required String path}) async {
     final objects = (await _retryOnException(
       'Get-Folder-Content-For-Deletion',
@@ -183,6 +210,7 @@ class YustFileService {
   }
 
   /// Checks if a file exists at a given [path] and [name].
+  @override
   Future<bool> fileExist({required String path, required String name}) async {
     final obj = await _retryOnException(
       'Get-File',
@@ -194,15 +222,20 @@ class YustFileService {
   }
 
   /// Returns the download url of a existing file at [path] and [name].
-  Future<String> getFileDownloadUrl(
-      {required String path, required String name}) async {
+  @override
+  Future<String> getFileDownloadUrl({
+    required String path,
+    required String name,
+  }) async {
     final object = await _retryOnException(
-        'Get-Storage-Obj-For-File-Url',
-        '$path/$name',
-        () => _storageApi.objects.get(bucketName, '$path/$name'));
+      'Get-Storage-Obj-For-File-Url',
+      '$path/$name',
+      () => _storageApi.objects.get(bucketName, '$path/$name'),
+    );
     if (object is Object) {
-      var token =
-          object.metadata?['firebaseStorageDownloadTokens']?.split(',')[0];
+      var token = object.metadata?['firebaseStorageDownloadTokens']?.split(
+        ',',
+      )[0];
       if (token == null) {
         token = Uuid().v4();
         if (object.metadata == null) {
@@ -225,12 +258,16 @@ class YustFileService {
     throw Exception('Unknown response Object');
   }
 
-  Future<YustFileMetadata> getMetadata(
-      {required String path, required String name}) async {
+  @override
+  Future<YustFileMetadata> getMetadata({
+    required String path,
+    required String name,
+  }) async {
     final Object object = await _retryOnException<dynamic>(
-        'Get-Storage-Obj-For-File-Url',
-        '$path/$name',
-        () => _storageApi.objects.get(bucketName, '$path/$name'));
+      'Get-Storage-Obj-For-File-Url',
+      '$path/$name',
+      () => _storageApi.objects.get(bucketName, '$path/$name'),
+    );
 
     return YustFileMetadata(
       size: int.parse(object.size ?? '0'),
@@ -244,38 +281,54 @@ class YustFileService {
         '?alt=media&token=$token';
   }
 
-  Future<List<Object>> getFilesInFolder({required String path}) async {
-    return (await _retryOnException('List-Files-Of-Folder', '$path/',
-                () => _storageApi.objects.list(bucketName, prefix: path)))
-            ?.items ??
-        [];
-  }
-
-  Future<List<Object>> getFileVersionsInFolder({required String path}) async {
+  @override
+  Future<List<dynamic>> getFilesInFolder({required String path}) async {
     return (await _retryOnException(
-                'Get-File-Versions-In-Folder',
-                '$path/',
-                () => _storageApi.objects
-                    .list(bucketName, prefix: path, versions: true)))
-            ?.items ??
+          'List-Files-Of-Folder',
+          '$path/',
+          () => _storageApi.objects.list(bucketName, prefix: path),
+        ))?.items ??
         [];
   }
 
-  Future<Map<String?, List<Object>>> getFileVersionsGrouped(
-      {required String path}) async {
+  @override
+  Future<List<dynamic>> getFileVersionsInFolder({required String path}) async {
+    return (await _retryOnException(
+          'Get-File-Versions-In-Folder',
+          '$path/',
+          () => _storageApi.objects.list(
+            bucketName,
+            prefix: path,
+            versions: true,
+          ),
+        ))?.items ??
+        [];
+  }
+
+  @override
+  Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
+    required String path,
+  }) async {
     final objects = groupBy(
-      (await _retryOnException('Get-File-Versions-Grouped', '$path/',
-              () => getFileVersionsInFolder(path: path))) ??
-          <Object>[],
-      (Object object) => object.name,
+      (await _retryOnException(
+            'Get-File-Versions-Grouped',
+            '$path/',
+            () => getFileVersionsInFolder(path: path),
+          )) ??
+          <dynamic>[],
+      (dynamic object) => object.name as String?,
     );
     return objects;
   }
 
-  Future<String?> getLatestFileVersion(
-      {required String path, required String name}) async {
-    final fileVersions = (await getFileVersionsInFolder(path: path))
-        .where((e) => e.name == '$path/$name');
+  @override
+  Future<String?> getLatestFileVersion({
+    required String path,
+    required String name,
+  }) async {
+    final fileVersions = (await getFileVersionsInFolder(
+      path: path,
+    )).where((e) => e.name == '$path/$name');
     // Get the generation of the file that has been deleted last
     return fileVersions
         .where((e) => e.timeCreated != null)
@@ -284,45 +337,62 @@ class YustFileService {
         ?.generation;
   }
 
+  @override
   Future<String?> getLatestInvalidFileVersion({
     required String path,
     required String name,
     DateTime? beforeDeletion,
     DateTime? afterDeletion,
   }) async {
-    final fileVersions = (await getFileVersionsInFolder(path: path))
-        .where((e) => e.name == '$path/$name');
+    final fileVersions = (await getFileVersionsInFolder(
+      path: path,
+    )).where((e) => e.name == '$path/$name');
     // Get the generation of the file that has been deleted last
     return fileVersions
         .where((e) => e.timeCreated != null && e.timeDeleted != null)
-        .where((e) => beforeDeletion != null
-            ? e.timeDeleted?.isAfter(beforeDeletion) ?? false
-            : true)
-        .where((e) => afterDeletion != null
-            ? e.timeDeleted?.isBefore(afterDeletion) ?? false
-            : true)
+        .where(
+          (e) => beforeDeletion != null
+              ? e.timeDeleted?.isAfter(beforeDeletion) ?? false
+              : true,
+        )
+        .where(
+          (e) => afterDeletion != null
+              ? e.timeDeleted?.isBefore(afterDeletion) ?? false
+              : true,
+        )
         .sortedBy<DateTime>((element) => element.timeDeleted!)
         .lastOrNull
         ?.generation;
   }
 
-  Future<void> recoverOutdatedFile(
-      {required String path,
-      required String name,
-      required String generation}) async {
+  @override
+  Future<void> recoverOutdatedFile({
+    required String path,
+    required String name,
+    required String generation,
+  }) async {
     final object = await _retryOnException(
       'Recover-Outdated-File-Get',
       '$path/$name',
-      () => _storageApi.objects
-          .get(bucketName, '$path/$name', generation: generation),
+      () => _storageApi.objects.get(
+        bucketName,
+        '$path/$name',
+        generation: generation,
+      ),
     );
     if (object is Object) {
       await _retryOnException(
-          'Recover-Outdated-File-Rewrite',
-          '$path/$name',
-          () => _storageApi.objects.rewrite(
-              object, bucketName, object.name!, bucketName, object.name!,
-              sourceGeneration: generation));
+        'Recover-Outdated-File-Rewrite',
+        '$path/$name',
+        () => _storageApi.objects.rewrite(
+          object,
+          bucketName,
+          object.name!,
+          bucketName,
+          object.name!,
+          sourceGeneration: generation,
+        ),
+      );
     }
   }
 
@@ -347,7 +417,8 @@ class YustFileService {
         ),
       ],
       onRetriesExceeded: (lastError, fnName, docPath) => print(
-          '[[ERROR]] Retried $fnName call $maxTries times, but still failed: $lastError for $docPath'),
+        '[[ERROR]] Retried $fnName call $maxTries times, but still failed: $lastError for $docPath',
+      ),
     );
   }
 }

@@ -125,8 +125,15 @@ class YustFileService implements IYustFileService {
 
   @override
   Future<bool> fileExist({required String path, required String name}) async {
-    final fileList = await _fireStorage.ref().child(path).list();
-    return fileList.items.any((element) => element.name == name);
+    try {
+      await _fireStorage.ref().child(path).child(name).getMetadata();
+      return true;
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        return false;
+      }
+      rethrow;
+    }
   }
 
   @override

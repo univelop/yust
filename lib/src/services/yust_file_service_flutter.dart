@@ -12,21 +12,35 @@ import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
 
 class YustFileService implements IYustFileService {
+  late String defaultBucketName;
+
   YustFileService({
     Client? authClient,
     required String? emulatorAddress,
     required String projectId,
   }) : _fireStorage = FirebaseStorage.instance {
+    defaultBucketName = '$projectId.appspot.com';
     if (emulatorAddress != null) {
       _fireStorage.useStorageEmulator(emulatorAddress, 9199);
     }
   }
 
   YustFileService.mocked() : _fireStorage = FirebaseStorage.instance {
+    defaultBucketName = 'mocked-bucket';
     throw UnsupportedError('Not supported in Flutter Environment');
   }
 
   final FirebaseStorage _fireStorage;
+
+  /// Returns the appropriate FirebaseStorage instance for the bucket
+  FirebaseStorage _getStorageForBucket(String? bucketName) {
+    final effectiveBucketName = bucketName ?? defaultBucketName;
+    if (effectiveBucketName == defaultBucketName) {
+      return _fireStorage;
+    }
+    // For different buckets, create a new instance
+    return FirebaseStorage.instanceFor(bucket: effectiveBucketName);
+  }
 
   @override
   Future<String> uploadStream({
@@ -35,6 +49,7 @@ class YustFileService implements IYustFileService {
     required Stream<List<int>> stream,
     String? contentDisposition,
     Map<String, String>? metadata,
+    String? bucketName,
   }) async {
     final collected = <int>[];
     await for (final chunk in stream) {
@@ -42,7 +57,13 @@ class YustFileService implements IYustFileService {
     }
     final bytes = Uint8List.fromList(collected);
 
-    return uploadFile(path: path, name: name, bytes: bytes, metadata: metadata);
+    return uploadFile(
+      path: path,
+      name: name,
+      bytes: bytes,
+      metadata: metadata,
+      bucketName: bucketName,
+    );
   }
 
   @override
@@ -52,9 +73,11 @@ class YustFileService implements IYustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? bucketName,
   }) async {
     try {
-      final storageReference = _fireStorage.ref().child(path).child(name);
+      final storage = _getStorageForBucket(bucketName);
+      final storageReference = storage.ref().child(path).child(name);
 
       var size = _calcMaxUploadRetryTime(bytes, file);
       FirebaseStorage.instance.setMaxUploadRetryTime(
@@ -101,19 +124,26 @@ class YustFileService implements IYustFileService {
     required String path,
     required String name,
     int maxSize = 20 * 1024 * 1024,
+    String? bucketName,
   }) async {
     try {
-      return await _fireStorage.ref().child(path).child(name).getData(maxSize);
+      final storage = _getStorageForBucket(bucketName);
+      return await storage.ref().child(path).child(name).getData(maxSize);
     } catch (e) {
       return Uint8List(0);
     }
   }
 
   @override
-  Future<void> deleteFile({required String path, String? name}) async {
+  Future<void> deleteFile({
+    required String path,
+    String? name,
+    String? bucketName,
+  }) async {
     if (name == null) return;
     try {
-      await _fireStorage.ref().child(path).child(name).delete();
+      final storage = _getStorageForBucket(bucketName);
+      await storage.ref().child(path).child(name).delete();
     } on FirebaseException catch (e) {
       if (e.code == 'object-not-found') {
         return;
@@ -124,9 +154,14 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<bool> fileExist({required String path, required String name}) async {
+  Future<bool> fileExist({
+    required String path,
+    required String name,
+    String? bucketName,
+  }) async {
     try {
-      await _fireStorage.ref().child(path).child(name).getMetadata();
+      final storage = _getStorageForBucket(bucketName);
+      await storage.ref().child(path).child(name).getMetadata();
       return true;
     } on FirebaseException catch (e) {
       if (e.code == 'object-not-found') {
@@ -140,20 +175,20 @@ class YustFileService implements IYustFileService {
   Future<String> getFileDownloadUrl({
     required String path,
     required String name,
+    String? bucketName,
   }) async {
-    return await _fireStorage.ref().child(path).child(name).getDownloadURL();
+    final storage = _getStorageForBucket(bucketName);
+    return await storage.ref().child(path).child(name).getDownloadURL();
   }
 
   @override
   Future<YustFileMetadata> getMetadata({
     required String path,
     required String name,
+    String? bucketName,
   }) async {
-    final metadata = await _fireStorage
-        .ref()
-        .child(path)
-        .child(name)
-        .getMetadata();
+    final storage = _getStorageForBucket(bucketName);
+    final metadata = await storage.ref().child(path).child(name).getMetadata();
 
     return YustFileMetadata(
       size: metadata.size ?? 0,
@@ -162,26 +197,34 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<void> deleteFolder({required String path}) async {
-    final fileList = await _fireStorage.ref().child(path).list();
+  Future<void> deleteFolder({required String path, String? bucketName}) async {
+    final storage = _getStorageForBucket(bucketName);
+    final fileList = await storage.ref().child(path).list();
     for (final file in fileList.items) {
       await file.delete();
     }
   }
 
   @override
-  Future<List<dynamic>> getFilesInFolder({required String path}) async {
+  Future<List<dynamic>> getFilesInFolder({
+    required String path,
+    String? bucketName,
+  }) async {
     throw YustException('Not implemented for flutter');
   }
 
   @override
-  Future<List<dynamic>> getFileVersionsInFolder({required String path}) async {
+  Future<List<dynamic>> getFileVersionsInFolder({
+    required String path,
+    String? bucketName,
+  }) async {
     throw YustException('Not implemented for flutter');
   }
 
   @override
   Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
     required String path,
+    String? bucketName,
   }) async {
     throw YustException('Not implemented for flutter');
   }
@@ -190,6 +233,7 @@ class YustFileService implements IYustFileService {
   Future<String?> getLatestFileVersion({
     required String path,
     required String name,
+    String? bucketName,
   }) async {
     throw YustException('Not implemented for flutter');
   }
@@ -200,6 +244,7 @@ class YustFileService implements IYustFileService {
     required String name,
     DateTime? beforeDeletion,
     DateTime? afterDeletion,
+    String? bucketName,
   }) async {
     throw YustException('Not implemented for flutter');
   }
@@ -209,6 +254,7 @@ class YustFileService implements IYustFileService {
     required String path,
     required String name,
     required String generation,
+    String? bucketName,
   }) async {
     throw YustException('Not implemented for flutter');
   }

@@ -34,6 +34,7 @@ class YustFileService implements IYustFileService {
     required String name,
     required Stream<List<int>> stream,
     String? contentDisposition,
+    Map<String, String>? metadata,
   }) async {
     final collected = <int>[];
     await for (final chunk in stream) {
@@ -41,7 +42,7 @@ class YustFileService implements IYustFileService {
     }
     final bytes = Uint8List.fromList(collected);
 
-    return uploadFile(path: path, name: name, bytes: bytes);
+    return uploadFile(path: path, name: name, bytes: bytes, metadata: metadata);
   }
 
   @override
@@ -50,6 +51,7 @@ class YustFileService implements IYustFileService {
     required String name,
     File? file,
     Uint8List? bytes,
+    Map<String, String>? metadata,
   }) async {
     try {
       final storageReference = _fireStorage.ref().child(path).child(name);
@@ -61,15 +63,23 @@ class YustFileService implements IYustFileService {
 
       UploadTask uploadTask;
       if (file != null) {
-        uploadTask = storageReference.putFile(file);
+        // For file uploads, create metadata with custom metadata if provided
+        var fileMetadata = SettableMetadata(
+          contentType: lookupMimeType(name),
+          customMetadata: metadata,
+        );
+        uploadTask = storageReference.putFile(file, fileMetadata);
       } else {
-        var metadata = SettableMetadata(contentType: lookupMimeType(name));
-        uploadTask = storageReference.putData(bytes!, metadata);
+        var fileMetadata = SettableMetadata(
+          contentType: lookupMimeType(name),
+          customMetadata: metadata,
+        );
+        uploadTask = storageReference.putData(bytes!, fileMetadata);
       }
       await uploadTask;
       return await storageReference.getDownloadURL();
-    } catch (error) {
-      throw YustException('Fehler beim Upload: ${error.toString()}');
+    } catch (e) {
+      throw YustException('Error uploading file: $e');
     }
   }
 

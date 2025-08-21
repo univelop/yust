@@ -24,6 +24,7 @@ class YustFileServiceMocked extends YustFileService {
     required String name,
     required Stream<List<int>> stream,
     String? contentDisposition,
+    Map<String, String>? metadata,
   }) async {
     final collected = <int>[];
     await for (final chunk in stream) {
@@ -31,7 +32,7 @@ class YustFileServiceMocked extends YustFileService {
     }
     final bytes = Uint8List.fromList(collected);
 
-    return uploadFile(path: path, name: name, bytes: bytes);
+    return uploadFile(path: path, name: name, bytes: bytes, metadata: metadata);
   }
 
   /// Uploads a file from either a [File] or [Uint8List]
@@ -44,6 +45,7 @@ class YustFileServiceMocked extends YustFileService {
     required String name,
     File? file,
     Uint8List? bytes,
+    Map<String, String>? metadata,
   }) async {
     if (file == null && bytes == null) {
       throw Exception('No file or bytes provided');
@@ -54,9 +56,18 @@ class YustFileServiceMocked extends YustFileService {
 
     _storage.putIfAbsent(path, () => {});
 
+    final fileMetadata = <String, String>{
+      'firebaseStorageDownloadTokens': token,
+    };
+
+    // Add custom metadata if provided
+    if (metadata != null) {
+      fileMetadata.addAll(metadata);
+    }
+
     _storage[path]![name] = MockedFile(
       data: data,
-      metadata: {'firebaseStorageDownloadTokens': token},
+      metadata: fileMetadata,
       mimeType: lookupMimeType(name) ?? 'application/octet-stream',
     );
 

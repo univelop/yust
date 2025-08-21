@@ -40,16 +40,13 @@ class YustFileService implements IYustFileService {
     rootUrl = '0.0.0.0:80';
   }
 
-  /// Uploads a file from either a [File] or [Uint8List]
-  /// to the given [path] and [name].
-  ///
-  /// It returns the download url of the uploaded file.
   @override
   Future<String> uploadFile({
     required String path,
     required String name,
     File? file,
     Uint8List? bytes,
+    Map<String, String>? metadata,
   }) async {
     // Check if either a file or bytes are provided
     if (file == null && bytes == null) {
@@ -61,10 +58,19 @@ class YustFileService implements IYustFileService {
         ? file.openRead()
         : Stream<List<int>>.value(bytes!.toList());
     final token = Uuid().v4();
+    final fileMetadata = <String, String>{
+      'firebaseStorageDownloadTokens': token,
+    };
+
+    // Add custom metadata if provided
+    if (metadata != null) {
+      fileMetadata.addAll(metadata);
+    }
+
     final object = Object(
       name: '$path/$name',
       bucket: bucketName,
-      metadata: {'firebaseStorageDownloadTokens': token},
+      metadata: fileMetadata,
     );
     final media = Media(
       data,
@@ -91,12 +97,22 @@ class YustFileService implements IYustFileService {
     required String name,
     required Stream<List<int>> stream,
     String? contentDisposition,
+    Map<String, String>? metadata,
   }) async {
     final token = Uuid().v4();
+    final fileMetadata = <String, String>{
+      'firebaseStorageDownloadTokens': token,
+    };
+
+    // Add custom metadata if provided
+    if (metadata != null) {
+      fileMetadata.addAll(metadata);
+    }
+
     final object = Object(
       name: '$path/$name',
       bucket: bucketName,
-      metadata: {'firebaseStorageDownloadTokens': token},
+      metadata: fileMetadata,
       contentDisposition: contentDisposition,
     );
     final media = Media(

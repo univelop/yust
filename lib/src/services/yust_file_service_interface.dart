@@ -10,16 +10,21 @@ abstract interface class IYustFileService {
   /// Uploads a file from either a [File] or [Uint8List]
   /// to the given [path] and [name].
   ///
+  /// Optionally accepts [metadata] to be set on the uploaded file.
+  ///
   /// It returns the download url of the uploaded file.
   Future<String> uploadFile({
     required String path,
     required String name,
     File? file,
     Uint8List? bytes,
+    Map<String, String>? metadata,
   });
 
   /// Uploads a file from a [Stream] of [List<int>]
   /// to the given [path] and [name].
+  ///
+  /// Optionally accepts [metadata] to be set on the uploaded file.
   ///
   /// Returns the download url of the uploaded file.
   Future<String> uploadStream({
@@ -27,6 +32,7 @@ abstract interface class IYustFileService {
     required String name,
     required Stream<List<int>> stream,
     String? contentDisposition,
+    Map<String, String>? metadata,
   });
 
   /// Downloads a file from a given [path] and [name] and returns it as [Uint8List].

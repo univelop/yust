@@ -1,3 +1,7 @@
+## 3.29.2 - 2025-08-25
+
+-   Fix for doNotCreate and updateMask
+
 ## 3.29.1 - 2025-08-21
 
 -   Add redirect parameter to auth service methods

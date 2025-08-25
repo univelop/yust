@@ -398,8 +398,10 @@ class YustDatabaseService implements IYustDatabaseService {
 
     final jsonDoc = doc.toJson();
 
-    final modifiedDoc = _prepareJsonForFirebase(
-      doNotCreate ? _getValuesByUpdateMask(jsonDoc, updateMask ?? []) : jsonDoc,
+     final modifiedDoc = _prepareJsonForFirebase(
+      doNotCreate && updateMask != null
+          ? _getValuesByUpdateMask(jsonDoc, updateMask)
+          : jsonDoc,
       removeNullValues: removeNullValues ?? docSetup.removeNullValues,
     );
 

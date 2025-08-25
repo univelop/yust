@@ -1,3 +1,7 @@
+## 3.28.6 - 2025-08-25
+
+-   Fix for doNotCreate and updateMask
+
 ## 3.28.5 - 2025-08-19
 
 -   Add `includeNumber` property to YustAddress for better address display control

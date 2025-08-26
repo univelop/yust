@@ -30,8 +30,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
             {String? id, List<String>? updateMask, num? aggregationResult}) =>
         statistics.dbStatisticsCallback(action, documentPath, count,
-            id: id,
-            updateMask: updateMask,
+          id: id,
+          updateMask: updateMask,
             aggregationResult: aggregationResult);
 
     YustDatabaseServiceMocked.onChange =
@@ -199,9 +199,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     T? startAfterDocument,
   }) {
     return Stream.fromFuture(getList(docSetup,
-            filters: filters,
-            orderBy: orderBy,
-            limit: pageSize,
+        filters: filters,
+        orderBy: orderBy,
+        limit: pageSize,
             startAfterDocument: startAfterDocument))
         .expand((e) => e);
   }
@@ -215,11 +215,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     T? startAfterDocument,
   }) {
     return Stream.fromFuture(getListFromDB<T>(
-      docSetup,
-      filters: filters,
-      orderBy: orderBy,
-      limit: limit,
-      startAfterDocument: startAfterDocument,
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: limit,
+        startAfterDocument: startAfterDocument,
     ));
   }
 
@@ -232,12 +232,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     T? startAfterDocument,
   }) {
     return Future.value(_getList(
-      docSetup,
-      filters: filters,
-      orderBy: orderBy,
-      limit: limit,
-      startAfterDocument: startAfterDocument,
-      forAllEnvironments: true,
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: limit,
+        startAfterDocument: startAfterDocument,
+        forAllEnvironments: true,
     ));
   }
 
@@ -250,9 +250,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     T? startAfterDocument,
   }) {
     return Stream.fromFuture(getListForCollectionGroup(docSetup,
-            filters: filters,
-            orderBy: orderBy,
-            limit: pageSize,
+        filters: filters,
+        orderBy: orderBy,
+        limit: pageSize,
             startAfterDocument: startAfterDocument))
         .expand((e) => e);
   }
@@ -350,7 +350,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService
         final newJsonDoc = docJsonPrepared;
         for (final path in updateMask) {
           final newValue = _readValueInJsonDoc(newJsonDoc, path);
-          _changeValueInJsonDoc(jsonDoc, newValue, path);
+          final shouldDelete = !_hasValueAtPath(newJsonDoc, path);
+          _changeValueInJsonDoc(
+            jsonDoc,
+            newValue,
+            path,
+            deleteField: shouldDelete,
+          );
         }
         jsonDocs[index] = jsonDoc;
         await onChange?.call(
@@ -517,8 +523,9 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   void _changeValueInJsonDoc(
     Map<String, dynamic> jsonDoc,
     dynamic newValue,
-    String path,
-  ) {
+    String path, {
+    bool deleteField = false,
+  }) {
     final segments = path.split('.');
     Map subDoc = jsonDoc;
     for (final segment in segments.sublist(0, segments.length - 1)) {
@@ -528,7 +535,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
       subDoc = subDoc[segment];
     }
-    subDoc[segments.last] = newValue;
+
+    if (deleteField) {
+      subDoc.remove(segments.last);
+    } else {
+      subDoc[segments.last] = newValue;
+    }
   }
 
   dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
@@ -541,6 +553,18 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       subDoc = subDoc[segment];
     }
     return subDoc[segments.last];
+  }
+
+  bool _hasValueAtPath(Map<String, dynamic> jsonDoc, String path) {
+    final segments = path.split('.');
+    Map subDoc = jsonDoc;
+    for (final segment in segments.sublist(0, segments.length - 1)) {
+      if (subDoc[segment] == null || subDoc[segment] is! Map) {
+        return false;
+      }
+      subDoc = subDoc[segment];
+    }
+    return subDoc.containsKey(segments.last);
   }
 
   String _createDocumentId() {

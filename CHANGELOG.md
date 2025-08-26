@@ -1,3 +1,7 @@
+## 3.29.2 - 2025-08-25
+
+-   Fix for doNotCreate and updateMask
+
 ## 3.29.1 - 2025-08-21
 
 -   Add redirect parameter to auth service methods
@@ -7,6 +11,10 @@
 -   Upgrade Flutter version to 3.32
 -   Add collection group support to database service for cross-collection queries
 -   Upgrade package versions and remove deprecated dependencies
+
+## 3.28.6 - 2025-08-25
+
+-   Fix for doNotCreate and updateMask
 
 ## 3.28.5 - 2025-08-19
 

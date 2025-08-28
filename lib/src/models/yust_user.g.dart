@@ -12,8 +12,19 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       lastName: json['lastName'] as String,
       gender: $enumDecodeNullable(_$YustGenderEnumMap, json['gender'],
           unknownValue: JsonKey.nullForUndefinedEnumValue),
+      envIds: (json['envIds'] as Map?)?.map(
+            (k, e) => MapEntry(k as String, e as bool?),
+          ) ??
+          const {},
+      deviceIds: (json['deviceIds'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       authId: json['authId'] as String?,
       locale: json['locale'] as String?,
+      userAttributes: (json['userAttributes'] as Map?)?.map(
+            (k, e) => MapEntry(k as String, e),
+          ) ??
+          const {},
     )
       ..id = json['id'] as String
       ..createdAt = json['createdAt'] == null
@@ -29,14 +40,7 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..expiresAt = json['expiresAt'] == null
           ? null
           : DateTime.parse(json['expiresAt'] as String)
-      ..envIds = (json['envIds'] as Map?)?.map(
-            (k, e) => MapEntry(k as String, e as bool?),
-          ) ??
-          {}
       ..currEnvId = json['currEnvId'] as String?
-      ..deviceIds = (json['deviceIds'] as List<dynamic>?)
-          ?.map((e) => e as String)
-          .toList()
       ..lastLogin = json['lastLogin'] == null
           ? null
           : DateTime.parse(json['lastLogin'] as String)
@@ -48,11 +52,7 @@ YustUser _$YustUserFromJson(Map json) => YustUser(
       ..profilePicture = json['profilePicture'] == null
           ? null
           : YustImage.fromJson(
-              Map<String, dynamic>.from(json['profilePicture'] as Map))
-      ..userAttributes = (json['userAttributes'] as Map?)?.map(
-            (k, e) => MapEntry(k as String, e),
-          ) ??
-          {};
+              Map<String, dynamic>.from(json['profilePicture'] as Map));
 
 Map<String, dynamic> _$YustUserToJson(YustUser instance) => <String, dynamic>{
       'id': instance.id,

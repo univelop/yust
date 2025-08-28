@@ -87,14 +87,14 @@ abstract interface class IYustFileService {
 
   /// Returns a list of files in a folder at the given [path].
   /// Optionally accepts [bucketName] to override the default bucket.
-  Future<List<dynamic>> getFilesInFolder({
+  Future<List<Object>> getFilesInFolder({
     required String path,
     String? bucketName,
   });
 
   /// Returns file versions grouped by file name for a folder at the given [path].
   /// Optionally accepts [bucketName] to override the default bucket.
-  Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped({
     required String path,
     String? bucketName,
   });

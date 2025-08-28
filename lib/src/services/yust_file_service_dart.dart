@@ -327,7 +327,7 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<List<dynamic>> getFilesInFolder({
+  Future<List<Object>> getFilesInFolder({
     required String path,
     String? bucketName,
   }) async {
@@ -340,7 +340,7 @@ class YustFileService implements IYustFileService {
         [];
   }
 
-  Future<List<dynamic>> _getFileVersionsInFolder({
+  Future<List<Object>> _getFileVersionsInFolder({
     required String path,
     String? bucketName,
   }) async {
@@ -358,7 +358,7 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped({
     required String path,
     String? bucketName,
   }) async {
@@ -372,8 +372,8 @@ class YustFileService implements IYustFileService {
               bucketName: effectiveBucketName,
             ),
           )) ??
-          <dynamic>[],
-      (dynamic object) => (object as Object).name,
+          <Object>[],
+      (Object object) => (object).name,
     );
     return objects;
   }
@@ -387,14 +387,12 @@ class YustFileService implements IYustFileService {
     final fileVersions = (await _getFileVersionsInFolder(
       path: path,
       bucketName: bucketName,
-    )).where((e) => (e as Object).name == '$path/$name');
+    )).where((e) => (e).name == '$path/$name');
     // Get the generation of the file that has been deleted last
     final sortedVersions = fileVersions
-        .where((e) => (e as Object).timeCreated != null)
-        .sortedBy<DateTime>((element) => (element as Object).timeCreated!);
-    return sortedVersions.isNotEmpty
-        ? (sortedVersions.last as Object).generation
-        : null;
+        .where((e) => (e).timeCreated != null)
+        .sortedBy<DateTime>((element) => (element).timeCreated!);
+    return sortedVersions.isNotEmpty ? (sortedVersions.last).generation : null;
   }
 
   @override
@@ -408,26 +406,22 @@ class YustFileService implements IYustFileService {
     final fileVersions = (await _getFileVersionsInFolder(
       path: path,
       bucketName: bucketName,
-    )).where((e) => (e as Object).name == '$path/$name');
+    )).where((e) => (e).name == '$path/$name');
     // Get the generation of the file that has been deleted last
     final sortedVersions = fileVersions
-        .where(
-          (e) => (e as Object).timeCreated != null && e.timeDeleted != null,
-        )
+        .where((e) => (e).timeCreated != null && e.timeDeleted != null)
         .where(
           (e) => beforeDeletion != null
-              ? (e as Object).timeDeleted?.isAfter(beforeDeletion) ?? false
+              ? (e).timeDeleted?.isAfter(beforeDeletion) ?? false
               : true,
         )
         .where(
           (e) => afterDeletion != null
-              ? (e as Object).timeDeleted?.isBefore(afterDeletion) ?? false
+              ? (e).timeDeleted?.isBefore(afterDeletion) ?? false
               : true,
         )
-        .sortedBy<DateTime>((element) => (element as Object).timeDeleted!);
-    return sortedVersions.isNotEmpty
-        ? (sortedVersions.last as Object).generation
-        : null;
+        .sortedBy<DateTime>((element) => (element).timeDeleted!);
+    return sortedVersions.isNotEmpty ? (sortedVersions.last).generation : null;
   }
 
   @override

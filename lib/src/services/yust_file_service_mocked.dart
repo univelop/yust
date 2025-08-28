@@ -195,22 +195,6 @@ class YustFileServiceMocked extends YustFileService {
   }
 
   @override
-  Future<List<dynamic>> getFilesInFolder({
-    required String path,
-    String? bucketName,
-  }) async {
-    throw YustException('Not implemented for mocked');
-  }
-
-  @override
-  Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
-    required String path,
-    String? bucketName,
-  }) async {
-    throw YustException('Not implemented for mocked');
-  }
-
-  @override
   Future<String?> getLatestFileVersion({
     required String path,
     required String name,

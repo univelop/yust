@@ -206,7 +206,7 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<List<dynamic>> getFilesInFolder({
+  Future<List<Object>> getFilesInFolder({
     required String path,
     String? bucketName,
   }) async {
@@ -214,7 +214,7 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
+  Future<Map<String?, List<Object>>> getFileVersionsGrouped({
     required String path,
     String? bucketName,
   }) async {

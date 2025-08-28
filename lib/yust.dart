@@ -1,7 +1,7 @@
 /// Support for doing something awesome.
 ///
 /// More dartdocs go here.
-library yust;
+library;
 
 export 'src/extensions/date_time_extension.dart';
 export 'src/extensions/list_extension.dart';

@@ -214,14 +214,6 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<List<dynamic>> getFileVersionsInFolder({
-    required String path,
-    String? bucketName,
-  }) async {
-    throw YustException('Not implemented for flutter');
-  }
-
-  @override
   Future<Map<String?, List<dynamic>>> getFileVersionsGrouped({
     required String path,
     String? bucketName,

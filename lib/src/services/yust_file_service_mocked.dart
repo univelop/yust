@@ -84,13 +84,9 @@ class YustFileServiceMocked extends YustFileService {
     bucketStorage.putIfAbsent(path, () => <String, MockedFile>{});
 
     final fileMetadata = <String, String>{
+      ...?metadata,
       'firebaseStorageDownloadTokens': token,
     };
-
-    // Add custom metadata if provided
-    if (metadata != null) {
-      fileMetadata.addAll(metadata);
-    }
 
     bucketStorage[path]![name] = MockedFile(
       data: data,
@@ -200,14 +196,6 @@ class YustFileServiceMocked extends YustFileService {
 
   @override
   Future<List<dynamic>> getFilesInFolder({
-    required String path,
-    String? bucketName,
-  }) async {
-    throw YustException('Not implemented for mocked');
-  }
-
-  @override
-  Future<List<dynamic>> getFileVersionsInFolder({
     required String path,
     String? bucketName,
   }) async {

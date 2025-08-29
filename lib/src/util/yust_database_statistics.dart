@@ -46,7 +46,7 @@ class YustDatabaseStatistics {
     }
   }
 
-  clear() {
+  void clear() {
     _statistics.clear();
     _statisticsTwoSegments.clear();
   }

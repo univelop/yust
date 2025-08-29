@@ -195,7 +195,7 @@ class YustFilter {
     }
   }
 
-  get isEqualityFilter => [
+  bool get isEqualityFilter => [
         YustFilterComparator.equal,
         YustFilterComparator.arrayContains,
         YustFilterComparator.isNull

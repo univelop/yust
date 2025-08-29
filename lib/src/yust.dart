@@ -164,7 +164,7 @@ class Yust {
     pushService = YustPushService();
   }
 
-  closeClient() {
+  void closeClient() {
     authClient?.close();
   }
 }

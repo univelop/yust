@@ -1,3 +1,10 @@
+## 3.29.3 - 2025-08-29
+
+-   Add bucketname parameter to all file service functions
+-   Add ability to add custom metadata to files
+-   Refactor file service interfaces and implementations
+-   Improve file exists functionality in Flutter service
+
 ## 3.29.2 - 2025-08-25
 
 -   Fix for doNotCreate and updateMask

@@ -11,10 +11,10 @@ part 'yust_user.g.dart';
 @JsonSerializable()
 class YustUser extends YustDoc {
   static YustDocSetup<YustUser> setup() => YustDocSetup<YustUser>(
-        collectionName: 'users',
-        newDoc: () => YustUser(email: '', firstName: '', lastName: ''),
-        fromJson: (json) => YustUser.fromJson(json),
-      );
+    collectionName: 'users',
+    newDoc: () => YustUser(email: '', firstName: '', lastName: ''),
+    fromJson: (json) => YustUser.fromJson(json),
+  );
 
   String get searchTag => '${firstName.toLowerCase()} ${lastName.toLowerCase()}'
       .replaceAll(' ', '_');
@@ -85,11 +85,14 @@ class YustUser extends YustDoc {
 
   /// Saves the current [DateTime] as the last login and the current domain.
   Future<void> setLoginFields({Yust? yust}) async {
-    lastLoginDomain =
-        Uri.base.scheme.contains('http') ? Uri.base.host : lastLoginDomain;
+    lastLoginDomain = Uri.base.scheme.contains('http')
+        ? Uri.base.host
+        : lastLoginDomain;
     lastLogin = Yust.helpers.utcNow();
-    await (yust?.dbService ?? Yust.databaseService)
-        .saveDoc<YustUser>(Yust.userSetup, this);
+    await (yust?.dbService ?? Yust.databaseService).saveDoc<YustUser>(
+      Yust.userSetup,
+      this,
+    );
   }
 
   /// Returns the user name.
@@ -98,19 +101,29 @@ class YustUser extends YustDoc {
   }
 
   /// Deletes the user.
-  Future<void> delete(
-      {String? password, bool deleteAuth = true, Yust? yust}) async {
-    await (yust?.dbService ?? Yust.databaseService)
-        .deleteDoc<YustUser>(YustUser.setup(), this);
+  Future<void> delete({
+    String? password,
+    bool deleteAuth = true,
+    Yust? yust,
+  }) async {
+    await (yust?.dbService ?? Yust.databaseService).deleteDoc<YustUser>(
+      YustUser.setup(),
+      this,
+    );
     if (deleteAuth) await Yust.authService.deleteAccount(password);
   }
 
-  Future<void> linkAuth(String uid, YustAuthenticationMethod? method,
-      {Yust? yust}) async {
+  Future<void> linkAuth(
+    String uid,
+    YustAuthenticationMethod? method, {
+    Yust? yust,
+  }) async {
     authId = uid;
     authenticationMethod = method;
-    await (yust?.dbService ?? Yust.databaseService)
-        .saveDoc<YustUser>(Yust.userSetup, this);
+    await (yust?.dbService ?? Yust.databaseService).saveDoc<YustUser>(
+      Yust.userSetup,
+      this,
+    );
   }
 
   /// This method returns the value of the attribute with the given key.
@@ -129,10 +142,7 @@ class YustUser extends YustDoc {
   void setAttribute(String key, dynamic value) => userAttributes[key] = value;
 }
 
-enum YustGender {
-  male,
-  female,
-}
+enum YustGender { male, female }
 
 enum YustAuthenticationMethod {
   mail('Email'),

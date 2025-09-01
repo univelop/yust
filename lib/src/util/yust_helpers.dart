@@ -64,18 +64,25 @@ class YustHelpers {
 
   /// Return a string representing [dateTime] in the German or English date
   /// format or another given [format].
-  String formatDate(DateTime? dateTime,
-      {String locale = 'de', String? format}) {
+  String formatDate(
+    DateTime? dateTime, {
+    String locale = 'de',
+    String? format,
+  }) {
     if (dateTime == null) return '';
 
     switch (locale) {
       case 'en':
-        return DateFormat(format ?? 'MM/dd/yyyy', locale)
-            .format(utcToLocal(dateTime));
+        return DateFormat(
+          format ?? 'MM/dd/yyyy',
+          locale,
+        ).format(utcToLocal(dateTime));
       case 'de':
       default:
-        return DateFormat(format ?? 'dd.MM.yyyy', locale)
-            .format(utcToLocal(dateTime));
+        return DateFormat(
+          format ?? 'dd.MM.yyyy',
+          locale,
+        ).format(utcToLocal(dateTime));
     }
   }
 
@@ -104,12 +111,14 @@ class YustHelpers {
     bool minuteGranularity = false,
   }) {
     assert(
-        minuteGranularity == false ||
-            (second == null && millisecond == null && microsecond == null),
-        'minuteGranularity is only allowed if second, millisecond and microsecond are null');
+      minuteGranularity == false ||
+          (second == null && millisecond == null && microsecond == null),
+      'minuteGranularity is only allowed if second, millisecond and microsecond are null',
+    );
 
-    final now =
-        mockNowUTC != null ? utcToLocal(mockNowUTC!) : TZDateTime.now(local);
+    final now = mockNowUTC != null
+        ? utcToLocal(mockNowUTC!)
+        : TZDateTime.now(local);
     return TZDateTime.local(
       year ?? now.year,
       month ?? now.month,
@@ -127,15 +136,16 @@ class YustHelpers {
       localNow(hour: 0, minute: 0, second: 0, millisecond: 0, microsecond: 0);
 
   /// Returns the current date and time in UTC.
-  DateTime utcNow(
-      {int? year,
-      int? month,
-      int? day,
-      int? hour,
-      int? minute,
-      int? second,
-      int? millisecond,
-      int? microsecond}) {
+  DateTime utcNow({
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+  }) {
     final now = mockNowUTC ?? TZDateTime.now(UTC);
     return TZDateTime.utc(
       year ?? now.year,
@@ -161,8 +171,12 @@ class YustHelpers {
 
   /// adds a Duration that is more that 24 hours
   /// this works with time shifts like daylight saving time
-  DateTime addDaysOrMore(DateTime dateTime,
-      {int days = 0, int months = 0, int years = 0}) {
+  DateTime addDaysOrMore(
+    DateTime dateTime, {
+    int days = 0,
+    int months = 0,
+    int years = 0,
+  }) {
     final localTime = dateTime.isUtc ? utcToLocal(dateTime) : dateTime;
     final newTime = DateTime(
       localTime.year + years,
@@ -182,15 +196,15 @@ class YustHelpers {
   DateTime localToUtc(DateTime dateTime) => dateTime.isUtc
       ? dateTime
       : TZDateTime.local(
-              dateTime.year,
-              dateTime.month,
-              dateTime.day,
-              dateTime.hour,
-              dateTime.minute,
-              dateTime.second,
-              dateTime.millisecond,
-              dateTime.microsecond)
-          .toUtc();
+          dateTime.year,
+          dateTime.month,
+          dateTime.day,
+          dateTime.hour,
+          dateTime.minute,
+          dateTime.second,
+          dateTime.millisecond,
+          dateTime.microsecond,
+        ).toUtc();
 
   DateTime? tryUtcToLocal(DateTime? dateTime) =>
       dateTime == null ? null : utcToLocal(dateTime);
@@ -211,21 +225,24 @@ class YustHelpers {
   /// https://github.com/dart-lang/sdk/blob/main/sdk/lib/_internal/js_dev_runtime/patch/core_patch.dart#L442
   /// and here: https://github.com/srawlins/timezone/issues/57
   Duration dateDifference(DateTime? first, DateTime? second) => Duration(
-      milliseconds: (first?.millisecondsSinceEpoch ?? 0) -
-          (second?.millisecondsSinceEpoch ?? 0));
+    milliseconds:
+        (first?.millisecondsSinceEpoch ?? 0) -
+        (second?.millisecondsSinceEpoch ?? 0),
+  );
 
   /// Returns the DateTime at the [day] in the [month], with no day overflow.
   DateTime getDateAtDayOfMonth(int day, DateTime month) {
     final lastDayOfMonth = DateTime(month.year, month.month + 1, 0).day;
     return DateTime(
-        month.year,
-        month.month,
-        min(day, lastDayOfMonth),
-        month.hour,
-        month.minute,
-        month.second,
-        month.millisecond,
-        month.microsecond);
+      month.year,
+      month.month,
+      min(day, lastDayOfMonth),
+      month.hour,
+      month.minute,
+      month.second,
+      month.millisecond,
+      month.microsecond,
+    );
   }
 
   /// Adds [months] to the [date] with no day overflow in the next month.
@@ -235,14 +252,15 @@ class YustHelpers {
     final newMonthInYear = newMonth % 12;
     final lastDayOfMonth = DateTime(newYear, newMonthInYear + 1, 0).day;
     return DateTime(
-        newYear,
-        newMonthInYear,
-        min(date.day, lastDayOfMonth),
-        date.hour,
-        date.minute,
-        date.second,
-        date.millisecond,
-        date.microsecond);
+      newYear,
+      newMonthInYear,
+      min(date.day, lastDayOfMonth),
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
   }
 
   /// Returns the DateTime at the day of the current month.
@@ -270,16 +288,18 @@ class YustHelpers {
   ///   1. first exact matches
   ///   2. then matches at the beginning of the string (sorted alphabetically (not case sensitive))
   ///   3. then matches only contain the search string (sorted alphabetically (not case sensitive))
-  List<int> searchString(
-      {required List<String> strings,
-      required String searchString,
-      bool ignoreCase = true,
-      bool reorder = true}) {
+  List<int> searchString({
+    required List<String> strings,
+    required String searchString,
+    bool ignoreCase = true,
+    bool reorder = true,
+  }) {
     final indices = List.generate(strings.length, (i) => i);
     if (searchString.isEmpty) return indices;
 
-    final stringsToBeSearched =
-        ignoreCase ? strings.map((s) => s.toLowerCase()).toList() : strings;
+    final stringsToBeSearched = ignoreCase
+        ? strings.map((s) => s.toLowerCase()).toList()
+        : strings;
     final searchFor = ignoreCase ? searchString.toLowerCase() : searchString;
 
     final searchResult = indices
@@ -287,16 +307,15 @@ class YustHelpers {
         .toList();
 
     if (!reorder) return searchResult;
-    return searchResult
-      ..sort((a, b) {
-        final aString = stringsToBeSearched[a];
-        final bString = stringsToBeSearched[b];
-        final aStartsWith = aString.startsWith(searchFor);
-        final bStartsWith = bString.startsWith(searchFor);
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
-        return aString.compareTo(bString);
-      });
+    return searchResult..sort((a, b) {
+      final aString = stringsToBeSearched[a];
+      final bString = stringsToBeSearched[b];
+      final aStartsWith = aString.startsWith(searchFor);
+      final bStartsWith = bString.startsWith(searchFor);
+      if (aStartsWith && !bStartsWith) return -1;
+      if (!aStartsWith && bStartsWith) return 1;
+      return aString.compareTo(bString);
+    });
   }
 
   /// Formats a number to a string.

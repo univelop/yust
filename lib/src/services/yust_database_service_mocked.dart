@@ -24,15 +24,24 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     implements IYustDatabaseService {
   static OnChangeCallback? onChange;
 
-  YustDatabaseServiceMocked.mocked({
-    required Yust yust,
-  }) : super.mocked(yust: yust) {
-    dbLogCallback = (DatabaseLogAction action, String documentPath, int count,
-            {String? id, List<String>? updateMask, num? aggregationResult}) =>
-        statistics.dbStatisticsCallback(action, documentPath, count,
-            id: id,
-            updateMask: updateMask,
-            aggregationResult: aggregationResult);
+  YustDatabaseServiceMocked.mocked({required Yust yust})
+    : super.mocked(yust: yust) {
+    dbLogCallback =
+        (
+          DatabaseLogAction action,
+          String documentPath,
+          int count, {
+          String? id,
+          List<String>? updateMask,
+          num? aggregationResult,
+        }) => statistics.dbStatisticsCallback(
+          action,
+          documentPath,
+          count,
+          id: id,
+          updateMask: updateMask,
+          aggregationResult: aggregationResult,
+        );
 
     YustDatabaseServiceMocked.onChange =
         yust.onChange ?? YustDatabaseServiceMocked.onChange;
@@ -49,10 +58,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }
 
   @override
-  Future<T?> get<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) async {
+  Future<T?> get<T extends YustDoc>(YustDocSetup<T> docSetup, String id) async {
     return getFromDB(docSetup, id);
   }
 
@@ -73,8 +79,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     final docs = _getCollection<T>(docSetup);
     try {
       final doc = docs.firstWhereOrNull((doc) => doc.id == id);
-      dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup),
-          doc != null ? 1 : 0);
+      dbLogCallback?.call(
+        DatabaseLogAction.get,
+        _getDocumentPath(docSetup),
+        doc != null ? 1 : 0,
+      );
       return doc;
     } catch (e) {
       return null;
@@ -82,10 +91,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }
 
   @override
-  Stream<T?> getStream<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  ) {
+  Stream<T?> getStream<T extends YustDoc>(YustDocSetup<T> docSetup, String id) {
     return Stream.fromFuture(getFromDB<T>(docSetup, id));
   }
 
@@ -117,8 +123,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
-    dbLogCallback?.call(DatabaseLogAction.get, _getDocumentPath(docSetup),
-        docs.isEmpty ? 0 : 1);
+    dbLogCallback?.call(
+      DatabaseLogAction.get,
+      _getDocumentPath(docSetup),
+      docs.isEmpty ? 0 : 1,
+    );
     if (docs.isEmpty) {
       return null;
     } else {
@@ -133,7 +142,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustOrderBy>? orderBy,
   }) {
     return Stream.fromFuture(
-        getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy));
+      getFirstFromDB<T>(docSetup, filters: filters, orderBy: orderBy),
+    );
   }
 
   @override
@@ -186,7 +196,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       startAfterDocument: startAfterDocument,
     );
     dbLogCallback?.call(
-        DatabaseLogAction.get, _getDocumentPath(docSetup), docs.length);
+      DatabaseLogAction.get,
+      _getDocumentPath(docSetup),
+      docs.length,
+    );
     return docs;
   }
 
@@ -198,12 +211,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int pageSize = 300,
     T? startAfterDocument,
   }) {
-    return Stream.fromFuture(getList(docSetup,
-            filters: filters,
-            orderBy: orderBy,
-            limit: pageSize,
-            startAfterDocument: startAfterDocument))
-        .expand((e) => e);
+    return Stream.fromFuture(
+      getList(
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: pageSize,
+        startAfterDocument: startAfterDocument,
+      ),
+    ).expand((e) => e);
   }
 
   @override
@@ -214,13 +230,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int? limit,
     T? startAfterDocument,
   }) {
-    return Stream.fromFuture(getListFromDB<T>(
-      docSetup,
-      filters: filters,
-      orderBy: orderBy,
-      limit: limit,
-      startAfterDocument: startAfterDocument,
-    ));
+    return Stream.fromFuture(
+      getListFromDB<T>(
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: limit,
+        startAfterDocument: startAfterDocument,
+      ),
+    );
   }
 
   @override
@@ -231,14 +249,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int? limit,
     T? startAfterDocument,
   }) {
-    return Future.value(_getList(
-      docSetup,
-      filters: filters,
-      orderBy: orderBy,
-      limit: limit,
-      startAfterDocument: startAfterDocument,
-      forAllEnvironments: true,
-    ));
+    return Future.value(
+      _getList(
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: limit,
+        startAfterDocument: startAfterDocument,
+        forAllEnvironments: true,
+      ),
+    );
   }
 
   @override
@@ -249,12 +269,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     int pageSize = 300,
     T? startAfterDocument,
   }) {
-    return Stream.fromFuture(getListForCollectionGroup(docSetup,
-            filters: filters,
-            orderBy: orderBy,
-            limit: pageSize,
-            startAfterDocument: startAfterDocument))
-        .expand((e) => e);
+    return Stream.fromFuture(
+      getListForCollectionGroup(
+        docSetup,
+        filters: filters,
+        orderBy: orderBy,
+        limit: pageSize,
+        startAfterDocument: startAfterDocument,
+      ),
+    ).expand((e) => e);
   }
 
   @override
@@ -265,7 +288,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }) async {
     final result = _getList(docSetup, filters: filters, limit: limit).length;
     dbLogCallback?.call(
-        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), result);
+      DatabaseLogAction.aggregate,
+      _getDocumentPath(docSetup),
+      result,
+    );
     return result;
   }
 
@@ -283,8 +309,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService
         .fold<double>(0.0, (previousValue, element) => previousValue + element);
 
     dbLogCallback?.call(
-        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
-        aggregationResult: result);
+      DatabaseLogAction.aggregate,
+      _getDocumentPath(docSetup),
+      count,
+      aggregationResult: result,
+    );
     return (count: count, result: result);
   }
 
@@ -303,8 +332,11 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     final result = sum / count;
 
     dbLogCallback?.call(
-        DatabaseLogAction.aggregate, _getDocumentPath(docSetup), count,
-        aggregationResult: result);
+      DatabaseLogAction.aggregate,
+      _getDocumentPath(docSetup),
+      count,
+      aggregationResult: result,
+    );
     return (count: count, result: result);
   }
 
@@ -321,8 +353,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     bool doNotCreate = false,
   }) async {
     await doc.onSave();
-    await prepareSaveDoc(docSetup, doc,
-        trackModification: trackModification, skipOnSave: skipOnSave);
+    await prepareSaveDoc(
+      docSetup,
+      doc,
+      trackModification: trackModification,
+      skipOnSave: skipOnSave,
+    );
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
@@ -334,8 +370,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService
         null,
         docJsonPrepared,
       );
-      dbLogCallback?.call(DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
-          id: doc.id, updateMask: updateMask ?? []);
+      dbLogCallback?.call(
+        DatabaseLogAction.save,
+        _getDocumentPath(docSetup),
+        1,
+        id: doc.id,
+        updateMask: updateMask ?? [],
+      );
     } else {
       final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
       if (updateMask == null) {
@@ -359,8 +400,13 @@ class YustDatabaseServiceMocked extends YustDatabaseService
           jsonDoc,
         );
       }
-      dbLogCallback?.call(DatabaseLogAction.save, _getDocumentPath(docSetup), 1,
-          id: doc.id, updateMask: updateMask ?? []);
+      dbLogCallback?.call(
+        DatabaseLogAction.save,
+        _getDocumentPath(docSetup),
+        1,
+        id: doc.id,
+        updateMask: updateMask ?? [],
+      );
     }
   }
 
@@ -382,7 +428,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       final oldValue =
           (_readValueInJsonDoc(jsonDocClone, unescapedPath) ?? 0) as num;
       _changeValueInJsonDoc(
-          jsonDocClone, oldValue + (t.increment ?? 0), unescapedPath);
+        jsonDocClone,
+        oldValue + (t.increment ?? 0),
+        unescapedPath,
+      );
       jsonDocs[index] = jsonDocClone;
       await onChange?.call(
         _getParentPath(docSetup, id: id),
@@ -391,8 +440,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       );
     }
     dbLogCallback?.call(
-        DatabaseLogAction.transform, _getDocumentPath(docSetup), 1,
-        id: id, updateMask: fieldTransforms.map((e) => e.fieldPath).toList());
+      DatabaseLogAction.transform,
+      _getDocumentPath(docSetup),
+      1,
+      id: id,
+      updateMask: fieldTransforms.map((e) => e.fieldPath).toList(),
+    );
   }
 
   @override
@@ -409,12 +462,17 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       null,
     );
     dbLogCallback?.call(
-        DatabaseLogAction.delete, _getDocumentPath(docSetup), 1);
+      DatabaseLogAction.delete,
+      _getDocumentPath(docSetup),
+      1,
+    );
   }
 
   @override
   Future<void> deleteDocById<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String id) async {
+    YustDocSetup<T> docSetup,
+    String id,
+  ) async {
     final doc = await get(docSetup, id);
     if (doc == null) return;
     await doc.onDelete();
@@ -426,7 +484,10 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       null,
     );
     dbLogCallback?.call(
-        DatabaseLogAction.delete, _getDocumentPath(docSetup), 1);
+      DatabaseLogAction.delete,
+      _getDocumentPath(docSetup),
+      1,
+    );
   }
 
   @override
@@ -465,15 +526,17 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     return _db[collectionName]!;
   }
 
-  List<T> _getCollection<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-  ) {
+  List<T> _getCollection<T extends YustDoc>(YustDocSetup<T> docSetup) {
     return _jsonListToDocList(
-        _getJSONCollection(docSetup.collectionName), docSetup);
+      _getJSONCollection(docSetup.collectionName),
+      docSetup,
+    );
   }
 
   List<T> _jsonListToDocList<T extends YustDoc>(
-      List<Map<String, dynamic>> collection, YustDocSetup<T> docSetup) {
+    List<Map<String, dynamic>> collection,
+    YustDocSetup<T> docSetup,
+  ) {
     return collection
         // We clone the maps here by using jsonDecode/jsonEncode
         .map<T>((e) => docSetup.fromJson(jsonDecode(jsonEncode(e))))
@@ -602,12 +665,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
     int startAfterIndex = 0;
     if (startAfterDocument != null) {
-      startAfterIndex =
-          max(docs.indexWhere((doc) => doc.id == startAfterDocument.id), 0);
+      startAfterIndex = max(
+        docs.indexWhere((doc) => doc.id == startAfterDocument.id),
+        0,
+      );
     }
 
-    final limitedDocs = docs.sublist(startAfterIndex,
-        min((limit ?? docs.length) + startAfterIndex, docs.length));
+    final limitedDocs = docs.sublist(
+      startAfterIndex,
+      min((limit ?? docs.length) + startAfterIndex, docs.length),
+    );
 
     return limitedDocs;
   }

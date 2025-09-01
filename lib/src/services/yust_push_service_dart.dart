@@ -14,8 +14,8 @@ class YustPushService {
   late final String _projectId;
 
   YustPushService()
-      : _authClient = Yust.authClient!,
-        _projectId = Yust.projectId {
+    : _authClient = Yust.authClient!,
+      _projectId = Yust.projectId {
     _api = FirebaseCloudMessagingApi(_authClient);
   }
 
@@ -32,16 +32,15 @@ class YustPushService {
     String? image,
   }) async {
     final message = Message(
-      notification: Notification(
-        title: title,
-        body: body,
-        image: image,
-      ),
+      notification: Notification(title: title, body: body, image: image),
       token: deviceId,
     );
     final request = SendMessageRequest(message: message);
-    await _retryOnException('FCM:SendMessageRequest', 'deviceIds/$deviceId',
-        () => _api.projects.messages.send(request, 'projects/$_projectId'));
+    await _retryOnException(
+      'FCM:SendMessageRequest',
+      'deviceIds/$deviceId',
+      () => _api.projects.messages.send(request, 'projects/$_projectId'),
+    );
   }
 
   /// Sends Push Notifications to all devices of a user.
@@ -51,8 +50,11 @@ class YustPushService {
     required String body,
     String? image,
     FutureOr<void> Function(
-            String deviceId, Object error, StackTrace stackTrace)?
-        onErrorForDevice,
+      String deviceId,
+      Object error,
+      StackTrace stackTrace,
+    )?
+    onErrorForDevice,
   }) async {
     for (final deviceId in user.deviceIds ?? []) {
       try {
@@ -76,19 +78,21 @@ class YustPushService {
     Future<T> Function() fn,
   ) async {
     return (await YustRetryHelper.retryOnException<T>(
-      fnName,
-      docPath,
-      fn,
-      maxTries: 16,
-      actionOnExceptionList: [
-        YustRetryHelper.actionOnNetworkException,
-        YustRetryHelper.actionOnDetailedApiRequestError(
-          shouldRetryOnTransactionErrors: true,
-          shouldIgnoreNotFound: false,
-        ),
-      ],
-      onRetriesExceeded: (lastError, fnName, docPath) => print(
-          '[[ERROR]] Retried $fnName call 16 times, but still failed: $lastError for $docPath'),
-    )) as T;
+          fnName,
+          docPath,
+          fn,
+          maxTries: 16,
+          actionOnExceptionList: [
+            YustRetryHelper.actionOnNetworkException,
+            YustRetryHelper.actionOnDetailedApiRequestError(
+              shouldRetryOnTransactionErrors: true,
+              shouldIgnoreNotFound: false,
+            ),
+          ],
+          onRetriesExceeded: (lastError, fnName, docPath) => print(
+            '[[ERROR]] Retried $fnName call 16 times, but still failed: $lastError for $docPath',
+          ),
+        ))
+        as T;
   }
 }

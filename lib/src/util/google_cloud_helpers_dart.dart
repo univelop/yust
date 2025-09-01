@@ -57,16 +57,20 @@ class GoogleCloudHelpers {
   /// Else the client is created with the application default credentials (e.g. from environment variables)
   ///
   /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
-  static Future<AuthClient> createAuthClient(
-      {required List<String> scopes, String? pathToServiceAccountJson}) async {
+  static Future<AuthClient> createAuthClient({
+    required List<String> scopes,
+    String? pathToServiceAccountJson,
+  }) async {
     if (pathToServiceAccountJson == null) {
       return await clientViaApplicationDefaultCredentials(scopes: scopes);
     } else {
-      final serviceAccountJson =
-          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+      final serviceAccountJson = jsonDecode(
+        await File(pathToServiceAccountJson).readAsString(),
+      );
 
-      final accountCredentials =
-          ServiceAccountCredentials.fromJson(serviceAccountJson);
+      final accountCredentials = ServiceAccountCredentials.fromJson(
+        serviceAccountJson,
+      );
 
       return await clientViaServiceAccount(accountCredentials, scopes);
     }
@@ -77,17 +81,17 @@ class GoogleCloudHelpers {
   /// If [pathToServiceAccountJson] is provided, the project id is read from the json file.
   /// If [pathToServiceAccountJson] and [useMetadataServer] are both not provided,
   /// the project id is read from typical google cloud environment variables.
-  static Future<String> getProjectId({
-    String? pathToServiceAccountJson,
-  }) async {
+  static Future<String> getProjectId({String? pathToServiceAccountJson}) async {
     String? projectId;
     if (pathToServiceAccountJson == null) {
-      projectId = Platform.environment['GCP_PROJECT'] ??
+      projectId =
+          Platform.environment['GCP_PROJECT'] ??
           Platform.environment['GCLOUD_PROJECT'];
       projectId ??= await _getProjectIdWithMetadataServer();
     } else {
-      final serviceAccountJson =
-          jsonDecode(await File(pathToServiceAccountJson).readAsString());
+      final serviceAccountJson = jsonDecode(
+        await File(pathToServiceAccountJson).readAsString(),
+      );
 
       projectId = serviceAccountJson['project_id'];
     }
@@ -129,21 +133,24 @@ class GoogleCloudHelpers {
   /// This is only available in the google cloud environment.
   static Future<String> _getProjectIdWithMetadataServer() async {
     final metadataServer = Uri.parse(
-        'http://metadata.google.internal/computeMetadata/v1/project/project-id');
+      'http://metadata.google.internal/computeMetadata/v1/project/project-id',
+    );
 
-    final projectId =
-        (await http.get(metadataServer, headers: {'Metadata-Flavor': 'Google'}))
-            .body;
+    final projectId = (await http.get(
+      metadataServer,
+      headers: {'Metadata-Flavor': 'Google'},
+    )).body;
 
     return projectId;
   }
 
   static Future<String> getInstanceId() async {
     final instanceId = (await http.get(
-            Uri.parse(
-                'http://metadata.google.internal/computeMetadata/v1/instance/id'),
-            headers: {'Metadata-Flavor': 'Google'}))
-        .body;
+      Uri.parse(
+        'http://metadata.google.internal/computeMetadata/v1/instance/id',
+      ),
+      headers: {'Metadata-Flavor': 'Google'},
+    )).body;
     return instanceId;
   }
 }

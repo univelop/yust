@@ -12,24 +12,31 @@ class YustException implements Exception {
   }
 
   factory YustException.fromDetailedApiRequestError(
-      String docPath, DetailedApiRequestError e) {
+    String docPath,
+    DetailedApiRequestError e,
+  ) {
     if (e.message != null &&
         (e.message!.contains('Too much contention on these documents') ||
-            e.message!
-                .contains('Aborted due to cross-transaction contention.'))) {
+            e.message!.contains(
+              'Aborted due to cross-transaction contention.',
+            ))) {
       return YustDocumentLockedException(
-          'Can not save the document $docPath. ${detailedApiRequestErrorToString(e)}');
+        'Can not save the document $docPath. ${detailedApiRequestErrorToString(e)}',
+      );
     }
     if (e.status == 404) {
       return YustNotFoundException(
-          'The document $docPath was not found. ${detailedApiRequestErrorToString(e)}');
+        'The document $docPath was not found. ${detailedApiRequestErrorToString(e)}',
+      );
     }
     if (e.status == 409) {
       return YustTransactionFailedException(
-          'Failed save transaction for the document $docPath. ${detailedApiRequestErrorToString(e)}');
+        'Failed save transaction for the document $docPath. ${detailedApiRequestErrorToString(e)}',
+      );
     }
     return YustException(
-        'Something went wrong with $docPath. ${detailedApiRequestErrorToString(e)}');
+      'Something went wrong with $docPath. ${detailedApiRequestErrorToString(e)}',
+    );
   }
 
   static String detailedApiRequestErrorToString(DetailedApiRequestError e) {

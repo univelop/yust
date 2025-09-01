@@ -24,13 +24,18 @@ enum YustFilterComparator {
   final String firestoreOperatorName;
 
   const YustFilterComparator(this.firestoreOperatorName);
-  static List<YustFilterComparator> get equalityFilters =>
-      const [equal, arrayContains, arrayContainsAny, inList, isNull];
+  static List<YustFilterComparator> get equalityFilters => const [
+    equal,
+    arrayContains,
+    arrayContainsAny,
+    inList,
+    isNull,
+  ];
 
   static List<YustFilterComparator> get arrayContainsOneOrAny => const [
-        arrayContains,
-        arrayContainsAny,
-      ];
+    arrayContains,
+    arrayContainsAny,
+  ];
 
   bool get isEqualityFilter => equalityFilters.contains(this);
 
@@ -45,47 +50,42 @@ enum YustFilterComparator {
 /// or a series of field names separated by dots '.'
 @JsonSerializable()
 class YustFilter {
-  YustFilter({
-    required this.field,
-    required this.comparator,
-    this.value,
-  });
+  YustFilter({required this.field, required this.comparator, this.value});
 
-  YustFilter.empty()
-      : field = '',
-        comparator = YustFilterComparator.equal;
+  YustFilter.empty() : field = '', comparator = YustFilterComparator.equal;
 
   YustFilter.arrayContains(this.field, this.value)
-      : comparator = YustFilterComparator.arrayContains;
+    : comparator = YustFilterComparator.arrayContains;
   YustFilter.arrayContainsAny(this.field, this.value)
-      : comparator = YustFilterComparator.arrayContainsAny;
+    : comparator = YustFilterComparator.arrayContainsAny;
   YustFilter.equal(this.field, this.value)
-      : comparator = YustFilterComparator.equal;
+    : comparator = YustFilterComparator.equal;
   YustFilter.greaterThan(this.field, this.value)
-      : comparator = YustFilterComparator.greaterThan;
+    : comparator = YustFilterComparator.greaterThan;
   YustFilter.greaterThanEqual(this.field, this.value)
-      : comparator = YustFilterComparator.greaterThanEqual;
+    : comparator = YustFilterComparator.greaterThanEqual;
   YustFilter.inList(this.field, this.value)
-      : comparator = YustFilterComparator.inList;
+    : comparator = YustFilterComparator.inList;
   YustFilter.isNotNull(this.field)
-      : comparator = YustFilterComparator.isNotNull;
+    : comparator = YustFilterComparator.isNotNull;
   YustFilter.isNull(this.field) : comparator = YustFilterComparator.isNull;
   YustFilter.lessThan(this.field, this.value)
-      : comparator = YustFilterComparator.lessThan;
+    : comparator = YustFilterComparator.lessThan;
   YustFilter.lessThanEqual(this.field, this.value)
-      : comparator = YustFilterComparator.lessThanEqual;
+    : comparator = YustFilterComparator.lessThanEqual;
   YustFilter.notEqual(this.field, this.value)
-      : comparator = YustFilterComparator.notEqual;
+    : comparator = YustFilterComparator.notEqual;
   YustFilter.notInList(this.field, this.value)
-      : comparator = YustFilterComparator.notInList;
+    : comparator = YustFilterComparator.notInList;
 
   /// The ID of the brick this filter refers to
   String field;
 
   /// The comparator to compare the value of the brick with the [brickId] [value]
   @JsonKey(
-      fromJson: YustFilter.comparatorFromString,
-      toJson: YustFilter.comparatorToString)
+    fromJson: YustFilter.comparatorFromString,
+    toJson: YustFilter.comparatorToString,
+  )
   YustFilterComparator comparator;
 
   /// The Value to compare the value of the brick with [brickId] to
@@ -117,8 +117,10 @@ class YustFilter {
       value = _handleTZDateTimeValue(value);
       value = _handleNumberValue(fieldValue, value);
       if (value == null &&
-          ![YustFilterComparator.isNull, YustFilterComparator.isNotNull]
-              .contains(comparator)) {
+          ![
+            YustFilterComparator.isNull,
+            YustFilterComparator.isNotNull,
+          ].contains(comparator)) {
         return true;
       }
 
@@ -150,7 +152,8 @@ class YustFilter {
       }
     } catch (e) {
       print(
-          "[[WARNING]] Error in comparing ($comparator) filter value '$value' with field value '$fieldValue': $e");
+        "[[WARNING]] Error in comparing ($comparator) filter value '$value' with field value '$fieldValue': $e",
+      );
       return false;
     }
   }
@@ -162,8 +165,16 @@ class YustFilter {
     } else if (value is TZDateTime || value is DateTime) {
       final date = helpers.localToUtc(value);
       // needs to be parsed to DateTime, because TZDateTime is not comparable with DateTime
-      return DateTime.utc(date.year, date.month, date.day, date.hour,
-          date.minute, date.second, date.millisecond, date.microsecond);
+      return DateTime.utc(
+        date.year,
+        date.month,
+        date.day,
+        date.hour,
+        date.minute,
+        date.second,
+        date.millisecond,
+        date.microsecond,
+      );
     }
     return value;
   }
@@ -196,10 +207,10 @@ class YustFilter {
   }
 
   bool get isEqualityFilter => [
-        YustFilterComparator.equal,
-        YustFilterComparator.arrayContains,
-        YustFilterComparator.isNull
-      ].contains(comparator);
+    YustFilterComparator.equal,
+    YustFilterComparator.arrayContains,
+    YustFilterComparator.isNull,
+  ].contains(comparator);
 
   /// A map with the [YustFilterComparator] and the string representation.
   static Map<YustFilterComparator, String> comparatorStrings = {
@@ -220,8 +231,10 @@ class YustFilter {
   /// Return the String representation for a comparator (e.g. [YustFilterComparator.equal] => '=')
   /// or an '?' if the comparator is not found
   ///
-  static String? comparatorToString(YustFilterComparator? comparator,
-      {bool useDoubleEqual = false}) {
+  static String? comparatorToString(
+    YustFilterComparator? comparator, {
+    bool useDoubleEqual = false,
+  }) {
     var comparatorString = YustFilter.comparatorStrings[comparator];
     if (useDoubleEqual && comparatorString == '=') {
       comparatorString = '==';
@@ -235,8 +248,9 @@ class YustFilter {
       comparatorString = '=';
     }
     return comparatorStrings.entries
-            .firstWhereOrNull((cs) =>
-                cs.value.toLowerCase() == comparatorString.toLowerCase())
+            .firstWhereOrNull(
+              (cs) => cs.value.toLowerCase() == comparatorString.toLowerCase(),
+            )
             ?.key ??
         YustFilterComparator.equal;
   }

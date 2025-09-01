@@ -61,7 +61,8 @@ class YustImage extends YustFile {
     return YustImage.fromYustFile(YustFile.fromLocalJson(json))
       ..location = json['location'] != null
           ? YustGeoLocation.fromJson(
-              Map<String, dynamic>.from(jsonDecode(json['location'])))
+              Map<String, dynamic>.from(jsonDecode(json['location'])),
+            )
           : null;
   }
 
@@ -75,11 +76,10 @@ class YustImage extends YustFile {
   /// This is used for offline file handling only (Caching on mobile devices)
   @override
   Map<String, String?> toLocalJson() {
-    return super.toLocalJson()
-      ..addAll({
-        'location': location != null ? jsonEncode(location?.toJson()) : null,
-        'type': type,
-      });
+    return super.toLocalJson()..addAll({
+      'location': location != null ? jsonEncode(location?.toJson()) : null,
+      'type': type,
+    });
   }
 
   @override

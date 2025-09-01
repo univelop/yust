@@ -7,28 +7,16 @@ import '../yust.dart';
 ///
 /// Its very closely based on the [_WithConverterQuery] class from the Firestore package.
 class YustQueryWithLogging implements Query {
-  YustQueryWithLogging(
-    this._dbLogCallback,
-    this._originalQuery,
-    this.path,
-  );
+  YustQueryWithLogging(this._dbLogCallback, this._originalQuery, this.path);
 
   final Query _originalQuery;
   final DatabaseLogCallback _dbLogCallback;
   final String path;
 
-  Query _mapQuery(
-    Query newOriginalQuery,
-  ) =>
-      YustQueryWithLogging(
-        _dbLogCallback,
-        newOriginalQuery,
-        path,
-      );
+  Query _mapQuery(Query newOriginalQuery) =>
+      YustQueryWithLogging(_dbLogCallback, newOriginalQuery, path);
 
-  AggregateQuery _mapAggregateQuery(
-    AggregateQuery newOriginalQuery,
-  ) =>
+  AggregateQuery _mapAggregateQuery(AggregateQuery newOriginalQuery) =>
       YustAggregateQueryWithLogging(_dbLogCallback, newOriginalQuery, path);
 
   @override
@@ -36,8 +24,11 @@ class YustQueryWithLogging implements Query {
     final snapshot = await _originalQuery.get(options);
     if (snapshot.docs.isNotEmpty) {
       for (final doc in snapshot.docs) {
-        _dbLogCallback(DatabaseLogActionExtension.fromSnapshot(doc),
-            doc.reference.parent.path, 1);
+        _dbLogCallback(
+          DatabaseLogActionExtension.fromSnapshot(doc),
+          doc.reference.parent.path,
+          1,
+        );
       }
     }
 
@@ -45,16 +36,19 @@ class YustQueryWithLogging implements Query {
   }
 
   @override
-  Stream<QuerySnapshot> snapshots(
-          {bool includeMetadataChanges = false,
-          ListenSource source = ListenSource.defaultSource}) =>
-      _originalQuery
-          .snapshots(includeMetadataChanges: includeMetadataChanges)
-          .map((snapshot) {
+  Stream<QuerySnapshot> snapshots({
+    bool includeMetadataChanges = false,
+    ListenSource source = ListenSource.defaultSource,
+  }) => _originalQuery
+      .snapshots(includeMetadataChanges: includeMetadataChanges)
+      .map((snapshot) {
         if (snapshot.docs.isNotEmpty) {
           for (final doc in snapshot.docs) {
-            _dbLogCallback(DatabaseLogActionExtension.fromSnapshot(doc),
-                doc.reference.parent.path, 1);
+            _dbLogCallback(
+              DatabaseLogActionExtension.fromSnapshot(doc),
+              doc.reference.parent.path,
+              1,
+            );
           }
         }
         return snapshot;
@@ -64,8 +58,7 @@ class YustQueryWithLogging implements Query {
   Query<R> withConverter<R extends Object?>({
     required FromFirestore<R> fromFirestore,
     required ToFirestore<R> toFirestore,
-  }) =>
-      throw UnimplementedError();
+  }) => throw UnimplementedError();
 
   // ########################################################################
   // #                                                                      #
@@ -123,30 +116,35 @@ class YustQueryWithLogging implements Query {
       _mapQuery(_originalQuery.startAtDocument(documentSnapshot));
 
   @override
-  Query where(Object field,
-          {Object? isEqualTo,
-          Object? isNotEqualTo,
-          Object? isLessThan,
-          Object? isLessThanOrEqualTo,
-          Object? isGreaterThan,
-          Object? isGreaterThanOrEqualTo,
-          Object? arrayContains,
-          Iterable<Object?>? arrayContainsAny,
-          Iterable<Object?>? whereIn,
-          Iterable<Object?>? whereNotIn,
-          bool? isNull}) =>
-      _mapQuery(_originalQuery.where(field,
-          isEqualTo: isEqualTo,
-          isNotEqualTo: isNotEqualTo,
-          isLessThan: isLessThan,
-          isLessThanOrEqualTo: isLessThanOrEqualTo,
-          isGreaterThan: isGreaterThan,
-          isGreaterThanOrEqualTo: isGreaterThanOrEqualTo,
-          arrayContains: arrayContains,
-          arrayContainsAny: arrayContainsAny,
-          whereIn: whereIn,
-          whereNotIn: whereNotIn,
-          isNull: isNull));
+  Query where(
+    Object field, {
+    Object? isEqualTo,
+    Object? isNotEqualTo,
+    Object? isLessThan,
+    Object? isLessThanOrEqualTo,
+    Object? isGreaterThan,
+    Object? isGreaterThanOrEqualTo,
+    Object? arrayContains,
+    Iterable<Object?>? arrayContainsAny,
+    Iterable<Object?>? whereIn,
+    Iterable<Object?>? whereNotIn,
+    bool? isNull,
+  }) => _mapQuery(
+    _originalQuery.where(
+      field,
+      isEqualTo: isEqualTo,
+      isNotEqualTo: isNotEqualTo,
+      isLessThan: isLessThan,
+      isLessThanOrEqualTo: isLessThanOrEqualTo,
+      isGreaterThan: isGreaterThan,
+      isGreaterThanOrEqualTo: isGreaterThanOrEqualTo,
+      arrayContains: arrayContains,
+      arrayContainsAny: arrayContainsAny,
+      whereIn: whereIn,
+      whereNotIn: whereNotIn,
+      isNull: isNull,
+    ),
+  );
 
   @override
   bool operator ==(Object other) {
@@ -163,67 +161,71 @@ class YustQueryWithLogging implements Query {
   AggregateQuery count() => _mapAggregateQuery(_originalQuery.count());
 
   @override
-  AggregateQuery aggregate(AggregateField aggregateField1,
-          [AggregateField? aggregateField2,
-          AggregateField? aggregateField3,
-          AggregateField? aggregateField4,
-          AggregateField? aggregateField5,
-          AggregateField? aggregateField6,
-          AggregateField? aggregateField7,
-          AggregateField? aggregateField8,
-          AggregateField? aggregateField9,
-          AggregateField? aggregateField10,
-          AggregateField? aggregateField11,
-          AggregateField? aggregateField12,
-          AggregateField? aggregateField13,
-          AggregateField? aggregateField14,
-          AggregateField? aggregateField15,
-          AggregateField? aggregateField16,
-          AggregateField? aggregateField17,
-          AggregateField? aggregateField18,
-          AggregateField? aggregateField19,
-          AggregateField? aggregateField20,
-          AggregateField? aggregateField21,
-          AggregateField? aggregateField22,
-          AggregateField? aggregateField23,
-          AggregateField? aggregateField24,
-          AggregateField? aggregateField25,
-          AggregateField? aggregateField26,
-          AggregateField? aggregateField27,
-          AggregateField? aggregateField28,
-          AggregateField? aggregateField29,
-          AggregateField? aggregateField30]) =>
-      _mapAggregateQuery(_originalQuery.aggregate(
-          aggregateField1,
-          aggregateField2,
-          aggregateField3,
-          aggregateField4,
-          aggregateField5,
-          aggregateField6,
-          aggregateField7,
-          aggregateField8,
-          aggregateField9,
-          aggregateField10,
-          aggregateField11,
-          aggregateField12,
-          aggregateField13,
-          aggregateField14,
-          aggregateField15,
-          aggregateField16,
-          aggregateField17,
-          aggregateField18,
-          aggregateField19,
-          aggregateField20,
-          aggregateField21,
-          aggregateField22,
-          aggregateField23,
-          aggregateField24,
-          aggregateField25,
-          aggregateField26,
-          aggregateField27,
-          aggregateField28,
-          aggregateField29,
-          aggregateField30));
+  AggregateQuery aggregate(
+    AggregateField aggregateField1, [
+    AggregateField? aggregateField2,
+    AggregateField? aggregateField3,
+    AggregateField? aggregateField4,
+    AggregateField? aggregateField5,
+    AggregateField? aggregateField6,
+    AggregateField? aggregateField7,
+    AggregateField? aggregateField8,
+    AggregateField? aggregateField9,
+    AggregateField? aggregateField10,
+    AggregateField? aggregateField11,
+    AggregateField? aggregateField12,
+    AggregateField? aggregateField13,
+    AggregateField? aggregateField14,
+    AggregateField? aggregateField15,
+    AggregateField? aggregateField16,
+    AggregateField? aggregateField17,
+    AggregateField? aggregateField18,
+    AggregateField? aggregateField19,
+    AggregateField? aggregateField20,
+    AggregateField? aggregateField21,
+    AggregateField? aggregateField22,
+    AggregateField? aggregateField23,
+    AggregateField? aggregateField24,
+    AggregateField? aggregateField25,
+    AggregateField? aggregateField26,
+    AggregateField? aggregateField27,
+    AggregateField? aggregateField28,
+    AggregateField? aggregateField29,
+    AggregateField? aggregateField30,
+  ]) => _mapAggregateQuery(
+    _originalQuery.aggregate(
+      aggregateField1,
+      aggregateField2,
+      aggregateField3,
+      aggregateField4,
+      aggregateField5,
+      aggregateField6,
+      aggregateField7,
+      aggregateField8,
+      aggregateField9,
+      aggregateField10,
+      aggregateField11,
+      aggregateField12,
+      aggregateField13,
+      aggregateField14,
+      aggregateField15,
+      aggregateField16,
+      aggregateField17,
+      aggregateField18,
+      aggregateField19,
+      aggregateField20,
+      aggregateField21,
+      aggregateField22,
+      aggregateField23,
+      aggregateField24,
+      aggregateField25,
+      aggregateField26,
+      aggregateField27,
+      aggregateField28,
+      aggregateField29,
+      aggregateField30,
+    ),
+  );
 }
 
 extension DatabaseLogActionExtension on DatabaseLogAction {
@@ -245,29 +247,20 @@ class YustAggregateQueryWithLogging implements AggregateQuery {
   final DatabaseLogCallback _dbLogCallback;
   final String path;
 
-  AggregateQuery _mapQuery(
-    AggregateQuery newOriginalQuery,
-  ) =>
-      YustAggregateQueryWithLogging(
-        _dbLogCallback,
-        newOriginalQuery,
-        path,
-      );
+  AggregateQuery _mapQuery(AggregateQuery newOriginalQuery) =>
+      YustAggregateQueryWithLogging(_dbLogCallback, newOriginalQuery, path);
 
   @override
   AggregateQuery count() => _mapQuery(_originalQuery);
 
   @override
-  Future<AggregateQuerySnapshot> get(
-      {AggregateSource source = AggregateSource.server}) async {
+  Future<AggregateQuerySnapshot> get({
+    AggregateSource source = AggregateSource.server,
+  }) async {
     final result = await _originalQuery.get(source: source);
     final count = result.count;
 
-    _dbLogCallback(
-      DatabaseLogAction.aggregate,
-      path,
-      count ?? 0,
-    );
+    _dbLogCallback(DatabaseLogAction.aggregate, path, count ?? 0);
     return result;
   }
 

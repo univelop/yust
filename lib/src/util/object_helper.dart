@@ -22,11 +22,12 @@ class TraversalCurrentNode {
   final dynamic key;
   final dynamic value;
   final TraversalInfo info;
-  TraversalCurrentNode(
-      {required this.parent,
-      required this.key,
-      required this.value,
-      required this.info});
+  TraversalCurrentNode({
+    required this.parent,
+    required this.key,
+    required this.value,
+    required this.info,
+  });
 }
 
 typedef TraversalCallback = dynamic Function(TraversalCurrentNode currentNode);
@@ -70,12 +71,14 @@ class TraverseObject {
 
     if (isBuiltIn(obj)) return obj;
 
-    return Map<String, dynamic>.from(_traverseRecursive(
-      cloneObject ? shallowClone(obj) : obj,
-      leafNodeCallback,
-      innerNodeCallback ?? (currentNode) => currentNode.value,
-      info,
-    ));
+    return Map<String, dynamic>.from(
+      _traverseRecursive(
+        cloneObject ? shallowClone(obj) : obj,
+        leafNodeCallback,
+        innerNodeCallback ?? (currentNode) => currentNode.value,
+        info,
+      ),
+    );
   }
 
   static dynamic _traverseRecursive(

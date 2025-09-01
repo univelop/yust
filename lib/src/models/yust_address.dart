@@ -14,7 +14,10 @@ class YustAddress {
   });
 
   factory YustAddress.withValueByKey(
-      YustAddress address, String key, dynamic value) {
+    YustAddress address,
+    String key,
+    dynamic value,
+  ) {
     switch (key) {
       case 'street':
         return address.copyWithStreet(value);
@@ -32,55 +35,55 @@ class YustAddress {
   }
 
   factory YustAddress.empty() => const YustAddress(
-        street: '',
-        number: '',
-        postcode: '',
-        city: '',
-        country: '',
-      );
+    street: '',
+    number: '',
+    postcode: '',
+    city: '',
+    country: '',
+  );
 
   factory YustAddress.fromJson(Map<String, dynamic> json) =>
       _$YustAddressFromJson(json);
 
   YustAddress copyWithStreet(String? value) => YustAddress(
-        street: value,
-        number: number,
-        postcode: postcode,
-        city: city,
-        country: country,
-      );
+    street: value,
+    number: number,
+    postcode: postcode,
+    city: city,
+    country: country,
+  );
 
   YustAddress copyWithNumber(String? value) => YustAddress(
-        city: city,
-        country: country,
-        number: value,
-        postcode: postcode,
-        street: street,
-      );
+    city: city,
+    country: country,
+    number: value,
+    postcode: postcode,
+    street: street,
+  );
 
   YustAddress copyWithPostcode(String? value) => YustAddress(
-        city: city,
-        country: country,
-        number: number,
-        postcode: value,
-        street: street,
-      );
+    city: city,
+    country: country,
+    number: number,
+    postcode: value,
+    street: street,
+  );
 
   YustAddress copyWithCity(String? value) => YustAddress(
-        city: value,
-        country: country,
-        number: number,
-        postcode: postcode,
-        street: street,
-      );
+    city: value,
+    country: country,
+    number: number,
+    postcode: postcode,
+    street: street,
+  );
 
   YustAddress copyWithCountry(String? value) => YustAddress(
-        city: city,
-        country: value,
-        number: number,
-        postcode: postcode,
-        street: street,
-      );
+    city: city,
+    country: value,
+    number: number,
+    postcode: postcode,
+    street: street,
+  );
 
   final String? street;
 
@@ -104,10 +107,7 @@ class YustAddress {
       (includeCountry && (country?.isEmpty ?? true));
 
   /// Returns true if any of the fields are not NULL
-  bool hasValue({
-    bool includeCountry = true,
-    bool includeNumber = true,
-  }) =>
+  bool hasValue({bool includeCountry = true, bool includeNumber = true}) =>
       street != null ||
       postcode != null ||
       city != null ||

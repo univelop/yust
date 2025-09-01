@@ -18,7 +18,8 @@ enum YustCardinalDirection {
         return DirectionX.west;
       default:
         throw YustException(
-            'Invalid cardinal direction. Expected YustCardinalDirection.east or YustCardinalDirection.west');
+          'Invalid cardinal direction. Expected YustCardinalDirection.east or YustCardinalDirection.west',
+        );
     }
   }
 
@@ -31,7 +32,8 @@ enum YustCardinalDirection {
         return DirectionY.south;
       default:
         throw YustException(
-            'Invalid cardinal direction. Expected YustCardinalDirection.north or YustCardinalDirection.south');
+          'Invalid cardinal direction. Expected YustCardinalDirection.north or YustCardinalDirection.south',
+        );
     }
   }
 

@@ -24,13 +24,15 @@ class YustAuthService {
     Yust yust, {
     String? emulatorAddress,
     String? pathToServiceAccountJson,
-  })  : _yust = yust,
-        _pathToServiceAccountJson = pathToServiceAccountJson,
-        _api = emulatorAddress != null
-            ? IdentityToolkitApi(Yust.authClient!,
-                rootUrl: 'http://$emulatorAddress:9099/',
-                servicePath: 'identitytoolkit.googleapis.com/')
-            : IdentityToolkitApi(Yust.authClient!);
+  }) : _yust = yust,
+       _pathToServiceAccountJson = pathToServiceAccountJson,
+       _api = emulatorAddress != null
+           ? IdentityToolkitApi(
+               Yust.authClient!,
+               rootUrl: 'http://$emulatorAddress:9099/',
+               servicePath: 'identitytoolkit.googleapis.com/',
+             )
+           : IdentityToolkitApi(Yust.authClient!);
 
   /// Returns the current [AuthState] in a Stream.
   Stream<AuthState> getAuthStateStream() {
@@ -40,10 +42,7 @@ class YustAuthService {
   String? getCurrentUserId() => null;
 
   /// Sign in by email and password.
-  Future<void> signIn(
-    String email,
-    String password,
-  ) async {
+  Future<void> signIn(String email, String password) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
@@ -78,8 +77,10 @@ class YustAuthService {
 
   /// Sign in with a configured OpenID. If a new user was created, return the user.
   /// The Authentication method must be configured in the Firebase console.
-  Future<YustUser?> signInWithOpenId(String providerId,
-      {bool redirect = false}) async {
+  Future<YustUser?> signInWithOpenId(
+    String providerId, {
+    bool redirect = false,
+  }) async {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
@@ -166,8 +167,11 @@ class YustAuthService {
   /// have one of the specified providers.
   /// This can be used to restrict the use of password login to users that
   /// have only been created with a 3rd party provider.
-  Future<YustUser> addUserNamePasswordToAccount(String email, String password,
-      {List<String> allowedProviderIds = const []}) async {
+  Future<YustUser> addUserNamePasswordToAccount(
+    String email,
+    String password, {
+    List<String> allowedProviderIds = const [],
+  }) async {
     final user = await _yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
@@ -198,17 +202,21 @@ class YustAuthService {
     final lookupRequest = GoogleCloudIdentitytoolkitV1GetAccountInfoRequest(
       localId: [user.authId!],
     );
-    final lookupResult =
-        await _api.projects.accounts_1.lookup(lookupRequest, Yust.projectId);
+    final lookupResult = await _api.projects.accounts_1.lookup(
+      lookupRequest,
+      Yust.projectId,
+    );
 
     if (lookupResult.users == null || lookupResult.users!.isEmpty) {
       throw YustException(
-          'User for authId ${user.authId} not found in Firebase Auth');
+        'User for authId ${user.authId} not found in Firebase Auth',
+      );
     }
 
     if (lookupResult.users!.length > 1) {
       throw YustException(
-          'Multiple users found for authId ${user.authId} in Firebase Auth');
+        'Multiple users found for authId ${user.authId} in Firebase Auth',
+      );
     }
 
     final firebaseUser = lookupResult.users!.first;
@@ -221,14 +229,16 @@ class YustAuthService {
       throw YustException('Firebase User has no configured auth providers');
     }
 
-    if (firebaseUser.providerUserInfo!
-        .any((info) => info.providerId == 'password')) {
+    if (firebaseUser.providerUserInfo!.any(
+      (info) => info.providerId == 'password',
+    )) {
       throw YustUserAlreadyHasPasswordException('User already has a password');
     }
 
     if (allowedProviderIds.isNotEmpty &&
-        firebaseUser.providerUserInfo!
-            .any((info) => !allowedProviderIds.contains(info.providerId))) {
+        firebaseUser.providerUserInfo!.any(
+          (info) => !allowedProviderIds.contains(info.providerId),
+        )) {
       throw YustProviderNotAllowed(
         'User has an unsupported auth provider',
         providerIds: firebaseUser.providerUserInfo!
@@ -249,7 +259,10 @@ class YustAuthService {
 
   /// Create an unsigned JWT for a given authId.
   JWT _createUnsignedJWTForAuthId(
-      String authId, String subjectAccountMail, String issuerAccountMail) {
+    String authId,
+    String subjectAccountMail,
+    String issuerAccountMail,
+  ) {
     return JWT(
       {'uid': authId},
       subject: subjectAccountMail,
@@ -265,7 +278,8 @@ class YustAuthService {
   /// This is only available in Google Cloud environments.
   Future<String> _getServiceAccountEmailFromMetadata() async {
     final uri = Uri.parse(
-        'http://metadata/computeMetadata/v1/instance/service-accounts/default/email');
+      'http://metadata/computeMetadata/v1/instance/service-accounts/default/email',
+    );
     final result = await get(uri, headers: {'Metadata-Flavor': 'Google'});
     return result.body;
   }
@@ -275,8 +289,10 @@ class YustAuthService {
   ///  If a Service Account File exists (e.g. in tools & emulator),
   /// we private key & email from the file to create the JWT.
   /// Else we use credentials from the cloud run environment
-  Future<String> getAuthTokenForAuthId(String authId,
-      {String? overrideEmail}) async {
+  Future<String> getAuthTokenForAuthId(
+    String authId, {
+    String? overrideEmail,
+  }) async {
     String issuerAccountMail;
     String? subjectServiceAccountMail = overrideEmail;
     Map? serviceAccountKey;
@@ -293,8 +309,11 @@ class YustAuthService {
       issuerAccountMail = serviceAccountKey['client_email'];
       // If we got a service account key file, we can just use the private key provided
       // for signing.
-      final jwt = _createUnsignedJWTForAuthId(authId,
-          subjectServiceAccountMail ?? issuerAccountMail, issuerAccountMail);
+      final jwt = _createUnsignedJWTForAuthId(
+        authId,
+        subjectServiceAccountMail ?? issuerAccountMail,
+        issuerAccountMail,
+      );
       final signedJwt = jwt.sign(
         RSAPrivateKey(serviceAccountKey['private_key']),
         algorithm: JWTAlgorithm.RS256,
@@ -311,19 +330,23 @@ class YustAuthService {
         final delegate =
             'projects/-/serviceAccounts/$subjectServiceAccountMail';
         final signRequest = SignJwtRequest(
-            payload: jsonEncode({
-          'uid': authId,
-          'iss': issuerAccountMail,
-          'sub': subjectServiceAccountMail,
-          'aud':
-              'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
-          'iat': DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000,
-          'exp': (DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000) + 3600
-        }));
+          payload: jsonEncode({
+            'uid': authId,
+            'iss': issuerAccountMail,
+            'sub': subjectServiceAccountMail,
+            'aud':
+                'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+            'iat': DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000,
+            'exp':
+                (DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000) + 3600,
+          }),
+        );
         final SignJwtResponse signingResponse;
         try {
-          signingResponse = await iamClient.projects.serviceAccounts
-              .signJwt(signRequest, delegate);
+          signingResponse = await iamClient.projects.serviceAccounts.signJwt(
+            signRequest,
+            delegate,
+          );
         } catch (e) {
           throw YustException('Could not sign JWT: $e');
         }
@@ -335,7 +358,8 @@ class YustAuthService {
         return signedJwt;
       } catch (e) {
         throw YustException(
-            'Could not get service account email from metadata: $e');
+          'Could not get service account email from metadata: $e',
+        );
       }
     }
   }

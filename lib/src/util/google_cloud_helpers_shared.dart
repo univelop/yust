@@ -1,6 +1,1 @@
-enum GoogleCloudPlatform {
-  cloudRunJob,
-  cloudRunService,
-  cloudFunctions,
-  local,
-}
+enum GoogleCloudPlatform { cloudRunJob, cloudRunService, cloudFunctions, local }

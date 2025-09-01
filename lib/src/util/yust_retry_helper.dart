@@ -12,18 +12,12 @@ import 'yust_exception.dart';
 ///
 /// The Priority is: [retry] > [rethrowException] > [ignore]
 /// If multiple functions return different actions, the action with the highest priority is taken.
-enum YustActionOnException {
-  retry,
-  rethrowException,
-  ignore,
-}
+enum YustActionOnException { retry, rethrowException, ignore }
 
 /// Returns the action to take if a exception occurs.
 /// Can also throw to produce a new exception.
-typedef YustActionOnExceptionFn = YustActionOnException? Function(
-  Object error,
-  YustRecursionMetaInfo meta,
-);
+typedef YustActionOnExceptionFn =
+    YustActionOnException? Function(Object error, YustRecursionMetaInfo meta);
 
 class YustRecursionMetaInfo {
   final String fnName;
@@ -36,26 +30,20 @@ class YustRecursionMetaInfo {
   bool get hasMoreTries => tryNumber < maxTries;
 
   YustRecursionMetaInfo(
-      this.fnName, this.docPath, this.tryNumber, this.maxTries);
+    this.fnName,
+    this.docPath,
+    this.tryNumber,
+    this.maxTries,
+  );
 
   factory YustRecursionMetaInfo.firstTry(
     String fnName,
     String docPath,
     int maxTries,
-  ) =>
-      YustRecursionMetaInfo(
-        fnName,
-        docPath,
-        1,
-        maxTries,
-      );
+  ) => YustRecursionMetaInfo(fnName, docPath, 1, maxTries);
 
-  YustRecursionMetaInfo nextTry() => YustRecursionMetaInfo(
-        fnName,
-        docPath,
-        tryNumber + 1,
-        maxTries,
-      );
+  YustRecursionMetaInfo nextTry() =>
+      YustRecursionMetaInfo(fnName, docPath, tryNumber + 1, maxTries);
 }
 
 class YustRetryHelper {
@@ -68,14 +56,16 @@ class YustRetryHelper {
       Object lastErrorThrown,
       String fnName,
       String docPath,
-    )? onRetriesExceeded,
+    )?
+    onRetriesExceeded,
     required bool shouldThrowAfterMaxTries,
     required YustActionOnException defaultAction,
   }) async {
     try {
       return await fn();
     } catch (e) {
-      final actionOnException = actionOnExceptionList
+      final actionOnException =
+          actionOnExceptionList
               .map((fn) => fn(e, meta))
               .firstWhereOrNull((action) => action != null) ??
           defaultAction;
@@ -87,9 +77,7 @@ class YustRetryHelper {
         case YustActionOnException.retry:
           if (meta.hasMoreTries) {
             return Future.delayed(
-              Duration(
-                milliseconds: backoffMs(meta.tryNumber),
-              ),
+              Duration(milliseconds: backoffMs(meta.tryNumber)),
               () => _retryRecursion<T>(
                 meta: meta.nextTry(),
                 fn: fn,
@@ -136,7 +124,8 @@ class YustRetryHelper {
       Object lastErrorThrown,
       String fnName,
       String docPath,
-    )? onRetriesExceeded,
+    )?
+    onRetriesExceeded,
     bool shouldThrowAfterMaxTries = true,
     YustActionOnException defaultAction = YustActionOnException.retry,
   }) async {
@@ -157,8 +146,10 @@ class YustRetryHelper {
   /// [maxExponentialBackoffMs] is the maximum for the exponential part
   /// of the backoff time, this will be multiplied by a random number between
   /// 20 and 40. For 16384 => 16384ms * ~30 = 491520ms (min 5.4min, max 10.9min)
-  static int randomExponentialCeiledBackoffMs(int tryNumber,
-      {int maxExponentialBackoffMs = 16384}) {
+  static int randomExponentialCeiledBackoffMs(
+    int tryNumber, {
+    int maxExponentialBackoffMs = 16384,
+  }) {
     final int maxExponentialBackoffMs = 16384;
     return min(maxExponentialBackoffMs, pow(2, tryNumber + 2).toInt()) *
         (20 + Random().nextInt(20));
@@ -166,24 +157,23 @@ class YustRetryHelper {
 
   /// Rethrows YustExceptions and ignores YustNotFoundExceptions
   /// based on [shouldIgnoreNotFound].
-  static YustActionOnExceptionFn actionOnYustException(
-          {bool shouldIgnoreNotFound = true}) =>
-      (
-        Object error,
-        YustRecursionMetaInfo meta,
-      ) {
-        if (error is YustException) {
-          if (error is YustNotFoundException && shouldIgnoreNotFound) {
-            print(
-                '[[DEBUG]] YustNotFoundException ignored for ${meta.fnName} call for ${meta.docPath}, this usually means the document was deleted before saving.');
-            return YustActionOnException.ignore;
-          }
-          print(
-              '[[DEBUG]] NOT Retrying ${meta.fnName} call for the ${meta.tryNumber} time on YustException ($error) for ${meta.docPath}, because we don\'t retry YustExceptions');
-          return YustActionOnException.rethrowException;
-        }
-        return null;
-      };
+  static YustActionOnExceptionFn actionOnYustException({
+    bool shouldIgnoreNotFound = true,
+  }) => (Object error, YustRecursionMetaInfo meta) {
+    if (error is YustException) {
+      if (error is YustNotFoundException && shouldIgnoreNotFound) {
+        print(
+          '[[DEBUG]] YustNotFoundException ignored for ${meta.fnName} call for ${meta.docPath}, this usually means the document was deleted before saving.',
+        );
+        return YustActionOnException.ignore;
+      }
+      print(
+        '[[DEBUG]] NOT Retrying ${meta.fnName} call for the ${meta.tryNumber} time on YustException ($error) for ${meta.docPath}, because we don\'t retry YustExceptions',
+      );
+      return YustActionOnException.rethrowException;
+    }
+    return null;
+  };
 
   /// Retries on Tls- and ClientExceptions.
   static YustActionOnException? actionOnNetworkException(
@@ -192,12 +182,14 @@ class YustRetryHelper {
   ) {
     if (error is TlsException) {
       print(
-          '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on TlsException ($error) for ${meta.docPath}');
+        '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on TlsException ($error) for ${meta.docPath}',
+      );
       return YustActionOnException.retry;
     }
     if (error is ClientException) {
       print(
-          '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on ClientException) ($error) for ${meta.docPath}');
+        '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on ClientException) ($error) for ${meta.docPath}',
+      );
       return YustActionOnException.retry;
     }
     return null;
@@ -211,44 +203,45 @@ class YustRetryHelper {
   static YustActionOnExceptionFn actionOnDetailedApiRequestError({
     bool shouldRetryOnTransactionErrors = true,
     bool shouldIgnoreNotFound = false,
-  }) =>
-      (
-        Object error,
-        YustRecursionMetaInfo meta,
-      ) {
-        if (error is DetailedApiRequestError) {
-          if (error.status == 500) {
-            print(
-                '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on InternalServerError ($error) for ${meta.docPath}');
-            return YustActionOnException.retry;
-          }
-          if (error.status == 502) {
-            print(
-                '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on BadGateway ($error) for ${meta.docPath}');
-            return YustActionOnException.retry;
-          }
-          if (error.status == 503) {
-            print(
-                '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on Unavailable ($error) for ${meta.docPath}');
-            return YustActionOnException.retry;
-          }
-          if (error.status == 409 && shouldRetryOnTransactionErrors) {
-            if ((error.message ?? '').contains(
-                'The referenced transaction has expired or is no longer valid')) {
-              throw YustException.fromDetailedApiRequestError(
-                  meta.docPath, error);
-            }
-            print(
-                '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on YustTransactionFailedException ($error) for ${meta.docPath}');
-            return YustActionOnException.retry;
-          }
-          if (error.status == 404 && shouldIgnoreNotFound) {
-            print(
-                '[[DEBUG]] Ignoring ${meta.fnName} call on NotFound ($error) for ${meta.docPath}');
-            return YustActionOnException.ignore;
-          }
+  }) => (Object error, YustRecursionMetaInfo meta) {
+    if (error is DetailedApiRequestError) {
+      if (error.status == 500) {
+        print(
+          '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on InternalServerError ($error) for ${meta.docPath}',
+        );
+        return YustActionOnException.retry;
+      }
+      if (error.status == 502) {
+        print(
+          '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on BadGateway ($error) for ${meta.docPath}',
+        );
+        return YustActionOnException.retry;
+      }
+      if (error.status == 503) {
+        print(
+          '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on Unavailable ($error) for ${meta.docPath}',
+        );
+        return YustActionOnException.retry;
+      }
+      if (error.status == 409 && shouldRetryOnTransactionErrors) {
+        if ((error.message ?? '').contains(
+          'The referenced transaction has expired or is no longer valid',
+        )) {
           throw YustException.fromDetailedApiRequestError(meta.docPath, error);
         }
-        return null;
-      };
+        print(
+          '[[DEBUG]] Retrying ${meta.fnName} call for the ${meta.tryNumber} time on YustTransactionFailedException ($error) for ${meta.docPath}',
+        );
+        return YustActionOnException.retry;
+      }
+      if (error.status == 404 && shouldIgnoreNotFound) {
+        print(
+          '[[DEBUG]] Ignoring ${meta.fnName} call on NotFound ($error) for ${meta.docPath}',
+        );
+        return YustActionOnException.ignore;
+      }
+      throw YustException.fromDetailedApiRequestError(meta.docPath, error);
+    }
+    return null;
+  };
 }

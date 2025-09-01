@@ -9,10 +9,7 @@ part 'yust_order_by.g.dart';
 /// or a series of field names separated by dots '.'
 @JsonSerializable()
 class YustOrderBy {
-  YustOrderBy({
-    required this.field,
-    this.descending = false,
-  });
+  YustOrderBy({required this.field, this.descending = false});
 
   /// The ID of the brick this filter referes to
   String field;

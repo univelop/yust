@@ -24,11 +24,17 @@ class YustGeoLocation {
   }) {
     if (latitude != null && (latitude! < -90 || latitude! > 90)) {
       throw YustInvalidCoordinatesException(
-          'Latitude must be between -90 and 90', latitude, longitude);
+        'Latitude must be between -90 and 90',
+        latitude,
+        longitude,
+      );
     }
     if (longitude != null && (longitude! < -180 || longitude! > 180)) {
       throw YustInvalidCoordinatesException(
-          'Longitude must be between -180 and 180', latitude, longitude);
+        'Longitude must be between -180 and 180',
+        latitude,
+        longitude,
+      );
     }
   }
 
@@ -75,32 +81,32 @@ class YustGeoLocation {
       _$YustGeoLocationFromJson(json);
 
   YustGeoLocation copyWithLatitude(double? value) => YustGeoLocation(
-        latitude: value,
-        longitude: longitude,
-        accuracy: accuracy,
-        address: address,
-      );
+    latitude: value,
+    longitude: longitude,
+    accuracy: accuracy,
+    address: address,
+  );
 
   YustGeoLocation copyWithLongitude(double? value) => YustGeoLocation(
-        latitude: latitude,
-        longitude: value,
-        accuracy: accuracy,
-        address: address,
-      );
+    latitude: latitude,
+    longitude: value,
+    accuracy: accuracy,
+    address: address,
+  );
 
   YustGeoLocation copyWithAccuracy(double? value) => YustGeoLocation(
-        latitude: latitude,
-        longitude: longitude,
-        accuracy: value,
-        address: address,
-      );
+    latitude: latitude,
+    longitude: longitude,
+    accuracy: value,
+    address: address,
+  );
 
   YustGeoLocation copyWithAddress(YustAddress value) => YustGeoLocation(
-        latitude: latitude,
-        longitude: longitude,
-        accuracy: accuracy,
-        address: value,
-      );
+    latitude: latitude,
+    longitude: longitude,
+    accuracy: accuracy,
+    address: value,
+  );
 
   final double? latitude;
 
@@ -156,10 +162,11 @@ class YustGeoLocation {
     String? eastAbbreviation = 'E',
   }) {
     final lat = formatLatitude(
-        appearance: appearance,
-        degreeSymbol: degreeSymbol,
-        northAbbreviation: northAbbreviation,
-        southAbbreviation: southAbbreviation);
+      appearance: appearance,
+      degreeSymbol: degreeSymbol,
+      northAbbreviation: northAbbreviation,
+      southAbbreviation: southAbbreviation,
+    );
     final long = formatLongitude(
       appearance: appearance,
       degreeSymbol: degreeSymbol,
@@ -183,7 +190,8 @@ class YustGeoLocation {
     }
 
     final dmsCoordinates = toYustDmsCoordinates();
-    final direction = {
+    final direction =
+        {
           YustCardinalDirection.north: northAbbreviation,
           YustCardinalDirection.south: southAbbreviation,
         }[dmsCoordinates.latDirection] ??
@@ -207,7 +215,8 @@ class YustGeoLocation {
     }
 
     final dmsCoordinates = toYustDmsCoordinates();
-    final direction = {
+    final direction =
+        {
           YustCardinalDirection.west: westAbbreviation,
           YustCardinalDirection.east: eastAbbreviation,
         }[dmsCoordinates.longDirection] ??

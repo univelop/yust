@@ -230,7 +230,7 @@ class YustFileServiceMocked extends YustFileService {
     String token,
     String bucketName,
   ) {
-    return 'https://not-a-real-url.mocked/$bucketName/$path/$name&token=$token';
+    return 'https://not-a-real-url.mocked/$bucketName/$path/$name?token=$token';
   }
 }
 

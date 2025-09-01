@@ -296,27 +296,27 @@ class YustUser extends YustDoc {
 
   /// This method returns the value of the attribute with the given key.
   T getAttribute<T>(String key, T defaultValue) {
-    if (userAttributes[key] == null) return defaultValue;
+    if (_userAttributes[key] == null) return defaultValue;
     if (T == DateTime) {
-      return DateTime.parse(userAttributes[key] as String) as T;
+      return DateTime.parse(_userAttributes[key] as String) as T;
     }
-    return userAttributes[key];
+    return _userAttributes[key];
   }
 
   /// This method returns the value of the attribute with the given key or null if the attribute does not exist.
-  T? getAttributeOrNull<T>(String key) => userAttributes[key];
+  T? getAttributeOrNull<T>(String key) => _userAttributes[key];
 
   /// This method sets the value of the attribute with the given key.
   void setAttribute(String key, dynamic value) {
-    if (userAttributes[key] == value) return;
+    if (_userAttributes[key] == value) return;
     updateMask.add('userAttributes.$key');
-    userAttributes[key] = value;
+    _userAttributes[key] = value;
   }
 
   void removeAttribute(String key) {
-    if (!userAttributes.containsKey(key)) return;
+    if (!_userAttributes.containsKey(key)) return;
     updateMask.add('userAttributes');
-    userAttributes.remove(key);
+    _userAttributes.remove(key);
   }
 }
 

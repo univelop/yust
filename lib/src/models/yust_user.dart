@@ -72,7 +72,7 @@ class YustUser extends YustDoc {
   /// The tenant the user has access to.
   /// We have a Map instead of a list to be able to filter for active envIds.
   /// This should not be used directly,
-  /// but rather use [getActiveEnvIds], [hasEnvId], [addEnvId], [removeEnvId] instead.
+  /// but rather use [getActiveEnvIds], [hasActiveEnvId], [addEnvId], [removeEnvId] instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
   Map<String, bool?> get envIds => Map.unmodifiable(_envIds);
 
@@ -190,20 +190,20 @@ class YustUser extends YustDoc {
     required String firstName,
     required String lastName,
     YustGender? gender,
-    Map<String, bool?> envIds = const {},
+    Map<String, bool?>? envIds,
     List<String>? deviceIds,
     String? authId,
     String? locale,
-    Map<String, dynamic> userAttributes = const {},
+    Map<String, dynamic>? userAttributes,
   }) : _email = email,
        _firstName = firstName,
        _lastName = lastName,
        _gender = gender,
-       _envIds = envIds,
+       _envIds = envIds ?? {},
        _deviceIds = deviceIds,
        _authId = authId,
        _locale = locale ?? 'de',
-       _userAttributes = userAttributes;
+       _userAttributes = userAttributes ?? {};
 
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);
@@ -216,7 +216,7 @@ class YustUser extends YustDoc {
       _envIds.keys.where((e) => _envIds[e] == true);
 
   /// Checks if the User has access to the given [envId].
-  bool hasEnvId(String? envId) => envId != null && _envIds[envId] == true;
+  bool hasActiveEnvId(String? envId) => envId != null && _envIds[envId] == true;
 
   /// Adds an [envId] to list of envIds the User has access to.
   void addEnvId(String envId) {

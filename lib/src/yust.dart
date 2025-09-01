@@ -18,11 +18,7 @@ import 'util/yust_helpers.dart';
 /// Represents the state of the user authentication.
 ///
 /// The states are [waiting] if asking for authentication, [signedIn] if the user is signed in and [signedOut] if the user is signed out.
-enum AuthState {
-  waiting,
-  signedIn,
-  signedOut,
-}
+enum AuthState { waiting, signedIn, signedOut }
 
 enum DatabaseLogAction {
   delete,
@@ -43,15 +39,22 @@ enum DatabaseLogAction {
       DatabaseLogAction.get;
 }
 
-typedef DatabaseLogCallback = void Function(
-    DatabaseLogAction action, String documentPath, int count,
-    {String? id, List<String>? updateMask, num? aggregationResult});
+typedef DatabaseLogCallback =
+    void Function(
+      DatabaseLogAction action,
+      String documentPath,
+      int count, {
+      String? id,
+      List<String>? updateMask,
+      num? aggregationResult,
+    });
 
-typedef OnChangeCallback = Future<void> Function(
-  String docPath,
-  Map<String, dynamic>? oldDocument,
-  Map<String, dynamic>? newDocument,
-);
+typedef OnChangeCallback =
+    Future<void> Function(
+      String docPath,
+      Map<String, dynamic>? oldDocument,
+      Map<String, dynamic>? newDocument,
+    );
 
 /// Yust is the easiest way to connect a full stack Dart app to Firebase.
 ///
@@ -100,13 +103,13 @@ class Yust {
 
   /// Initializes [Yust] in a mocked way => use in memory db instead of a real connection to firebase.
   /// If you will use yust in combination with e.g. YustUI in a flutter app set [forUI] to true.
-  Yust.mocked(
-      {required this.forUI,
-      this.useSubcollections = false,
-      this.envCollectionName = 'envs',
-      this.dbLogCallback,
-      this.onChange})
-      : mocked = true;
+  Yust.mocked({
+    required this.forUI,
+    this.useSubcollections = false,
+    this.envCollectionName = 'envs',
+    this.dbLogCallback,
+    this.onChange,
+  }) : mocked = true;
 
   /// Initializes [Yust].
   //
@@ -164,7 +167,7 @@ class Yust {
     pushService = YustPushService();
   }
 
-  closeClient() {
+  void closeClient() {
     authClient?.close();
   }
 }

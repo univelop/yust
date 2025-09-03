@@ -663,17 +663,18 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
 
-    int startAfterIndex = 0;
+    int startIndex = 0;
     if (startAfterDocument != null) {
-      startAfterIndex = max(
+      final startAfterIndex = max(
         docs.indexWhere((doc) => doc.id == startAfterDocument.id),
         0,
       );
+      startIndex = startAfterIndex + 1;
     }
 
     final limitedDocs = docs.sublist(
-      startAfterIndex,
-      min((limit ?? docs.length) + startAfterIndex, docs.length),
+      min(startIndex, docs.length),
+      min((limit ?? docs.length) + startIndex, docs.length),
     );
 
     return limitedDocs;

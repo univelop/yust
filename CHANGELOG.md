@@ -1,3 +1,7 @@
+## 3.29.4 - 2025-09-03
+
+-   Fixes for mocked database service
+
 ## 3.29.3 - 2025-08-29
 
 -   Add bucketname parameter to all file service functions

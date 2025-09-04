@@ -42,11 +42,11 @@ class YustQueryWithLogging implements Query {
   }) => _originalQuery
       .snapshots(includeMetadataChanges: includeMetadataChanges)
       .map((snapshot) {
-        if (snapshot.docs.isNotEmpty) {
-          for (final doc in snapshot.docs) {
+        if (snapshot.docChanges.isNotEmpty) {
+          for (final docChange in snapshot.docChanges) {
             _dbLogCallback(
-              DatabaseLogActionExtension.fromSnapshot(doc),
-              doc.reference.parent.path,
+              DatabaseLogActionExtension.fromSnapshot(docChange.doc),
+              docChange.doc.reference.parent.path,
               1,
             );
           }

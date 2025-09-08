@@ -72,7 +72,8 @@ class YustFileService implements IYustFileService {
       name: '$path/$name',
       bucket: effectiveBucketName,
       metadata: fileMetadata,
-      contentDisposition: contentDisposition ?? 'inline; filename="$name"',
+      contentDisposition:
+          contentDisposition ?? YustHelpers.createContentDisposition(name),
     );
     final media = Media(
       data,
@@ -117,7 +118,8 @@ class YustFileService implements IYustFileService {
       name: '$path/$name',
       bucket: effectiveBucketName,
       metadata: fileMetadata,
-      contentDisposition: contentDisposition ?? 'inline; filename="$name"',
+      contentDisposition:
+          contentDisposition ?? YustHelpers.createContentDisposition(name),
     );
     final media = Media(
       stream,

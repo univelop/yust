@@ -47,6 +47,7 @@ class YustFileService implements IYustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? contentDisposition,
     String? bucketName,
   }) async {
     // Check if either a file or bytes are provided
@@ -70,6 +71,7 @@ class YustFileService implements IYustFileService {
       name: '$path/$name',
       bucket: effectiveBucketName,
       metadata: fileMetadata,
+      contentDisposition: contentDisposition ?? 'inline; filename="$name"',
     );
     final media = Media(
       data,
@@ -114,7 +116,7 @@ class YustFileService implements IYustFileService {
       name: '$path/$name',
       bucket: effectiveBucketName,
       metadata: fileMetadata,
-      contentDisposition: contentDisposition,
+      contentDisposition: contentDisposition ?? 'inline; filename="$name"',
     );
     final media = Media(
       stream,

@@ -12,6 +12,7 @@ abstract interface class IYustFileService {
   ///
   /// Optionally accepts [metadata] to be set on the uploaded file.
   /// Optionally accepts [bucketName] to override the default bucket.
+  /// Optionally accepts [contentDisposition] to override the default Content-Disposition header.
   ///
   /// It returns the download url of the uploaded file.
   Future<String> uploadFile({
@@ -20,6 +21,7 @@ abstract interface class IYustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? contentDisposition,
     String? bucketName,
   });
 
@@ -28,6 +30,7 @@ abstract interface class IYustFileService {
   ///
   /// Optionally accepts [metadata] to be set on the uploaded file.
   /// Optionally accepts [bucketName] to override the default bucket.
+  /// Optionally accepts [contentDisposition] to override the default Content-Disposition header.
   ///
   /// Returns the download url of the uploaded file.
   Future<String> uploadStream({

@@ -56,6 +56,7 @@ class YustFileServiceMocked extends YustFileService {
       name: name,
       bytes: bytes,
       metadata: metadata,
+      contentDisposition: contentDisposition,
       bucketName: bucketName,
     );
   }
@@ -71,6 +72,7 @@ class YustFileServiceMocked extends YustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? contentDisposition,
     String? bucketName,
   }) async {
     if (file == null && bytes == null) {
@@ -86,6 +88,7 @@ class YustFileServiceMocked extends YustFileService {
     final fileMetadata = <String, String>{
       ...?metadata,
       'firebaseStorageDownloadTokens': token,
+      'contentDisposition': contentDisposition ?? 'inline; filename="$name"',
     };
 
     bucketStorage[path]![name] = MockedFile(

@@ -62,6 +62,7 @@ class YustFileService implements IYustFileService {
       name: name,
       bytes: bytes,
       metadata: metadata,
+      contentDisposition: contentDisposition,
       bucketName: bucketName,
     );
   }
@@ -73,6 +74,7 @@ class YustFileService implements IYustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? contentDisposition,
     String? bucketName,
   }) async {
     try {
@@ -90,12 +92,14 @@ class YustFileService implements IYustFileService {
         var fileMetadata = SettableMetadata(
           contentType: lookupMimeType(name),
           customMetadata: metadata,
+          contentDisposition: contentDisposition ?? 'inline; filename="$name"',
         );
         uploadTask = storageReference.putFile(file, fileMetadata);
       } else {
         var fileMetadata = SettableMetadata(
           contentType: lookupMimeType(name),
           customMetadata: metadata,
+          contentDisposition: contentDisposition ?? 'inline; filename="$name"',
         );
         uploadTask = storageReference.putData(bytes!, fileMetadata);
       }

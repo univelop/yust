@@ -128,4 +128,25 @@ abstract interface class IYustFileService {
     required String generation,
     String? bucketName,
   });
+
+  /// Updates metadata of an existing file.
+  ///
+  /// Optionally accepts [bucketName] to override the default bucket.
+  Future<void> updateMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  });
+
+  /// Adds metadata to an existing file.
+  /// Merges the provided [metadata] with existing custom metadata.
+  ///
+  /// Optionally accepts [bucketName] to override the default bucket.
+  Future<void> addMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  });
 }

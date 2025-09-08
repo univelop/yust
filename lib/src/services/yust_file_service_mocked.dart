@@ -194,6 +194,7 @@ class YustFileServiceMocked extends YustFileService {
     return YustFileMetadata(
       size: object?.data.length ?? 0,
       token: object?.metadata['firebaseStorageDownloadTokens'] ?? '',
+      customMetadata: object?.metadata,
     );
   }
 
@@ -225,6 +226,41 @@ class YustFileServiceMocked extends YustFileService {
     String? bucketName,
   }) async {
     throw YustException('Not implemented for mocked');
+  }
+
+  @override
+  Future<void> updateMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  }) async {
+    final bucketStorage = _getStorageForBucket(bucketName);
+    final file = bucketStorage[path]?[name];
+    if (file == null) {
+      throw YustException('File not found');
+    }
+
+    // Update metadata
+    file.metadata.clear();
+    file.metadata.addAll(metadata);
+  }
+
+  @override
+  Future<void> addMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  }) async {
+    final bucketStorage = _getStorageForBucket(bucketName);
+    final file = bucketStorage[path]?[name];
+    if (file == null) {
+      throw YustException('File not found');
+    }
+
+    // Add metadata to existing metadata
+    file.metadata.addAll(metadata);
   }
 
   String _createDownloadUrl(

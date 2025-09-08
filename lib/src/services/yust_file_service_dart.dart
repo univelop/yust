@@ -8,6 +8,7 @@ import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../yust.dart';
 import '../util/yust_retry_helper.dart';
 import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
@@ -52,7 +53,7 @@ class YustFileService implements IYustFileService {
   }) async {
     // Check if either a file or bytes are provided
     if (file == null && bytes == null) {
-      throw Exception('No file or bytes provided');
+      throw YustException('No file or bytes provided');
     }
 
     final effectiveBucketName = bucketName ?? defaultBucketName;
@@ -196,7 +197,7 @@ class YustFileService implements IYustFileService {
 
       return completer.future;
     }
-    throw Exception('Unknown response Object');
+    throw YustException('Unknown response Object');
   }
 
   /// Deletes a existing file at [path] and filename [name].
@@ -267,34 +268,37 @@ class YustFileService implements IYustFileService {
       '$effectiveBucketName/$path/$name',
       () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
     );
-    if (object is Object) {
-      var token = object.metadata?['firebaseStorageDownloadTokens']?.split(
-        ',',
-      )[0];
-      if (token == null) {
-        token = Uuid().v4();
-        if (object.metadata == null) {
-          object.metadata = {'firebaseStorageDownloadTokens': token};
-        } else {
-          object.metadata!['firebaseStorageDownloadTokens'] = token;
-        }
-        try {
-          await _retryOnException(
-            'Setting-Token-For-Download-Url',
-            '$effectiveBucketName/$path/$name',
-            () => _storageApi.objects.update(
-              object,
-              effectiveBucketName,
-              object.name!,
-            ),
-          );
-        } catch (e) {
-          throw Exception('Error while creating token: ${e.toString()}}');
-        }
-      }
-      return _createDownloadUrl(path, name, token, effectiveBucketName);
+
+    if (object is! Object) {
+      throw YustException('Unknown response Object');
     }
-    throw Exception('Unknown response Object');
+
+    var token = object.metadata?['firebaseStorageDownloadTokens']?.split(
+      ',',
+    )[0];
+    if (token == null) {
+      token = Uuid().v4();
+      if (object.metadata == null) {
+        object.metadata = {'firebaseStorageDownloadTokens': token};
+      } else {
+        object.metadata!['firebaseStorageDownloadTokens'] = token;
+      }
+      try {
+        await _retryOnException(
+          'Setting-Token-For-Download-Url',
+          '$effectiveBucketName/$path/$name',
+          () => _storageApi.objects.update(
+            object,
+            effectiveBucketName,
+            object.name!,
+          ),
+        );
+      } catch (e) {
+        throw YustException('Error while creating token: ${e.toString()}}');
+      }
+    }
+
+    return _createDownloadUrl(path, name, token, effectiveBucketName);
   }
 
   @override
@@ -314,6 +318,7 @@ class YustFileService implements IYustFileService {
     return YustFileMetadata(
       size: int.parse(object.size ?? '0'),
       token: object.metadata?['firebaseStorageDownloadTokens'] ?? '',
+      customMetadata: object.metadata,
     );
   }
 
@@ -457,6 +462,71 @@ class YustFileService implements IYustFileService {
         ),
       );
     }
+  }
+
+  @override
+  Future<void> updateMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  }) async {
+    final effectiveBucketName = bucketName ?? defaultBucketName;
+
+    // Get current object
+    final object = await _retryOnException(
+      'Get-Object-For-Metadata-Update',
+      '$effectiveBucketName/$path/$name',
+      () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
+    );
+
+    if (object is! Object) {
+      throw YustException('Unknown response Object');
+    }
+
+    // Update metadata
+    object.metadata = metadata;
+
+    await _retryOnException(
+      'Update-Metadata',
+      '$effectiveBucketName/$path/$name',
+      () =>
+          _storageApi.objects.patch(object, effectiveBucketName, object.name!),
+    );
+  }
+
+  @override
+  Future<void> addMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  }) async {
+    final effectiveBucketName = bucketName ?? defaultBucketName;
+
+    // Get current object
+    final object = await _retryOnException(
+      'Get-Object-For-Metadata-Add',
+      '$effectiveBucketName/$path/$name',
+      () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
+    );
+
+    if (object is! Object) {
+      throw YustException('Unknown response Object');
+    }
+
+    // Merge with existing metadata
+    final existingMetadata = object.metadata ?? <String, String>{};
+    final mergedMetadata = <String, String>{...existingMetadata, ...metadata};
+
+    object.metadata = mergedMetadata;
+
+    await _retryOnException(
+      'Add-Metadata',
+      '$effectiveBucketName/$path/$name',
+      () =>
+          _storageApi.objects.patch(object, effectiveBucketName, object.name!),
+    );
   }
 
   /// Retries the given function if a TlsException, ClientException or YustBadGatewayException occurs.

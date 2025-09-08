@@ -197,6 +197,7 @@ class YustFileService implements IYustFileService {
     return YustFileMetadata(
       size: metadata.size ?? 0,
       token: metadata.customMetadata?['firebaseStorageDownloadTokens'] ?? '',
+      customMetadata: metadata.customMetadata,
     );
   }
 
@@ -253,5 +254,54 @@ class YustFileService implements IYustFileService {
     String? bucketName,
   }) async {
     throw YustException('Not implemented for flutter');
+  }
+
+  @override
+  Future<void> updateMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  }) async {
+    try {
+      final storage = _getStorageForBucket(bucketName);
+      final storageReference = storage.ref().child(path).child(name);
+
+      final newMetadata = SettableMetadata(customMetadata: metadata);
+
+      await storageReference.updateMetadata(newMetadata);
+    } catch (e) {
+      throw YustException('Error updating metadata: $e');
+    }
+  }
+
+  @override
+  Future<void> addMetadata({
+    required String path,
+    required String name,
+    required Map<String, String> metadata,
+    String? bucketName,
+  }) async {
+    try {
+      final storage = _getStorageForBucket(bucketName);
+      final storageReference = storage.ref().child(path).child(name);
+
+      // Get current metadata first
+      final currentMetadata = await storageReference.getMetadata();
+      final existingCustomMetadata =
+          currentMetadata.customMetadata ?? <String, String>{};
+
+      // Merge with new metadata
+      final mergedMetadata = <String, String>{
+        ...existingCustomMetadata,
+        ...metadata,
+      };
+
+      final newMetadata = SettableMetadata(customMetadata: mergedMetadata);
+
+      await storageReference.updateMetadata(newMetadata);
+    } catch (e) {
+      throw YustException('Error adding metadata: $e');
+    }
   }
 }

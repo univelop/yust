@@ -64,6 +64,14 @@ class YustUser extends YustDoc {
   /// Locale
   String locale;
 
+  /// Whether the user has completed the onboarding.
+  bool? onboardingCompleted;
+
+  /// Onboarding state
+  /// A map of onboarding steps and their completion status.
+  @JsonKey(defaultValue: {})
+  Map<String, dynamic>? onboardingState;
+
   /// The attributes for a user.
   @JsonKey(defaultValue: {})
   Map<String, dynamic> userAttributes = {};

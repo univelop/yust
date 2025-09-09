@@ -231,10 +231,10 @@ class YustFileServiceMocked extends YustFileService {
   }
 
   @override
-  Future<void> updateMetadata({
+  Future<void> updateContentDisposition({
     required String path,
     required String name,
-    required Map<String, String> metadata,
+    required String contentDisposition,
     String? bucketName,
   }) async {
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -243,26 +243,8 @@ class YustFileServiceMocked extends YustFileService {
       throw YustException('File not found');
     }
 
-    // Update metadata
-    file.metadata.clear();
-    file.metadata.addAll(metadata);
-  }
-
-  @override
-  Future<void> addMetadata({
-    required String path,
-    required String name,
-    required Map<String, String> metadata,
-    String? bucketName,
-  }) async {
-    final bucketStorage = _getStorageForBucket(bucketName);
-    final file = bucketStorage[path]?[name];
-    if (file == null) {
-      throw YustException('File not found');
-    }
-
-    // Add metadata to existing metadata
-    file.metadata.addAll(metadata);
+    // Update content disposition in mocked file metadata
+    file.metadata['contentDisposition'] = contentDisposition;
   }
 
   String _createDownloadUrl(
@@ -278,7 +260,7 @@ class YustFileServiceMocked extends YustFileService {
 class MockedFile {
   final Uint8List data;
   final Map<String, String> metadata;
-  final String mimeType;
+  String mimeType;
 
   MockedFile({
     required this.data,

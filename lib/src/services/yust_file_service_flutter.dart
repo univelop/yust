@@ -260,51 +260,31 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<void> updateMetadata({
+  Future<void> updateContentDisposition({
     required String path,
     required String name,
-    required Map<String, String> metadata,
+    required String contentDisposition,
     String? bucketName,
   }) async {
     try {
       final storage = _getStorageForBucket(bucketName);
       final storageReference = storage.ref().child(path).child(name);
 
-      final newMetadata = SettableMetadata(customMetadata: metadata);
-
-      await storageReference.updateMetadata(newMetadata);
-    } catch (e) {
-      throw YustException('Error updating metadata: $e');
-    }
-  }
-
-  @override
-  Future<void> addMetadata({
-    required String path,
-    required String name,
-    required Map<String, String> metadata,
-    String? bucketName,
-  }) async {
-    try {
-      final storage = _getStorageForBucket(bucketName);
-      final storageReference = storage.ref().child(path).child(name);
-
-      // Get current metadata first
+      // Get current metadata first to preserve it
       final currentMetadata = await storageReference.getMetadata();
-      final existingCustomMetadata =
-          currentMetadata.customMetadata ?? <String, String>{};
 
-      // Merge with new metadata
-      final mergedMetadata = <String, String>{
-        ...existingCustomMetadata,
-        ...metadata,
-      };
-
-      final newMetadata = SettableMetadata(customMetadata: mergedMetadata);
+      final newMetadata = SettableMetadata(
+        contentDisposition: contentDisposition,
+        contentType: currentMetadata.contentType,
+        customMetadata: currentMetadata.customMetadata,
+        cacheControl: currentMetadata.cacheControl,
+        contentEncoding: currentMetadata.contentEncoding,
+        contentLanguage: currentMetadata.contentLanguage,
+      );
 
       await storageReference.updateMetadata(newMetadata);
     } catch (e) {
-      throw YustException('Error adding metadata: $e');
+      throw YustException('Error updating content disposition: $e');
     }
   }
 }

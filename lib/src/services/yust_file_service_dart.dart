@@ -9,7 +9,6 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../yust.dart';
-import '../util/yust_retry_helper.dart';
 import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
 
@@ -467,17 +466,17 @@ class YustFileService implements IYustFileService {
   }
 
   @override
-  Future<void> updateMetadata({
+  Future<void> updateContentDisposition({
     required String path,
     required String name,
-    required Map<String, String> metadata,
+    required String contentDisposition,
     String? bucketName,
   }) async {
     final effectiveBucketName = bucketName ?? defaultBucketName;
 
     // Get current object
     final object = await _retryOnException(
-      'Get-Object-For-Metadata-Update',
+      'Get-Object-For-Content-Disposition-Update',
       '$effectiveBucketName/$path/$name',
       () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
     );
@@ -486,45 +485,11 @@ class YustFileService implements IYustFileService {
       throw YustException('Unknown response Object');
     }
 
-    // Update metadata
-    object.metadata = metadata;
+    // Update content disposition
+    object.contentDisposition = contentDisposition;
 
     await _retryOnException(
-      'Update-Metadata',
-      '$effectiveBucketName/$path/$name',
-      () =>
-          _storageApi.objects.patch(object, effectiveBucketName, object.name!),
-    );
-  }
-
-  @override
-  Future<void> addMetadata({
-    required String path,
-    required String name,
-    required Map<String, String> metadata,
-    String? bucketName,
-  }) async {
-    final effectiveBucketName = bucketName ?? defaultBucketName;
-
-    // Get current object
-    final object = await _retryOnException(
-      'Get-Object-For-Metadata-Add',
-      '$effectiveBucketName/$path/$name',
-      () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
-    );
-
-    if (object is! Object) {
-      throw YustException('Unknown response Object');
-    }
-
-    // Merge with existing metadata
-    final existingMetadata = object.metadata ?? <String, String>{};
-    final mergedMetadata = <String, String>{...existingMetadata, ...metadata};
-
-    object.metadata = mergedMetadata;
-
-    await _retryOnException(
-      'Add-Metadata',
+      'Update-Content-Disposition',
       '$effectiveBucketName/$path/$name',
       () =>
           _storageApi.objects.patch(object, effectiveBucketName, object.name!),

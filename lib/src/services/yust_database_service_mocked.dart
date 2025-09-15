@@ -223,6 +223,44 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }
 
   @override
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+    String? startAfterDocumentId,
+  }) async {
+    final docs = _getList(
+      docSetup,
+      filters: filters,
+      limit: limit,
+      startAfterDocumentId: startAfterDocumentId,
+    );
+    dbLogCallback?.call(
+      DatabaseLogAction.get,
+      _getDocumentPath(docSetup),
+      docs.length,
+    );
+    return docs.map((doc) => doc.id).toList();
+  }
+
+  @override
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int pageSize = 300,
+    String? startAfterDocumentId,
+  }) {
+    return Stream.fromFuture(
+      getDocumentIds(
+        docSetup,
+        filters: filters,
+        limit: pageSize,
+        startAfterDocumentId: startAfterDocumentId,
+      ),
+    ).expand((e) => e);
+  }
+
+  @override
   Stream<List<T>> getListStream<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
@@ -352,7 +390,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     await prepareSaveDoc(
       docSetup,
       doc,
@@ -453,7 +490,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == doc.id);
     await onChange?.call(
@@ -475,7 +511,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   ) async {
     final doc = await get(docSetup, id);
     if (doc == null) return;
-    await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == id);
     await onChange?.call(
@@ -650,6 +685,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustOrderBy>? orderBy,
     int? limit,
     T? startAfterDocument,
+    String? startAfterDocumentId,
     bool forAllEnvironments = false,
   }) {
     var jsonDocs = _getJSONCollection(docSetup.collectionName);
@@ -667,6 +703,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     if (startAfterDocument != null) {
       final startAfterIndex = max(
         docs.indexWhere((doc) => doc.id == startAfterDocument.id),
+        0,
+      );
+      startIndex = startAfterIndex + 1;
+    } else if (startAfterDocumentId != null) {
+      final startAfterIndex = max(
+        docs.indexWhere((doc) => doc.id == startAfterDocumentId),
         0,
       );
       startIndex = startAfterIndex + 1;

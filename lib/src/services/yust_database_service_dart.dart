@@ -768,6 +768,7 @@ class YustDatabaseService implements IYustDatabaseService {
       await _api.projects.databases.documents.patch(
         dbDoc,
         docPath,
+        mask_fieldPaths: ['id'], // to reduce the size of the request
         updateMask_fieldPaths: ignoreUpdateMask ? null : quotedUpdateMask,
         currentDocument_exists: doNotCreate ? true : null,
       );

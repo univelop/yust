@@ -8,7 +8,7 @@ import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
-import '../util/yust_helpers.dart';
+import '../yust.dart';
 import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
 
@@ -94,7 +94,7 @@ class YustFileService implements IYustFileService {
           contentType: lookupMimeType(name),
           customMetadata: metadata,
           contentDisposition:
-              contentDisposition ?? YustHelpers.createContentDisposition(name),
+              contentDisposition ?? Yust.helpers.createContentDisposition(name),
         );
         uploadTask = storageReference.putFile(file, fileMetadata);
       } else {
@@ -102,7 +102,7 @@ class YustFileService implements IYustFileService {
           contentType: lookupMimeType(name),
           customMetadata: metadata,
           contentDisposition:
-              contentDisposition ?? YustHelpers.createContentDisposition(name),
+              contentDisposition ?? Yust.helpers.createContentDisposition(name),
         );
         uploadTask = storageReference.putData(bytes!, fileMetadata);
       }

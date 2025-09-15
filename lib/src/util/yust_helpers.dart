@@ -372,11 +372,6 @@ class YustHelpers {
   }
 
   /// Creates a proper Content-Disposition header value with UTF-8 encoded filename
-  ///
-  /// Defaults to inline. Set [inline] to use attachment instead.
-  static String createContentDisposition(
-    String filename, {
-    bool inline = true,
-  }) =>
-      '${inline ? 'inline' : 'attachment'}; filename*=UTF-8\'\'${Uri.encodeComponent(filename)}';
+  String createContentDisposition(String filename) =>
+      'attachment; filename*=UTF-8\'\'${Uri.encodeComponent(filename)}';
 }

@@ -6,7 +6,7 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../util/yust_exception.dart';
-import '../util/yust_helpers.dart';
+import '../yust.dart';
 import 'yust_file_service.dart';
 import 'yust_file_service_shared.dart';
 
@@ -90,7 +90,7 @@ class YustFileServiceMocked extends YustFileService {
       ...?metadata,
       'firebaseStorageDownloadTokens': token,
       'contentDisposition':
-          contentDisposition ?? YustHelpers.createContentDisposition(name),
+          contentDisposition ?? Yust.helpers.createContentDisposition(name),
     };
 
     bucketStorage[path]![name] = MockedFile(

@@ -72,7 +72,7 @@ class YustFileService implements IYustFileService {
       bucket: effectiveBucketName,
       metadata: fileMetadata,
       contentDisposition:
-          contentDisposition ?? YustHelpers.createContentDisposition(name),
+          contentDisposition ?? Yust.helpers.createContentDisposition(name),
     );
     final media = Media(
       data,
@@ -118,7 +118,7 @@ class YustFileService implements IYustFileService {
       bucket: effectiveBucketName,
       metadata: fileMetadata,
       contentDisposition:
-          contentDisposition ?? YustHelpers.createContentDisposition(name),
+          contentDisposition ?? Yust.helpers.createContentDisposition(name),
     );
     final media = Media(
       stream,

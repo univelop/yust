@@ -373,5 +373,5 @@ class YustHelpers {
 
   /// Creates a proper Content-Disposition header value with UTF-8 encoded filename
   String createContentDisposition(String filename) =>
-      'attachment; filename*=UTF-8\'\'${Uri.encodeComponent(filename)}';
+      'inline; filename*=UTF-8\'\'${Uri.encodeComponent(filename)}';
 }

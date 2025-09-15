@@ -6,6 +6,7 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../util/yust_exception.dart';
+import '../yust.dart';
 import 'yust_file_service.dart';
 import 'yust_file_service_shared.dart';
 
@@ -56,6 +57,7 @@ class YustFileServiceMocked extends YustFileService {
       name: name,
       bytes: bytes,
       metadata: metadata,
+      contentDisposition: contentDisposition,
       bucketName: bucketName,
     );
   }
@@ -71,6 +73,7 @@ class YustFileServiceMocked extends YustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? contentDisposition,
     String? bucketName,
   }) async {
     if (file == null && bytes == null) {
@@ -86,6 +89,8 @@ class YustFileServiceMocked extends YustFileService {
     final fileMetadata = <String, String>{
       ...?metadata,
       'firebaseStorageDownloadTokens': token,
+      'contentDisposition':
+          contentDisposition ?? Yust.helpers.createContentDisposition(name),
     };
 
     bucketStorage[path]![name] = MockedFile(
@@ -191,6 +196,7 @@ class YustFileServiceMocked extends YustFileService {
     return YustFileMetadata(
       size: object?.data.length ?? 0,
       token: object?.metadata['firebaseStorageDownloadTokens'] ?? '',
+      customMetadata: object?.metadata,
     );
   }
 
@@ -224,6 +230,23 @@ class YustFileServiceMocked extends YustFileService {
     throw YustException('Not implemented for mocked');
   }
 
+  @override
+  Future<void> updateContentDisposition({
+    required String path,
+    required String name,
+    required String contentDisposition,
+    String? bucketName,
+  }) async {
+    final bucketStorage = _getStorageForBucket(bucketName);
+    final file = bucketStorage[path]?[name];
+    if (file == null) {
+      throw YustException('File not found');
+    }
+
+    // Update content disposition in mocked file metadata
+    file.metadata['contentDisposition'] = contentDisposition;
+  }
+
   String _createDownloadUrl(
     String path,
     String name,
@@ -237,7 +260,7 @@ class YustFileServiceMocked extends YustFileService {
 class MockedFile {
   final Uint8List data;
   final Map<String, String> metadata;
-  final String mimeType;
+  String mimeType;
 
   MockedFile({
     required this.data,

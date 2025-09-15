@@ -720,7 +720,6 @@ class YustDatabaseService implements IYustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     await prepareSaveDoc(
       docSetup,
       doc,
@@ -891,7 +890,6 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final docPath = _getDocumentPath(docSetup, doc.id);
     await _retryOnException('deleteDoc', _getDocumentPath(docSetup), () async {
       await _api.projects.databases.documents.delete(docPath);
@@ -909,7 +907,6 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) async {
-    await (await get(docSetup, id))?.onDelete();
     final docPath = _getDocumentPath(docSetup, id);
     await _retryOnException(
       'deleteDocById',

@@ -125,12 +125,6 @@ abstract class YustDoc {
     return GoogleCloudHelpers.convertTimestamp(value);
   }
 
-  /// is triggered when the document is saved
-  Future<void> onSave() async {}
-
-  /// is triggered when the document is removed
-  Future<void> onDelete() async {}
-
   /// clear the update mask
   void clearUpdateMask() => updateMask.clear();
 }

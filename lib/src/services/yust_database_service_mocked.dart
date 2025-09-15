@@ -352,7 +352,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     await prepareSaveDoc(
       docSetup,
       doc,
@@ -453,7 +452,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == doc.id);
     await onChange?.call(
@@ -475,7 +473,6 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   ) async {
     final doc = await get(docSetup, id);
     if (doc == null) return;
-    await doc.onDelete();
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == id);
     await onChange?.call(

@@ -437,7 +437,6 @@ class YustDatabaseService implements IYustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
     await prepareSaveDoc(
       docSetup,
@@ -667,7 +666,6 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final docRef = _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(doc.id);
@@ -685,7 +683,6 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     String docId,
   ) async {
-    await (await get(docSetup, docId))?.onDelete();
     final docRef = _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(docId);

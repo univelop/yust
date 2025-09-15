@@ -387,6 +387,74 @@ class YustDatabaseService implements IYustDatabaseService {
     startAfterDocument: startAfterDocument,
   );
 
+  @override
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+    String? startAfterDocumentId,
+  }) async {
+    T? startAfterDocument;
+    if (startAfterDocumentId != null) {
+      // Create a minimal document object for pagination using doInitDoc
+      startAfterDocument = doInitDoc(docSetup, startAfterDocumentId);
+    }
+
+    final response = await _retryOnException<List<RunQueryResponseElement>>(
+      'getDocumentIds',
+      _getDocumentPath(docSetup),
+      () => _api.projects.databases.documents.runQuery(
+        getQuery(
+          docSetup,
+          filters: filters,
+          limit: limit,
+          startAfterDocument: startAfterDocument,
+          fields: ['id'],
+        ),
+        _getParentPath(docSetup),
+      ),
+    );
+    dbLogCallback?.call(
+      DatabaseLogAction.get,
+      _getDocumentPath(docSetup),
+      response.length,
+    );
+
+    return response
+        .map((e) {
+          if (e.document == null) {
+            return null;
+          }
+          return _extractDocumentId(e.document!);
+        })
+        .whereType<String>()
+        .toList();
+  }
+
+  @override
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int pageSize = 300,
+    String? startAfterDocumentId,
+  }) {
+    T? startAfterDocument;
+    if (startAfterDocumentId != null) {
+      // Create a minimal document object for pagination using doInitDoc
+      startAfterDocument = doInitDoc(docSetup, startAfterDocumentId);
+    }
+
+    return _getDocumentsListChunked(
+      docSetup: docSetup,
+      parent: _getParentPath(docSetup),
+      fnName: 'getDocumentIdsChunked',
+      filters: filters,
+      pageSize: pageSize,
+      startAfterDocument: startAfterDocument,
+      idsOnly: true,
+    ).cast<String>();
+  }
+
   /// Returns a stream of a [YustDoc]s.
   ///
   /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.
@@ -482,10 +550,11 @@ class YustDatabaseService implements IYustDatabaseService {
     required String parent,
     required String fnName,
     required List<YustFilter>? filters,
-    required List<YustOrderBy>? orderBy,
+    List<YustOrderBy>? orderBy,
     required int pageSize,
     required T? startAfterDocument,
     bool forCollectionGroup = false,
+    bool idsOnly = false,
   }) {
     final url = '${_rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
@@ -517,14 +586,15 @@ class YustDatabaseService implements IYustDatabaseService {
         final request = getQuery(
           docSetup,
           filters: filters,
-          // orderBy __name__ is required for pagination
-          orderBy: [
-            ...?orderBy,
-            YustOrderBy(field: '__name__'),
-          ],
+          // For ID-only mode, only use __name__ ordering for pagination
+          // For full documents, use provided orderBy + __name__
+          orderBy: idsOnly
+              ? [YustOrderBy(field: '__name__')]
+              : [...?orderBy, YustOrderBy(field: '__name__')],
           limit: pageSize,
           startAfterDocument: lastDocument,
           forCollectionGroup: forCollectionGroup,
+          fields: idsOnly ? ['id'] : null,
         );
         final body = jsonEncode(request);
 
@@ -560,22 +630,45 @@ class YustDatabaseService implements IYustDatabaseService {
         if (!isDone) {
           final lastDocumentJson = response.last['document'];
 
-          lastDocument = lastDocumentJson == null
-              ? null
-              : _transformDoc<T>(docSetup, Document.fromJson(lastDocumentJson));
+          if (idsOnly) {
+            final lastDocumentId = lastDocumentJson == null
+                ? null
+                : _extractDocumentId(Document.fromJson(lastDocumentJson));
+            lastDocument = lastDocumentId == null
+                ? null
+                : doInitDoc(docSetup, lastDocumentId);
+          } else {
+            lastDocument = lastDocumentJson == null
+                ? null
+                : _transformDoc<T>(
+                    docSetup,
+                    Document.fromJson(lastDocumentJson),
+                  );
+          }
         }
 
         yield* Stream.fromIterable(response);
       }
     }
 
-    return lazyPaginationGenerator()
-        .map<T?>((e) {
-          if (e['document'] == null) return null;
-          return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
-        })
-        .where((e) => e is T)
-        .cast<T>();
+    if (idsOnly) {
+      return lazyPaginationGenerator()
+              .map<String?>((e) {
+                if (e['document'] == null) return null;
+                return _extractDocumentId(Document.fromJson(e['document']));
+              })
+              .where((e) => e is String)
+              .cast<String>()
+          as Stream<T>;
+    } else {
+      return lazyPaginationGenerator()
+          .map<T?>((e) {
+            if (e['document'] == null) return null;
+            return _transformDoc<T>(docSetup, Document.fromJson(e['document']));
+          })
+          .where((e) => e is T)
+          .cast<T>();
+    }
   }
 
   /// Counts the number of documents in a collection.
@@ -1186,6 +1279,7 @@ class YustDatabaseService implements IYustDatabaseService {
     int? limit,
     T? startAfterDocument,
     bool forCollectionGroup = false,
+    List<String>? fields,
   }) {
     final startAfterDocumentJson = startAfterDocument?.toJson();
 
@@ -1235,9 +1329,26 @@ class YustDatabaseService implements IYustDatabaseService {
                     [],
                 before: false,
               ),
+        select: fields != null
+            ? Projection(
+                fields: fields
+                    .map((field) => FieldReference(fieldPath: field))
+                    .toList(),
+              )
+            : null,
       ),
       readTime: readTime?.toUtc().toIso8601String(),
     );
+  }
+
+  /// Extracts the id field from a document.
+  String _extractDocumentId(Document document) {
+    final idValue = document.fields?['id'];
+    if (idValue?.stringValue != null) {
+      return idValue!.stringValue!;
+    }
+
+    throw YustException('Document has no id field: ${document.name}');
   }
 
   RunAggregationQueryRequest _getAggregationQuery<T extends YustDoc>(

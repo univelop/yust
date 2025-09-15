@@ -625,6 +625,42 @@ class YustDatabaseService implements IYustDatabaseService {
   }
 
   @override
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+    String? startAfterDocumentId,
+  }) async {
+    if (startAfterDocumentId != null) {
+      throw YustException('startAfterDocumentId is not supported in Flutter');
+    }
+
+    final docs = await getList<T>(docSetup, filters: filters, limit: limit);
+
+    return docs.map((doc) => doc.id).toList();
+  }
+
+  @override
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int pageSize = 300,
+    String? startAfterDocumentId,
+  }) async* {
+    if (startAfterDocumentId != null) {
+      throw YustException('startAfterDocumentId is not supported in Flutter');
+    }
+
+    await for (final doc in getListChunked<T>(
+      docSetup,
+      filters: filters,
+      pageSize: pageSize,
+    )) {
+      yield doc.id;
+    }
+  }
+
+  @override
   Future<int> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,

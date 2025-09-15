@@ -196,6 +196,47 @@ abstract interface class IYustDatabaseService {
     T? startAfterDocument,
   });
 
+  /// Returns document IDs from the server, if available, otherwise from the cache.
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// [limit] can be passed to only get at most n document IDs.
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+    String? startAfterDocumentId,
+  });
+
+  /// Returns document IDs as a lazy, chunked Stream from the database.
+  ///
+  /// This is much more memory efficient in comparison to other methods,
+  /// because of three reasons:
+  /// 1. It gets the data in multiple requests ([pageSize] each); the raw json
+  ///    strings and raw maps are only in memory while one chunk is processed.
+  /// 2. It loads the records *lazily*, meaning only one chunk is in memory while
+  ///    the records worked with (e.g. via a `await for(...)`)
+  /// 3. It doesn't use the google_apis package for the request, because that
+  ///    has a huge memory leak
+  ///
+  /// NOTE: Because this is a Stream you may only iterate over it once,
+  /// listening to it multiple times will result in a runtime-exception!
+  ///
+  /// [docSetup] is used to read the collection path.
+  ///
+  /// [filters] each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int pageSize = 300,
+    String? startAfterDocumentId,
+  });
+
   /// Returns a stream of a [YustDoc]s.
   ///
   /// Asking the cache and the database for documents. If documents are stored in the cache, the documents are returned instantly and then refreshed by the documents from the server.

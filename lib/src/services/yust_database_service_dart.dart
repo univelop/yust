@@ -835,15 +835,17 @@ class YustDatabaseService implements IYustDatabaseService {
 
   /// Delete all [YustDoc]s in the filter.
   @override
-  Future<void> deleteDocs<T extends YustDoc>(
+  Future<int> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
     // (No logs here, because getListFromDB, and deleteDoc already log)
     final docs = await getListFromDB<T>(docSetup, filters: filters);
+    final count = docs.length;
     for (var doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
+    return count;
   }
 
   /// Delete all [YustDoc]s in the filter as a batch.

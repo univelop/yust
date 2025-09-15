@@ -302,7 +302,7 @@ abstract interface class IYustDatabaseService {
   });
 
   /// Delete all [YustDoc]s in the filter.
-  Future<void> deleteDocs<T extends YustDoc>(
+  Future<int> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   });

@@ -1,3 +1,7 @@
+## 3.29.5 - 2025-09-17
+
+-   Fix for file service functions
+
 ## 3.29.4 - 2025-09-03
 
 -   Fixes for mocked database service

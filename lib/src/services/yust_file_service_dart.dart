@@ -80,7 +80,7 @@ class YustFileService implements IYustFileService {
     // Using the Google Storage API to insert (upload) the file
     await _retryOnException(
       'Upload-File',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.insert(
         object,
         effectiveBucketName,
@@ -125,7 +125,7 @@ class YustFileService implements IYustFileService {
     // Use the Google Storage API to insert (upload) the file
     await _retryOnException(
       'Upload-Stream',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.insert(
         object,
         effectiveBucketName,
@@ -150,10 +150,10 @@ class YustFileService implements IYustFileService {
 
     final object = await _retryOnException(
       'Download-File',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.get(
         effectiveBucketName,
-        '$effectiveBucketName/$path/$name',
+        '$path/$name',
         downloadOptions: DownloadOptions.fullMedia,
       ),
     );
@@ -207,7 +207,7 @@ class YustFileService implements IYustFileService {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     await _retryOnException(
       'deleteFile',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.delete(effectiveBucketName, '$path/$name'),
       shouldIgnoreNotFound: true,
     );
@@ -218,7 +218,7 @@ class YustFileService implements IYustFileService {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     final objects = (await _retryOnException(
       'Get-Folder-Content-For-Deletion',
-      '$effectiveBucketName/$path/',
+      '$path/',
       () => _storageApi.objects.list(effectiveBucketName, prefix: path),
     ))!;
 
@@ -244,7 +244,7 @@ class YustFileService implements IYustFileService {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     final obj = await _retryOnException(
       'Get-File',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
       shouldIgnoreNotFound: true,
     );
@@ -262,7 +262,7 @@ class YustFileService implements IYustFileService {
 
     final object = await _retryOnException(
       'Get-Storage-Obj-For-File-Url',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
     );
     if (object is Object) {
@@ -279,7 +279,7 @@ class YustFileService implements IYustFileService {
         try {
           await _retryOnException(
             'Setting-Token-For-Download-Url',
-            '$effectiveBucketName/$path/$name',
+            '$path/$name',
             () => _storageApi.objects.update(
               object,
               effectiveBucketName,
@@ -305,7 +305,7 @@ class YustFileService implements IYustFileService {
 
     final Object object = await _retryOnException<dynamic>(
       'Get-Storage-Obj-For-File-Url',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.get(effectiveBucketName, '$path/$name'),
     );
 
@@ -334,7 +334,7 @@ class YustFileService implements IYustFileService {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     return (await _retryOnException(
           'List-Files-Of-Folder',
-          '$effectiveBucketName/$path/',
+          '$path/',
           () => _storageApi.objects.list(effectiveBucketName, prefix: path),
         ))?.items ??
         [];
@@ -347,7 +347,7 @@ class YustFileService implements IYustFileService {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     return (await _retryOnException(
           'Get-File-Versions-In-Folder',
-          '$effectiveBucketName/$path/',
+          '$path/',
           () => _storageApi.objects.list(
             effectiveBucketName,
             prefix: path,
@@ -366,7 +366,7 @@ class YustFileService implements IYustFileService {
     final objects = groupBy(
       (await _retryOnException(
             'Get-File-Versions-Grouped',
-            '$effectiveBucketName/$path/',
+            '$path/',
             () => _getFileVersionsInFolder(
               path: path,
               bucketName: effectiveBucketName,
@@ -434,7 +434,7 @@ class YustFileService implements IYustFileService {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     final object = await _retryOnException(
       'Recover-Outdated-File-Get',
-      '$effectiveBucketName/$path/$name',
+      '$path/$name',
       () => _storageApi.objects.get(
         effectiveBucketName,
         '$path/$name',
@@ -444,7 +444,7 @@ class YustFileService implements IYustFileService {
     if (object is Object) {
       await _retryOnException(
         'Recover-Outdated-File-Rewrite',
-        '$effectiveBucketName/$path/$name',
+        '$path/$name',
         () => _storageApi.objects.rewrite(
           object,
           effectiveBucketName,

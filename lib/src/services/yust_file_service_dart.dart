@@ -153,7 +153,7 @@ class YustFileService implements IYustFileService {
       '$effectiveBucketName/$path/$name',
       () => _storageApi.objects.get(
         effectiveBucketName,
-        '$effectiveBucketName/$path/$name',
+        '$path/$name',
         downloadOptions: DownloadOptions.fullMedia,
       ),
     );
@@ -226,7 +226,7 @@ class YustFileService implements IYustFileService {
       for (final object in objects.items!) {
         await _retryOnException(
           'Delete-File-of-Folder',
-          '$path/${object.name!}',
+          '$effectiveBucketName/$path/${object.name!}',
           () => _storageApi.objects.delete(effectiveBucketName, object.name!),
           shouldIgnoreNotFound: true,
         );

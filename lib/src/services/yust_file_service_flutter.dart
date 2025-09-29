@@ -8,6 +8,7 @@ import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 
 import '../util/yust_exception.dart';
+import '../yust.dart';
 import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
 
@@ -62,6 +63,7 @@ class YustFileService implements IYustFileService {
       name: name,
       bytes: bytes,
       metadata: metadata,
+      contentDisposition: contentDisposition,
       bucketName: bucketName,
     );
   }
@@ -73,6 +75,7 @@ class YustFileService implements IYustFileService {
     File? file,
     Uint8List? bytes,
     Map<String, String>? metadata,
+    String? contentDisposition,
     String? bucketName,
   }) async {
     try {
@@ -90,12 +93,16 @@ class YustFileService implements IYustFileService {
         var fileMetadata = SettableMetadata(
           contentType: lookupMimeType(name),
           customMetadata: metadata,
+          contentDisposition:
+              contentDisposition ?? Yust.helpers.createContentDisposition(name),
         );
         uploadTask = storageReference.putFile(file, fileMetadata);
       } else {
         var fileMetadata = SettableMetadata(
           contentType: lookupMimeType(name),
           customMetadata: metadata,
+          contentDisposition:
+              contentDisposition ?? Yust.helpers.createContentDisposition(name),
         );
         uploadTask = storageReference.putData(bytes!, fileMetadata);
       }
@@ -193,6 +200,7 @@ class YustFileService implements IYustFileService {
     return YustFileMetadata(
       size: metadata.size ?? 0,
       token: metadata.customMetadata?['firebaseStorageDownloadTokens'] ?? '',
+      customMetadata: metadata.customMetadata,
     );
   }
 
@@ -249,5 +257,34 @@ class YustFileService implements IYustFileService {
     String? bucketName,
   }) async {
     throw YustException('Not implemented for flutter');
+  }
+
+  @override
+  Future<void> updateContentDisposition({
+    required String path,
+    required String name,
+    required String contentDisposition,
+    String? bucketName,
+  }) async {
+    try {
+      final storage = _getStorageForBucket(bucketName);
+      final storageReference = storage.ref().child(path).child(name);
+
+      // Get current metadata first to preserve it
+      final currentMetadata = await storageReference.getMetadata();
+
+      final newMetadata = SettableMetadata(
+        contentDisposition: contentDisposition,
+        contentType: currentMetadata.contentType,
+        customMetadata: currentMetadata.customMetadata,
+        cacheControl: currentMetadata.cacheControl,
+        contentEncoding: currentMetadata.contentEncoding,
+        contentLanguage: currentMetadata.contentLanguage,
+      );
+
+      await storageReference.updateMetadata(newMetadata);
+    } catch (e) {
+      throw YustException('Error updating content disposition: $e');
+    }
   }
 }

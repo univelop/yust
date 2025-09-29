@@ -290,7 +290,7 @@ abstract interface class IYustDatabaseService {
   ///
   /// [docSetup] is used to read the collection path.
   ///
-  /// [field] is the field over which to sum.
+  /// [fieldPath] is the field over which to sum.
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
@@ -343,6 +343,11 @@ abstract interface class IYustDatabaseService {
   });
 
   /// Delete all [YustDoc]s in the filter.
+  ///
+  /// [filters] Each entry represents a condition that has to be met.
+  /// All of those conditions must be true for each returned entry.
+  ///
+  /// Returns the number of deleted documents.
   Future<int> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,

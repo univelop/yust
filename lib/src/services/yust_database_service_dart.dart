@@ -421,12 +421,7 @@ class YustDatabaseService implements IYustDatabaseService {
     );
 
     return response
-        .map((e) {
-          if (e.document == null) {
-            return null;
-          }
-          return _extractDocumentId(e.document!);
-        })
+        .map((e) => _extractDocumentId(e.document))
         .whereType<String>()
         .toList();
   }
@@ -452,6 +447,7 @@ class YustDatabaseService implements IYustDatabaseService {
       pageSize: pageSize,
       startAfterDocument: startAfterDocument,
       idsOnly: true,
+      orderBy: null,
     ).cast<String>();
   }
 
@@ -550,12 +546,17 @@ class YustDatabaseService implements IYustDatabaseService {
     required String parent,
     required String fnName,
     required List<YustFilter>? filters,
-    List<YustOrderBy>? orderBy,
+    required List<YustOrderBy>? orderBy,
     required int pageSize,
     required T? startAfterDocument,
     bool forCollectionGroup = false,
     bool idsOnly = false,
   }) {
+    assert(
+      orderBy == null || idsOnly == false,
+      'If idsOnly is set to true, orderBy is not supported and must be null.',
+    );
+
     final url = '${_rootUrl}v1/${Uri.encodeFull(parent)}:runQuery';
 
     final unequalFilters = (filters ?? [])
@@ -1342,7 +1343,9 @@ class YustDatabaseService implements IYustDatabaseService {
   }
 
   /// Extracts the id field from a document.
-  String _extractDocumentId(Document document) {
+  String? _extractDocumentId(Document? document) {
+    if (document == null) return null;
+
     final idValue = document.fields?['id'];
     if (idValue?.stringValue != null) {
       return idValue!.stringValue!;

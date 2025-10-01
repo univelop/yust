@@ -1,3 +1,11 @@
+## 3.29.6 - 2025-10-01
+
+-   Implement update mask support for YustUser
+-   Refactor deleteAll to delete via IDs for better performance
+-   Set content disposition by default for uploaded files
+-   Add new functions to edit file metadata and update content disposition
+-   Remove deprecated onSave and onDelete callbacks from YustDoc
+
 ## 3.29.5 - 2025-09-17
 
 -   Fix for file service functions

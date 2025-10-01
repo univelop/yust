@@ -437,7 +437,6 @@ class YustDatabaseService implements IYustDatabaseService {
     bool skipLog = false,
     bool doNotCreate = false,
   }) async {
-    await doc.onSave();
     var collection = _fireStore.collection(_getCollectionPath(docSetup));
     await prepareSaveDoc(
       docSetup,
@@ -626,14 +625,52 @@ class YustDatabaseService implements IYustDatabaseService {
   }
 
   @override
-  Future<void> deleteDocs<T extends YustDoc>(
+  Future<List<String>> getDocumentIds<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+    String? startAfterDocumentId,
+  }) async {
+    if (startAfterDocumentId != null) {
+      throw YustException('startAfterDocumentId is not supported in Flutter');
+    }
+
+    final docs = await getList<T>(docSetup, filters: filters, limit: limit);
+
+    return docs.map((doc) => doc.id).toList();
+  }
+
+  @override
+  Stream<String> getDocumentIdsChunked<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int pageSize = 300,
+    String? startAfterDocumentId,
+  }) async* {
+    if (startAfterDocumentId != null) {
+      throw YustException('startAfterDocumentId is not supported in Flutter');
+    }
+
+    await for (final doc in getListChunked<T>(
+      docSetup,
+      filters: filters,
+      pageSize: pageSize,
+    )) {
+      yield doc.id;
+    }
+  }
+
+  @override
+  Future<int> deleteDocs<T extends YustDoc>(
     YustDocSetup<T> docSetup, {
     List<YustFilter>? filters,
   }) async {
     final docs = await getListFromDB<T>(docSetup, filters: filters);
+    final count = docs.length;
     for (var doc in docs) {
       await deleteDoc<T>(docSetup, doc);
     }
+    return count;
   }
 
   @override
@@ -667,7 +704,6 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    await doc.onDelete();
     final docRef = _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(doc.id);
@@ -685,7 +721,6 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     String docId,
   ) async {
-    await (await get(docSetup, docId))?.onDelete();
     final docRef = _fireStore
         .collection(_getCollectionPath(docSetup))
         .doc(docId);

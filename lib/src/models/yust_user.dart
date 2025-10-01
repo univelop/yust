@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../yust.dart';
@@ -19,69 +20,236 @@ class YustUser extends YustDoc {
   String get searchTag => '${firstName.toLowerCase()} ${lastName.toLowerCase()}'
       .replaceAll(' ', '_');
 
+  String _email;
+
   /// The email of the user.
-  String email;
+  String get email => _email;
+  set email(String s) {
+    if (s == _email) return;
+    updateMask.add('email');
+    _email = s;
+  }
+
+  String _firstName;
 
   /// The first name of the user.
-  String firstName;
+  String get firstName => _firstName;
+  set firstName(String s) {
+    if (s == _firstName) return;
+    updateMask.add('firstName');
+    _firstName = s;
+  }
+
+  String _lastName;
 
   /// The last name of the user.
-  String lastName;
+  String get lastName => _lastName;
+  set lastName(String s) {
+    if (s == _lastName) return;
+    updateMask.add('lastName');
+    _lastName = s;
+  }
+
+  YustGender? _gender;
 
   /// The gender of the user.
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
-  YustGender? gender;
+  YustGender? get gender => _gender;
+  set gender(YustGender? s) {
+    if (s == _gender) return;
+    updateMask.add('gender');
+    _gender = s;
+  }
+
+  @JsonKey(
+    includeFromJson: true,
+    includeToJson: true,
+    name: 'envIds',
+    defaultValue: {},
+  )
+  Map<String, bool?> _envIds;
 
   /// The tenant the user has access to.
-  @JsonKey(defaultValue: {})
-  Map<String, bool?> envIds = {};
+  /// We have a Map instead of a list to be able to filter for active envIds.
+  /// This should not be used directly,
+  /// but rather use [getActiveEnvIds], [hasActiveEnvId], [addEnvId], [removeEnvId] instead.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  Map<String, bool?> get envIds => Map.unmodifiable(_envIds);
+
+  String? _currEnvId;
 
   /// The current tenant the user is using.
-  String? currEnvId;
+  String? get currEnvId => _currEnvId;
+  set currEnvId(String? s) {
+    if (s == _currEnvId) return;
+    updateMask.add('currEnvId');
+    _currEnvId = s;
+  }
+
+  @JsonKey(
+    includeFromJson: true,
+    includeToJson: true,
+    name: 'deviceIds',
+    defaultValue: [],
+  )
+  List<String>? _deviceIds;
 
   /// ID of devices the user is using.
-  List<String>? deviceIds = [];
+  /// This should not be used directly to change the deviceIds,
+  /// but rather use [setDeviceIds], [addDeviceId], [removeDeviceId] instead.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  List<String> get deviceIds => List.unmodifiable(_deviceIds ?? []);
+
+  DateTime? _lastLogin;
 
   /// The timestamp of the last login.
-  DateTime? lastLogin;
+  DateTime? get lastLogin => _lastLogin;
+  set lastLogin(DateTime? s) {
+    if (s == _lastLogin) return;
+    updateMask.add('lastLogin');
+    _lastLogin = s;
+  }
+
+  String? _lastLoginDomain;
 
   /// The domain of the last login.
-  String? lastLoginDomain;
+  String? get lastLoginDomain => _lastLoginDomain;
+  set lastLoginDomain(String? s) {
+    if (s == _lastLoginDomain) return;
+    updateMask.add('lastLoginDomain');
+    _lastLoginDomain = s;
+  }
+
+  YustAuthenticationMethod? _authenticationMethod;
 
   /// The authentication method.
   @JsonKey(unknownEnumValue: JsonKey.nullForUndefinedEnumValue)
-  YustAuthenticationMethod? authenticationMethod;
+  YustAuthenticationMethod? get authenticationMethod => _authenticationMethod;
+  set authenticationMethod(YustAuthenticationMethod? s) {
+    if (s == _authenticationMethod) return;
+    updateMask.add('authenticationMethod');
+    _authenticationMethod = s;
+  }
+
+  String? _domain;
 
   /// The domain of the user mail.
-  String? domain;
+  String? get domain => _domain;
+  set domain(String? s) {
+    if (s == _domain) return;
+    updateMask.add('domain');
+    _domain = s;
+  }
+
+  String? _authId;
 
   /// The link to the authentication user uid.
-  String? authId;
+  String? get authId => _authId;
+  set authId(String? s) {
+    if (s == _authId) return;
+    updateMask.add('authId');
+    _authId = s;
+  }
+
+  YustImage? _profilePicture;
 
   /// Profile picture.
-  YustImage? profilePicture;
+  YustImage? get profilePicture => _profilePicture;
+  set profilePicture(YustImage? s) {
+    if (s == _profilePicture) return;
+    updateMask.add('profilePicture');
+    _profilePicture = s;
+  }
+
+  String _locale;
 
   /// Locale
-  String locale;
+  String get locale => _locale;
+  set locale(String s) {
+    if (s == _locale) return;
+    updateMask.add('locale');
+    _locale = s;
+  }
+
+  @JsonKey(
+    includeFromJson: true,
+    includeToJson: true,
+    name: 'userAttributes',
+    defaultValue: {},
+  )
+  Map<String, dynamic> _userAttributes;
 
   /// The attributes for a user.
-  @JsonKey(defaultValue: {})
-  Map<String, dynamic> userAttributes = {};
+  /// This should not be used directly to change the userAttributes,
+  /// but rather use [setAttribute] instead.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  Map<String, dynamic> get userAttributes => Map.unmodifiable(_userAttributes);
 
   YustUser({
-    required this.email,
-    required this.firstName,
-    required this.lastName,
-    this.gender,
-    this.authId,
+    required String email,
+    required String firstName,
+    required String lastName,
+    YustGender? gender,
+    Map<String, bool?>? envIds,
+    List<String>? deviceIds,
+    String? authId,
     String? locale,
-  }) : locale = locale ?? 'de';
+    Map<String, dynamic>? userAttributes,
+  }) : _email = email,
+       _firstName = firstName,
+       _lastName = lastName,
+       _gender = gender,
+       _envIds = envIds ?? {},
+       _deviceIds = deviceIds,
+       _authId = authId,
+       _locale = locale ?? 'de',
+       _userAttributes = userAttributes ?? {};
 
   factory YustUser.fromJson(Map<String, dynamic> json) =>
       _$YustUserFromJson(json);
 
   @override
   Map<String, dynamic> toJson() => _$YustUserToJson(this);
+
+  /// Returns the envIds the User has access to.
+  Iterable<String> getActiveEnvIds() =>
+      _envIds.keys.where((e) => _envIds[e] == true);
+
+  /// Checks if the User has access to the given [envId].
+  bool hasActiveEnvId(String? envId) => envId != null && _envIds[envId] == true;
+
+  /// Adds an [envId] to list of envIds the User has access to.
+  void addEnvId(String envId) {
+    if (_envIds[envId] == true) return;
+    updateMask.add('envIds.$envId');
+    _envIds[envId] = true;
+  }
+
+  /// Removes the [envId] from the list of envIds the User has access to.
+  void removeEnvId(String envId) {
+    if (!_envIds.containsKey(envId)) return;
+    updateMask.add('envIds');
+    _envIds.remove(envId);
+  }
+
+  /// Sets the deviceIds of the user.
+  void setDeviceIds(List<String> deviceIds) {
+    if (UnorderedIterableEquality().equals(this.deviceIds, deviceIds)) return;
+    updateMask.add('deviceIds');
+    _deviceIds = deviceIds;
+  }
+
+  /// Adds a deviceId to the user.
+  void addDeviceId(String deviceId) {
+    if (deviceIds.contains(deviceId)) return;
+    setDeviceIds([...deviceIds, deviceId]);
+  }
+
+  /// Removes a deviceId from the user.
+  void removeDeviceId(String deviceId) {
+    if (!deviceIds.contains(deviceId)) return;
+    setDeviceIds(deviceIds.where((e) => e != deviceId).toList());
+  }
 
   /// Saves the current [DateTime] as the last login and the current domain.
   Future<void> setLoginFields({Yust? yust}) async {
@@ -128,22 +296,34 @@ class YustUser extends YustDoc {
 
   /// This method returns the value of the attribute with the given key.
   T getAttribute<T>(String key, T defaultValue) {
-    if (userAttributes[key] == null) return defaultValue;
+    if (_userAttributes[key] == null) return defaultValue;
     if (T == DateTime) {
-      return DateTime.parse(userAttributes[key] as String) as T;
+      return DateTime.parse(_userAttributes[key] as String) as T;
     }
-    return userAttributes[key];
+    return _userAttributes[key];
   }
 
   /// This method returns the value of the attribute with the given key or null if the attribute does not exist.
-  T? getAttributeOrNull<T>(String key) => userAttributes[key];
+  T? getAttributeOrNull<T>(String key) => _userAttributes[key];
 
   /// This method sets the value of the attribute with the given key.
-  void setAttribute(String key, dynamic value) => userAttributes[key] = value;
+  void setAttribute(String key, dynamic value) {
+    if (_userAttributes[key] == value) return;
+    updateMask.add('userAttributes.$key');
+    _userAttributes[key] = value;
+  }
+
+  void removeAttribute(String key) {
+    if (!_userAttributes.containsKey(key)) return;
+    updateMask.add('userAttributes');
+    _userAttributes.remove(key);
+  }
 }
 
-enum YustGender { male, female }
+/// The gender of the user.
+enum YustGender { male, female, nonBinary, other, preferNotToSay }
 
+/// The authentication method of the user.
 enum YustAuthenticationMethod {
   mail('Email'),
   microsoft('Microsoft'),

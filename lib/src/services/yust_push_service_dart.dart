@@ -56,7 +56,7 @@ class YustPushService {
     )?
     onErrorForDevice,
   }) async {
-    for (final deviceId in user.deviceIds ?? []) {
+    for (final deviceId in user.deviceIds) {
       try {
         await sendToDevice(
           deviceId: deviceId,

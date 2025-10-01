@@ -10,10 +10,14 @@ class YustSnapshot<T extends YustDoc> {
   YustSnapshot({this.document, this.state = SnapshotState.loading});
 
   static Stream<YustSnapshot<V>> mapStream<V extends YustDoc>(
-      Stream<V?> stream) {
-    return stream.map((document) => YustSnapshot(
+    Stream<V?> stream,
+  ) {
+    return stream.map(
+      (document) => YustSnapshot(
         document: document,
-        state: document == null ? SnapshotState.error : SnapshotState.loaded));
+        state: document == null ? SnapshotState.error : SnapshotState.loaded,
+      ),
+    );
   }
 
   static Stream<YustSnapshot<V>> emptyStream<V extends YustDoc>() =>

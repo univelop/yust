@@ -3,11 +3,7 @@ import '../models/yust_doc_setup.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
 
-enum AggregationType {
-  count,
-  sum,
-  avg;
-}
+enum AggregationType { count, sum, avg }
 
 typedef AggregationResult = ({double? result, int count});
 

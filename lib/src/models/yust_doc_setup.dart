@@ -24,10 +24,7 @@ class YustDocSetup<T extends YustDoc> {
     required String collectionName,
     required T Function(Map<String, dynamic> json) fromJson,
   }) {
-    return YustDocSetup(
-      collectionName: collectionName,
-      fromJson: fromJson,
-    );
+    return YustDocSetup(collectionName: collectionName, fromJson: fromJson);
   }
 
   /// The ID of the tenant to use.

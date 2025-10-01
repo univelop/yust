@@ -11,8 +11,13 @@ class YustAuthServiceMocked implements YustAuthService {
 
   @override
   Future<YustUser?> createAccount(
-      String firstName, String lastName, String email, String password,
-      {YustGender? gender, bool useOAuth = false}) {
+    String firstName,
+    String lastName,
+    String email,
+    String password, {
+    YustGender? gender,
+    bool useOAuth = false,
+  }) {
     final id = Uuid().v4();
 
     return YustAuthServiceShared.createYustUser(
@@ -76,22 +81,26 @@ class YustAuthServiceMocked implements YustAuthService {
       throw UnimplementedError();
 
   @override
-  Future<YustUser?> signInWithOpenId(String providerId,
-          {bool redirect = false}) =>
-      throw UnimplementedError();
+  Future<YustUser?> signInWithOpenId(
+    String providerId, {
+    bool redirect = false,
+  }) => throw UnimplementedError();
 
   @override
   Future<void> signOut() => throw UnimplementedError();
 
   @override
-  Future<YustUser> addUserNamePasswordToAccount(String email, String password,
-          {List<String> allowedProviderIds = const []}) =>
-      throw UnimplementedError();
+  Future<YustUser> addUserNamePasswordToAccount(
+    String email,
+    String password, {
+    List<String> allowedProviderIds = const [],
+  }) => throw UnimplementedError();
 
   @override
-  Future<String> getAuthTokenForAuthId(String authId,
-          {String? overrideEmail}) =>
-      throw UnimplementedError();
+  Future<String> getAuthTokenForAuthId(
+    String authId, {
+    String? overrideEmail,
+  }) => throw UnimplementedError();
 
   @override
   Future<bool?> isEmailVerified() => throw UnimplementedError();

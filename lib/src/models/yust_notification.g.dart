@@ -6,21 +6,21 @@ part of 'yust_notification.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-YustNotification _$YustNotificationFromJson(Map json) => YustNotification(
-      forCollection: json['forCollection'] as String?,
-      forDocId: json['forDocId'] as String?,
-      deepLink: json['deepLink'] as String?,
-      title: json['title'] as String?,
-      body: json['body'] as String?,
-      dispatchAt: json['dispatchAt'] == null
-          ? null
-          : DateTime.parse(json['dispatchAt'] as String),
-      delivered: json['delivered'] as bool? ?? false,
-      data: (json['data'] as Map?)?.map(
-            (k, e) => MapEntry(k as String, e),
-          ) ??
-          const {},
-    )
+YustNotification _$YustNotificationFromJson(Map json) =>
+    YustNotification(
+        forCollection: json['forCollection'] as String?,
+        forDocId: json['forDocId'] as String?,
+        deepLink: json['deepLink'] as String?,
+        title: json['title'] as String?,
+        body: json['body'] as String?,
+        dispatchAt: json['dispatchAt'] == null
+            ? null
+            : DateTime.parse(json['dispatchAt'] as String),
+        delivered: json['delivered'] as bool? ?? false,
+        data:
+            (json['data'] as Map?)?.map((k, e) => MapEntry(k as String, e)) ??
+            const {},
+      )
       ..id = json['id'] as String
       ..createdAt = json['createdAt'] == null
           ? null

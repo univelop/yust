@@ -321,7 +321,7 @@ class YustUser extends YustDoc {
 }
 
 /// The gender of the user.
-enum YustGender { male, female }
+enum YustGender { male, female, nonBinary, other, preferNotToSay }
 
 /// The authentication method of the user.
 enum YustAuthenticationMethod {

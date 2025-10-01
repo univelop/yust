@@ -28,8 +28,11 @@ class YustPushService {
     required String body,
     String? image,
     FutureOr<void> Function(
-            String deviceId, Object error, StackTrace stackTrace)?
-        onErrorForDevice,
+      String deviceId,
+      Object error,
+      StackTrace stackTrace,
+    )?
+    onErrorForDevice,
   }) async {
     throw UnimplementedError();
   }

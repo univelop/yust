@@ -40,8 +40,9 @@ class GoogleCloudHelpers {
       //     // Have one Cache over all univelop tabs (IndexDB)
       //     .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
     } else {
-      FirebaseFirestore.instance.settings =
-          const Settings(persistenceEnabled: true);
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+      );
     }
     return null;
   }
@@ -70,9 +71,10 @@ class GoogleCloudHelpers {
     if (value is Timestamp) {
       return value.toDate().toLocal();
     } else if (value is Map && value['_seconds'] != null) {
-      return Timestamp(value['_seconds'], value['_nanoseconds'])
-          .toDate()
-          .toLocal();
+      return Timestamp(
+        value['_seconds'],
+        value['_nanoseconds'],
+      ).toDate().toLocal();
     } else {
       return value;
     }
@@ -88,8 +90,10 @@ class GoogleCloudHelpers {
   }
 
   /// Just a stub for now. See google_cloud_helpers_dart.dart for documentation.
-  static Future<AutoRefreshingAuthClient> createAuthClient(
-      {required List<String> scopes, String? pathToServiceAccountJson}) async {
+  static Future<AutoRefreshingAuthClient> createAuthClient({
+    required List<String> scopes,
+    String? pathToServiceAccountJson,
+  }) async {
     throw UnimplementedError();
   }
 

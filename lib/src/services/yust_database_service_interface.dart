@@ -38,10 +38,7 @@ abstract interface class IYustDatabaseService {
   /// The cached documents may not be up to date!
   ///
   /// Be careful with offline functionality.
-  Future<T?> get<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  );
+  Future<T?> get<T extends YustDoc>(YustDocSetup<T> docSetup, String id);
 
   /// Returns a [YustDoc] from the cache, if available, otherwise from the server.
   /// Be careful: The cached documents may not be up to date!
@@ -64,10 +61,7 @@ abstract interface class IYustDatabaseService {
   /// Returns a stream of a [YustDoc].
   ///
   /// Whenever another user makes a change, a new version of the document is returned.
-  Stream<T?> getStream<T extends YustDoc>(
-    YustDocSetup<T> docSetup,
-    String id,
-  );
+  Stream<T?> getStream<T extends YustDoc>(YustDocSetup<T> docSetup, String id);
 
   /// Returns the first [YustDoc] in a list from the server, if available, otherwise from the cache.
   /// The cached documents may not be up to date!
@@ -245,8 +239,11 @@ abstract interface class IYustDatabaseService {
   ///
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
-  Future<int> count<T extends YustDoc>(YustDocSetup<T> docSetup,
-      {List<YustFilter>? filters, int? limit});
+  Future<int> count<T extends YustDoc>(
+    YustDocSetup<T> docSetup, {
+    List<YustFilter>? filters,
+    int? limit,
+  });
 
   /// Returns the sum over a field of multiple documents in a collection.
   ///
@@ -257,8 +254,11 @@ abstract interface class IYustDatabaseService {
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   Future<AggregationResult> sum<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String fieldPath,
-      {List<YustFilter>? filters, int? limit});
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+    int? limit,
+  });
 
   /// Returns the sum over a field of multiple documents in a collection.
   ///
@@ -269,8 +269,11 @@ abstract interface class IYustDatabaseService {
   /// [filters] Each entry represents a condition that has to be met.
   /// All of those conditions must be true for each returned entry.
   Future<AggregationResult> avg<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String fieldPath,
-      {List<YustFilter>? filters, int? limit});
+    YustDocSetup<T> docSetup,
+    String fieldPath, {
+    List<YustFilter>? filters,
+    int? limit,
+  });
 
   /// Saves a document.
   ///
@@ -314,7 +317,9 @@ abstract interface class IYustDatabaseService {
 
   /// Delete a [YustDoc] by the ID.
   Future<void> deleteDocById<T extends YustDoc>(
-      YustDocSetup<T> docSetup, String id);
+    YustDocSetup<T> docSetup,
+    String id,
+  );
 
   /// Initializes a [YustDoc] and saves it.
   ///
@@ -354,8 +359,11 @@ abstract interface class IYustDatabaseService {
 
   /// Saves a YustDoc and finishes a transaction.
   Future<void> commitTransaction(
-      String transaction, YustDocSetup docSetup, YustDoc doc,
-      {bool useUpdateMask = false});
+    String transaction,
+    YustDocSetup docSetup,
+    YustDoc doc, {
+    bool useUpdateMask = false,
+  });
 
   // Makes an empty commit, thereby releasing the lock on the document.
   Future<void> commitEmptyTransaction(String transaction);

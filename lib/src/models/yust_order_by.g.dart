@@ -7,9 +7,9 @@ part of 'yust_order_by.dart';
 // **************************************************************************
 
 YustOrderBy _$YustOrderByFromJson(Map json) => YustOrderBy(
-  field: json['field'] as String,
-  descending: json['descending'] as bool? ?? false,
-);
+      field: json['field'] as String,
+      descending: json['descending'] as bool? ?? false,
+    );
 
 Map<String, dynamic> _$YustOrderByToJson(YustOrderBy instance) =>
     <String, dynamic>{

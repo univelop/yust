@@ -23,11 +23,14 @@ class YustImage extends YustFile {
     super.processing = false,
     super.lastError,
     super.createdAt,
+    super.path,
+    super.thumbnails,
     this.location,
   });
 
   YustGeoLocation? location;
 
+  /// Creates a new image from a file.
   factory YustImage.fromYustFile(YustFile file) => file is YustImage
       ? file
       : YustImage(
@@ -45,6 +48,8 @@ class YustImage extends YustFile {
           processing: file.processing,
           lastError: file.lastError,
           createdAt: file.createdAt,
+          path: file.path,
+          thumbnails: file.thumbnails,
         );
 
   /// Create a list of images from a list of files

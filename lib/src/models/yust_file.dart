@@ -1,12 +1,29 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'yust_file.g.dart';
 
 typedef YustFileJson = Map<String, dynamic>;
 typedef YustFilesJson = List<YustFileJson>;
+
+/// The size of the thumbnail.
+enum YustFileThumbnailSize {
+  small;
+
+  /// Converts a JSON string to a [YustFileThumbnailSize].
+  ///
+  /// If the size is not found, [YustFileThumbnailSize.small] is returned.
+  static YustFileThumbnailSize fromJson(String size) =>
+      YustFileThumbnailSize.values.firstWhereOrNull((e) => e.name == size) ??
+      YustFileThumbnailSize.small;
+
+  /// Converts a [YustFileThumbnailSize] to a JSON string.
+  String toJson() => name;
+}
 
 /// A binary file handled by database and file storage.
 /// A file is stored in Firebase Storage and linked to a document in the database.
@@ -30,6 +47,14 @@ class YustFile {
   ///
   /// On mobile devices, this can also be the time the file was uploaded into device cache.
   DateTime? createdAt;
+
+  /// The path to the file in the storage.
+  String? path;
+
+  /// The thumbnails of the file.
+  ///
+  /// Map of thumbnail size to path in the storage.
+  Map<YustFileThumbnailSize, String>? thumbnails;
 
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -91,6 +116,8 @@ class YustFile {
     this.processing = false,
     this.lastError,
     this.createdAt,
+    this.path,
+    this.thumbnails,
     bool setCreatedAtToNow = true,
   }) {
     if (setCreatedAtToNow) {
@@ -111,6 +138,11 @@ class YustFile {
       createdAt: json['createdAt'] == null
           ? null
           : DateTime.parse(json['createdAt'] as String),
+      path: json['path'] as String?,
+      thumbnails: (json['thumbnails'] as Map<String, dynamic>?)?.map(
+        (key, value) =>
+            MapEntry(YustFileThumbnailSize.fromJson(key), value as String),
+      ),
       setCreatedAtToNow: false,
     );
   }
@@ -122,13 +154,6 @@ class YustFile {
 
   /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
-
-  void update(YustFile file) {
-    url = file.url;
-    name = file.name;
-    hash = file.hash;
-    createdAt = file.createdAt;
-  }
 
   /// Converts the file to JSON for local device. Only relevant attributes are converted.
   ///
@@ -147,6 +172,17 @@ class YustFile {
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : null,
+      path: json['path'] as String?,
+      thumbnails: json['thumbnails'] != null
+          ? (jsonDecode(json['thumbnails'] as String) as Map<String, dynamic>)
+                .map(
+                  (key, value) => MapEntry(
+                    YustFileThumbnailSize.fromJson(key),
+                    value as String,
+                  ),
+                )
+          : null,
+
       setCreatedAtToNow: false,
     );
   }
@@ -177,6 +213,8 @@ class YustFile {
       'modifiedAt': modifiedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
       'type': type,
+      'path': path,
+      'thumbnails': thumbnails != null ? jsonEncode(thumbnails) : null,
     };
   }
 
@@ -190,6 +228,9 @@ class YustFile {
         return url;
       case 'createdAt':
         return createdAt;
+      case 'path':
+        return path;
+      case 'thumbnails': // Thumbnails should not be accessible
       default:
         throw ArgumentError();
     }

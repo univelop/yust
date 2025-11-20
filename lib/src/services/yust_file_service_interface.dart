@@ -138,4 +138,29 @@ abstract interface class IYustFileService {
     required String contentDisposition,
     String? bucketName,
   });
+
+  /// Creates a signed URL for a file at the given [path] and [name].
+  /// The [validFor] parameter limits the validity of the URL.
+  /// [cdnBaseUrl] example: "https://cdn.example.com"
+  /// [cdnKeyName] is the key name configured on the backend.
+  /// [cdnKeyBase64] is the base64-encoded signing key value.
+  Future<String> createSignedUrlForFile({
+    required String path,
+    required String name,
+    required Duration validFor,
+    required String cdnBaseUrl,
+    required String cdnKeyName,
+    required String cdnKeyBase64,
+  });
+
+  /// Creates a signed URL for a folder at the given [path], using URLPrefix signing.
+  /// The returned URL can be used (and its query string reused) to access
+  /// any file under that folder while it’s valid.
+  Future<String> createSignedUrlForFolder({
+    required String path,
+    required Duration validFor,
+    required String cdnBaseUrl,
+    required String cdnKeyName,
+    required String cdnKeyBase64,
+  });
 }

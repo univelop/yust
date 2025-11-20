@@ -7,7 +7,7 @@ class GoogleCloudCdnHelper {
     required this.baseUrl,
     required this.keyName,
     required this.keyBase64,
-  }) : _keyBytes = base64Decode(keyBase64);
+  }) : _keyBytes = base64Url.decode(keyBase64);
 
   final String baseUrl;
   final String keyName;
@@ -18,11 +18,15 @@ class GoogleCloudCdnHelper {
     required String objectPath,
     required Duration validFor,
   }) {
-    final fullUrl = _join(baseUrl, objectPath);
+    final fullUrlWithPort = _join(baseUrl, objectPath);
+    final fullUrl = _stripPort(fullUrlWithPort);
     final expires = _unix(validFor);
 
+    final uri = Uri.parse(fullUrl);
+    final separator = uri.hasQuery ? '&' : '?';
+    final keyNameEncoded = Uri.encodeQueryComponent(keyName);
     final stringToSign =
-        '$fullUrl?Expires=$expires&KeyName=${Uri.encodeQueryComponent(keyName)}';
+        '$fullUrl$separator&Expires=$expires&KeyName=$keyNameEncoded';
 
     final signature = _sign(stringToSign);
 
@@ -49,6 +53,14 @@ class GoogleCloudCdnHelper {
         '&Expires=$expires'
         '&KeyName=${Uri.encodeQueryComponent(keyName)}'
         '&Signature=$signature';
+  }
+
+  String _stripPort(String url) {
+    final uri = Uri.parse(url);
+    if (uri.hasPort == false) return url;
+
+    final normalizedUri = uri.replace(port: null);
+    return normalizedUri.toString();
   }
 
   int _unix(Duration validFor) {

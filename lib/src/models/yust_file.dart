@@ -139,7 +139,7 @@ class YustFile {
           ? null
           : DateTime.parse(json['createdAt'] as String),
       path: json['path'] as String?,
-      thumbnails: (json['thumbnails'] as Map<String, dynamic>?)?.map(
+      thumbnails: (json['thumbnails'] as Map?)?.map(
         (key, value) =>
             MapEntry(YustFileThumbnailSize.fromJson(key), value as String),
       ),
@@ -183,13 +183,12 @@ class YustFile {
           : null,
       path: json['path'] as String?,
       thumbnails: json['thumbnails'] != null
-          ? (jsonDecode(json['thumbnails'] as String) as Map<String, dynamic>)
-                .map(
-                  (key, value) => MapEntry(
-                    YustFileThumbnailSize.fromJson(key),
-                    value as String,
-                  ),
-                )
+          ? (jsonDecode(json['thumbnails'] as String) as Map).map(
+              (key, value) => MapEntry(
+                YustFileThumbnailSize.fromJson(key),
+                value as String,
+              ),
+            )
           : null,
 
       setCreatedAtToNow: false,

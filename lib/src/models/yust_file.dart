@@ -227,6 +227,27 @@ class YustFile {
     };
   }
 
+  /// Creates a new file with the same properties but with a new URL.
+  YustFile copyWithUrl(String? url) => YustFile(
+    key: key,
+    name: name,
+    modifiedAt: modifiedAt,
+    url: url,
+    hash: hash,
+    file: file,
+    bytes: bytes,
+    devicePath: devicePath,
+    storageFolderPath: storageFolderPath,
+    linkedDocPath: linkedDocPath,
+    linkedDocAttribute: linkedDocAttribute,
+    processing: processing,
+    lastError: lastError,
+    createdAt: createdAt,
+    path: path,
+    thumbnails: thumbnails,
+    setCreatedAtToNow: false,
+  );
+
   dynamic operator [](String key) {
     switch (key) {
       case 'name':

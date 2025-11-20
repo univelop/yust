@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart';
 
+import 'google_cloud_cdn_helper.dart';
+
 /// Yust helpers
 class YustHelpers {
   /// Mock the current time in UTC. Only use this in tests!!!
@@ -374,4 +376,43 @@ class YustHelpers {
   /// Creates a proper Content-Disposition header value with UTF-8 encoded filename
   String createContentDisposition(String filename) =>
       'inline; filename*=UTF-8\'\'${Uri.encodeComponent(filename)}';
+
+  /// Creates a signed URL for a file at the given [path] and [name].
+  /// The [validFor] parameter limits the validity of the URL.
+  /// [cdnBaseUrl] example: "https://cdn.example.com"
+  /// [cdnKeyName] is the key name configured on the backend.
+  /// [cdnKeyBase64] is the base64-encoded signing key value.
+  String createSignedUrlForFile({
+    required String path,
+    required String name,
+    required Duration validFor,
+    required String cdnBaseUrl,
+    required String cdnKeyName,
+    required String cdnKeyBase64,
+  }) {
+    final helper = GoogleCloudCdnHelper(
+      baseUrl: cdnBaseUrl,
+      keyName: cdnKeyName,
+      keyBase64: cdnKeyBase64,
+    );
+    return helper.signFilePath(objectPath: '$path/$name', validFor: validFor);
+  }
+
+  /// Creates a signed URL for a folder at the given [path], using URLPrefix signing.
+  /// The returned URL can be used (and its query string reused) to access
+  /// any file under that folder while it’s valid.
+  String createSignedUrlForFolder({
+    required String path,
+    required Duration validFor,
+    required String cdnBaseUrl,
+    required String cdnKeyName,
+    required String cdnKeyBase64,
+  }) {
+    final helper = GoogleCloudCdnHelper(
+      baseUrl: cdnBaseUrl,
+      keyName: cdnKeyName,
+      keyBase64: cdnKeyBase64,
+    );
+    return helper.signPrefix(prefixPath: path, validFor: validFor);
+  }
 }

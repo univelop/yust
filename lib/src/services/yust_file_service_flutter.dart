@@ -287,27 +287,4 @@ class YustFileService implements IYustFileService {
       throw YustException('Error updating content disposition: $e');
     }
   }
-
-  @override
-  Future<String> createSignedUrlForFile({
-    required String path,
-    required String name,
-    required Duration validFor,
-    required String cdnBaseUrl,
-    required String cdnKeyName,
-    required String cdnKeyBase64,
-  }) async {
-    throw YustException('Not implemented for flutter');
-  }
-
-  @override
-  Future<String> createSignedUrlForFolder({
-    required String path,
-    required Duration validFor,
-    required String cdnBaseUrl,
-    required String cdnKeyName,
-    required String cdnKeyBase64,
-  }) async {
-    throw YustException('Not implemented for flutter');
-  }
 }

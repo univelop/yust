@@ -9,7 +9,6 @@ import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../yust.dart';
-import '../util/google_cloud_cdn_helper.dart';
 import 'yust_file_service_interface.dart';
 import 'yust_file_service_shared.dart';
 
@@ -495,39 +494,6 @@ class YustFileService implements IYustFileService {
       () =>
           _storageApi.objects.patch(object, effectiveBucketName, object.name!),
     );
-  }
-
-  @override
-  Future<String> createSignedUrlForFile({
-    required String path,
-    required String name,
-    required Duration validFor,
-    required String cdnBaseUrl,
-    required String cdnKeyName,
-    required String cdnKeyBase64,
-  }) async {
-    final helper = GoogleCloudCdnHelper(
-      baseUrl: cdnBaseUrl,
-      keyName: cdnKeyName,
-      keyBase64: cdnKeyBase64,
-    );
-    return helper.signFilePath(objectPath: '$path/$name', validFor: validFor);
-  }
-
-  @override
-  Future<String> createSignedUrlForFolder({
-    required String path,
-    required Duration validFor,
-    required String cdnBaseUrl,
-    required String cdnKeyName,
-    required String cdnKeyBase64,
-  }) async {
-    final helper = GoogleCloudCdnHelper(
-      baseUrl: cdnBaseUrl,
-      keyName: cdnKeyName,
-      keyBase64: cdnKeyBase64,
-    );
-    return helper.signPrefix(prefixPath: path, validFor: validFor);
   }
 
   /// Retries the given function if a TlsException, ClientException or YustBadGatewayException occurs.

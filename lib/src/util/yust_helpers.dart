@@ -389,13 +389,18 @@ class YustHelpers {
     required String cdnBaseUrl,
     required String cdnKeyName,
     required String cdnKeyBase64,
+    Map<String, String>? additionalQueryParams,
   }) {
     final helper = GoogleCloudCdnHelper(
       baseUrl: cdnBaseUrl,
       keyName: cdnKeyName,
       keyBase64: cdnKeyBase64,
     );
-    return helper.signFilePath(objectPath: '$path/$name', validFor: validFor);
+    return helper.signFilePath(
+      objectPath: '$path/$name',
+      validFor: validFor,
+      additionalQueryParams: additionalQueryParams,
+    );
   }
 
   /// Creates a signed URL for a folder at the given [path], using URLPrefix signing.

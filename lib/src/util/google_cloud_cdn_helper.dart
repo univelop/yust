@@ -9,24 +9,46 @@ class GoogleCloudCdnHelper {
     required this.keyBase64,
   }) : _keyBytes = base64Url.decode(keyBase64);
 
+  /// The base URL of the CDN.
   final String baseUrl;
+
+  /// The key name of the CDN.
   final String keyName;
+
+  /// The key base64 of the CDN.
   final String keyBase64;
+
+  /// Decoded key bytes
   final List<int> _keyBytes;
 
+  /// Creates a signed URL for a file at the given [objectPath].
+  ///
+  /// [additionalQueryParams] are additional query parameters to be added to the URL.
+  /// These will be signed and must exist in the same order in the signed URL.
   String signFilePath({
     required String objectPath,
     required Duration validFor,
+    Map<String, String>? additionalQueryParams,
   }) {
     final fullUrlWithPort = _join(baseUrl, objectPath);
-    final fullUrl = _stripPort(fullUrlWithPort);
+    var uriWithPort = Uri.parse(fullUrlWithPort);
+
+    // Add optional query parameters to the url that will be signed
+    final queryParams = Map<String, String>.from(uriWithPort.queryParameters);
+    if (additionalQueryParams != null) {
+      queryParams.addAll(additionalQueryParams);
+    }
+    uriWithPort = uriWithPort.replace(queryParameters: queryParams);
+
+    // Strip the port because cdn otherwise rejects it
+    final fullUrl = _stripPort(uriWithPort.toString());
     final expires = _unix(validFor);
 
     final uri = Uri.parse(fullUrl);
     final separator = uri.hasQuery ? '&' : '?';
     final keyNameEncoded = Uri.encodeQueryComponent(keyName);
     final stringToSign =
-        '$fullUrl$separator&Expires=$expires&KeyName=$keyNameEncoded';
+        '$fullUrl${separator}Expires=$expires&KeyName=$keyNameEncoded';
 
     final signature = _sign(stringToSign);
 

@@ -403,9 +403,11 @@ class YustHelpers {
     );
   }
 
-  /// Creates a signed URL for a folder at the given [path], using URLPrefix signing.
-  /// The returned URL can be used (and its query string reused) to access
-  /// any file under that folder while it’s valid.
+  /// Creates a signed URL Part for a folder at the given [path], using URLPrefix signing.
+  ///
+  /// Returns only the query string to append to the requested file url.
+  /// e.g. `URLPrefix=...`
+  ///
   String createSignedUrlForFolder({
     required String path,
     required Duration validFor,

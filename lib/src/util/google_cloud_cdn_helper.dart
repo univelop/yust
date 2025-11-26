@@ -60,7 +60,8 @@ class GoogleCloudCdnHelper {
   /// "URLPrefix=...&Expires=...&KeyName=...&Signature=..."
   String signPrefix({required String prefixPath, required Duration validFor}) {
     final normalized = _normalizePrefix(prefixPath);
-    final fullPrefix = _join(baseUrl, normalized);
+    final baseWithoutPort = _stripPort(baseUrl);
+    final fullPrefix = _join(baseWithoutPort, normalized);
 
     final expires = _unix(validFor);
 

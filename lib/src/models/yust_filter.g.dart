@@ -7,10 +7,10 @@ part of 'yust_filter.dart';
 // **************************************************************************
 
 YustFilter _$YustFilterFromJson(Map json) => YustFilter(
-      field: json['field'] as String,
-      comparator: YustFilter.comparatorFromString(json['comparator'] as String),
-      value: json['value'],
-    );
+  field: json['field'] as String,
+  comparator: YustFilter.comparatorFromString(json['comparator'] as String),
+  value: json['value'],
+);
 
 Map<String, dynamic> _$YustFilterToJson(YustFilter instance) =>
     <String, dynamic>{

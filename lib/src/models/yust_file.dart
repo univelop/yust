@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../yust.dart';
+
 part 'yust_file.g.dart';
 
 typedef YustFileJson = Map<String, dynamic>;
@@ -288,4 +290,28 @@ class YustFile {
 
     return name!.contains('.') ? name!.split('.').last : '';
   }
+
+  bool hasThumbnail() => thumbnails?.isNotEmpty ?? false;
+
+  String? getOriginalUrl() {
+    final baseUrl = Yust.fileAccessService.originalCdnBaseUrl;
+    final grant = Yust.fileAccessService.getGrantForFile(this);
+
+    if (baseUrl == null || grant == null || path == null) return url;
+
+    return '${_tryAppendSlash(baseUrl)}$path?${grant.originalSignedUrlPart}';
+  }
+
+  String? getThumbnailUrl() {
+    final baseUrl = Yust.fileAccessService.thumbnailCdnBaseUrl;
+    final grant = Yust.fileAccessService.getGrantForFile(this);
+
+    if (baseUrl == null || grant == null || !hasThumbnail()) return null;
+    final thumbnailPath = thumbnails![YustFileThumbnailSize.small];
+
+    return '${_tryAppendSlash(baseUrl)}$thumbnailPath?${grant.thumbnailSignedUrlPart}';
+  }
+
+  String? _tryAppendSlash(String baseUrl) =>
+      baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
 }

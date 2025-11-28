@@ -8,6 +8,8 @@ import 'services/yust_auth_service.dart';
 import 'services/yust_auth_service_mocked.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
+import 'services/yust_file_access_service.dart';
+import 'services/yust_file_access_service_mocked.dart';
 import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
 import 'services/yust_push_service.dart';
@@ -73,6 +75,7 @@ class Yust {
 
   static late YustAuthService authService;
   static late YustFileService fileService;
+  static late IYustFileAccessService fileAccessService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
   static late String projectId;
@@ -128,6 +131,8 @@ class Yust {
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
     AccessCredentials? credentials,
+    String? originalCdnBaseUrl,
+    String? thumbnailCdnBaseUrl,
   }) async {
     if (forUI) _instance = this;
 
@@ -139,6 +144,10 @@ class Yust {
       pushService = YustPushServiceMocked();
       Yust.authService = YustAuthServiceMocked(this);
       Yust.fileService = YustFileServiceMocked();
+      Yust.fileAccessService = YustFileAccessServiceMocked(
+        originalCdnBaseUrl: originalCdnBaseUrl,
+        thumbnailCdnBaseUrl: thumbnailCdnBaseUrl,
+      );
       return;
     }
 
@@ -163,6 +172,10 @@ class Yust {
       authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,
       projectId: projectId,
+    );
+    Yust.fileAccessService = YustFileAccessService(
+      originalCdnBaseUrl: originalCdnBaseUrl,
+      thumbnailCdnBaseUrl: thumbnailCdnBaseUrl,
     );
     pushService = YustPushService();
   }

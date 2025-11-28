@@ -1,3 +1,7 @@
+## 3.29.7 - 2025-11-28
+
+-   Fix for mime package version conflict
+
 ## 3.29.6 - 2025-10-01
 
 -   Implement update mask support for YustUser

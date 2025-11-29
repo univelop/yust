@@ -48,7 +48,7 @@ class YustFileAccessService implements IYustFileAccessService {
   }
 
   @override
-  Future<void> setGrants(List<YustFileAccessGrant> grants) async {
+  void setGrants(List<YustFileAccessGrant> grants) {
     this.grants = grants;
   }
 

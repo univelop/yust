@@ -1,12 +1,8 @@
-import '../../yust.dart';
 import '../models/yust_file.dart';
 import '../util/file_access/yust_cdn_configuration.dart';
 import '../util/file_access/yust_file_access_grant.dart';
 
 /// Handles file access URL signing requests.
-///
-/// Using Google Cloud CDN signing for Dart-only environments.
-/// Flutter implementation throws not implemented.
 abstract interface class IYustFileAccessService {
   /// Base URL for the original files.
   String? get originalCdnBaseUrl;
@@ -42,7 +38,10 @@ abstract interface class IYustFileAccessService {
   });
 
   /// Sets the list of file access grants.
-  Future<void> setGrants(List<YustFileAccessGrant> grants);
+  void setGrants(List<YustFileAccessGrant> grants);
 
+  /// Returns the file access grant for a given file.
+  ///
+  /// Tries to match the file path to a grant path prefix.
   YustFileAccessGrant? getGrantForFile(YustFile file);
 }

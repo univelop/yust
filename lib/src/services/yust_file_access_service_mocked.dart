@@ -48,11 +48,11 @@ class YustFileAccessServiceMocked implements IYustFileAccessService {
   }
 
   @override
-  Future<void> setGrants(List<YustFileAccessGrant> grants) async {
+  void setGrants(List<YustFileAccessGrant> grants) {
     this.grants = grants;
   }
 
-    @override
+  @override
   YustFileAccessGrant? getGrantForFile(YustFile file) {
     return grants.firstWhereOrNull(
       (grant) => file.path?.startsWith(grant.pathPrefix) ?? false,

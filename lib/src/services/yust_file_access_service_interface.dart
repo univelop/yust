@@ -10,11 +10,9 @@ abstract interface class IYustFileAccessService {
   /// Base URL for the thumbnail files.
   String? get thumbnailCdnBaseUrl;
 
-  /// List of file access grants (relevant for yust_ui package).
+  /// List of file access grants
   List<YustFileAccessGrant> get grants;
 
-  /// Callback to generate download URL for a file (only for flutter impl).
-  /// This callback can be set to call your API and request a signed URL.
   Future<String?> Function(YustFile)? generateDownloadUrl;
 
   /// Creates a signed URL for a file at the given [path] and [name].

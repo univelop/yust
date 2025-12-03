@@ -6,7 +6,6 @@ import '../util/file_access/yust_file_access_grant.dart';
 import '../util/google_cloud_cdn_helper.dart';
 import 'yust_file_access_service_interface.dart';
 
-/// Handles file access URL signing requests for Dart-only environments.
 class YustFileAccessService implements IYustFileAccessService {
   @override
   final String? originalCdnBaseUrl;

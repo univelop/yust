@@ -6,9 +6,6 @@ import '../util/file_access/yust_file_access_grant.dart';
 import '../util/yust_exception.dart';
 import 'yust_file_access_service_interface.dart';
 
-/// Handles file access URL signing requests for Flutter platforms.
-///
-/// Uses generateDownloadUrl callback to request signed URLs from your API.
 class YustFileAccessService implements IYustFileAccessService {
   @override
   final String? originalCdnBaseUrl;

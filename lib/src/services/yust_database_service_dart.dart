@@ -583,16 +583,8 @@ class YustDatabaseService implements IYustDatabaseService {
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
       T? lastDocument = startAfterDocument;
-      var iterationCount = 0;
-      const maxIterations = 5000;
 
       while (!isDone) {
-        if (iterationCount >= maxIterations) {
-          throw YustException(
-            'Maximum iteration limit ($maxIterations) reached in pagination. Possible infinite loop.',
-          );
-        }
-        iterationCount++;
         final request = getQuery(
           docSetup,
           filters: filters,

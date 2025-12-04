@@ -584,7 +584,7 @@ class YustDatabaseService implements IYustDatabaseService {
       var isDone = false;
       T? lastDocument = startAfterDocument;
       var iterationCount = 0;
-      const maxIterations = 10000;
+      const maxIterations = 5000;
 
       while (!isDone) {
         if (iterationCount >= maxIterations) {

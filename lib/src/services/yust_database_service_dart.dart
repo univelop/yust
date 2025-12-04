@@ -583,7 +583,16 @@ class YustDatabaseService implements IYustDatabaseService {
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
       T? lastDocument = startAfterDocument;
+      var iterationCount = 0;
+      const maxIterations = 10000;
+
       while (!isDone) {
+        if (iterationCount >= maxIterations) {
+          throw YustException(
+            'Maximum iteration limit ($maxIterations) reached in pagination. Possible infinite loop.',
+          );
+        }
+        iterationCount++;
         final request = getQuery(
           docSetup,
           filters: filters,
@@ -629,23 +638,39 @@ class YustDatabaseService implements IYustDatabaseService {
 
         isDone = response.length < pageSize;
         if (!isDone) {
-          final lastDocumentJson = response.last['document'];
+          T? lastNotCorruptDocument;
 
-          if (idsOnly) {
-            final lastDocumentId = lastDocumentJson == null
-                ? null
-                : _extractDocumentId(Document.fromJson(lastDocumentJson));
-            lastDocument = lastDocumentId == null
-                ? null
-                : doInitDoc(docSetup, lastDocumentId);
-          } else {
-            lastDocument = lastDocumentJson == null
-                ? null
-                : _transformDoc<T>(
-                    docSetup,
-                    Document.fromJson(lastDocumentJson),
-                  );
+          for (var i = response.length - 1; i >= 0; i--) {
+            final documentJson = response[i]['document'];
+            if (documentJson == null) continue;
+
+            if (idsOnly) {
+              final documentId = _extractDocumentId(
+                Document.fromJson(documentJson),
+              );
+              if (documentId != null) {
+                lastNotCorruptDocument = doInitDoc(docSetup, documentId);
+                break;
+              }
+            } else {
+              final transformedDoc = _transformDoc<T>(
+                docSetup,
+                Document.fromJson(documentJson),
+              );
+              if (transformedDoc != null) {
+                lastNotCorruptDocument = transformedDoc;
+                break;
+              }
+            }
           }
+
+          if (lastNotCorruptDocument == null) {
+            throw YustException(
+              'No valid document found in chunk of $pageSize documents.',
+            );
+          }
+
+          lastDocument = lastNotCorruptDocument;
         }
 
         yield* Stream.fromIterable(response);

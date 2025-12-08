@@ -583,6 +583,7 @@ class YustDatabaseService implements IYustDatabaseService {
     Stream<Map<dynamic, dynamic>> lazyPaginationGenerator() async* {
       var isDone = false;
       T? lastDocument = startAfterDocument;
+
       while (!isDone) {
         final request = getQuery(
           docSetup,
@@ -629,23 +630,45 @@ class YustDatabaseService implements IYustDatabaseService {
 
         isDone = response.length < pageSize;
         if (!isDone) {
-          final lastDocumentJson = response.last['document'];
+          T? lastNotCorruptDocument;
 
-          if (idsOnly) {
-            final lastDocumentId = lastDocumentJson == null
-                ? null
-                : _extractDocumentId(Document.fromJson(lastDocumentJson));
-            lastDocument = lastDocumentId == null
-                ? null
-                : doInitDoc(docSetup, lastDocumentId);
-          } else {
-            lastDocument = lastDocumentJson == null
-                ? null
-                : _transformDoc<T>(
-                    docSetup,
-                    Document.fromJson(lastDocumentJson),
-                  );
+          for (var i = response.length - 1; i >= 0; i--) {
+            final documentJson = response[i]['document'];
+            if (documentJson == null) continue;
+
+            if (idsOnly) {
+              String? documentId;
+              try {
+                documentId = _extractDocumentId(
+                  Document.fromJson(documentJson),
+                );
+              } on YustException {
+                // Skip corrupt document with no id field
+                continue;
+              }
+              if (documentId != null) {
+                lastNotCorruptDocument = doInitDoc(docSetup, documentId);
+                break;
+              }
+            } else {
+              final transformedDoc = _transformDoc<T>(
+                docSetup,
+                Document.fromJson(documentJson),
+              );
+              if (transformedDoc != null) {
+                lastNotCorruptDocument = transformedDoc;
+                break;
+              }
+            }
           }
+
+          if (lastNotCorruptDocument == null) {
+            throw YustException(
+              'No valid document found in chunk of $pageSize documents.',
+            );
+          }
+
+          lastDocument = lastNotCorruptDocument;
         }
 
         yield* Stream.fromIterable(response);

@@ -1,3 +1,7 @@
+## 3.29.8 - 2025-12-08
+
+-   Fix for pagination with corrupted documents
+
 ## 3.29.7 - 2025-11-28
 
 -   Fix for mime package version conflict

@@ -637,9 +637,15 @@ class YustDatabaseService implements IYustDatabaseService {
             if (documentJson == null) continue;
 
             if (idsOnly) {
-              final documentId = _extractDocumentId(
-                Document.fromJson(documentJson),
-              );
+              String? documentId;
+              try {
+                documentId = _extractDocumentId(
+                  Document.fromJson(documentJson),
+                );
+              } on YustException {
+                // Skip corrupt document with no id field
+                continue;
+              }
               if (documentId != null) {
                 lastNotCorruptDocument = doInitDoc(docSetup, documentId);
                 break;

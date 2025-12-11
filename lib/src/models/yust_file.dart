@@ -134,11 +134,15 @@ class YustFile {
       name: json['name'] as String?,
       modifiedAt: json['modifiedAt'] == null
           ? null
+          : json['modifiedAt'] is DateTime
+          ? json['modifiedAt'] as DateTime
           : DateTime.parse(json['modifiedAt'] as String),
       url: json['url'] as String?,
       hash: json['hash'] as String? ?? '',
       createdAt: json['createdAt'] == null
           ? null
+          : json['createdAt'] is DateTime
+          ? json['createdAt'] as DateTime
           : DateTime.parse(json['createdAt'] as String),
       path: json['path'] as String?,
       thumbnails: (json['thumbnails'] as Map?)?.map(

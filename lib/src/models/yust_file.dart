@@ -86,6 +86,10 @@ class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   String? lastError;
 
+  /// True if a thumbnail should be created.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool? createThumbnail;
+
   /// Is true while uploading the file.
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool processing;
@@ -117,6 +121,7 @@ class YustFile {
     this.linkedDocAttribute,
     this.processing = false,
     this.lastError,
+    this.createThumbnail,
     this.createdAt,
     this.path,
     this.thumbnails,
@@ -181,6 +186,7 @@ class YustFile {
       linkedDocPath: json['linkedDocPath'] as String,
       linkedDocAttribute: json['linkedDocAttribute'] as String,
       lastError: json['lastError'] as String?,
+      createThumbnail: json['createThumbnail'] == 'true',
       modifiedAt: json['modifiedAt'] != null
           ? DateTime.parse(json['modifiedAt'] as String)
           : null,
@@ -206,16 +212,22 @@ class YustFile {
   /// This is used for offline file handling only (Caching on mobile devices)
   Map<String, String?> toLocalJson() {
     if (name == null) {
-      throw ('Error: Each cached file needs a name. Should be unique for each path!');
+      throw YustException(
+        'Error: Each cached file needs a name. Should be unique for each path!',
+      );
     }
     if (devicePath == null) {
-      throw ('Error: Device Path has to be a String.');
+      throw YustException('Error: Device Path has to be a String.');
     }
     if (storageFolderPath == null) {
-      throw ('Error: StorageFolderPath has to be set for a successful upload.');
+      throw YustException(
+        'Error: StorageFolderPath has to be set for a successful upload.',
+      );
     }
     if (linkedDocPath == null || linkedDocAttribute == null) {
-      throw ('Error: linkedDocPath and linkedDocAttribute have to be set for a successful upload.');
+      throw YustException(
+        'Error: linkedDocPath and linkedDocAttribute have to be set for a successful upload.',
+      );
     }
     return {
       'name': name,
@@ -224,6 +236,7 @@ class YustFile {
       'linkedDocAttribute': linkedDocAttribute,
       'devicePath': devicePath,
       'lastError': lastError,
+      'createThumbnail': (createThumbnail ?? false).toString(),
       'modifiedAt': modifiedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
       'type': type,
@@ -247,6 +260,7 @@ class YustFile {
     linkedDocAttribute: linkedDocAttribute,
     processing: processing,
     lastError: lastError,
+    createThumbnail: createThumbnail,
     createdAt: createdAt,
     path: path,
     thumbnails: thumbnails,

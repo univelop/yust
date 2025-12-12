@@ -49,6 +49,9 @@ class YustFileService implements IYustFileService {
     Map<String, String>? metadata,
     String? contentDisposition,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   }) async {
     // Check if either a file or bytes are provided
     if (file == null && bytes == null) {
@@ -62,9 +65,13 @@ class YustFileService implements IYustFileService {
         ? file.openRead()
         : Stream<List<int>>.value(bytes!.toList());
     final token = Uuid().v4();
+    final hasLinkedDoc = linkedDocPath != null && linkedDocAttribute != null;
     final fileMetadata = <String, String>{
       ...?metadata,
       'firebaseStorageDownloadTokens': token,
+      if (createThumbnail == true && hasLinkedDoc) 'thumbnail': 'true',
+      if (hasLinkedDoc) 'linkedDocPath': linkedDocPath,
+      if (hasLinkedDoc) 'linkedDocAttribute': linkedDocAttribute,
     };
 
     final object = Object(
@@ -105,12 +112,19 @@ class YustFileService implements IYustFileService {
     String? contentDisposition,
     Map<String, String>? metadata,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   }) async {
     final effectiveBucketName = bucketName ?? defaultBucketName;
     final token = Uuid().v4();
+    final hasLinkedDoc = linkedDocPath != null && linkedDocAttribute != null;
     final fileMetadata = <String, String>{
       ...?metadata,
       'firebaseStorageDownloadTokens': token,
+      if (createThumbnail == true && hasLinkedDoc) 'thumbnail': 'true',
+      if (hasLinkedDoc) 'linkedDocPath': linkedDocPath,
+      if (hasLinkedDoc) 'linkedDocAttribute': linkedDocAttribute,
     };
 
     final object = Object(

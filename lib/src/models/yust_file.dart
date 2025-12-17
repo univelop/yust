@@ -59,6 +59,14 @@ class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   String? lastError;
 
+  /// True if the files should be stored as a Map of hash and file
+  /// inside the linked document.
+  ///
+  /// By default, files will be stored as a list (simple array)
+  /// or individual files sometimes directly as a map
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool? linkedDocStoresFilesAsMap;
+
   /// Is true while uploading the file.
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool processing;
@@ -90,6 +98,7 @@ class YustFile {
     this.linkedDocAttribute,
     this.processing = false,
     this.lastError,
+    this.linkedDocStoresFilesAsMap,
     this.createdAt,
     bool setCreatedAtToNow = true,
   }) {
@@ -145,6 +154,7 @@ class YustFile {
       linkedDocPath: json['linkedDocPath'] as String,
       linkedDocAttribute: json['linkedDocAttribute'] as String,
       lastError: json['lastError'] as String?,
+      linkedDocStoresFilesAsMap: json['linkedDocStoresFilesAsMap'] == 'true',
       modifiedAt: json['modifiedAt'] != null
           ? DateTime.parse(json['modifiedAt'] as String)
           : null,
@@ -178,6 +188,8 @@ class YustFile {
       'linkedDocAttribute': linkedDocAttribute,
       'devicePath': devicePath,
       'lastError': lastError,
+      'linkedDocStoresFilesAsMap': (linkedDocStoresFilesAsMap ?? false)
+          .toString(),
       'modifiedAt': modifiedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
       'type': type,

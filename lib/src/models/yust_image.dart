@@ -22,6 +22,7 @@ class YustImage extends YustFile {
     super.linkedDocAttribute,
     super.processing = false,
     super.lastError,
+    super.linkedDocStoresFilesAsMap,
     super.createdAt,
     this.location,
   });
@@ -44,6 +45,7 @@ class YustImage extends YustFile {
           linkedDocAttribute: file.linkedDocAttribute,
           processing: file.processing,
           lastError: file.lastError,
+          linkedDocStoresFilesAsMap: file.linkedDocStoresFilesAsMap,
           createdAt: file.createdAt,
         );
 

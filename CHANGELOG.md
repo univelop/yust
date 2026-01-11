@@ -1,3 +1,7 @@
+## 3.30.0 - 2025-12-19
+
+-   Add supported for map based file structure
+
 ## 3.29.8 - 2025-12-08
 
 -   Fix for pagination with corrupted documents

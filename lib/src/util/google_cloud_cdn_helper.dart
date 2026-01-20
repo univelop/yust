@@ -1,6 +1,9 @@
 import 'dart:convert';
-import 'package:crypto/crypto.dart' as crypto;
+import 'dart:typed_data';
 
+import 'package:pointycastle/export.dart';
+
+import '../yust.dart';
 import 'file_access/yust_cdn_configuration.dart';
 
 /// Helper for creating Cloud CDN Signed URLs (file + prefix).
@@ -32,7 +35,7 @@ class GoogleCloudCdnHelper {
   final String keyBase64;
 
   /// Decoded key bytes
-  final List<int> _keyBytes;
+  final Uint8List _keyBytes;
 
   /// Creates a signed URL for a file at the given [path].
   ///
@@ -43,47 +46,38 @@ class GoogleCloudCdnHelper {
     required Duration validFor,
     Map<String, String>? additionalQueryParams,
   }) {
-    final fullUrlWithPort = _join(baseUrl, path);
-    var uriWithPort = Uri.parse(fullUrlWithPort);
-
-    // Add optional query parameters to the url that will be signed
-    final queryParams = Map<String, String>.from(uriWithPort.queryParameters);
-    if (additionalQueryParams != null) {
-      queryParams.addAll(additionalQueryParams);
-    }
-    uriWithPort = uriWithPort.replace(queryParameters: queryParams);
-
-    // Strip the port because cdn otherwise rejects it
-    final fullUrl = _stripPort(uriWithPort.toString());
+    final fullUrl = _join(baseUrl, path);
+    var uri = Uri.parse(fullUrl);
     final expires = _unix(validFor);
 
-    final uri = Uri.parse(fullUrl);
-    final separator = uri.hasQuery ? '&' : '?';
-    final keyNameEncoded = Uri.encodeQueryComponent(keyName);
-    final stringToSign =
-        '$fullUrl${separator}Expires=$expires&KeyName=$keyNameEncoded';
+    uri = uri.replace(
+      queryParameters: {
+        ...uri.queryParameters,
+        ...?additionalQueryParams,
+        'Expires': expires.toString(),
+        'KeyName': keyName,
+      },
+    );
 
-    final signature = _sign(stringToSign);
+    final url = uri.toString();
+    final signature = _sign(url);
 
-    return '$stringToSign&Signature=$signature';
+    return '$url&Signature=$signature';
   }
 
   /// Returns only the query string
   ///
   /// "URLPrefix=...&Expires=...&KeyName=...&Signature=..."
-  String signPrefix({required String prefixPath, required Duration validFor}) {
-    final normalized = _normalizePrefix(prefixPath);
-    final baseWithoutPort = _stripPort(baseUrl);
-    final fullPrefix = _join(baseWithoutPort, normalized);
-
+  String signPrefix({required String path, required Duration validFor}) {
+    final normalized = _normalizePrefix(path);
+    final fullPrefix = _join(baseUrl, normalized);
     final expires = _unix(validFor);
 
     final urlPrefixEncoded = base64UrlEncode(utf8.encode(fullPrefix));
-
-    final signedValue =
+    final urlPartToSign =
         'URLPrefix=$urlPrefixEncoded&Expires=$expires&KeyName=$keyName';
 
-    final signature = _sign(signedValue);
+    final signature = _sign(urlPartToSign);
 
     return 'URLPrefix=$urlPrefixEncoded'
         '&Expires=$expires'
@@ -91,30 +85,27 @@ class GoogleCloudCdnHelper {
         '&Signature=$signature';
   }
 
-  String _stripPort(String url) {
-    final uri = Uri.parse(url);
-    if (uri.hasPort == false) return url;
-
-    final normalizedUri = uri.replace(port: null);
-    return normalizedUri.toString();
-  }
-
-  int _unix(Duration validFor) {
-    final now = DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000;
-    return now + validFor.inSeconds;
-  }
+  /// Returns the Unix timestamp for the given [validFor] duration.
+  int _unix(Duration validFor) =>
+      (Yust.helpers.utcNow().millisecondsSinceEpoch ~/ 1000) +
+      validFor.inSeconds;
 
   String _sign(String value) {
-    final hmac = crypto.Hmac(crypto.sha1, _keyBytes);
-    final digest = hmac.convert(utf8.encode(value));
-    return base64UrlEncode(digest.bytes);
+    const sha1BlockSize = 64;
+    final hmac = HMac(SHA1Digest(), sha1BlockSize)
+      ..init(KeyParameter(_keyBytes));
+
+    final bytes = hmac.process(Uint8List.fromList(utf8.encode(value)));
+    return base64UrlEncode(bytes);
   }
 
-  String _normalizePrefix(String p) {
-    p = p.trim();
-    if (p.startsWith('/')) p = p.substring(1);
-    if (!p.endsWith('/')) p = '$p/';
-    return p;
+  /// Normalize the given [path] e.g. remove leading and trailing slashes.
+  String _normalizePrefix(String path) {
+    var normalized = path;
+    if (normalized.startsWith('/')) normalized = normalized.substring(1);
+    if (!normalized.endsWith('/')) normalized = '$normalized/';
+
+    return normalized;
   }
 
   String _join(String base, String rel) {

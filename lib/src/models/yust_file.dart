@@ -62,6 +62,8 @@ class YustFile {
   /// The thumbnails of the file.
   ///
   /// Map of thumbnail size to path in the storage.
+  ///
+  /// e.g. {[YustFileThumbnailSize.small]: 'thumbnails/small/image.webp'}
   Map<YustFileThumbnailSize, String>? thumbnails;
 
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.

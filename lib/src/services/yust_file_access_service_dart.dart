@@ -53,7 +53,7 @@ class YustFileAccessService implements IYustFileAccessService {
     required YustCdnConfiguration cdnConfiguration,
   }) {
     final helper = GoogleCloudCdnHelper.fromCdnConfiguration(cdnConfiguration);
-    return helper.signPrefix(prefixPath: path, validFor: validFor);
+    return helper.signPrefix(path: path, validFor: validFor);
   }
 
   @override

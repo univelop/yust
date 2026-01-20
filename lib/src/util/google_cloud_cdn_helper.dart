@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart' as crypto;
 
+import 'file_access/yust_cdn_configuration.dart';
+
 /// Helper for creating Cloud CDN Signed URLs (file + prefix).
 class GoogleCloudCdnHelper {
   GoogleCloudCdnHelper({
@@ -8,6 +10,17 @@ class GoogleCloudCdnHelper {
     required this.keyName,
     required this.keyBase64,
   }) : _keyBytes = base64Url.decode(keyBase64);
+
+  /// Creates a GoogleCloudCdnHelper from a YustCdnConfiguration.
+  factory GoogleCloudCdnHelper.fromCdnConfiguration(
+    YustCdnConfiguration cdnConfiguration,
+  ) {
+    return GoogleCloudCdnHelper(
+      baseUrl: cdnConfiguration.baseUrl,
+      keyName: cdnConfiguration.keyName,
+      keyBase64: cdnConfiguration.keyBase64,
+    );
+  }
 
   /// The base URL of the CDN.
   final String baseUrl;
@@ -21,16 +34,16 @@ class GoogleCloudCdnHelper {
   /// Decoded key bytes
   final List<int> _keyBytes;
 
-  /// Creates a signed URL for a file at the given [objectPath].
+  /// Creates a signed URL for a file at the given [path].
   ///
   /// [additionalQueryParams] are additional query parameters to be added to the URL.
   /// These will be signed and must exist in the same order in the signed URL.
   String signFilePath({
-    required String objectPath,
+    required String path,
     required Duration validFor,
     Map<String, String>? additionalQueryParams,
   }) {
-    final fullUrlWithPort = _join(baseUrl, objectPath);
+    final fullUrlWithPort = _join(baseUrl, path);
     var uriWithPort = Uri.parse(fullUrlWithPort);
 
     // Add optional query parameters to the url that will be signed

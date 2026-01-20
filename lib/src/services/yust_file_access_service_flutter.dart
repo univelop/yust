@@ -55,4 +55,14 @@ class YustFileAccessService implements IYustFileAccessService {
       (grant) => file.path?.startsWith(grant.pathPrefix) ?? false,
     );
   }
+
+  @override
+  YustFileAccessGrant createGrant({
+    required YustCdnConfiguration originalCdnConfiguration,
+    required YustCdnConfiguration thumbnailCdnConfiguration,
+    required String pathPrefix,
+    required Duration validFor,
+  }) {
+    throw YustException('Not implemented for flutter');
+  }
 }

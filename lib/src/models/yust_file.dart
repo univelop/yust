@@ -41,8 +41,14 @@ class YustFile {
   /// The last modification time stamp.
   DateTime? modifiedAt;
 
+  @Deprecated(
+    'Url is deprecated and will soon be null for valid files.'
+    'Specify a path instead and use getOriginalUrl() or getThumbnailUrl() to get temporary URLs.',
+  )
   /// The URL to download the file.
   String? url;
+
+  /// The md5 hash of the file.
   String hash;
 
   /// Date and time when the file was created in univelop.
@@ -176,6 +182,7 @@ class YustFile {
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
   void update(YustFile file) {
+    // ignore: deprecated_member_use_from_same_package
     url = file.url;
     name = file.name;
     hash = file.hash;
@@ -286,21 +293,28 @@ class YustFile {
       case 'hash':
         return hash;
       case 'url':
+        // ignore: deprecated_member_use_from_same_package
         return url;
       case 'createdAt':
         return createdAt;
-      case 'path':
-        return path;
-      case 'thumbnails': // Thumbnails should not be accessible
+      case 'path': // Path and thumbnails should not be accessible
+      case 'thumbnails':
       default:
         throw ArgumentError();
     }
   }
 
-  bool isValid() {
-    return name != null && name != '' && url != null && url != '';
-  }
+  /// Checks if the file has a valid name and url or path.
+  bool isValid() =>
+      name != null &&
+      name != '' &&
+      // ignore: deprecated_member_use_from_same_package
+      ((url != null && url != '') || (path != null && path != ''));
 
+  /// Returns the file name without the extension.
+  ///
+  /// e.g. "image.png" -> "image"
+  /// Returns an empty string if the file name is null.
   String getFileNameWithoutExtension() {
     if (name == null) {
       return '';
@@ -313,6 +327,10 @@ class YustFile {
     return pathParts.join('.');
   }
 
+  /// Returns the extension of the file.
+  ///
+  /// e.g. "image.png" -> "png"
+  /// Returns an empty string if the file name is null or has no extension.
   String getFilenameExtension() {
     if (name == null) {
       return '';
@@ -321,27 +339,39 @@ class YustFile {
     return name!.contains('.') ? name!.split('.').last : '';
   }
 
-  bool hasThumbnail() => thumbnails?.isNotEmpty ?? false;
+  /// Returns true if this file has a thumbnail
+  bool get hasThumbnail => thumbnails?.isNotEmpty ?? false;
 
+  /// Returns the original URL of the file.
+  ///
+  /// Tries to build the URL with the signed URL part.
+  // ignore: deprecated_member_use_from_same_package
+  /// Falls back to the [url] if thats not possible.
   String? getOriginalUrl() {
     final baseUrl = Yust.fileAccessService.originalCdnBaseUrl;
     final grant = Yust.fileAccessService.getGrantForFile(this);
 
+    // ignore: deprecated_member_use_from_same_package
     if (baseUrl == null || grant == null || path == null) return url;
 
-    return '${_tryAppendSlash(baseUrl)}$path?${grant.originalSignedUrlPart}';
+    return '$baseUrl$path?${grant.originalSignedUrlPart}';
   }
 
-  String? getThumbnailUrl() {
+  /// Returns the thumbnail URL of the file.
+  ///
+  /// Returns null if any configuration is missing
+  /// and the url cannot be built.
+  ///
+  /// Optionally override [size] to get a different thumbnail size.
+  String? getThumbnailUrl({
+    YustFileThumbnailSize size = YustFileThumbnailSize.small,
+  }) {
     final baseUrl = Yust.fileAccessService.thumbnailCdnBaseUrl;
     final grant = Yust.fileAccessService.getGrantForFile(this);
 
-    if (baseUrl == null || grant == null || !hasThumbnail()) return null;
-    final thumbnailPath = thumbnails![YustFileThumbnailSize.small];
+    if (baseUrl == null || grant == null || !hasThumbnail) return null;
+    final thumbnailPath = thumbnails![size];
 
-    return '${_tryAppendSlash(baseUrl)}$thumbnailPath?${grant.thumbnailSignedUrlPart}';
+    return '$baseUrl$thumbnailPath?${grant.thumbnailSignedUrlPart}';
   }
-
-  String? _tryAppendSlash(String baseUrl) =>
-      baseUrl.endsWith('/') ? baseUrl : '$baseUrl/';
 }

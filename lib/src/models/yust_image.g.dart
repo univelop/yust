@@ -31,6 +31,7 @@ YustImage _$YustImageFromJson(Map json) => YustImage(
 Map<String, dynamic> _$YustImageToJson(YustImage instance) => <String, dynamic>{
   'name': instance.name,
   'modifiedAt': instance.modifiedAt?.toIso8601String(),
+  // ignore: deprecated_member_use_from_same_package
   'url': instance.url,
   'hash': instance.hash,
   'createdAt': instance.createdAt?.toIso8601String(),

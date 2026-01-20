@@ -39,6 +39,7 @@ class YustImage extends YustFile {
           key: file.key,
           name: file.name,
           modifiedAt: file.modifiedAt,
+          // ignore: deprecated_member_use_from_same_package
           url: file.url,
           hash: file.hash,
           file: file.file,

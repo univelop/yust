@@ -20,9 +20,15 @@ class YustFileAccessService implements IYustFileAccessService {
   Future<String?> Function(YustFile)? generateDownloadUrl;
 
   YustFileAccessService({
-    required this.originalCdnBaseUrl,
-    required this.thumbnailCdnBaseUrl,
-  });
+    required String? originalCdnBaseUrl,
+    required String? thumbnailCdnBaseUrl,
+  }) : originalCdnBaseUrl = _tryAppendTrailingSlash(originalCdnBaseUrl),
+       thumbnailCdnBaseUrl = _tryAppendTrailingSlash(thumbnailCdnBaseUrl);
+
+  static String? _tryAppendTrailingSlash(String? url) {
+    if (url == null || url.isEmpty) return url;
+    return url.endsWith('/') ? url : '$url/';
+  }
 
   @override
   String createSignedUrlForFile({
@@ -32,13 +38,9 @@ class YustFileAccessService implements IYustFileAccessService {
     required YustCdnConfiguration cdnConfiguration,
     Map<String, String>? additionalQueryParams,
   }) {
-    final helper = GoogleCloudCdnHelper(
-      baseUrl: cdnConfiguration.baseUrl,
-      keyName: cdnConfiguration.keyName,
-      keyBase64: cdnConfiguration.keyBase64,
-    );
+    final helper = GoogleCloudCdnHelper.fromCdnConfiguration(cdnConfiguration);
     return helper.signFilePath(
-      objectPath: '$path/$name',
+      path: '$path/$name',
       validFor: validFor,
       additionalQueryParams: additionalQueryParams,
     );
@@ -50,11 +52,7 @@ class YustFileAccessService implements IYustFileAccessService {
     required Duration validFor,
     required YustCdnConfiguration cdnConfiguration,
   }) {
-    final helper = GoogleCloudCdnHelper(
-      baseUrl: cdnConfiguration.baseUrl,
-      keyName: cdnConfiguration.keyName,
-      keyBase64: cdnConfiguration.keyBase64,
-    );
+    final helper = GoogleCloudCdnHelper.fromCdnConfiguration(cdnConfiguration);
     return helper.signPrefix(prefixPath: path, validFor: validFor);
   }
 
@@ -69,4 +67,24 @@ class YustFileAccessService implements IYustFileAccessService {
       (grant) => file.path?.startsWith(grant.pathPrefix) ?? false,
     );
   }
+
+  @override
+  YustFileAccessGrant createGrant({
+    required YustCdnConfiguration originalCdnConfiguration,
+    required YustCdnConfiguration thumbnailCdnConfiguration,
+    required String pathPrefix,
+    required Duration validFor,
+  }) => YustFileAccessGrant(
+    pathPrefix: pathPrefix,
+    originalSignedUrlPart: createSignedUrlPartForFolder(
+      path: pathPrefix,
+      validFor: validFor,
+      cdnConfiguration: originalCdnConfiguration,
+    ),
+    thumbnailSignedUrlPart: createSignedUrlPartForFolder(
+      path: pathPrefix,
+      validFor: validFor,
+      cdnConfiguration: thumbnailCdnConfiguration,
+    ),
+  );
 }

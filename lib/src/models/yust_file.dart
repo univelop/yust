@@ -14,14 +14,14 @@ typedef YustFilesJson = List<YustFileJson>;
 
 /// The size of the thumbnail.
 enum YustFileThumbnailSize {
-  small;
+  normal;
 
   /// Converts a JSON string to a [YustFileThumbnailSize].
   ///
-  /// If the size is not found, [YustFileThumbnailSize.small] is returned.
+  /// If the size is not found, [YustFileThumbnailSize.normal] is returned.
   static YustFileThumbnailSize fromJson(String size) =>
       YustFileThumbnailSize.values.firstWhereOrNull((e) => e.name == size) ??
-      YustFileThumbnailSize.small;
+      YustFileThumbnailSize.normal;
 
   /// Converts a [YustFileThumbnailSize] to a JSON string.
   String toJson() => name;
@@ -63,7 +63,7 @@ class YustFile {
   ///
   /// Map of thumbnail size to path in the storage.
   ///
-  /// e.g. {[YustFileThumbnailSize.small]: 'thumbnails/small/image.webp'}
+  /// e.g. {[YustFileThumbnailSize.normal]: 'thumbnails/small/image.webp'}
   Map<YustFileThumbnailSize, String>? thumbnails;
 
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
@@ -366,7 +366,7 @@ class YustFile {
   ///
   /// Optionally override [size] to get a different thumbnail size.
   String? getThumbnailUrl({
-    YustFileThumbnailSize size = YustFileThumbnailSize.small,
+    YustFileThumbnailSize size = YustFileThumbnailSize.normal,
   }) {
     final baseUrl = Yust.fileAccessService.thumbnailCdnBaseUrl;
     final grant = Yust.fileAccessService.getGrantForFile(this);

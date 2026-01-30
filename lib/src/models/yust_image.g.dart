@@ -40,4 +40,4 @@ Map<String, dynamic> _$YustImageToJson(YustImage instance) => <String, dynamic>{
   'location': instance.location?.toJson(),
 };
 
-const _$YustFileThumbnailSizeEnumMap = {YustFileThumbnailSize.small: 'small'};
+const _$YustFileThumbnailSizeEnumMap = {YustFileThumbnailSize.normal: 'normal'};

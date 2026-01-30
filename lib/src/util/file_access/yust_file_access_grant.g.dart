@@ -10,7 +10,7 @@ YustFileAccessGrant _$YustFileAccessGrantFromJson(Map json) =>
     YustFileAccessGrant(
       pathPrefix: json['pathPrefix'] as String,
       originalSignedUrlPart: json['originalSignedUrlPart'] as String,
-      thumbnailSignedUrlPart: json['thumbnailSignedUrlPart'] as String,
+      thumbnailSignedUrlPart: json['thumbnailSignedUrlPart'] as String?,
     );
 
 Map<String, dynamic> _$YustFileAccessGrantToJson(

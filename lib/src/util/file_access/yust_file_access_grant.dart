@@ -76,7 +76,7 @@ class YustFileAccessGrant {
   /// Example value could look like this: `URLPrefix=123&Expires=123&KeyName=123&Signature=123`
   ///
   /// The client has to decide whether to append the query string with ? or &.
-  final String thumbnailSignedUrlPart;
+  final String? thumbnailSignedUrlPart;
 
   /// Converts the file access grant to a JSON map.
   Map<String, dynamic> toJson() => _$YustFileAccessGrantToJson(this);

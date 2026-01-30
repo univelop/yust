@@ -342,6 +342,7 @@ class YustFile {
   }
 
   /// Returns true if this file has a thumbnail
+  @JsonKey(includeFromJson: false, includeToJson: false)
   bool get hasThumbnail => thumbnails?.isNotEmpty ?? false;
 
   /// Returns the original URL of the file.

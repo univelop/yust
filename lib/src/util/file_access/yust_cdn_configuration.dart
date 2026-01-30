@@ -1,5 +1,7 @@
 import 'package:meta/meta.dart';
 
+import '../yust_exception.dart';
+
 @immutable
 /// Configuration for a CDN.
 ///
@@ -12,7 +14,11 @@ class YustCdnConfiguration {
     required this.baseUrl,
     required this.keyName,
     required this.keyBase64,
-  });
+  }) {
+    if (!baseUrl.endsWith('/')) {
+      throw YustException('Base URL must end with a trailing slash: $baseUrl');
+    }
+  }
 
   /// The base URL of the CDN.
   final String baseUrl;

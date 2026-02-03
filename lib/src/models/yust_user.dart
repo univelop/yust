@@ -313,6 +313,12 @@ class YustUser extends YustDoc {
     _userAttributes[key] = value;
   }
 
+  void setAttributes(Map<String, dynamic> attributes) {
+    for (final entry in attributes.entries) {
+      setAttribute(entry.key, entry.value);
+    }
+  }
+
   void removeAttribute(String key) {
     if (!_userAttributes.containsKey(key)) return;
     updateMask.add('userAttributes');

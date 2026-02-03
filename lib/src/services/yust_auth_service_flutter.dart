@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
+import '../extensions/string_extension.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
 import '../util/yust_exception.dart';
@@ -93,9 +95,13 @@ class YustAuthService {
 
   Future<YustUser?> signInWithOpenId(
     String providerId, {
+    List<String>? scopes,
     bool redirect = false,
   }) async {
     final provider = OAuthProvider(providerId);
+    if (scopes != null && scopes.isNotEmpty) {
+      provider.setScopes(scopes);
+    }
     return _signInWithProvider(
       provider,
       YustAuthenticationMethod.openId,
@@ -112,15 +118,31 @@ class YustAuthService {
       provider,
       redirect: redirect,
     );
-    if (_signInFailed(userCredential)) return null;
+
+    final userAttributes = <String, dynamic>{};
+    if (_getExternalId(provider, userCredential) != null) {
+      userAttributes['externalId${provider.providerId.toCapitalized()}'] =
+          _getExternalId(provider, userCredential);
+    }
+
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
-    if (_yustUserWasLinked(connectedYustUser)) return null;
+
+    if (_yustUserWasLinked(connectedYustUser)) {
+      connectedYustUser!.setAttributes(userAttributes);
+      await _yust.dbService.saveDoc<YustUser>(
+        Yust.userSetup,
+        connectedYustUser,
+      );
+      return null;
+    }
+    ;
 
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
       _getEmail(userCredential),
       _getId(userCredential),
       method,
+      userAttributes: userAttributes,
     );
     if (successfullyLinked) return null;
 
@@ -136,10 +158,18 @@ class YustAuthService {
       id: _getId(userCredential),
       authId: _getId(userCredential),
       authenticationMethod: method,
+      userAttributes: userAttributes,
     );
   }
 
   String _getId(UserCredential userCredential) => userCredential.user!.uid;
+
+  String? _getExternalId(
+    AuthProvider provider,
+    UserCredential userCredential,
+  ) => userCredential.user?.providerData
+      .firstWhereOrNull((p) => p.providerId == provider.providerId)
+      ?.uid;
 
   String _getEmail(UserCredential userCredential) =>
       userCredential.user!.email ?? '';

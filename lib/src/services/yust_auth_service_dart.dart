@@ -79,6 +79,7 @@ class YustAuthService {
   /// The Authentication method must be configured in the Firebase console.
   Future<YustUser?> signInWithOpenId(
     String providerId, {
+    List<String>? scopes,
     bool redirect = false,
   }) async {
     throw UnsupportedError('Not supported. No UI available.');

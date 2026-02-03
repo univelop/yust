@@ -5,8 +5,9 @@ class YustAuthServiceShared {
     Yust yust,
     String email,
     String authUserId,
-    YustAuthenticationMethod? method,
-  ) async {
+    YustAuthenticationMethod? method, {
+    Map<String, dynamic> userAttributes = const {},
+  }) async {
     final user = await yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
@@ -18,6 +19,9 @@ class YustAuthServiceShared {
       ],
     );
     if (user == null) return false;
+
+    user.setAttributes(userAttributes);
+
     await user.linkAuth(authUserId, method);
     return true;
   }
@@ -32,6 +36,7 @@ class YustAuthServiceShared {
     YustAuthenticationMethod? authenticationMethod,
     String? domain,
     YustGender? gender,
+    Map<String, dynamic> userAttributes = const {},
   }) async {
     if (Yust.userSetup.newDoc == null) {
       throw YustException(
@@ -52,6 +57,9 @@ class YustAuthServiceShared {
       ..lastLoginDomain = Uri.base.scheme.contains('http')
           ? Uri.base.host
           : null;
+
+    user.setAttributes(userAttributes);
+
     await yust.dbService.saveDoc<YustUser>(Yust.userSetup, user);
     return user;
   }

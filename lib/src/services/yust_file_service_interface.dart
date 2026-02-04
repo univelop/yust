@@ -14,6 +14,9 @@ abstract interface class IYustFileService {
   /// Optionally accepts [bucketName] to override the default bucket.
   /// Optionally accepts [contentDisposition] to override the default Content-Disposition header.
   ///
+  /// If [createThumbnail] is set to true and both [linkedDocPath] and [linkedDocAttribute] are provided,
+  /// a 'thumbnail': true metadata entry will be set on the uploaded file.
+  ///
   /// It returns the download url of the uploaded file.
   Future<String> uploadFile({
     required String path,
@@ -23,6 +26,9 @@ abstract interface class IYustFileService {
     Map<String, String>? metadata,
     String? contentDisposition,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   });
 
   /// Uploads a file from a [Stream] of [List<int>]
@@ -32,6 +38,9 @@ abstract interface class IYustFileService {
   /// Optionally accepts [bucketName] to override the default bucket.
   /// Optionally accepts [contentDisposition] to override the default Content-Disposition header.
   ///
+  /// If [createThumbnail] is set to true and both [linkedDocPath] and [linkedDocAttribute] are provided,
+  /// a 'thumbnail': true metadata entry will be set on the uploaded file.
+  ///
   /// Returns the download url of the uploaded file.
   Future<String> uploadStream({
     required String path,
@@ -40,6 +49,9 @@ abstract interface class IYustFileService {
     String? contentDisposition,
     Map<String, String>? metadata,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   });
 
   /// Downloads a file from a given [path] and [name] and returns it as [Uint8List].

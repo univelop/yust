@@ -22,19 +22,24 @@ class YustImage extends YustFile {
     super.linkedDocAttribute,
     super.processing = false,
     super.lastError,
+    super.createThumbnail,
     super.linkedDocStoresFilesAsMap,
     super.createdAt,
+    super.path,
+    super.thumbnails,
     this.location,
   });
 
   YustGeoLocation? location;
 
+  /// Creates a new image from a file.
   factory YustImage.fromYustFile(YustFile file) => file is YustImage
       ? file
       : YustImage(
           key: file.key,
           name: file.name,
           modifiedAt: file.modifiedAt,
+          // ignore: deprecated_member_use_from_same_package
           url: file.url,
           hash: file.hash,
           file: file.file,
@@ -45,8 +50,11 @@ class YustImage extends YustFile {
           linkedDocAttribute: file.linkedDocAttribute,
           processing: file.processing,
           lastError: file.lastError,
+          createThumbnail: file.createThumbnail,
           linkedDocStoresFilesAsMap: file.linkedDocStoresFilesAsMap,
           createdAt: file.createdAt,
+          path: file.path,
+          thumbnails: file.thumbnails,
         );
 
   /// Create a list of images from a list of files

@@ -45,6 +45,9 @@ class YustFileServiceMocked extends YustFileService {
     String? contentDisposition,
     Map<String, String>? metadata,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   }) async {
     final collected = <int>[];
     await for (final chunk in stream) {
@@ -59,6 +62,9 @@ class YustFileServiceMocked extends YustFileService {
       metadata: metadata,
       contentDisposition: contentDisposition,
       bucketName: bucketName,
+      createThumbnail: createThumbnail,
+      linkedDocPath: linkedDocPath,
+      linkedDocAttribute: linkedDocAttribute,
     );
   }
 
@@ -75,6 +81,9 @@ class YustFileServiceMocked extends YustFileService {
     Map<String, String>? metadata,
     String? contentDisposition,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   }) async {
     if (file == null && bytes == null) {
       throw Exception('No file or bytes provided');
@@ -85,12 +94,16 @@ class YustFileServiceMocked extends YustFileService {
 
     final bucketStorage = _getStorageForBucket(bucketName);
     bucketStorage.putIfAbsent(path, () => <String, MockedFile>{});
+    final hasLinkedDoc = linkedDocPath != null && linkedDocAttribute != null;
 
     final fileMetadata = <String, String>{
       ...?metadata,
       'firebaseStorageDownloadTokens': token,
       'contentDisposition':
           contentDisposition ?? Yust.helpers.createContentDisposition(name),
+      if (createThumbnail == true && hasLinkedDoc) 'thumbnail': 'true',
+      if (hasLinkedDoc) 'linkedDocPath': linkedDocPath,
+      if (hasLinkedDoc) 'linkedDocAttribute': linkedDocAttribute,
     };
 
     bucketStorage[path]![name] = MockedFile(

@@ -8,10 +8,13 @@ import 'services/yust_auth_service.dart';
 import 'services/yust_auth_service_mocked.dart';
 import 'services/yust_database_service.dart';
 import 'services/yust_database_service_mocked.dart';
+import 'services/yust_file_access_service.dart';
+import 'services/yust_file_access_service_mocked.dart';
 import 'services/yust_file_service.dart';
 import 'services/yust_file_service_mocked.dart';
 import 'services/yust_push_service.dart';
 import 'services/yust_push_service_mocked.dart';
+import 'util/file_access/yust_file_access_grant.dart';
 import 'util/google_cloud_helpers.dart';
 import 'util/yust_helpers.dart';
 
@@ -67,12 +70,17 @@ class Yust {
   static Yust? _instance;
 
   /// When using Yust with Flutter, you can access the databaseService of the
-  /// only instance of Yust with this getter._
+  /// only instance of Yust with this getter.
   static YustDatabaseService get databaseService => instance.dbService;
   static Client? authClient;
 
   static late YustAuthService authService;
   static late YustFileService fileService;
+
+  /// Service to handle file access and URL signing requests.
+  ///
+  /// See [IYustFileAccessService] and [YustFileAccessGrant] for more details.
+  static late IYustFileAccessService fileAccessService;
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
   static late String projectId;
@@ -82,6 +90,9 @@ class Yust {
 
   bool mocked = false;
 
+  /// Whether this Yust instance is used for a UI application.
+  ///
+  /// If so, the instance can be accessed via [Yust.instance]
   bool forUI;
 
   set readTime(DateTime? time) => dbService.readTime = time;
@@ -128,6 +139,8 @@ class Yust {
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
     AccessCredentials? credentials,
+    String? originalCdnBaseUrl,
+    String? thumbnailCdnBaseUrl,
   }) async {
     if (forUI) _instance = this;
 
@@ -139,6 +152,12 @@ class Yust {
       pushService = YustPushServiceMocked();
       Yust.authService = YustAuthServiceMocked(this);
       Yust.fileService = YustFileServiceMocked();
+      Yust.fileAccessService = YustFileAccessServiceMocked(
+        originalCdnBaseUrl:
+            YustFileAccessServiceMocked.mockedOriginalCdnBaseUrl,
+        thumbnailCdnBaseUrl:
+            YustFileAccessServiceMocked.mockedThumbnailCdnBaseUrl,
+      );
       return;
     }
 
@@ -163,6 +182,10 @@ class Yust {
       authClient: Yust.authClient,
       emulatorAddress: emulatorAddress,
       projectId: projectId,
+    );
+    Yust.fileAccessService = YustFileAccessService(
+      originalCdnBaseUrl: originalCdnBaseUrl,
+      thumbnailCdnBaseUrl: thumbnailCdnBaseUrl,
     );
     pushService = YustPushService();
   }

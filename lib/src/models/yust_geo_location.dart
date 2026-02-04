@@ -174,7 +174,7 @@ class YustGeoLocation {
       eastAbbreviation: eastAbbreviation,
     );
 
-    return lat == null && long == null ? null : '$lat, $long';
+    return lat == null && long == null ? null : '$lat,\n$long';
   }
 
   /// Returns a user readable string of the latitude.

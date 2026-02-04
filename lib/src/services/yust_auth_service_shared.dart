@@ -1,28 +1,29 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 import '../../yust.dart';
 
 class YustAuthServiceShared {
   static Future<bool> tryLinkYustUser(
     Yust yust,
-    String email,
-    String authUserId,
-    YustAuthenticationMethod? method, {
-    Map<String, dynamic> userAttributes = const {},
-  }) async {
-    final user = await yust.dbService.getFirst<YustUser>(
+    User user,
+    YustAuthenticationMethod? method,
+  ) async {
+    final yustUser = await yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [
         YustFilter(
           field: 'email',
           comparator: YustFilterComparator.equal,
-          value: email,
+          value: user.email,
         ),
       ],
     );
-    if (user == null) return false;
+    if (yustUser == null) return false;
 
-    user.setAttributes(userAttributes);
+    await yustUser.linkAuth(user.uid, method);
 
-    await user.linkAuth(authUserId, method);
+    await yustUser.setLoginFields(user: user, skipSave: true);
+
     return true;
   }
 
@@ -30,13 +31,10 @@ class YustAuthServiceShared {
     required Yust yust,
     required String firstName,
     required String lastName,
-    required String email,
-    required String id,
-    required String authId,
+    required User user,
     YustAuthenticationMethod? authenticationMethod,
     String? domain,
     YustGender? gender,
-    Map<String, dynamic> userAttributes = const {},
   }) async {
     if (Yust.userSetup.newDoc == null) {
       throw YustException(
@@ -44,24 +42,24 @@ class YustAuthServiceShared {
       );
     }
 
-    final user = Yust.userSetup.newDoc!()
-      ..email = email
+    final yustUser = Yust.userSetup.newDoc!()
+      ..email = user.email ?? ''
       ..firstName = firstName
       ..lastName = lastName
-      ..id = id
-      ..authId = authId
+      ..id = user.uid
+      ..authId = user.uid
       ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
+      ..domain = domain ?? (user.email ?? '').split('@').last
       ..gender = gender
       ..lastLogin = DateTime.now()
       ..lastLoginDomain = Uri.base.scheme.contains('http')
           ? Uri.base.host
           : null;
 
-    user.setAttributes(userAttributes);
+    await yustUser.setLoginFields(user: user, skipSave: true);
 
-    await yust.dbService.saveDoc<YustUser>(Yust.userSetup, user);
-    return user;
+    await yust.dbService.saveDoc<YustUser>(Yust.userSetup, yustUser);
+    return yustUser;
   }
 }
 

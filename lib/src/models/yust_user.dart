@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../yust.dart';
@@ -252,15 +253,35 @@ class YustUser extends YustDoc {
   }
 
   /// Saves the current [DateTime] as the last login and the current domain.
-  Future<void> setLoginFields({Yust? yust}) async {
+  Future<void> setLoginFields({
+    Yust? yust,
+    required User user,
+    bool skipSave = false,
+  }) async {
     lastLoginDomain = Uri.base.scheme.contains('http')
         ? Uri.base.host
         : lastLoginDomain;
     lastLogin = Yust.helpers.utcNow();
-    await (yust?.dbService ?? Yust.databaseService).saveDoc<YustUser>(
-      Yust.userSetup,
-      this,
-    );
+
+    _setOAuthProviderIds(user);
+
+    if (!skipSave) {
+      await (yust?.dbService ?? Yust.databaseService).saveDoc<YustUser>(
+        Yust.userSetup,
+        this,
+      );
+    }
+  }
+
+  void _setOAuthProviderIds(User user) {
+    for (final providerData in user.providerData) {
+      if (providerData.uid == null || providerData.uid!.isEmpty) continue;
+
+      setAttribute(
+        'oAuthProviderId_${providerData.providerId}',
+        providerData.uid,
+      );
+    }
   }
 
   /// Returns the user name.

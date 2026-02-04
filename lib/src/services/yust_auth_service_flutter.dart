@@ -1,10 +1,8 @@
 import 'dart:async';
 
-import 'package:collection/collection.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
-import '../extensions/string_extension.dart';
 import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
 import '../util/yust_exception.dart';
@@ -44,7 +42,7 @@ class YustAuthService {
                 ),
               ],
             )
-            .then((yustUser) => yustUser?.setLoginFields());
+            .then((yustUser) => yustUser?.setLoginFields(user: user));
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
@@ -119,30 +117,13 @@ class YustAuthService {
       redirect: redirect,
     );
 
-    final userAttributes = <String, dynamic>{};
-    if (_getExternalId(provider, userCredential) != null) {
-      userAttributes['externalId${provider.providerId.toCapitalized()}'] =
-          _getExternalId(provider, userCredential);
-    }
-
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
-
-    if (_yustUserWasLinked(connectedYustUser)) {
-      connectedYustUser!.setAttributes(userAttributes);
-      await _yust.dbService.saveDoc<YustUser>(
-        Yust.userSetup,
-        connectedYustUser,
-      );
-      return null;
-    }
-    ;
+    if (_yustUserWasLinked(connectedYustUser)) return null;
 
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
-      _getEmail(userCredential),
-      _getId(userCredential),
+      userCredential.user!,
       method,
-      userAttributes: userAttributes,
     );
     if (successfullyLinked) return null;
 
@@ -154,25 +135,10 @@ class YustAuthService {
       yust: _yust,
       firstName: firstName,
       lastName: lastName,
-      email: _getEmail(userCredential),
-      id: _getId(userCredential),
-      authId: _getId(userCredential),
+      user: userCredential.user!,
       authenticationMethod: method,
-      userAttributes: userAttributes,
     );
   }
-
-  String _getId(UserCredential userCredential) => userCredential.user!.uid;
-
-  String? _getExternalId(
-    AuthProvider provider,
-    UserCredential userCredential,
-  ) => userCredential.user?.providerData
-      .firstWhereOrNull((p) => p.providerId == provider.providerId)
-      ?.uid;
-
-  String _getEmail(UserCredential userCredential) =>
-      userCredential.user!.email ?? '';
 
   String _getFirstName(List<String> nameParts) =>
       nameParts.join(' ').replaceAll(r'+', ' ');
@@ -234,8 +200,7 @@ class YustAuthService {
     await userCredential.user?.updateDisplayName('$firstName $lastName');
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
-      email,
-      userCredential.user!.uid,
+      userCredential.user!,
       YustAuthenticationMethod.mail,
     );
     if (successfullyLinked) return null;
@@ -243,10 +208,8 @@ class YustAuthService {
     return await YustAuthServiceShared.createYustUser(
       yust: _yust,
       firstName: firstName,
-      email: email,
       lastName: lastName,
-      id: userCredential.user!.uid,
-      authId: userCredential.user!.uid,
+      user: userCredential.user!,
       gender: gender,
       authenticationMethod: YustAuthenticationMethod.mail,
     );

@@ -1,3 +1,9 @@
+## 3.31.0 - 2026-02-04
+
+-   Add file access service and signed URL helpers for image/file previews
+-   Add path, thumbnails and `createThumbnail` to YustFile/YustImage; add `copyWith` to file model
+-   Fix YustFile.fromJson implementation
+
 ## 3.30.0 - 2025-12-19
 
 -   Add supported for map based file structure

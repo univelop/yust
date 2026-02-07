@@ -4,6 +4,7 @@ import '../models/yust_file.dart';
 import '../util/file_access/yust_cdn_configuration.dart';
 import '../util/file_access/yust_file_access_grant.dart';
 import '../util/google_cloud_cdn_helper.dart';
+import '../util/yust_exception.dart';
 import 'yust_file_access_service_interface.dart';
 
 class YustFileAccessService implements IYustFileAccessService {
@@ -38,6 +39,13 @@ class YustFileAccessService implements IYustFileAccessService {
     required YustCdnConfiguration cdnConfiguration,
     Map<String, String>? additionalQueryParams,
   }) {
+    if (path.endsWith('/')) {
+      throw YustException('Path must not end with a trailing slash: $path');
+    }
+    if (name.startsWith('/')) {
+      throw YustException('Name must not start with a leading slash: $name');
+    }
+
     final helper = GoogleCloudCdnHelper.fromCdnConfiguration(cdnConfiguration);
     return helper.signFilePath(
       path: '$path/$name',

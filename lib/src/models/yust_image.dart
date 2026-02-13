@@ -76,6 +76,16 @@ class YustImage extends YustFile {
           : null;
   }
 
+  /// Allowed file extensions for image uploads.
+  static const List<String> allowedExtensions = [
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'tiff',
+    'heic',
+  ];
+
   /// Type identifier for this class
   ///
   /// Used for local caching on mobile devices

@@ -42,7 +42,7 @@ class YustAuthService {
                 ),
               ],
             )
-            .then((yustUser) => yustUser?.setLoginFields(user: user));
+            .then((yustUser) => yustUser?.setLoginFields());
       }
       return user == null ? AuthState.signedOut : AuthState.signedIn;
     });
@@ -116,13 +116,14 @@ class YustAuthService {
       provider,
       redirect: redirect,
     );
-
+    if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
 
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
-      userCredential.user!,
+      _getEmail(userCredential),
+      _getId(userCredential),
       method,
     );
     if (successfullyLinked) return null;
@@ -135,10 +136,17 @@ class YustAuthService {
       yust: _yust,
       firstName: firstName,
       lastName: lastName,
-      user: userCredential.user!,
+      email: _getEmail(userCredential),
+      id: _getId(userCredential),
+      authId: _getId(userCredential),
       authenticationMethod: method,
     );
   }
+
+  String _getId(UserCredential userCredential) => userCredential.user!.uid;
+
+  String _getEmail(UserCredential userCredential) =>
+      userCredential.user!.email ?? '';
 
   String _getFirstName(List<String> nameParts) =>
       nameParts.join(' ').replaceAll(r'+', ' ');
@@ -200,7 +208,8 @@ class YustAuthService {
     await userCredential.user?.updateDisplayName('$firstName $lastName');
     final successfullyLinked = await YustAuthServiceShared.tryLinkYustUser(
       _yust,
-      userCredential.user!,
+      email,
+      userCredential.user!.uid,
       YustAuthenticationMethod.mail,
     );
     if (successfullyLinked) return null;
@@ -208,8 +217,10 @@ class YustAuthService {
     return await YustAuthServiceShared.createYustUser(
       yust: _yust,
       firstName: firstName,
+      email: email,
       lastName: lastName,
-      user: userCredential.user!,
+      id: userCredential.user!.uid,
+      authId: userCredential.user!.uid,
       gender: gender,
       authenticationMethod: YustAuthenticationMethod.mail,
     );

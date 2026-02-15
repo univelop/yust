@@ -51,6 +51,9 @@ class YustFileService implements IYustFileService {
     String? contentDisposition,
     Map<String, String>? metadata,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   }) async {
     final collected = <int>[];
     await for (final chunk in stream) {
@@ -65,6 +68,9 @@ class YustFileService implements IYustFileService {
       metadata: metadata,
       contentDisposition: contentDisposition,
       bucketName: bucketName,
+      createThumbnail: createThumbnail,
+      linkedDocPath: linkedDocPath,
+      linkedDocAttribute: linkedDocAttribute,
     );
   }
 
@@ -77,6 +83,9 @@ class YustFileService implements IYustFileService {
     Map<String, String>? metadata,
     String? contentDisposition,
     String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   }) async {
     try {
       final storage = _getStorageForBucket(bucketName);
@@ -88,11 +97,17 @@ class YustFileService implements IYustFileService {
       );
 
       UploadTask uploadTask;
+      final hasLinkedDoc = linkedDocPath != null && linkedDocAttribute != null;
       if (file != null) {
         // For file uploads, create metadata with custom metadata if provided
         var fileMetadata = SettableMetadata(
           contentType: lookupMimeType(name),
-          customMetadata: metadata,
+          customMetadata: {
+            ...?metadata,
+            if (createThumbnail == true) 'thumbnail': 'true',
+            if (hasLinkedDoc) 'linkedDocPath': linkedDocPath,
+            if (hasLinkedDoc) 'linkedDocAttribute': linkedDocAttribute,
+          },
           contentDisposition:
               contentDisposition ?? Yust.helpers.createContentDisposition(name),
         );
@@ -100,7 +115,12 @@ class YustFileService implements IYustFileService {
       } else {
         var fileMetadata = SettableMetadata(
           contentType: lookupMimeType(name),
-          customMetadata: metadata,
+          customMetadata: {
+            ...?metadata,
+            if (createThumbnail == true && hasLinkedDoc) 'thumbnail': 'true',
+            if (hasLinkedDoc) 'linkedDocPath': linkedDocPath,
+            if (hasLinkedDoc) 'linkedDocAttribute': linkedDocAttribute,
+          },
           contentDisposition:
               contentDisposition ?? Yust.helpers.createContentDisposition(name),
         );

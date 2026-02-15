@@ -22,8 +22,12 @@ export 'src/services/yust_database_service.dart';
 export 'src/services/yust_database_service_mocked.dart';
 export 'src/services/yust_database_service_shared.dart'
     show AggregationResult, AggregationType;
+export 'src/services/yust_file_access_service.dart';
+export 'src/services/yust_file_access_service_mocked.dart';
 export 'src/services/yust_push_service.dart';
 export 'src/services/yust_push_service_mocked.dart';
+export 'src/util/file_access/yust_cdn_configuration.dart';
+export 'src/util/file_access/yust_file_access_grant.dart';
 export 'src/util/google_cloud_helpers.dart';
 export 'src/util/google_cloud_helpers_shared.dart';
 export 'src/util/object_helper.dart';

@@ -257,10 +257,10 @@ class YustUser extends YustDoc {
         ? Uri.base.host
         : lastLoginDomain;
     lastLogin = Yust.helpers.utcNow();
-      await (yust?.dbService ?? Yust.databaseService).saveDoc<YustUser>(
-        Yust.userSetup,
-        this,
-      );
+    await (yust?.dbService ?? Yust.databaseService).saveDoc<YustUser>(
+      Yust.userSetup,
+      this,
+    );
   }
 
   /// Returns the user name.

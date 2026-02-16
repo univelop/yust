@@ -45,6 +45,9 @@ abstract interface class IYustFileAccessService {
   Future<String?> Function(YustFile)? generateDownloadUrl;
 
   /// Creates a signed URL for a file at the given [path] and [name].
+  ///
+  /// [path] must NOT end with a trailing slash.
+  ///
   /// The [validFor] parameter limits the validity of the URL.
   String createSignedUrlForFile({
     required String path,

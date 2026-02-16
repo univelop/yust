@@ -147,6 +147,10 @@ class YustFile {
     if (setCreatedAtToNow) {
       createdAt ??= DateTime.now();
     }
+
+    if (path != null && path!.endsWith('/')) {
+      throw YustException('Path must not end with a trailing slash: $path');
+    }
   }
 
   /// Converts the file to JSON for Firebase. Only relevant attributes are converted.
@@ -355,9 +359,12 @@ class YustFile {
     final grant = Yust.fileAccessService.getGrantForFile(this);
 
     // ignore: deprecated_member_use_from_same_package
-    if (baseUrl == null || grant == null || path == null) return url;
+    if (baseUrl == null || grant == null || path == null || name == null) {
+      // ignore: deprecated_member_use_from_same_package
+      return url;
+    }
 
-    return '$baseUrl$path?${grant.originalSignedUrlPart}';
+    return '$baseUrl$path/$name?${grant.originalSignedUrlPart}';
   }
 
   /// Returns the thumbnail URL of the file.

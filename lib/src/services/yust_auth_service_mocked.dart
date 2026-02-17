@@ -83,6 +83,7 @@ class YustAuthServiceMocked implements YustAuthService {
   @override
   Future<YustUser?> signInWithOpenId(
     String providerId, {
+    List<String>? scopes,
     bool redirect = false,
   }) => throw UnimplementedError();
 

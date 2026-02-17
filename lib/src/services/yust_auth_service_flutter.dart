@@ -93,9 +93,13 @@ class YustAuthService {
 
   Future<YustUser?> signInWithOpenId(
     String providerId, {
+    List<String>? scopes,
     bool redirect = false,
   }) async {
     final provider = OAuthProvider(providerId);
+    if (scopes != null && scopes.isNotEmpty) {
+      provider.setScopes(scopes);
+    }
     return _signInWithProvider(
       provider,
       YustAuthenticationMethod.openId,

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:googleapis/fcm/v1.dart';
 import 'package:http/http.dart';
@@ -9,6 +11,10 @@ import '../yust.dart';
 
 /// Sends out Push notifications via Firebase Cloud Messaging
 class YustPushService {
+  /// FCM enforces a 4096-byte limit on the total message payload.
+  static const int _maxTitleBytes = 750;
+  static const int _maxBodyBytes = 3000;
+
   late final FirebaseCloudMessagingApi _api;
   late final Client _authClient;
   late final String _projectId;
@@ -32,7 +38,11 @@ class YustPushService {
     String? image,
   }) async {
     final message = Message(
-      notification: Notification(title: title, body: body, image: image),
+      notification: Notification(
+        title: _trimToByteLength(title, _maxTitleBytes),
+        body: _trimToByteLength(body, _maxBodyBytes),
+        image: image,
+      ),
       token: deviceId,
     );
     final request = SendMessageRequest(message: message);
@@ -68,6 +78,21 @@ class YustPushService {
         await onErrorForDevice?.call(deviceId, e, s);
       }
     }
+  }
+
+  /// Trims [text] so its UTF-8 encoding does not exceed [maxBytes].
+  static String _trimToByteLength(String text, int maxBytes) {
+    final bytes = utf8.encode(text);
+
+    if (bytes.length <= maxBytes) {
+      return text;
+    }
+
+    final truncated = Uint8List.sublistView(bytes, 0, maxBytes);
+
+    // Set allowMalformed to true to avoid exceptions if we cut mid-character (e.g. for emojis)
+    // This will instead just show the unicode replacement character "�"
+    return utf8.decode(truncated, allowMalformed: true);
   }
 
   /// Retries the given function if a TlsException, ClientException or BadGatewayException occurs.

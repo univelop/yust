@@ -1,3 +1,7 @@
+## 3.31.2 - 2026-02-18
+
+- Add optional `scopes` parameter to `signInWithOpenId` for OpenID Connect (OAuth provider scopes)
+
 ## 3.31.1 - 2026-02-16
 
 - Fix file name missing in URL

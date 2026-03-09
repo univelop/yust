@@ -17,6 +17,7 @@ class YustAuthService {
     Yust yust, {
     String? emulatorAddress,
     String? pathToServiceAccountJson,
+    String? backendAuthId,
   }) : _fireAuth = FirebaseAuth.instance,
        _yust = yust {
     if (emulatorAddress != null) {
@@ -292,7 +293,7 @@ class YustAuthService {
     }
   }
 
-  Future<String?> getJWTToken() async {
+  Future<String?> getJWTToken({String? targetUrl}) async {
     final jwtObject = await _fireAuth.currentUser?.getIdTokenResult();
     return jwtObject?.token;
   }

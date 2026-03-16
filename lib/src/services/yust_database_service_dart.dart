@@ -1504,6 +1504,13 @@ class YustDatabaseService implements IYustDatabaseService {
       return null;
     }
 
+    if (json['id'] is! String || json['id'].isEmpty) {
+      print(
+        '[[WARNING]] Error Transforming JSON. Document has no id: Collection ${docSetup.collectionName}, Name ${document.name}',
+      );
+      return null;
+    }
+
     try {
       final doc = docSetup.fromJson(json);
       doc.clearUpdateMask();

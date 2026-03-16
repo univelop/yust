@@ -186,6 +186,14 @@ class YustUser extends YustDoc {
   Map<String, dynamic> get userAttributes => Map.unmodifiable(_userAttributes);
 
   YustUser({
+    super.id,
+    super.createdAt,
+    super.createdBy,
+    super.modifiedAt,
+    super.modifiedBy,
+    super.userId,
+    super.envId,
+    super.expiresAt,
     required String email,
     required String firstName,
     required String lastName,

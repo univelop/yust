@@ -1,3 +1,8 @@
+## 3.31.3 - 2026-03-16
+
+- Trim long push notifications to avoid send failures
+- In transform operations, remove invalid documents when the id field is not given instead of failing
+
 ## 3.31.2 - 2026-02-18
 
 - Add optional `scopes` parameter to `signInWithOpenId` for OpenID Connect (OAuth provider scopes)

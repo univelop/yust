@@ -141,6 +141,12 @@ class Yust {
     AccessCredentials? credentials,
     String? originalCdnBaseUrl,
     String? thumbnailCdnBaseUrl,
+
+    /// The Firebase Auth uid used by the backend to authenticate its own API
+    /// calls (e.g. backend-to-backend requests). When provided, `getJWTToken`
+    /// generates a Firebase ID token for this uid via custom token exchange
+    /// instead of throwing [UnsupportedError]. Leave null in Flutter apps.
+    String? backendAuthId,
   }) async {
     if (forUI) _instance = this;
 
@@ -177,6 +183,7 @@ class Yust {
       this,
       emulatorAddress: emulatorAddress,
       pathToServiceAccountJson: pathToServiceAccountJson,
+      backendAuthId: backendAuthId,
     );
     Yust.fileService = YustFileService(
       authClient: Yust.authClient,

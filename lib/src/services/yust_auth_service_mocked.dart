@@ -51,7 +51,8 @@ class YustAuthServiceMocked implements YustAuthService {
   String? getCurrentUserId() => throw UnimplementedError();
 
   @override
-  Future<String?> getJWTToken() => throw UnimplementedError();
+  Future<String?> getJWTToken({String? targetUrl}) =>
+      throw UnimplementedError();
 
   @override
   Future<void> sendPasswordResetEmail(String email) =>
@@ -101,6 +102,7 @@ class YustAuthServiceMocked implements YustAuthService {
   Future<String> getAuthTokenForAuthId(
     String authId, {
     String? overrideEmail,
+    String? targetUrl,
   }) => throw UnimplementedError();
 
   @override

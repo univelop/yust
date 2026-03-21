@@ -316,13 +316,7 @@ class YustAuthService {
     String? subjectServiceAccountMail = overrideEmail;
     Map? serviceAccountKey;
 
-    // ignore: avoid_print
-    print(
-      '[YustAuthService] getAuthTokenForAuthId: authId=$authId, pathToServiceAccountJson=$_pathToServiceAccountJson',
-    );
     if (_pathToServiceAccountJson != null) {
-      // ignore: avoid_print
-      print('[YustAuthService] getAuthTokenForAuthId: using SA JSON file');
       final rawFileText = await File(_pathToServiceAccountJson).readAsString();
       final decodedKey = jsonDecode(rawFileText);
 
@@ -332,47 +326,24 @@ class YustAuthService {
       serviceAccountKey = decodedKey;
       subjectServiceAccountMail ??= serviceAccountKey['client_email'];
       issuerAccountMail = serviceAccountKey['client_email'];
-      // ignore: avoid_print
-      print(
-        '[YustAuthService] getAuthTokenForAuthId: SA email=$issuerAccountMail',
-      );
+
       // If we got a service account key file, we can just use the private key provided
       // for signing.
-      // ignore: avoid_print
-      print(
-        '[YustAuthService] getAuthTokenForAuthId: creating unsigned JWT for authId=$authId subject=${subjectServiceAccountMail ?? issuerAccountMail} issuer=$issuerAccountMail targetUrl=$targetUrl',
-      );
       final jwt = _createUnsignedJWTForAuthId(
         authId,
         subjectServiceAccountMail ?? issuerAccountMail,
         issuerAccountMail,
         targetUrl: targetUrl,
       );
-      // ignore: avoid_print
-      print(
-        '[YustAuthService] getAuthTokenForAuthId: signing JWT with RSA private key',
-      );
       final signedJwt = jwt.sign(
         RSAPrivateKey(serviceAccountKey['private_key']),
         algorithm: JWTAlgorithm.RS256,
         expiresIn: const Duration(seconds: 3600),
       );
-      // ignore: avoid_print
-      print(
-        '[YustAuthService] getAuthTokenForAuthId: signed custom token with SA key file',
-      );
       return signedJwt;
     } else {
       try {
-        // ignore: avoid_print
-        print(
-          '[YustAuthService] getAuthTokenForAuthId: fetching SA email from metadata server',
-        );
         final metadataEmail = await _getServiceAccountEmailFromMetadata();
-        // ignore: avoid_print
-        print(
-          '[YustAuthService] getAuthTokenForAuthId: using IAM path, metadata email=$metadataEmail',
-        );
         subjectServiceAccountMail ??= metadataEmail;
         issuerAccountMail = metadataEmail;
 
@@ -389,10 +360,6 @@ class YustAuthService {
           'iat': DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000,
           'exp': (DateTime.now().toUtc().millisecondsSinceEpoch ~/ 1000) + 3600,
         });
-        // ignore: avoid_print
-        print(
-          '[YustAuthService] getAuthTokenForAuthId: calling IAM signJwt delegate=$delegate payload=$payload',
-        );
         final signRequest = SignJwtRequest(payload: payload);
         final SignJwtResponse signingResponse;
         try {
@@ -407,10 +374,7 @@ class YustAuthService {
         if (signedJwt == null) {
           throw YustException('Could not sign JWT');
         }
-        // ignore: avoid_print
-        print(
-          '[YustAuthService] getAuthTokenForAuthId: IAM signed custom token successfully',
-        );
+
         return signedJwt;
       } catch (e) {
         throw YustException(
@@ -434,20 +398,12 @@ class YustAuthService {
   /// If [targetUrl] is provided, it is embedded as a `resource` claim so the
   /// token is bound to that URL (validated server-side by the API middleware).
   Future<String?> getJWTToken({String? targetUrl}) async {
-    // ignore: avoid_print
-    print(
-      '[YustAuthService] getJWTToken: backendAuthId=$_backendAuthId, targetUrl=$targetUrl, pathToServiceAccountJson=$_pathToServiceAccountJson',
-    );
     if (_backendAuthId == null) {
       throw UnsupportedError('Not supported. No UI available.');
     }
     final customToken = await getAuthTokenForAuthId(
       _backendAuthId,
       targetUrl: targetUrl,
-    );
-    // ignore: avoid_print
-    print(
-      '[YustAuthService] getJWTToken: got custom token, exchanging for ID token',
     );
     final response = await _api.accounts.signInWithCustomToken(
       GoogleCloudIdentitytoolkitV1SignInWithCustomTokenRequest(
@@ -458,8 +414,6 @@ class YustAuthService {
     if (response.idToken == null) {
       throw YustException('Failed to get ID token from custom token exchange');
     }
-    // ignore: avoid_print
-    print('[YustAuthService] getJWTToken: successfully obtained ID token');
     return response.idToken;
   }
 

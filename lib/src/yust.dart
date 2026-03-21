@@ -143,7 +143,7 @@ class Yust {
     String? thumbnailCdnBaseUrl,
 
     /// The Firebase Auth uid used by the backend to authenticate its own API
-    /// calls (e.g. backend-to-backend requests). When provided, [getJWTToken]
+    /// calls (e.g. backend-to-backend requests). When provided, `getJWTToken`
     /// generates a Firebase ID token for this uid via custom token exchange
     /// instead of throwing [UnsupportedError]. Leave null in Flutter apps.
     String? backendAuthId,

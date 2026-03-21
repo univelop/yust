@@ -1,3 +1,8 @@
+## 3.31.4 - 2026-03-21
+
+- Add optional `backendAuthId` to `Yust.initialize` so server-side Dart can obtain a Firebase ID token via `getJWTToken` (custom token exchange) instead of throwing `UnsupportedError`
+- Add optional `targetUrl` to `getJWTToken` and `getAuthTokenForAuthId` to embed a `resource` custom claim for URL-scoped tokens (validated by API middleware)
+
 ## 3.31.3 - 2026-03-16
 
 - Trim long push notifications to avoid send failures

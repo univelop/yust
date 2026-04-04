@@ -85,15 +85,10 @@ class GoogleCloudHelpers {
 
   /// Gets the google project id from the execution environment.
   ///
-  /// Lookup order:
-  /// 1. [credentials] email (`<sa>@<project-id>.iam.gserviceaccount.com`)
-  /// 2. `GCP_PROJECT` / `GCLOUD_PROJECT` environment variables
-  /// 3. GCP metadata server (Cloud Run only)
-  static Future<String> getProjectId({
-    ServiceAccountCredentials? credentials,
-  }) async {
-    String? projectId = credentials?.projectId;
-    projectId ??=
+  /// The project id is read from typical google cloud environment variables
+  /// or from the metadata server.
+  static Future<String> getProjectId() async {
+    String? projectId =
         Platform.environment['GCP_PROJECT'] ??
         Platform.environment['GCLOUD_PROJECT'];
     projectId ??= await _getProjectIdWithMetadataServer();

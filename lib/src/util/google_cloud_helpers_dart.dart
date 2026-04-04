@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:googleapis/firestore/v1.dart';
@@ -15,31 +14,19 @@ import 'yust_exception.dart';
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
-  /// Optional in-memory credentials override.
-  ///
-  /// When set via [setCredentialsOverride], [createAuthClient] uses these
-  /// credentials instead of ADC or a key file. Useful for injecting SA key
-  /// JSON fetched at runtime (e.g. from 1Password) without writing to disk.
-  static ServiceAccountCredentials? _credentialsOverride;
-
-  /// Sets in-memory credentials that [createAuthClient] will use instead of
-  /// ADC or a service account key file.
-  static void setCredentialsOverride(ServiceAccountCredentials creds) =>
-      _credentialsOverride = creds;
-
   /// Initializes firebase
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
-  /// Use [pathToServiceAccountJson] if you are connecting directly with Dart.
-  /// If you don't provide a path, the client looks for credentials in common places,
-  /// like environment variables, etc.
+  /// Use [credentials] to authenticate with a service account directly with Dart.
+  /// If you don't provide credentials, the client looks for application default
+  /// credentials in common places, like environment variables, etc.
   /// Set the [emulatorAddress], if you want to emulate Firebase.
   /// [buildRelease] must be set to true if you want to create an iOS release.
   ///
   /// Returns an [Client] (if in dart-only env) which can be used to authenticate with other google cloud services.
   static Future<Client?> initializeFirebase({
     Map<String, String>? firebaseOptions,
-    String? pathToServiceAccountJson,
+    ServiceAccountCredentials? credentials,
     String? emulatorAddress,
     bool buildRelease = false,
     Client? authClient,
@@ -57,7 +44,7 @@ class GoogleCloudHelpers {
 
     authClient = await createAuthClient(
       scopes: scopes,
-      pathToServiceAccountJson: pathToServiceAccountJson,
+      credentials: credentials,
     );
 
     return authClient;
@@ -65,51 +52,29 @@ class GoogleCloudHelpers {
 
   /// Creates an auth client for the google cloud environment.
   ///
-  /// If [pathToServiceAccountJson] is provided, the client is created with the service account credentials.
-  /// Else the client is created with the application default credentials (e.g. from environment variables)
+  /// If [credentials] are provided, the client is created with those service account credentials.
+  /// Else the client is created with the application default credentials (e.g. from environment variables).
   ///
   /// The [scopes] need to be set, to the services you want to use. E.g. `FirestoreApi.datastoreScope`.
   static Future<AuthClient> createAuthClient({
     required List<String> scopes,
-    String? pathToServiceAccountJson,
+    ServiceAccountCredentials? credentials,
   }) async {
-    if (_credentialsOverride != null) {
-      return await clientViaServiceAccount(_credentialsOverride!, scopes);
+    if (credentials != null) {
+      return await clientViaServiceAccount(credentials, scopes);
     }
-    if (pathToServiceAccountJson == null) {
-      return await clientViaApplicationDefaultCredentials(scopes: scopes);
-    } else {
-      final serviceAccountJson = jsonDecode(
-        await File(pathToServiceAccountJson).readAsString(),
-      );
-
-      final accountCredentials = ServiceAccountCredentials.fromJson(
-        serviceAccountJson,
-      );
-
-      return await clientViaServiceAccount(accountCredentials, scopes);
-    }
+    return await clientViaApplicationDefaultCredentials(scopes: scopes);
   }
 
   /// Gets the google project id from the execution environment.
   ///
-  /// If [pathToServiceAccountJson] is provided, the project id is read from the json file.
-  /// If [pathToServiceAccountJson] and [useMetadataServer] are both not provided,
-  /// the project id is read from typical google cloud environment variables.
-  static Future<String> getProjectId({String? pathToServiceAccountJson}) async {
-    String? projectId;
-    if (pathToServiceAccountJson == null) {
-      projectId =
-          Platform.environment['GCP_PROJECT'] ??
-          Platform.environment['GCLOUD_PROJECT'];
-      projectId ??= await _getProjectIdWithMetadataServer();
-    } else {
-      final serviceAccountJson = jsonDecode(
-        await File(pathToServiceAccountJson).readAsString(),
-      );
-
-      projectId = serviceAccountJson['project_id'];
-    }
+  /// The project id is read from typical google cloud environment variables
+  /// or from the metadata server.
+  static Future<String> getProjectId() async {
+    String? projectId =
+        Platform.environment['GCP_PROJECT'] ??
+        Platform.environment['GCLOUD_PROJECT'];
+    projectId ??= await _getProjectIdWithMetadataServer();
     if ((projectId ?? '') == '') {
       throw YustException('No project id found!');
     }

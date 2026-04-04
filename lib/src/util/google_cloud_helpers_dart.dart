@@ -12,6 +12,23 @@ import 'package:http/http.dart';
 import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 
+/// Extension on [ServiceAccountCredentials] to derive the GCP project id
+/// from the service account email (`<name>@<project-id>.iam.gserviceaccount.com`).
+extension ServiceAccountCredentialsExtension on ServiceAccountCredentials {
+  /// The GCP project id derived from the service account email.
+  ///
+  /// Returns `null` if the email does not follow the standard
+  /// `<name>@<project-id>.iam.gserviceaccount.com` format.
+  String? get projectId {
+    const suffix = '.iam.gserviceaccount.com';
+    final atIndex = email.indexOf('@');
+    if (atIndex == -1) return null;
+    final domain = email.substring(atIndex + 1);
+    if (!domain.endsWith(suffix)) return null;
+    return domain.substring(0, domain.length - suffix.length);
+  }
+}
+
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
   /// Initializes firebase
@@ -68,10 +85,15 @@ class GoogleCloudHelpers {
 
   /// Gets the google project id from the execution environment.
   ///
-  /// The project id is read from typical google cloud environment variables
-  /// or from the metadata server.
-  static Future<String> getProjectId() async {
-    String? projectId =
+  /// Lookup order:
+  /// 1. [credentials] email (`<sa>@<project-id>.iam.gserviceaccount.com`)
+  /// 2. `GCP_PROJECT` / `GCLOUD_PROJECT` environment variables
+  /// 3. GCP metadata server (Cloud Run only)
+  static Future<String> getProjectId({
+    ServiceAccountCredentials? credentials,
+  }) async {
+    String? projectId = credentials?.projectId;
+    projectId ??=
         Platform.environment['GCP_PROJECT'] ??
         Platform.environment['GCLOUD_PROJECT'];
     projectId ??= await _getProjectIdWithMetadataServer();

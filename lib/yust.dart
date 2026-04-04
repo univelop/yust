@@ -3,6 +3,9 @@
 /// More dart docs go here.
 library;
 
+export 'package:googleapis_auth/googleapis_auth.dart'
+    show ServiceAccountCredentials;
+
 export 'src/extensions/date_time_extension.dart';
 export 'src/extensions/list_extension.dart';
 export 'src/extensions/server_now.dart';

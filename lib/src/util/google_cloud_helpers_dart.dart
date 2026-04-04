@@ -75,10 +75,10 @@ class GoogleCloudHelpers {
         Platform.environment['GCP_PROJECT'] ??
         Platform.environment['GCLOUD_PROJECT'];
     projectId ??= await _getProjectIdWithMetadataServer();
-    if ((projectId ?? '') == '') {
+    if (projectId.isEmpty) {
       throw YustException('No project id found!');
     }
-    return projectId!;
+    return projectId;
   }
 
   /// Converts a timestamp to a DateTime.

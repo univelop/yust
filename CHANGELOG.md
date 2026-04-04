@@ -1,3 +1,7 @@
+## 3.32.0 - 2026-04-04
+
+- Add optional `credentials` parameter to `Yust.initialize` to allow passing in-memory service account credentials instead of reading from a file
+
 ## 3.31.4 - 2026-03-21
 
 - Add optional `backendAuthId` to `Yust.initialize` so server-side Dart can obtain a Firebase ID token via `getJWTToken` (custom token exchange) instead of throwing `UnsupportedError`

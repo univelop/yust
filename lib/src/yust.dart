@@ -125,7 +125,7 @@ class Yust {
   /// Initializes [Yust].
   //
   /// This method should be called before any usage of the yust package.
-  /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [pathToServiceAccountJson] if you are connecting directly with Dart.
+  /// Use [firebaseOptions] to connect to Firebase if your are using Flutter. Use [credentials] to pass service account credentials directly with Dart.
   /// Set the [emulatorAddress], if you want to emulate Firebase. [userSetup] let you overwrite the default [UserSetup].
   /// If [useSubcollections] is set to true (default), Yust is creating subcollections for each tenant automatically.
   /// [envCollectionName] represents the collection name for the tenants.
@@ -133,12 +133,11 @@ class Yust {
   /// Use [dbLogCallback] to provide a function that will get called on each DatabaseCall
   Future<void> initialize({
     Map<String, String>? firebaseOptions,
-    String? pathToServiceAccountJson,
+    ServiceAccountCredentials? credentials,
     required String projectId,
     String? emulatorAddress,
     YustDocSetup<YustUser>? userSetup,
     DatabaseLogCallback? dbLogCallback,
-    AccessCredentials? credentials,
     String? originalCdnBaseUrl,
     String? thumbnailCdnBaseUrl,
 
@@ -169,7 +168,7 @@ class Yust {
 
     Yust.authClient = await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
-      pathToServiceAccountJson: pathToServiceAccountJson,
+      credentials: credentials,
       emulatorAddress: emulatorAddress,
       authClient: Yust.authClient,
     );
@@ -182,7 +181,7 @@ class Yust {
     Yust.authService = YustAuthService(
       this,
       emulatorAddress: emulatorAddress,
-      pathToServiceAccountJson: pathToServiceAccountJson,
+      credentials: credentials,
       backendAuthId: backendAuthId,
     );
     Yust.fileService = YustFileService(

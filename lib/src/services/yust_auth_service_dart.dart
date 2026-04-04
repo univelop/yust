@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:googleapis/iamcredentials/v1.dart';
 import 'package:googleapis/identitytoolkit/v1.dart';
+import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart';
 import 'package:uuid/uuid.dart';
 
@@ -18,7 +18,7 @@ import 'yust_auth_service_shared.dart';
 class YustAuthService {
   final IdentityToolkitApi _api;
   final Yust _yust;
-  final String? _pathToServiceAccountJson;
+  final ServiceAccountCredentials? _credentials;
 
   /// The Firebase Auth ID (uid) used to generate tokens for backend-to-backend
   /// API calls. When set, [getJWTToken] signs in as this user via a custom
@@ -30,10 +30,10 @@ class YustAuthService {
   YustAuthService(
     Yust yust, {
     String? emulatorAddress,
-    String? pathToServiceAccountJson,
+    ServiceAccountCredentials? credentials,
     String? backendAuthId,
   }) : _yust = yust,
-       _pathToServiceAccountJson = pathToServiceAccountJson,
+       _credentials = credentials,
        _backendAuthId = backendAuthId,
        _api = emulatorAddress != null
            ? IdentityToolkitApi(
@@ -314,29 +314,20 @@ class YustAuthService {
   }) async {
     String issuerAccountMail;
     String? subjectServiceAccountMail = overrideEmail;
-    Map? serviceAccountKey;
 
-    if (_pathToServiceAccountJson != null) {
-      final rawFileText = await File(_pathToServiceAccountJson).readAsString();
-      final decodedKey = jsonDecode(rawFileText);
+    if (_credentials != null) {
+      issuerAccountMail = _credentials.email;
+      subjectServiceAccountMail ??= issuerAccountMail;
 
-      if (decodedKey == null || decodedKey is! Map) {
-        throw YustException('Could not read service account key');
-      }
-      serviceAccountKey = decodedKey;
-      subjectServiceAccountMail ??= serviceAccountKey['client_email'];
-      issuerAccountMail = serviceAccountKey['client_email'];
-
-      // If we got a service account key file, we can just use the private key provided
-      // for signing.
+      // Sign directly with the private key from the credentials.
       final jwt = _createUnsignedJWTForAuthId(
         authId,
-        subjectServiceAccountMail ?? issuerAccountMail,
+        subjectServiceAccountMail,
         issuerAccountMail,
         targetUrl: targetUrl,
       );
       final signedJwt = jwt.sign(
-        RSAPrivateKey(serviceAccountKey['private_key']),
+        RSAPrivateKey(_credentials.privateKey),
         algorithm: JWTAlgorithm.RS256,
         expiresIn: const Duration(seconds: 3600),
       );

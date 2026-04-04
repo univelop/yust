@@ -15,6 +15,18 @@ import 'yust_exception.dart';
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
 class GoogleCloudHelpers {
+  /// Optional in-memory credentials override.
+  ///
+  /// When set via [setCredentialsOverride], [createAuthClient] uses these
+  /// credentials instead of ADC or a key file. Useful for injecting SA key
+  /// JSON fetched at runtime (e.g. from 1Password) without writing to disk.
+  static ServiceAccountCredentials? _credentialsOverride;
+
+  /// Sets in-memory credentials that [createAuthClient] will use instead of
+  /// ADC or a service account key file.
+  static void setCredentialsOverride(ServiceAccountCredentials creds) =>
+      _credentialsOverride = creds;
+
   /// Initializes firebase
   ///
   /// Use [firebaseOptions] to connect to Firebase if your are using Flutter.
@@ -61,6 +73,9 @@ class GoogleCloudHelpers {
     required List<String> scopes,
     String? pathToServiceAccountJson,
   }) async {
+    if (_credentialsOverride != null) {
+      return await clientViaServiceAccount(_credentialsOverride!, scopes);
+    }
     if (pathToServiceAccountJson == null) {
       return await clientViaApplicationDefaultCredentials(scopes: scopes);
     } else {

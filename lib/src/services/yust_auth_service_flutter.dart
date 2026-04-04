@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:googleapis_auth/googleapis_auth.dart'
+    show ServiceAccountCredentials;
 
 import '../models/yust_filter.dart';
 import '../models/yust_user.dart';
@@ -16,7 +18,7 @@ class YustAuthService {
   YustAuthService(
     Yust yust, {
     String? emulatorAddress,
-    String? pathToServiceAccountJson,
+    ServiceAccountCredentials? credentials,
     String? backendAuthId,
   }) : _fireAuth = FirebaseAuth.instance,
        _yust = yust {

@@ -1,3 +1,7 @@
+## 3.32.1 - 2026-04-04
+
+- Fix flutter & dart interface compatibility
+
 ## 3.32.0 - 2026-04-04
 
 - Add optional `credentials` parameter to `Yust.initialize` to allow passing in-memory service account credentials instead of reading from a file

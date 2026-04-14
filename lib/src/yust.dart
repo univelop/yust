@@ -16,6 +16,7 @@ import 'services/yust_push_service.dart';
 import 'services/yust_push_service_mocked.dart';
 import 'util/file_access/yust_file_access_grant.dart';
 import 'util/google_cloud_helpers.dart';
+import 'util/user_agent_client.dart';
 import 'util/yust_helpers.dart';
 
 /// Represents the state of the user authentication.
@@ -146,6 +147,7 @@ class Yust {
     /// generates a Firebase ID token for this uid via custom token exchange
     /// instead of throwing [UnsupportedError]. Leave null in Flutter apps.
     String? backendAuthId,
+    String? userAgent,
   }) async {
     if (forUI) _instance = this;
 
@@ -172,6 +174,10 @@ class Yust {
       emulatorAddress: emulatorAddress,
       authClient: Yust.authClient,
     );
+
+    if (userAgent != null && Yust.authClient != null) {
+      Yust.authClient = UserAgentClient(Yust.authClient!, userAgent: userAgent);
+    }
 
     dbService = YustDatabaseService(
       yust: this,

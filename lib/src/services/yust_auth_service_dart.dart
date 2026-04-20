@@ -37,11 +37,11 @@ class YustAuthService {
        _backendAuthId = backendAuthId,
        _api = emulatorAddress != null
            ? IdentityToolkitApi(
-               Yust.authClient!,
+               yust.authClient!,
                rootUrl: 'http://$emulatorAddress:9099/',
                servicePath: 'identitytoolkit.googleapis.com/',
              )
-           : IdentityToolkitApi(Yust.authClient!);
+           : IdentityToolkitApi(yust.authClient!);
 
   /// Returns the current [AuthState] in a Stream.
   Stream<AuthState> getAuthStateStream() {
@@ -338,7 +338,7 @@ class YustAuthService {
         subjectServiceAccountMail ??= metadataEmail;
         issuerAccountMail = metadataEmail;
 
-        final iamClient = IAMCredentialsApi(Yust.authClient!);
+        final iamClient = IAMCredentialsApi(_yust.authClient!);
         final delegate =
             'projects/-/serviceAccounts/$subjectServiceAccountMail';
         final payload = jsonEncode({

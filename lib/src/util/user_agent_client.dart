@@ -6,18 +6,21 @@ import 'package:http/http.dart' as http;
 /// This makes the User-Agent visible in Google Cloud Audit Logs
 /// via `requestMetadata.callerSuppliedUserAgent`.
 class UserAgentClient extends http.BaseClient {
-  UserAgentClient(this._inner, {required String userAgent})
+  UserAgentClient(this.inner, {required String userAgent})
     : _userAgent = userAgent;
 
-  final http.Client _inner;
+  final http.Client inner;
   final String _userAgent;
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) {
-    request.headers['User-Agent'] = _userAgent;
-    return _inner.send(request);
+    final existing = request.headers['User-Agent'];
+    request.headers['User-Agent'] = existing != null && existing.isNotEmpty
+        ? '$existing $_userAgent'
+        : _userAgent;
+    return inner.send(request);
   }
 
   @override
-  void close() => _inner.close();
+  void close() => inner.close();
 }

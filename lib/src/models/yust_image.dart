@@ -98,7 +98,7 @@ class YustImage extends YustFile {
       case 'location':
         return location;
       default:
-        super[key];
+        return super[key];
     }
   }
 

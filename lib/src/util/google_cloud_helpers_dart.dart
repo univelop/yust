@@ -34,7 +34,12 @@ class GoogleCloudHelpers {
     String? userAgent,
   }) async {
     if (authClient != null) {
-      final base = authClient is UserAgentClient ? authClient.inner : authClient;
+      final isUserAgentClient = authClient is UserAgentClient;
+      if (isUserAgentClient && authClient.userAgent == userAgent) {
+        return authClient;
+      }
+
+      final base = isUserAgentClient ? authClient.inner : authClient;
       return userAgent != null
           ? UserAgentClient(base, userAgent: userAgent)
           : base;

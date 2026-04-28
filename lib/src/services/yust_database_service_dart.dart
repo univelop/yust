@@ -57,7 +57,7 @@ class YustDatabaseService implements IYustDatabaseService {
 
   YustDatabaseService({required Yust yust, String? emulatorAddress})
     : _yust = yust,
-      _authClient = Yust.authClient!,
+      _authClient = yust.authClient!,
       envCollectionName = yust.envCollectionName,
       useSubcollections = yust.useSubcollections,
       _rootUrl = emulatorAddress != null

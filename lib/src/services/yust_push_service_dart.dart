@@ -19,8 +19,8 @@ class YustPushService {
   late final Client _authClient;
   late final String _projectId;
 
-  YustPushService()
-    : _authClient = Yust.authClient!,
+  YustPushService(Yust yust)
+    : _authClient = yust.authClient!,
       _projectId = Yust.projectId {
     _api = FirebaseCloudMessagingApi(_authClient);
   }

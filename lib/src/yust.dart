@@ -72,7 +72,8 @@ class Yust {
   /// When using Yust with Flutter, you can access the databaseService of the
   /// only instance of Yust with this getter.
   static YustDatabaseService get databaseService => instance.dbService;
-  static Client? authClient;
+
+  Client? authClient;
 
   static late YustAuthService authService;
   static late YustFileService fileService;
@@ -146,6 +147,10 @@ class Yust {
     /// generates a Firebase ID token for this uid via custom token exchange
     /// instead of throwing [UnsupportedError]. Leave null in Flutter apps.
     String? backendAuthId,
+
+    /// User agent to provide for server side db requests.
+    /// Will be appended to the original user agent of the requests
+    String? userAgent,
   }) async {
     if (forUI) _instance = this;
 
@@ -166,11 +171,12 @@ class Yust {
       return;
     }
 
-    Yust.authClient = await GoogleCloudHelpers.initializeFirebase(
+    authClient = await GoogleCloudHelpers.initializeFirebase(
       firebaseOptions: firebaseOptions,
       credentials: credentials,
       emulatorAddress: emulatorAddress,
-      authClient: Yust.authClient,
+      authClient: authClient,
+      userAgent: userAgent,
     );
 
     dbService = YustDatabaseService(
@@ -185,7 +191,7 @@ class Yust {
       backendAuthId: backendAuthId,
     );
     Yust.fileService = YustFileService(
-      authClient: Yust.authClient,
+      authClient: authClient,
       emulatorAddress: emulatorAddress,
       projectId: projectId,
     );
@@ -193,7 +199,7 @@ class Yust {
       originalCdnBaseUrl: originalCdnBaseUrl,
       thumbnailCdnBaseUrl: thumbnailCdnBaseUrl,
     );
-    pushService = YustPushService();
+    pushService = YustPushService(this);
   }
 
   void closeClient() {

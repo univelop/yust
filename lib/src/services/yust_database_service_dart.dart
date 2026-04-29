@@ -107,7 +107,7 @@ class YustDatabaseService implements IYustDatabaseService {
   /// assigned a new id becoming a new document if it had an id previously.
   @override
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
-    final id = _createDocumentId();
+    final id = YustDoc.createDocumentId();
     return doInitDoc(docSetup, id, doc);
   }
 
@@ -1620,10 +1620,6 @@ class YustDatabaseService implements IYustDatabaseService {
         'Value can not be transformed from Firestore: ${jsonEncode(dbValue.toJson())}',
       );
     }
-  }
-
-  String _createDocumentId() {
-    return Yust.helpers.randomString(length: 20);
   }
 
   /// Retries the given function if a TlsException, ClientException or YustBadGatewayException occurs.

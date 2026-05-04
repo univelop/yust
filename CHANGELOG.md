@@ -1,3 +1,8 @@
+## 3.33.0 - 2026-05-04
+
+- Add optional `userAgent` to `Yust.initialize` so backend traffic is easier to spot in logs
+- Fix reading file-related values on `YustImage`
+
 ## 3.32.1 - 2026-04-04
 
 - Fix flutter & dart interface compatibility

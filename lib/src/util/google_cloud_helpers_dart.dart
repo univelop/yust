@@ -10,6 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 
 import 'google_cloud_helpers_shared.dart';
+import 'user_agent_client.dart';
 import 'yust_exception.dart';
 
 /// Google Cloud (incl. Firebase) specific helpers used in other modules.
@@ -30,8 +31,19 @@ class GoogleCloudHelpers {
     String? emulatorAddress,
     bool buildRelease = false,
     Client? authClient,
+    String? userAgent,
   }) async {
-    if (authClient != null) return authClient;
+    if (authClient != null) {
+      final isUserAgentClient = authClient is UserAgentClient;
+      if (isUserAgentClient && authClient.userAgent == userAgent) {
+        return authClient;
+      }
+
+      final base = isUserAgentClient ? authClient.inner : authClient;
+      return userAgent != null
+          ? UserAgentClient(base, userAgent: userAgent)
+          : base;
+    }
 
     final scopes = [
       FirestoreApi.datastoreScope,
@@ -47,6 +59,9 @@ class GoogleCloudHelpers {
       credentials: credentials,
     );
 
+    if (userAgent != null) {
+      return UserAgentClient(authClient, userAgent: userAgent);
+    }
     return authClient;
   }
 

@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import '../models/yust_user.dart';
+import '../yust.dart';
 
 /// Sends out Push notifications via Firebase Cloud Messaging
 class YustPushService {
-  YustPushService();
+  YustPushService(Yust yust);
 
   YustPushService.mocked();
 

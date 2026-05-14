@@ -51,6 +51,56 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
   Map<String, List<Map<String, dynamic>>> get db => _db;
 
+  /// Snapshot of [_db] used to serve reads while [readTime] is non-null.
+  ///
+  /// This mirrors Firestore's point-in-time recovery (PITR): production
+  /// callers point a clone of their session at an earlier moment by setting
+  /// `db.readTime`, and reads then return the data as it existed then. In
+  /// the mock we keep a single in-memory snapshot which can be filled via
+  /// [createRecoveryDb]. The recovery db is static so it survives across
+  /// the fresh instances created by `BackendSessionController.clone`.
+  static final MockDB _recoveryDb = {};
+
+  /// Snapshots the current live [_db] into [_recoveryDb], deep-copying every
+  /// document. After this call, any read issued through any
+  /// [YustDatabaseServiceMocked] instance whose [readTime] is set will
+  /// resolve against the snapshot rather than the live db.
+  void createRecoveryDb() {
+    _recoveryDb
+      ..clear()
+      ..addAll(_deepCopyMockDb(_db));
+  }
+
+  /// Clears the PITR recovery db populated by [createRecoveryDb].
+  static void clearRecoveryDb() => _recoveryDb.clear();
+
+  /// Read-only view of the PITR recovery db. Intended for assertions in
+  /// tests that compare the live db against the snapshot.
+  static MockDB get recoveryDb => _recoveryDb;
+
+  static MockDB _deepCopyMockDb(MockDB src) {
+    final result = <String, List<Map<String, dynamic>>>{};
+    for (final entry in src.entries) {
+      result[entry.key] = entry.value
+          .map(
+            (e) => Map<String, dynamic>.from(jsonDecode(jsonEncode(e)) as Map),
+          )
+          .toList();
+    }
+    return result;
+  }
+
+  /// Read-side accessor for a collection. When [readTime] is set, returns
+  /// the snapshot from [_recoveryDb]; otherwise returns the live [_db]
+  /// collection (auto-creating it). Writes always go through
+  /// [_getJSONCollection] directly so they never touch the recovery db.
+  List<Map<String, dynamic>> _getReadCollection(String collectionName) {
+    if (readTime != null) {
+      return _recoveryDb[collectionName] ?? const <Map<String, dynamic>>[];
+    }
+    return _getJSONCollection(collectionName);
+  }
+
   @override
   T initDoc<T extends YustDoc>(YustDocSetup<T> docSetup, [T? doc]) {
     final id = _createDocumentId();
@@ -119,7 +169,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
   }) async {
-    var jsonDocs = _getJSONCollection(docSetup.collectionName);
+    var jsonDocs = _getReadCollection(docSetup.collectionName);
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
@@ -563,7 +613,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
   List<T> _getCollection<T extends YustDoc>(YustDocSetup<T> docSetup) {
     return _jsonListToDocList(
-      _getJSONCollection(docSetup.collectionName),
+      _getReadCollection(docSetup.collectionName),
       docSetup,
     );
   }
@@ -688,7 +738,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     String? startAfterDocumentId,
     bool forAllEnvironments = false,
   }) {
-    var jsonDocs = _getJSONCollection(docSetup.collectionName);
+    var jsonDocs = _getReadCollection(docSetup.collectionName);
 
     // Apply static filters (envId) only if not querying all environments
     if (!forAllEnvironments) {

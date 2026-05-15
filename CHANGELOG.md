@@ -1,3 +1,7 @@
+## 3.33.1 - 2026-05-15
+
+- Support PITR in mocked database service
+
 ## 3.33.0 - 2026-05-04
 
 - Add optional `userAgent` to `Yust.initialize` so backend traffic is easier to spot in logs

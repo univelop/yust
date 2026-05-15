@@ -1600,9 +1600,14 @@ class YustDatabaseService implements IYustDatabaseService {
           isUtc: true,
         ).toIso8601StringWithOffset();
       }
+      // Firestore omits the `fields` key in the REST response for empty
+      // MapValues, so `map` is null even though the field IS a map. Mirror
+      // the `?? []` fallback that arrayValue already has — preserves empty
+      // maps instead of collapsing them to null. A real null field lands in
+      // the `nullValue` branch below, not here.
       return map?.map(
-        (key, childValue) => MapEntry(key, _dbValueToValue(childValue)),
-      );
+            (key, childValue) => MapEntry(key, _dbValueToValue(childValue)),
+          ) ?? {};
     } else if (dbValue.booleanValue != null) {
       return dbValue.booleanValue;
     } else if (dbValue.integerValue != null) {

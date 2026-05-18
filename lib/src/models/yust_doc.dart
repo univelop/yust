@@ -87,7 +87,7 @@ abstract class YustDoc {
   bool get hasChanges => _updateMask.isNotEmpty;
 
   YustDoc({
-    String id = '',
+    String? id,
     DateTime? createdAt,
     String? createdBy,
     DateTime? modifiedAt,
@@ -95,7 +95,7 @@ abstract class YustDoc {
     String? userId,
     String? envId,
     DateTime? expiresAt,
-  }) : _id = id,
+  }) : _id = id ?? createDocumentId(),
        _createdAt = createdAt,
        _createdBy = createdBy,
        _modifiedAt = modifiedAt,
@@ -103,8 +103,6 @@ abstract class YustDoc {
        _userId = userId,
        _envId = envId,
        _expiresAt = expiresAt;
-
-  YustDoc.fromJson(Map<String, dynamic> json) : _id = '';
 
   Map<String, dynamic> toJson();
 
@@ -123,6 +121,11 @@ abstract class YustDoc {
   /// Converts a firebase timestamp to a [DateTime].
   static dynamic convertTimestamp(dynamic value) {
     return GoogleCloudHelpers.convertTimestamp(value);
+  }
+
+  /// Creates a new document ID.
+  static String createDocumentId() {
+    return Yust.helpers.randomString(length: 20);
   }
 
   /// clear the update mask

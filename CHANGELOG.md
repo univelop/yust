@@ -1,3 +1,7 @@
+## 3.33.2 - 2026-05-18
+
+- Fix handling of empty maps in `YustDatabaseService` (dart-only)
+
 ## 3.33.1 - 2026-05-15
 
 - Support PITR in mocked database service

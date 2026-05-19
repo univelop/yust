@@ -20,6 +20,11 @@ class YustAuthService {
   final Yust _yust;
   final ServiceAccountCredentials? _credentials;
 
+  /// Resolves once the service is ready. On Dart there is nothing async to
+  /// wait for, so this is always already completed — kept here to match the
+  /// Flutter-side API used in [Yust.initialize].
+  final Future<void> ready = Future.value();
+
   /// The Firebase Auth ID (uid) used to generate tokens for backend-to-backend
   /// API calls. When set, [getJWTToken] signs in as this user via a custom
   /// token exchange instead of throwing [UnsupportedError].

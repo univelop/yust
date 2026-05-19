@@ -15,19 +15,25 @@ class YustAuthService {
   late final FirebaseAuth _fireAuth;
   late final Yust _yust;
 
+  /// Resolves once any emulator wiring has been applied. Callers that perform
+  /// auth operations during initialization must await this — `useAuthEmulator`
+  /// returns a Future that the constructor cannot await, and on web the
+  /// underlying JS `connectAuthEmulator` does not take effect synchronously.
+  final Future<void> ready;
+
   YustAuthService(
     Yust yust, {
     String? emulatorAddress,
     ServiceAccountCredentials? credentials,
     String? backendAuthId,
-  }) : _fireAuth = FirebaseAuth.instance,
-       _yust = yust {
-    if (emulatorAddress != null) {
-      _fireAuth.useAuthEmulator(emulatorAddress, 9099);
-    }
+  }) : ready = emulatorAddress != null
+           ? FirebaseAuth.instance.useAuthEmulator(emulatorAddress, 9099)
+           : Future.value() {
+    _fireAuth = FirebaseAuth.instance;
+    _yust = yust;
   }
 
-  YustAuthService.mocked(Yust yust) {
+  YustAuthService.mocked(Yust yust) : ready = Future.value() {
     throw UnsupportedError('Not supported in Flutter Environment');
   }
 

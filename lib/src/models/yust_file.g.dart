@@ -13,5 +13,6 @@ Map<String, dynamic> _$YustFileToJson(YustFile instance) => <String, dynamic>{
   'hash': instance.hash,
   'createdAt': instance.createdAt?.toIso8601String(),
   'path': instance.path,
+  'favorite': instance.favorite,
   'thumbnails': instance.thumbnails?.map((k, e) => MapEntry(k.toJson(), e)),
 };

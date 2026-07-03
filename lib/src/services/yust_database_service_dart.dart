@@ -324,7 +324,11 @@ class YustDatabaseService implements IYustDatabaseService {
         getQuery(
           docSetup,
           filters: filters,
-          orderBy: orderBy,
+          orderBy: getOrderBy(
+            filters: filters,
+            orderBy: orderBy,
+            startAfterDocument: startAfterDocument,
+          ),
           limit: limit,
           startAfterDocument: startAfterDocument,
         ),
@@ -1269,6 +1273,46 @@ class YustDatabaseService implements IYustDatabaseService {
     return _transformDoc(docSetup, document as Document);
   }
 
+  /// Returns the orderBy list to send to Firestore for a `getListFromDB`
+  /// call. When [startAfterDocument] is `null` the caller's [orderBy] is
+  /// returned unchanged — behavior for non-paginated queries is
+  /// preserved.
+  ///
+  /// When [startAfterDocument] is set the orderBy must be non-empty:
+  /// Firestore's REST `runQuery` builds the `startAt` cursor by mapping
+  /// the query's `orderBy` fields onto the document's field values, and
+  /// an empty cursor makes Firestore return zero results. Mirrors the
+  /// pattern used in the lazy-chunked path:
+  /// - Seed orderBy from inequality-filter fields when the caller didn't
+  ///   provide one (Firestore requires an inequality field to be the
+  ///   first orderBy anyway).
+  /// - Append `__name__` as the stable tiebreaker so the cursor always
+  ///   has a document reference to anchor on.
+  static List<YustOrderBy>? getOrderBy<T extends YustDoc>({
+    required List<YustFilter>? filters,
+    required List<YustOrderBy>? orderBy,
+    required T? startAfterDocument,
+  }) {
+    if (startAfterDocument == null) return orderBy;
+
+    final unequalFilters = (filters ?? [])
+        .whereNot(
+          (filter) =>
+              YustFilterComparator.equalityFilters.contains(filter.comparator),
+        )
+        .toSet()
+        .toList();
+
+    final resolved = <YustOrderBy>[
+      if ((orderBy == null || orderBy.isEmpty) && unequalFilters.isNotEmpty)
+        ...unequalFilters.map((e) => YustOrderBy(field: e.field)).toSet(),
+      ...?orderBy,
+    ];
+
+    if (resolved.any((o) => o.field == '__name__')) return resolved;
+    return [...resolved, YustOrderBy(field: '__name__')];
+  }
+
   String _getDatabasePath() => 'projects/${Yust.projectId}/databases/(default)';
 
   String _getParentPath(YustDocSetup docSetup) {
@@ -1607,7 +1651,8 @@ class YustDatabaseService implements IYustDatabaseService {
       // the `nullValue` branch below, not here.
       return map?.map(
             (key, childValue) => MapEntry(key, _dbValueToValue(childValue)),
-          ) ?? {};
+          ) ??
+          {};
     } else if (dbValue.booleanValue != null) {
       return dbValue.booleanValue;
     } else if (dbValue.integerValue != null) {

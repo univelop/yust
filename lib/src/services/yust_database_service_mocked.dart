@@ -652,9 +652,18 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustOrderBy>? orderBy,
   ) {
     for (final o in (orderBy ?? []).reversed) {
+      // Firestore addresses the document ID via the reserved `__name__`
+      // field. Yust stores document IDs in the `id` field on every
+      // YustDoc, so alias `__name__` → `id` here to mirror Firestore's
+      // behavior. Enables tests that append `__name__` as a stable
+      // pagination tiebreaker (as `_getListLazyChunked` does internally,
+      // and as callers of `getListFromDB` should for correct cursor
+      // advancement).
+      final field = o.field == '__name__' ? 'id' : o.field;
       collection.sort((a, b) {
-        final compare = (_readValueInJsonDoc(a, o.field) as Comparable)
-            .compareTo(_readValueInJsonDoc(b, o.field) as Comparable);
+        final compare = (_readValueInJsonDoc(a, field) as Comparable).compareTo(
+          _readValueInJsonDoc(b, field) as Comparable,
+        );
         final order = o.descending ? -1 : 1;
         return order * compare;
       });

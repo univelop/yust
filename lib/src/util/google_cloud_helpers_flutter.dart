@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
@@ -27,6 +28,21 @@ class GoogleCloudHelpers {
       }
       final options = fromMap(firebaseOptions);
       await Firebase.initializeApp(options: options);
+    }
+
+    // On iOS release we initialize without FirebaseOptions (see above), so the
+    // configured authDomain never reaches Firebase Auth. Apply it explicitly
+    // via customAuthDomain so OAuth (signInWithProvider) uses our self-hosted,
+    // same-site auth handler instead of the shared *.firebaseapp.com domain,
+    // which Safari's cross-site tracking prevention partitions — breaking
+    // signInWithProvider with "missing initial state". Set unconditionally on
+    // iOS (harmless when it matches the default) to cover both build modes.
+    final authDomain = firebaseOptions?['authDomain'];
+    if (!kIsWeb &&
+        Platform.isIOS &&
+        authDomain != null &&
+        authDomain.isNotEmpty) {
+      FirebaseAuth.instance.customAuthDomain = authDomain;
     }
 
     // Only use emulator when emulatorAddress is provided

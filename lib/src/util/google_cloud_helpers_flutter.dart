@@ -34,12 +34,13 @@ class GoogleCloudHelpers {
     // configured authDomain never reaches Firebase Auth. Apply it explicitly
     // via customAuthDomain so OAuth (signInWithProvider) uses our self-hosted,
     // same-site auth handler instead of the shared *.firebaseapp.com domain,
-    // which Safari's cross-site tracking prevention partitions — breaking
-    // signInWithProvider with "missing initial state". Set unconditionally on
-    // iOS (harmless when it matches the default) to cover both build modes.
+    // whose storage the in-app browser partitions — breaking signInWithProvider
+    // with "missing initial state" (Safari ITP on iOS; also affects Android).
+    // Set on both mobile platforms (harmless when it matches the options value)
+    // to cover the iOS-release no-options path and keep behaviour uniform.
     final authDomain = firebaseOptions?['authDomain'];
     if (!kIsWeb &&
-        Platform.isIOS &&
+        (Platform.isIOS || Platform.isAndroid) &&
         authDomain != null &&
         authDomain.isNotEmpty) {
       FirebaseAuth.instance.customAuthDomain = authDomain;

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class YustFieldTransform {
   String fieldPath;
   double? increment;
+  List<dynamic>? appendMissingElements;
   List<dynamic>? removeFromArray;
   bool? setToServerTimestamp;
   bool? delete;
@@ -10,6 +11,7 @@ class YustFieldTransform {
   YustFieldTransform({
     required String fieldPath,
     this.increment,
+    this.appendMissingElements,
     this.removeFromArray,
     this.setToServerTimestamp,
     this.delete,
@@ -23,6 +25,9 @@ class YustFieldTransform {
   /// ... and for dart (googleapis/firestore) its a [FieldTransform]
   dynamic toNativeTransform() {
     if (increment != null) return FieldValue.increment(increment!);
+    if (appendMissingElements != null) {
+      return FieldValue.arrayUnion(appendMissingElements!);
+    }
     if (removeFromArray != null) {
       return FieldValue.arrayRemove(removeFromArray!);
     }

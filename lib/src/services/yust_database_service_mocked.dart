@@ -512,13 +512,47 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
     for (final t in fieldTransforms) {
       final unescapedPath = t.fieldPath.replaceAll('`', '');
-      final oldValue =
-          (_readValueInJsonDoc(jsonDocClone, unescapedPath) ?? 0) as num;
-      _changeValueInJsonDoc(
-        jsonDocClone,
-        oldValue + (t.increment ?? 0),
-        unescapedPath,
-      );
+      if (t.appendMissingElements != null) {
+        final current = _readValueInJsonDoc(jsonDocClone, unescapedPath);
+        final list = (current is List)
+            ? List<dynamic>.from(current)
+            : <dynamic>[];
+        for (final element in t.appendMissingElements!) {
+          if (!list.any(
+            (e) => const DeepCollectionEquality().equals(e, element),
+          )) {
+            list.add(element);
+          }
+        }
+        _changeValueInJsonDoc(jsonDocClone, list, unescapedPath);
+      } else if (t.removeFromArray != null) {
+        final current = _readValueInJsonDoc(jsonDocClone, unescapedPath);
+        final list = (current is List)
+            ? List<dynamic>.from(current)
+            : <dynamic>[];
+        list.removeWhere(
+          (e) => t.removeFromArray!.any(
+            (r) => const DeepCollectionEquality().equals(e, r),
+          ),
+        );
+        _changeValueInJsonDoc(jsonDocClone, list, unescapedPath);
+      } else if (t.delete == true) {
+        _changeValueInJsonDoc(jsonDocClone, null, unescapedPath);
+      } else if (t.setToServerTimestamp == true) {
+        _changeValueInJsonDoc(
+          jsonDocClone,
+          DateTime.now().toUtc().toIso8601String(),
+          unescapedPath,
+        );
+      } else {
+        final oldValue =
+            (_readValueInJsonDoc(jsonDocClone, unescapedPath) ?? 0) as num;
+        _changeValueInJsonDoc(
+          jsonDocClone,
+          oldValue + (t.increment ?? 0),
+          unescapedPath,
+        );
+      }
       jsonDocs[index] = jsonDocClone;
       await onChange?.call(
         _getParentPath(docSetup, id: id),

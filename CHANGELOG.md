@@ -1,3 +1,7 @@
+## 3.34.0 - 2026-05-19
+
+- Add `appendMissingElements` to `YustFieldTransform` (Firestore `arrayUnion`) on Dart, Flutter, and mocked backends; mocked service now also honors `removeFromArray`, `setToServerTimestamp`, and `delete`
+
 ## 3.33.2 - 2026-05-18
 
 - Fix handling of empty maps in `YustDatabaseService` (dart-only)

@@ -5,6 +5,7 @@ import '../../yust.dart';
 class YustFieldTransform {
   String fieldPath;
   double? increment;
+  List<dynamic>? appendMissingElements;
   List<dynamic>? removeFromArray;
   bool? setToServerTimestamp;
   bool? delete;
@@ -12,6 +13,7 @@ class YustFieldTransform {
   YustFieldTransform({
     required String fieldPath,
     this.increment,
+    this.appendMissingElements,
     this.removeFromArray,
     this.setToServerTimestamp,
     this.delete,
@@ -27,6 +29,11 @@ class YustFieldTransform {
     return FieldTransform(
       fieldPath: YustHelpers().toQuotedFieldPath(fieldPath),
       increment: increment != null ? Value(doubleValue: increment) : null,
+      appendMissingElements: appendMissingElements != null
+          ? ArrayValue.fromJson(<dynamic, dynamic>{
+              'values': appendMissingElements,
+            })
+          : null,
       removeAllFromArray: removeFromArray != null
           ? ArrayValue.fromJson(<dynamic, dynamic>{'values': removeFromArray})
           : null,

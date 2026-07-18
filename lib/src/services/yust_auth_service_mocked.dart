@@ -89,6 +89,9 @@ class YustAuthServiceMocked implements YustAuthService {
   }) => throw UnimplementedError();
 
   @override
+  Future<YustUser?> completeSignInWithRedirect() async => null;
+
+  @override
   Future<void> signOut() => throw UnimplementedError();
 
   @override

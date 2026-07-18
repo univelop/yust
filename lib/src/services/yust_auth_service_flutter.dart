@@ -119,6 +119,42 @@ class YustAuthService {
       provider,
       redirect: redirect,
     );
+    return _provisionYustUser(userCredential, method);
+  }
+
+  /// Completes an OAuth sign-in that was started with `redirect: true` on web.
+  ///
+  /// The redirect flow navigates the whole page away to the identity provider
+  /// and reloads the app on return, which discards the in-flight
+  /// `signInWith...` call before it can provision a [YustUser]. Firebase
+  /// restores the auth user from persistence on reload, but the [YustUser]
+  /// document would otherwise never be created — leaving an authenticated
+  /// Firebase user with no matching domain user.
+  ///
+  /// Call this once at app startup (web only). It fetches the pending redirect
+  /// result and, if a sign-in just completed, creates or links the matching
+  /// [YustUser]. It is a no-op when there is no pending redirect result, so it
+  /// is safe to call on every startup.
+  Future<YustUser?> completeSignInWithRedirect() async {
+    if (!kIsWeb) return null;
+    final userCredential = await _fireAuth.getRedirectResult();
+    if (userCredential.user == null) return null;
+    final method = _methodFromProviderId(
+      userCredential.additionalUserInfo?.providerId ??
+          userCredential.credential?.providerId,
+    );
+    return _provisionYustUser(userCredential, method);
+  }
+
+  /// Ensures a [YustUser] exists for the signed-in [userCredential], linking
+  /// an existing user (matched by email) or creating a new one. Returns the
+  /// created user, or `null` when the sign-in failed or a matching user
+  /// already existed / was linked. Idempotent — safe to call for a user that
+  /// is already provisioned.
+  Future<YustUser?> _provisionYustUser(
+    UserCredential userCredential,
+    YustAuthenticationMethod? method,
+  ) async {
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
@@ -144,6 +180,23 @@ class YustAuthService {
       authId: _getId(userCredential),
       authenticationMethod: method,
     );
+  }
+
+  YustAuthenticationMethod? _methodFromProviderId(String? providerId) {
+    switch (providerId) {
+      case 'microsoft.com':
+        return YustAuthenticationMethod.microsoft;
+      case 'google.com':
+        return YustAuthenticationMethod.google;
+      case 'apple.com':
+        return YustAuthenticationMethod.apple;
+      case null:
+      case 'password':
+      case 'firebase':
+        return null;
+      default:
+        return YustAuthenticationMethod.openId;
+    }
   }
 
   String _getId(UserCredential userCredential) => userCredential.user!.uid;

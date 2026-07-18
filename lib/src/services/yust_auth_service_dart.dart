@@ -94,6 +94,10 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
+  /// Completes an OAuth redirect sign-in. Web-only concept; on the server this
+  /// is a no-op so shared code can call it unconditionally.
+  Future<YustUser?> completeSignInWithRedirect() async => null;
+
   /// Sign out the current user.
   Future<void> signOut() async {
     throw UnsupportedError('Not supported. No UI available.');

@@ -1,3 +1,7 @@
+## 3.35.0 - 2026-07-18
+
+- Add `completeSignInWithRedirect` to the auth service. On web, OAuth sign-in with `redirect: true` reloads the page on return from the provider, discarding the in-flight `signInWith...` call before it can provision a `YustUser` — leaving an authenticated Firebase user with no matching `YustUser`. Call `completeSignInWithRedirect` once at app startup to fetch the pending redirect result and create/link the `YustUser`. No-op when there is no pending redirect (safe to call on every startup) and on non-web platforms.
+
 ## 3.33.2 - 2026-05-18
 
 - Fix handling of empty maps in `YustDatabaseService` (dart-only)

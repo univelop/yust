@@ -1,3 +1,8 @@
+## 3.33.3 - 2026-07-23
+
+- Fix document ID ordering in the mocked database service
+- Fix OAuth sign-in on iOS and Android when using a custom auth domain
+
 ## 3.33.2 - 2026-05-18
 
 - Fix handling of empty maps in `YustDatabaseService` (dart-only)

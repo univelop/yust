@@ -1,3 +1,7 @@
+## 3.33.4 - 2026-07-28
+
+- Add `favorite` flag to `YustFile` and `YustImage`
+
 ## 3.33.3 - 2026-07-23
 
 - Fix document ID ordering in the mocked database service

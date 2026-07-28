@@ -21,6 +21,7 @@ YustImage _$YustImageFromJson(Map json) => YustImage(
     (k, e) =>
         MapEntry($enumDecode(_$YustFileThumbnailSizeEnumMap, k), e as String),
   ),
+  favorite: json['favorite'] as bool? ?? false,
   location: json['location'] == null
       ? null
       : YustGeoLocation.fromJson(
@@ -35,6 +36,7 @@ Map<String, dynamic> _$YustImageToJson(YustImage instance) => <String, dynamic>{
   'hash': instance.hash,
   'createdAt': instance.createdAt?.toIso8601String(),
   'path': instance.path,
+  'favorite': instance.favorite,
   'thumbnails': instance.thumbnails?.map((k, e) => MapEntry(k.toJson(), e)),
   'location': instance.location?.toJson(),
 };

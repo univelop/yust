@@ -59,6 +59,9 @@ class YustFile {
   /// The path to the file in the storage.
   String? path;
 
+  /// Whether the file is marked as a favorite.
+  bool favorite;
+
   /// The thumbnails of the file.
   ///
   /// Map of thumbnail size to path in the storage.
@@ -142,6 +145,7 @@ class YustFile {
     this.createdAt,
     this.path,
     this.thumbnails,
+    this.favorite = false,
     bool setCreatedAtToNow = true,
   }) {
     if (setCreatedAtToNow) {
@@ -175,6 +179,7 @@ class YustFile {
         (key, value) =>
             MapEntry(YustFileThumbnailSize.fromJson(key), value as String),
       ),
+      favorite: json['favorite'] as bool? ?? false,
       setCreatedAtToNow: false,
     );
   }
@@ -195,6 +200,7 @@ class YustFile {
     createdAt = file.createdAt;
     path = file.path;
     thumbnails = file.thumbnails;
+    favorite = file.favorite;
   }
 
   /// Converts the file to JSON for local device. Only relevant attributes are converted.
@@ -225,7 +231,7 @@ class YustFile {
               ),
             )
           : null,
-
+      favorite: json['favorite'] == 'true',
       setCreatedAtToNow: false,
     );
   }
@@ -267,6 +273,7 @@ class YustFile {
       'type': type,
       'path': path,
       'thumbnails': thumbnails != null ? jsonEncode(thumbnails) : null,
+      'favorite': favorite.toString(),
     };
   }
 
@@ -289,6 +296,7 @@ class YustFile {
     createdAt: createdAt,
     path: path,
     thumbnails: thumbnails,
+    favorite: favorite,
     setCreatedAtToNow: false,
   );
 
@@ -303,6 +311,8 @@ class YustFile {
         return url;
       case 'createdAt':
         return createdAt;
+      case 'favorite':
+        return favorite;
       case 'path': // Path and thumbnails should not be accessible
       case 'thumbnails':
       default:

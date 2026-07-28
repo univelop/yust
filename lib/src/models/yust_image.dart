@@ -27,6 +27,7 @@ class YustImage extends YustFile {
     super.createdAt,
     super.path,
     super.thumbnails,
+    super.favorite,
     this.location,
   });
 
@@ -55,6 +56,7 @@ class YustImage extends YustFile {
           createdAt: file.createdAt,
           path: file.path,
           thumbnails: file.thumbnails,
+          favorite: file.favorite,
         );
 
   /// Create a list of images from a list of files

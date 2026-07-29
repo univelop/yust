@@ -43,6 +43,7 @@ class GoogleCloudHelpers {
     } else {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
+        cacheSizeBytes: 500 * 1024 * 1024,
       );
     }
     return null;

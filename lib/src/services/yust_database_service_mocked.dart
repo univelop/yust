@@ -512,13 +512,36 @@ class YustDatabaseServiceMocked extends YustDatabaseService
 
     for (final t in fieldTransforms) {
       final unescapedPath = t.fieldPath.replaceAll('`', '');
-      final oldValue =
-          (_readValueInJsonDoc(jsonDocClone, unescapedPath) ?? 0) as num;
-      _changeValueInJsonDoc(
-        jsonDocClone,
-        oldValue + (t.increment ?? 0),
-        unescapedPath,
-      );
+      if (t.delete == true) {
+        _deleteValueInJsonDoc(jsonDocClone, unescapedPath);
+      } else if (t.removeFromArray != null) {
+        final existing = _readValueInJsonDoc(jsonDocClone, unescapedPath);
+        _changeValueInJsonDoc(
+          jsonDocClone,
+          existing is List
+              ? existing
+                    .where(
+                      (dynamic entry) => !t.removeFromArray!.any(
+                        (dynamic removed) =>
+                            const DeepCollectionEquality().equals(
+                              entry,
+                              removed,
+                            ),
+                      ),
+                    )
+                    .toList()
+              : existing,
+          unescapedPath,
+        );
+      } else {
+        final oldValue =
+            (_readValueInJsonDoc(jsonDocClone, unescapedPath) ?? 0) as num;
+        _changeValueInJsonDoc(
+          jsonDocClone,
+          oldValue + (t.increment ?? 0),
+          unescapedPath,
+        );
+      }
       jsonDocs[index] = jsonDocClone;
       await onChange?.call(
         _getParentPath(docSetup, id: id),
@@ -677,6 +700,17 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       subDoc = subDoc[segment];
     }
     subDoc[segments.last] = newValue;
+  }
+
+  /// Removes the field at [path], leaving the map that held it in place.
+  void _deleteValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {
+    final segments = path.split('.');
+    Map subDoc = jsonDoc;
+    for (final segment in segments.sublist(0, segments.length - 1)) {
+      if (subDoc[segment] is! Map) return;
+      subDoc = subDoc[segment];
+    }
+    subDoc.remove(segments.last);
   }
 
   dynamic _readValueInJsonDoc(Map<String, dynamic> jsonDoc, String path) {

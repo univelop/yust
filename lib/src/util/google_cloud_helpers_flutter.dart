@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart';
 
+import 'browser_helpers.dart';
 import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 
@@ -57,6 +58,16 @@ class GoogleCloudHelpers {
       // await FirebaseFirestore.instance
       //     // Have one Cache over all univelop tabs (IndexDB)
       //     .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
+
+      // WebKit since Safari 26.4 buffers Firestore's streaming responses until
+      // a 30s keep-alive ping, stalling reads and snapshot listeners. Force the
+      // XHR long-polling transport on WebKit browsers as recommended in
+      // https://github.com/firebase/firebase-js-sdk/issues/9789.
+      if (isWebKitBrowser) {
+        FirebaseFirestore.instance.settings = const Settings(
+          webExperimentalForceLongPolling: true,
+        );
+      }
     } else {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,

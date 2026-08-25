@@ -1,6 +1,7 @@
-## 3.33.5 - 2026-08-24
+## 3.33.5 - 2026-08-25
 
 - Force Firestore XHR long-polling on WebKit browsers (Safari on macOS, all iOS browsers) to work around severe read/listener stalls in Safari >= 26.4 (firebase/firebase-js-sdk#9789)
+- Drop update mask paths that are missing from the saved data, so partial updates no longer fail on stale field paths
 
 ## 3.33.4 - 2026-07-28
 

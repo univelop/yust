@@ -2,6 +2,7 @@
 
 - Force Firestore XHR long-polling on WebKit browsers (Safari on macOS, all iOS browsers) to work around severe read/listener stalls in Safari >= 26.4 (firebase/firebase-js-sdk#9789)
 - Drop update mask paths that are missing from the saved data, so partial updates no longer fail on stale field paths
+- Narrow the `googleapis_auth` import in `YustAuthService` (dart) to `ServiceAccountCredentials`, resolving the `RSAPrivateKey` ambiguity with `dart_jsonwebtoken` on `googleapis_auth` >= 2.1.0
 
 ## 3.33.4 - 2026-07-28
 

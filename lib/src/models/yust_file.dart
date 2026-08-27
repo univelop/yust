@@ -294,6 +294,7 @@ class YustFile {
     storageFolderPath: storageFolderPath,
     linkedDocPath: linkedDocPath,
     linkedDocAttribute: linkedDocAttribute,
+    linkedDocStoresFilesAsMap: linkedDocStoresFilesAsMap,
     processing: processing,
     lastError: lastError,
     createThumbnail: createThumbnail,

@@ -1,5 +1,6 @@
 ## 3.34.0 - 2026-09-07
 
+- Normalize user emails to trimmed lowercase everywhere: the `YustUser.email` setter and constructor, `createAccount`, `changeEmail`, `sendPasswordResetEmail`, `addUserNamePasswordToAccount`, and the email-based lookups when linking or provisioning a `YustUser` after an OAuth/OpenID sign-in. Firestore compares strings case-sensitively, so emails delivered in mixed case by identity providers previously created users that could not be found by email. Use `YustUser.normalizeEmail` for your own email lookups.
 - Add `completeSignInWithRedirect` to the auth service. On web, OAuth sign-in with `redirect: true` reloads the page on return from the provider, discarding the in-flight `signInWith...` call before it can provision a `YustUser` — leaving an authenticated Firebase user with no matching `YustUser`. Call `completeSignInWithRedirect` once at app startup to fetch the pending redirect result and create/link the `YustUser`. No-op when there is no pending redirect (safe to call on every startup) and on non-web platforms.
 
 ## 3.33.5 - 2026-08-25

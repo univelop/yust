@@ -133,6 +133,8 @@ class YustAuthService {
     YustGender? gender,
     bool useOAuth = false,
   }) async {
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     GoogleCloudIdentitytoolkitV1SignUpResponse? response;
     final uuid = Uuid().v4();
 
@@ -187,6 +189,8 @@ class YustAuthService {
     String password, {
     List<String> allowedProviderIds = const [],
   }) async {
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     final user = await _yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [

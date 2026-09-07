@@ -55,7 +55,7 @@ class YustAuthService {
 
   Future<void> signIn(String email, String password) async {
     await _fireAuth.signInWithEmailAndPassword(
-      email: email,
+      email: YustUser.normalizeEmail(email),
       password: password,
     );
   }
@@ -202,7 +202,7 @@ class YustAuthService {
   String _getId(UserCredential userCredential) => userCredential.user!.uid;
 
   String _getEmail(UserCredential userCredential) =>
-      userCredential.user!.email ?? '';
+      YustUser.normalizeEmail(userCredential.user!.email ?? '');
 
   String _getFirstName(List<String> nameParts) =>
       nameParts.join(' ').replaceAll(r'+', ' ');
@@ -257,6 +257,8 @@ class YustAuthService {
     if (useOAuth == true) {
       throw YustException('OAuth not supported for createAccount.');
     }
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     final userCredential = await _fireAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -288,13 +290,17 @@ class YustAuthService {
 
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await _fireAuth.sendPasswordResetEmail(email: email);
+      await _fireAuth.sendPasswordResetEmail(
+        email: YustUser.normalizeEmail(email),
+      );
     } catch (e) {
       throw YustException('Reset password not possible.');
     }
   }
 
   Future<void> changeEmail(String email, String password) async {
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     final user = await Yust.databaseService.getFromDB<YustUser>(
       Yust.userSetup,
       _fireAuth.currentUser!.uid,
@@ -392,7 +398,7 @@ class YustAuthService {
     // If the emails match, return the verified status.
     // Note: We do not rely solely on emailVerified because, during a pending email change,
     // Firebase still shows the old (already verified) email, which would always return true.
-    if (refreshedUser?.email == user.email) {
+    if (refreshedUser?.email?.toLowerCase() == user.email.toLowerCase()) {
       return refreshedUser?.emailVerified;
     }
 

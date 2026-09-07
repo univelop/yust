@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:googleapis_auth/googleapis_auth.dart';
 import 'package:http/http.dart';
 
+import 'browser_helpers.dart';
 import 'google_cloud_helpers_shared.dart';
 import 'yust_exception.dart';
 
@@ -29,6 +31,22 @@ class GoogleCloudHelpers {
       await Firebase.initializeApp(options: options);
     }
 
+    // On iOS release we initialize without FirebaseOptions (see above), so the
+    // configured authDomain never reaches Firebase Auth. Apply it explicitly
+    // via customAuthDomain so OAuth (signInWithProvider) uses our self-hosted,
+    // same-site auth handler instead of the shared *.firebaseapp.com domain,
+    // whose storage the in-app browser partitions — breaking signInWithProvider
+    // with "missing initial state" (Safari ITP on iOS; also affects Android).
+    // Set on both mobile platforms (harmless when it matches the options value)
+    // to cover the iOS-release no-options path and keep behaviour uniform.
+    final authDomain = firebaseOptions?['authDomain'];
+    if (!kIsWeb &&
+        (Platform.isIOS || Platform.isAndroid) &&
+        authDomain != null &&
+        authDomain.isNotEmpty) {
+      FirebaseAuth.instance.customAuthDomain = authDomain;
+    }
+
     // Only use emulator when emulatorAddress is provided
     if (emulatorAddress != null) {
       FirebaseFirestore.instance.useFirestoreEmulator(emulatorAddress, 8080);
@@ -40,6 +58,16 @@ class GoogleCloudHelpers {
       // await FirebaseFirestore.instance
       //     // Have one Cache over all univelop tabs (IndexDB)
       //     .enablePersistence(const PersistenceSettings(synchronizeTabs: true));
+
+      // WebKit since Safari 26.4 buffers Firestore's streaming responses until
+      // a 30s keep-alive ping, stalling reads and snapshot listeners. Force the
+      // XHR long-polling transport on WebKit browsers as recommended in
+      // https://github.com/firebase/firebase-js-sdk/issues/9789.
+      if (isWebKitBrowser) {
+        FirebaseFirestore.instance.settings = const Settings(
+          webExperimentalForceLongPolling: true,
+        );
+      }
     } else {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,

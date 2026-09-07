@@ -1,3 +1,7 @@
+## 3.34.0 - 2026-09-07
+
+- Add `completeSignInWithRedirect` to the auth service. On web, OAuth sign-in with `redirect: true` reloads the page on return from the provider, discarding the in-flight `signInWith...` call before it can provision a `YustUser` — leaving an authenticated Firebase user with no matching `YustUser`. Call `completeSignInWithRedirect` once at app startup to fetch the pending redirect result and create/link the `YustUser`. No-op when there is no pending redirect (safe to call on every startup) and on non-web platforms.
+
 ## 3.33.5 - 2026-08-25
 
 - Force Firestore XHR long-polling on WebKit browsers (Safari on macOS, all iOS browsers) to work around severe read/listener stalls in Safari >= 26.4 (firebase/firebase-js-sdk#9789)

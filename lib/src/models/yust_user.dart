@@ -23,12 +23,23 @@ class YustUser extends YustDoc {
   String _email;
 
   /// The email of the user.
+  ///
+  /// Always stored trimmed and in lowercase, see [normalizeEmail].
   String get email => _email;
   set email(String s) {
-    if (s == _email) return;
+    final normalized = normalizeEmail(s);
+    if (normalized == _email) return;
     updateMask.add('email');
-    _email = s;
+    _email = normalized;
   }
+
+  /// Normalizes an email address for storage and lookups.
+  ///
+  /// User emails are stored trimmed and in lowercase so that Firestore
+  /// queries and security rules (which compare case-sensitively) match
+  /// regardless of how the email was entered or delivered by an identity
+  /// provider.
+  static String normalizeEmail(String email) => email.trim().toLowerCase();
 
   String _firstName;
 
@@ -195,7 +206,7 @@ class YustUser extends YustDoc {
     String? authId,
     String? locale,
     Map<String, dynamic>? userAttributes,
-  }) : _email = email,
+  }) : _email = normalizeEmail(email),
        _firstName = firstName,
        _lastName = lastName,
        _gender = gender,

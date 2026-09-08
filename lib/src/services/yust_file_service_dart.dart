@@ -58,6 +58,8 @@ class YustFileService implements IYustFileService {
       throw YustException('No file or bytes provided');
     }
 
+    validateYustUploadSize(name, file?.lengthSync() ?? bytes!.length);
+
     final effectiveBucketName = bucketName ?? defaultBucketName;
 
     // Prefer file over bytes if both are provided
@@ -135,7 +137,7 @@ class YustFileService implements IYustFileService {
           contentDisposition ?? Yust.helpers.createContentDisposition(name),
     );
     final media = Media(
-      stream,
+      _limitStreamSize(stream, name),
       null,
       contentType: lookupMimeType(name) ?? 'application/octet-stream',
     );
@@ -160,7 +162,7 @@ class YustFileService implements IYustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = 20 * 1024 * 1024,
+    int maxSize = yustMaxFileSizeInBytes,
     String? bucketName,
   }) async {
     final effectiveBucketName = bucketName ?? defaultBucketName;
@@ -187,11 +189,15 @@ class YustFileService implements IYustFileService {
       subscription = mediaStream.listen(
         (List<int> data) {
           if (totalBytes + data.length > maxSize) {
-            final leftOverBytes = maxSize - totalBytes;
-            bytesBuilder.add(data.sublist(0, leftOverBytes));
-            completer.complete(bytesBuilder.takeBytes());
-            print(
-              '[[DEBUG]] Completed download of File from $path/$name with ${bytesBuilder.length} bytes',
+            // Truncating would hand back a corrupt file that looks valid, so
+            // fail instead.
+            completer.completeError(
+              YustFileTooLargeException(
+                'The file $path/$name is larger than the maximum download size '
+                'of $maxSize bytes.',
+                null,
+                maxSize,
+              ),
             );
             subscription?.cancel();
           } else {
@@ -534,5 +540,22 @@ class YustFileService implements IYustFileService {
         '[[ERROR]] Retried $fnName call $maxTries times, but still failed: $lastError for $docPath',
       ),
     );
+  }
+
+  /// Passes [stream] through and throws as soon as more than
+  /// [yustMaxFileSizeInBytes] have been read.
+  ///
+  /// A stream has no known length up front, so the limit can only be enforced
+  /// while uploading.
+  Stream<List<int>> _limitStreamSize(
+    Stream<List<int>> stream,
+    String name,
+  ) async* {
+    var totalBytes = 0;
+    await for (final chunk in stream) {
+      totalBytes += chunk.length;
+      validateYustUploadSize(name, totalBytes);
+      yield chunk;
+    }
   }
 }

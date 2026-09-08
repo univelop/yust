@@ -90,6 +90,7 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     final data = file != null ? await file.readAsBytes() : bytes!;
+    validateYustUploadSize(name, data.length);
     final token = Uuid().v4();
 
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -126,7 +127,7 @@ class YustFileServiceMocked extends YustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = 20 * 1024 * 1024,
+    int maxSize = yustMaxFileSizeInBytes,
     String? bucketName,
   }) async {
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -136,7 +137,12 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     if (file.data.length > maxSize) {
-      return file.data.sublist(0, maxSize);
+      throw YustFileTooLargeException(
+        'The file $path/$name is ${file.data.length} bytes and exceeds the '
+        'maximum download size of $maxSize bytes.',
+        file.data.length,
+        maxSize,
+      );
     }
     return file.data;
   }

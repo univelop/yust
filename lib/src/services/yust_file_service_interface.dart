@@ -55,12 +55,14 @@ abstract interface class IYustFileService {
   });
 
   /// Downloads a file from a given [path] and [name] and returns it as [Uint8List].
-  /// The [maxSize] parameter can be used to limit the size of the downloaded file.
+  /// The [maxSize] parameter can be used to limit the size of the downloaded file;
+  /// it defaults to [yustMaxFileSizeInBytes] and cannot exceed it.
+  /// Throws a [YustFileTooLargeException] when the file is larger than [maxSize].
   /// Optionally accepts [bucketName] to override the default bucket.
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = 20 * 1024 * 1024,
+    int maxSize = yustMaxFileSizeInBytes,
     String? bucketName,
   });
 

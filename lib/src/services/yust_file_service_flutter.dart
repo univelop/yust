@@ -88,6 +88,8 @@ class YustFileService implements IYustFileService {
     String? linkedDocAttribute,
   }) async {
     try {
+      validateYustUploadSize(name, file?.lengthSync() ?? bytes?.length ?? 0);
+
       final storage = _getStorageForBucket(bucketName);
       final storageReference = storage.ref().child(path).child(name);
 
@@ -150,7 +152,7 @@ class YustFileService implements IYustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = 20 * 1024 * 1024,
+    int maxSize = yustMaxFileSizeInBytes,
     String? bucketName,
   }) async {
     try {

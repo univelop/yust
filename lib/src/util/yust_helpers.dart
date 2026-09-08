@@ -3,10 +3,26 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart';
 
+import '../models/yust_file.dart';
+import 'yust_exception.dart';
+
 /// Yust helpers
 class YustHelpers {
   /// Mock the current time in UTC. Only use this in tests!!!
   static TZDateTime? mockNowUTC;
+
+  /// Throws a [YustFileTooLargeException] when [sizeInBytes] exceeds
+  /// [YustFile.maxSizeInBytes].
+  void validateFileSize(String name, int sizeInBytes) {
+    if (sizeInBytes > YustFile.maxSizeInBytes) {
+      throw YustFileTooLargeException(
+        'The file $name is $sizeInBytes bytes and exceeds the maximum size '
+        'of ${YustFile.maxSizeInBytes} bytes.',
+        sizeInBytes,
+        YustFile.maxSizeInBytes,
+      );
+    }
+  }
 
   /// Returns a random String with a specific length.
   ///

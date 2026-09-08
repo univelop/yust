@@ -58,7 +58,7 @@ class YustFileService implements IYustFileService {
       throw YustException('No file or bytes provided');
     }
 
-    YustFile.validateSize(name, file?.lengthSync() ?? bytes!.length);
+    Yust.helpers.validateFileSize(name, file?.lengthSync() ?? bytes!.length);
 
     final effectiveBucketName = bucketName ?? defaultBucketName;
 
@@ -554,7 +554,7 @@ class YustFileService implements IYustFileService {
     var totalBytes = 0;
     await for (final chunk in stream) {
       totalBytes += chunk.length;
-      YustFile.validateSize(name, totalBytes);
+      Yust.helpers.validateFileSize(name, totalBytes);
       yield chunk;
     }
   }

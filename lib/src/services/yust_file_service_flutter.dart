@@ -89,7 +89,10 @@ class YustFileService implements IYustFileService {
     String? linkedDocAttribute,
   }) async {
     try {
-      YustFile.validateSize(name, file?.lengthSync() ?? bytes?.length ?? 0);
+      Yust.helpers.validateFileSize(
+        name,
+        file?.lengthSync() ?? bytes?.length ?? 0,
+      );
 
       final storage = _getStorageForBucket(bucketName);
       final storageReference = storage.ref().child(path).child(name);

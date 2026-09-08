@@ -91,7 +91,7 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     final data = file != null ? await file.readAsBytes() : bytes!;
-    YustFile.validateSize(name, data.length);
+    Yust.helpers.validateFileSize(name, data.length);
     final token = Uuid().v4();
 
     final bucketStorage = _getStorageForBucket(bucketName);

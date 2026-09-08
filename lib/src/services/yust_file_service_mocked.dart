@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/yust_file.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
 import 'yust_file_service.dart';
@@ -90,7 +91,7 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     final data = file != null ? await file.readAsBytes() : bytes!;
-    Yust.validateFileSize(name, data.length);
+    YustFile.validateSize(name, data.length);
     final token = Uuid().v4();
 
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -127,7 +128,7 @@ class YustFileServiceMocked extends YustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = Yust.maxFileSizeInBytes,
+    int maxSize = YustFile.maxSizeInBytes,
     String? bucketName,
   }) async {
     final bucketStorage = _getStorageForBucket(bucketName);

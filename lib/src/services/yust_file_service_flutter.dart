@@ -7,6 +7,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart';
 import 'package:mime/mime.dart';
 
+import '../models/yust_file.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
 import 'yust_file_service_interface.dart';
@@ -88,7 +89,7 @@ class YustFileService implements IYustFileService {
     String? linkedDocAttribute,
   }) async {
     try {
-      Yust.validateFileSize(name, file?.lengthSync() ?? bytes?.length ?? 0);
+      YustFile.validateSize(name, file?.lengthSync() ?? bytes?.length ?? 0);
 
       final storage = _getStorageForBucket(bucketName);
       final storageReference = storage.ref().child(path).child(name);
@@ -152,7 +153,7 @@ class YustFileService implements IYustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = Yust.maxFileSizeInBytes,
+    int maxSize = YustFile.maxSizeInBytes,
     String? bucketName,
   }) async {
     try {

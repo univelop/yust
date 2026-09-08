@@ -58,7 +58,7 @@ class YustFileService implements IYustFileService {
       throw YustException('No file or bytes provided');
     }
 
-    validateYustUploadSize(name, file?.lengthSync() ?? bytes!.length);
+    Yust.validateFileSize(name, file?.lengthSync() ?? bytes!.length);
 
     final effectiveBucketName = bucketName ?? defaultBucketName;
 
@@ -162,7 +162,7 @@ class YustFileService implements IYustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = yustMaxFileSizeInBytes,
+    int maxSize = Yust.maxFileSizeInBytes,
     String? bucketName,
   }) async {
     final effectiveBucketName = bucketName ?? defaultBucketName;
@@ -543,7 +543,7 @@ class YustFileService implements IYustFileService {
   }
 
   /// Passes [stream] through and throws as soon as more than
-  /// [yustMaxFileSizeInBytes] have been read.
+  /// [Yust.maxFileSizeInBytes] have been read.
   ///
   /// A stream has no known length up front, so the limit can only be enforced
   /// while uploading.
@@ -554,7 +554,7 @@ class YustFileService implements IYustFileService {
     var totalBytes = 0;
     await for (final chunk in stream) {
       totalBytes += chunk.length;
-      validateYustUploadSize(name, totalBytes);
+      Yust.validateFileSize(name, totalBytes);
       yield chunk;
     }
   }

@@ -90,7 +90,7 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     final data = file != null ? await file.readAsBytes() : bytes!;
-    validateYustUploadSize(name, data.length);
+    Yust.validateFileSize(name, data.length);
     final token = Uuid().v4();
 
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -127,7 +127,7 @@ class YustFileServiceMocked extends YustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = yustMaxFileSizeInBytes,
+    int maxSize = Yust.maxFileSizeInBytes,
     String? bucketName,
   }) async {
     final bucketStorage = _getStorageForBucket(bucketName);

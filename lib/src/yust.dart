@@ -16,6 +16,7 @@ import 'services/yust_push_service.dart';
 import 'services/yust_push_service_mocked.dart';
 import 'util/file_access/yust_file_access_grant.dart';
 import 'util/google_cloud_helpers.dart';
+import 'util/yust_exception.dart';
 import 'util/yust_helpers.dart';
 
 /// Represents the state of the user authentication.
@@ -85,6 +86,25 @@ class Yust {
   static late YustDocSetup<YustUser> userSetup;
   static YustHelpers helpers = YustHelpers();
   static late String projectId;
+
+  /// The hard upper limit for a single file yust uploads or downloads.
+  ///
+  /// Applies to every upload and download regardless of the caller. Callers
+  /// may enforce a stricter limit of their own, but never a larger one.
+  static const maxFileSizeInBytes = 500 * 1024 * 1024;
+
+  /// Throws a [YustFileTooLargeException] when [sizeInBytes] exceeds
+  /// [maxFileSizeInBytes].
+  static void validateFileSize(String name, int sizeInBytes) {
+    if (sizeInBytes > maxFileSizeInBytes) {
+      throw YustFileTooLargeException(
+        'The file $name is $sizeInBytes bytes and exceeds the maximum size '
+        'of $maxFileSizeInBytes bytes.',
+        sizeInBytes,
+        maxFileSizeInBytes,
+      );
+    }
+  }
 
   late YustDatabaseService dbService;
   late YustPushService pushService;

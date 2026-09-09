@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:mime/mime.dart';
 import 'package:uuid/uuid.dart';
 
+import '../models/yust_file.dart';
 import '../util/yust_exception.dart';
 import '../yust.dart';
 import 'yust_file_service.dart';
@@ -90,6 +91,7 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     final data = file != null ? await file.readAsBytes() : bytes!;
+    Yust.helpers.validateFileSize(name, data.length);
     final token = Uuid().v4();
 
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -126,7 +128,7 @@ class YustFileServiceMocked extends YustFileService {
   Future<Uint8List?> downloadFile({
     required String path,
     required String name,
-    int maxSize = 20 * 1024 * 1024,
+    int maxSize = YustFile.maxSizeInBytes,
     String? bucketName,
   }) async {
     final bucketStorage = _getStorageForBucket(bucketName);
@@ -136,7 +138,12 @@ class YustFileServiceMocked extends YustFileService {
     }
 
     if (file.data.length > maxSize) {
-      return file.data.sublist(0, maxSize);
+      throw YustFileTooLargeException(
+        'The file $path/$name is ${file.data.length} bytes and exceeds the '
+        'maximum download size of $maxSize bytes.',
+        file.data.length,
+        maxSize,
+      );
     }
     return file.data;
   }

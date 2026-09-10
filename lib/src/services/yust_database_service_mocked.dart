@@ -522,11 +522,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
               ? existing
                     .where(
                       (dynamic entry) => !t.removeFromArray!.any(
-                        (dynamic removed) =>
-                            const DeepCollectionEquality().equals(
-                              entry,
-                              removed,
-                            ),
+                        (dynamic removed) => const DeepCollectionEquality()
+                            .equals(entry, removed),
                       ),
                     )
                     .toList()

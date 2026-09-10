@@ -43,8 +43,8 @@ class GoogleCloudHelpers {
     } else {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
-        // 100 MB is the maximum the Firestore SDK accepts.
-        cacheSizeBytes: 100 * 1024 * 1024,
+        // Unlimited, so Firestore's LRU never evicts
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
     }
     return null;

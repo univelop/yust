@@ -1,3 +1,9 @@
+## 3.36.0 - 2026-09-15
+
+- Add `YustFile.scan`, a nullable `YustFileScan` carrying a virus scan verdict (`pending`, `clean`, `infected`, `skipped`, `error`), the detected signature, a skip reason (`tooLarge`, `encrypted`, `limitsExceeded`) and the scan time. Written by the backend scan trigger; clients write only `pending`, and only when creating a file map entry.
+- Add `YustFile.isScannedClean` and `YustFile.isInfected`. **A null `scan` means "not scanned", never "safe"** — a file uploaded before the feature, or in a workspace that has not enabled scanning, has no verdict. Use `isScannedClean` rather than testing `scan` yourself, so an absent verdict cannot be spelled into a safe one.
+- An unknown or missing scan status deserializes to `YustFileScanStatus.error`, not to anything reassuring.
+
 ## 3.34.0 - 2026-09-07
 
 - Normalize user emails to trimmed lowercase everywhere: the `YustUser.email` setter and constructor, `createAccount`, `changeEmail`, `sendPasswordResetEmail`, `addUserNamePasswordToAccount`, and the email-based lookups when linking or provisioning a `YustUser` after an OAuth/OpenID sign-in. Firestore compares strings case-sensitively, so emails delivered in mixed case by identity providers previously created users that could not be found by email. Use `YustUser.normalizeEmail` for your own email lookups.

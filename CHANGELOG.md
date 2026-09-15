@@ -4,6 +4,11 @@
 - Add `YustFile.isScannedClean` and `YustFile.isInfected`. **A null `scan` means "not scanned", never "safe"** — a file uploaded before the feature, or in a workspace that has not enabled scanning, has no verdict. Use `isScannedClean` rather than testing `scan` yourself, so an absent verdict cannot be spelled into a safe one.
 - An unknown or missing scan status deserializes to `YustFileScanStatus.error`, not to anything reassuring.
 
+## 3.35.0 - 2026-09-08
+
+- Raise the file size limit to 500 MB and enforce it in one place. `YustFile.maxSizeInBytes` is the new hard ceiling for every upload and download; `downloadFile`'s `maxSize` default rises from 20 MB to it, and `uploadFile`/`uploadStream` now reject anything larger via `Yust.helpers.validateFileSize`. Callers may still apply a stricter limit of their own.
+- `downloadFile` throws `YustFileTooLargeException` instead of silently truncating. Previously a file larger than `maxSize` came back as a partial buffer that looked like a valid file, which corrupted anything that round-tripped it - renaming a file and duplicating a record both re-upload what they download.
+
 ## 3.34.0 - 2026-09-07
 
 - Normalize user emails to trimmed lowercase everywhere: the `YustUser.email` setter and constructor, `createAccount`, `changeEmail`, `sendPasswordResetEmail`, `addUserNamePasswordToAccount`, and the email-based lookups when linking or provisioning a `YustUser` after an OAuth/OpenID sign-in. Firestore compares strings case-sensitively, so emails delivered in mixed case by identity providers previously created users that could not be found by email. Use `YustUser.normalizeEmail` for your own email lookups.

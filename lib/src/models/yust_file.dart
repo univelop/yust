@@ -69,6 +69,12 @@ class YustFile {
   /// e.g. {[YustFileThumbnailSize.normal]: 'thumbnails/small/image.webp'}
   Map<YustFileThumbnailSize, String>? thumbnails;
 
+  /// The virus scan verdict for this file.
+  ///
+  /// Null means **not scanned**, not safe — the file predates the feature, or
+  /// its workspace has not enabled scanning. See [isScannedClean].
+  YustFileScan? scan;
+
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
   File? file;
@@ -122,6 +128,14 @@ class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool get cached => devicePath != null;
 
+  /// True only when a scan examined this file and found it clean.
+  ///
+  /// Exists so that "not scanned" cannot be spelled as `scan?.isClean != false`
+  /// or any of the other forms that quietly turn an absent verdict into a safe
+  /// one. A file with no [scan] is unknown, not safe.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isScannedClean => scan?.status == YustFileScanStatus.clean;
+
   /// Creates a new file.
   ///
   /// Set [setCreatedAtToNow] to false, if it should not be set automatically.
@@ -145,6 +159,7 @@ class YustFile {
     this.createdAt,
     this.path,
     this.thumbnails,
+    this.scan,
     this.favorite = false,
     bool setCreatedAtToNow = true,
   }) {
@@ -179,6 +194,9 @@ class YustFile {
         (key, value) =>
             MapEntry(YustFileThumbnailSize.fromJson(key), value as String),
       ),
+      scan: json['scan'] == null
+          ? null
+          : YustFileScan.fromJson(json['scan'] as Map<String, dynamic>),
       favorite: json['favorite'] as bool? ?? false,
       setCreatedAtToNow: false,
     );
@@ -195,7 +213,6 @@ class YustFile {
   /// may enforce a stricter limit of their own, but never a larger one.
   static const maxSizeInBytes = 500 * 1024 * 1024;
 
-
   /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
@@ -207,6 +224,7 @@ class YustFile {
     createdAt = file.createdAt;
     path = file.path;
     thumbnails = file.thumbnails;
+    scan = file.scan;
     favorite = file.favorite;
   }
 

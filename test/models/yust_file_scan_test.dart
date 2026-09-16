@@ -15,7 +15,7 @@ void main() {
         'reason': null,
         'scannedAt': '2026-09-11T10:00:00.000Z',
       });
-      expect(YustFileScan.fromJson(json).isClean, isTrue);
+      expect(YustFileScan.fromJson(json).status, YustFileScanStatus.clean);
     });
 
     test('round-trips an infected verdict with its signature', () {
@@ -28,8 +28,6 @@ void main() {
 
       expect(scan.status, YustFileScanStatus.infected);
       expect(scan.signature, 'Win.Trojan.Agent-1774751');
-      expect(scan.isClean, isFalse);
-      expect(scan.isInfected, isTrue);
     });
 
     test('round-trips a skipped verdict with its reason', () {
@@ -42,7 +40,6 @@ void main() {
 
       expect(scan.status, YustFileScanStatus.skipped);
       expect(scan.reason, YustFileScanReason.encrypted);
-      expect(scan.isClean, isFalse);
     });
 
     test('never persists the computed getters', () {
@@ -62,7 +59,6 @@ void main() {
       final scan = YustFileScan.fromJson({'status': 'quarantined'});
 
       expect(scan.status, YustFileScanStatus.error);
-      expect(scan.isClean, isFalse);
     });
 
     test('reads a missing status as error', () {
@@ -96,7 +92,6 @@ void main() {
       });
 
       expect(file.scan?.status, YustFileScanStatus.infected);
-      expect(file.isInfected, isTrue);
       expect(file.isScannedClean, isFalse);
       expect((file.toJson()['scan'] as Map)['signature'], 'Eicar-Signature');
     });
@@ -108,7 +103,6 @@ void main() {
 
       expect(file.scan, isNull);
       expect(file.isScannedClean, isFalse);
-      expect(file.isInfected, isFalse);
     });
 
     test('omits scan from JSON when there is none', () {

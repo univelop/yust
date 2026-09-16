@@ -5,13 +5,11 @@ part 'yust_file_scan.g.dart';
 
 /// What is known about a file's virus scan.
 ///
-/// The absence of a [YustFileScan] and a [YustFileScan] are different things:
-/// a file with no scan predates the feature, or its workspace has not enabled
-/// scanning. **Neither may ever render as safe.**
-///
 /// Written by the backend scan trigger. The client only ever writes
-/// [YustFileScanStatus.pending], and only when creating the map entry — see
-/// [YustFileScanStatus.pending] for why.
+/// [YustFileScanStatus.pending], and only when creating the map entry.
+///
+/// A file with **no** [YustFileScan] is a different thing from a clean one, and
+/// must never render as safe — use [YustFile.isScannedClean].
 @JsonSerializable(createFactory: false)
 class YustFileScan {
   YustFileScan({
@@ -40,13 +38,11 @@ class YustFileScan {
   /// [YustFileScanStatus.clean].
   YustFileScanStatus status;
 
-  /// The ClamAV signature name, e.g. `Win.Trojan.Agent-1774751`.
+  /// The engine's signature name, e.g. `Win.Trojan.Agent-1774751`.
   ///
   /// Set only when [status] is [YustFileScanStatus.infected], and only for real
-  /// detections — the scanner maps its engine's "could not open this"
-  /// pseudo-signatures onto [reason] instead, so this field always means
-  /// "malware was identified". Shown verbatim in admin and support views;
-  /// never translated.
+  /// detections — "could not open this" maps onto [reason] instead, so this
+  /// always means malware was identified. Never translated.
   String? signature;
 
   /// Why there is no verdict. Set only when [status] is
@@ -57,21 +53,6 @@ class YustFileScan {
 
   /// When the verdict was written. Null while pending.
   DateTime? scannedAt;
-
-  /// True only for a file an engine actually examined and found clean.
-  ///
-  /// Every other state — including no scan at all, which is why this lives
-  /// here and there is a `YustFile.isScannedClean` beside it — is not safe.
-  @JsonKey(includeToJson: false)
-  bool get isClean => status == YustFileScanStatus.clean;
-
-  /// True when the file is known to contain malware.
-  @JsonKey(includeToJson: false)
-  bool get isInfected => status == YustFileScanStatus.infected;
-
-  /// True while a verdict is still expected. Distinct from having none.
-  @JsonKey(includeToJson: false)
-  bool get isPending => status == YustFileScanStatus.pending;
 
   Map<String, dynamic> toJson() => _$YustFileScanToJson(this);
 
@@ -92,12 +73,9 @@ class YustFileScan {
 enum YustFileScanStatus {
   /// Queued, no verdict yet.
   ///
-  /// Written by the client when the file entry is created, and replaced by the
-  /// backend. That ordering is forced rather than chosen: the trigger
-  /// annotates an existing map entry and cannot write a verdict before the
-  /// entry exists. Writing `pending` on *update* would let a stale client push
-  /// a real verdict back to "scanning…", which is the one way this field can
-  /// do harm.
+  /// The client writes this when creating the entry, because the backend can
+  /// only annotate an entry that already exists. Never on *update* — that
+  /// would let a stale client push a real verdict back to "scanning…".
   pending,
 
   /// An engine examined the file and found nothing.

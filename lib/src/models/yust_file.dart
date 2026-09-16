@@ -71,12 +71,8 @@ class YustFile {
 
   /// The virus scan verdict for this file.
   ///
-  /// Null means **not scanned**, not safe: the file predates the feature, or
-  /// its workspace has not enabled scanning. Anything rendering a file's safety
-  /// must distinguish the two — see [isScannedClean].
-  ///
-  /// Written by the backend scan trigger. The client writes only
-  /// [YustFileScanStatus.pending], and only when creating the entry.
+  /// Null means **not scanned**, not safe — the file predates the feature, or
+  /// its workspace has not enabled scanning. See [isScannedClean].
   YustFileScan? scan;
 
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
@@ -132,17 +128,13 @@ class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool get cached => devicePath != null;
 
-  /// True only when a scan actually examined this file and found it clean.
+  /// True only when a scan examined this file and found it clean.
   ///
-  /// Exists so that "not scanned" cannot be written as `scan?.isClean != false`
-  /// or any of the other spellings that quietly turn an absent verdict into a
-  /// safe one. A file with no [scan] is unknown, not safe.
+  /// Exists so that "not scanned" cannot be spelled as `scan?.isClean != false`
+  /// or any of the other forms that quietly turn an absent verdict into a safe
+  /// one. A file with no [scan] is unknown, not safe.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  bool get isScannedClean => scan?.isClean ?? false;
-
-  /// True when this file is known to contain malware.
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  bool get isInfected => scan?.isInfected ?? false;
+  bool get isScannedClean => scan?.status == YustFileScanStatus.clean;
 
   /// Creates a new file.
   ///
@@ -220,7 +212,6 @@ class YustFile {
   /// Applies to every upload and download regardless of the caller. Callers
   /// may enforce a stricter limit of their own, but never a larger one.
   static const maxSizeInBytes = 500 * 1024 * 1024;
-
 
   /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);

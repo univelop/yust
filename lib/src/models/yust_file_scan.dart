@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import 'yust_json_date.dart';
+
 part 'yust_file_scan.g.dart';
 
 /// What is known about a file's virus scan.
@@ -23,11 +25,7 @@ class YustFileScan {
     status: YustFileScanStatus.fromJson(json['status'] as String?),
     signature: json['signature'] as String?,
     reason: YustFileScanReason.fromJson(json['reason'] as String?),
-    scannedAt: json['scannedAt'] == null
-        ? null
-        : json['scannedAt'] is DateTime
-        ? json['scannedAt'] as DateTime
-        : DateTime.tryParse(json['scannedAt'] as String),
+    scannedAt: dateTimeFromJson(json['scannedAt']),
   );
 
   /// A file that has been queued for scanning but has no verdict yet.
@@ -55,18 +53,6 @@ class YustFileScan {
   DateTime? scannedAt;
 
   Map<String, dynamic> toJson() => _$YustFileScanToJson(this);
-
-  @override
-  bool operator ==(Object other) =>
-      other is YustFileScan &&
-      other.status == status &&
-      other.signature == signature &&
-      other.reason == reason &&
-      other.scannedAt == scannedAt;
-
-  @JsonKey(includeToJson: false)
-  @override
-  int get hashCode => Object.hash(status, signature, reason, scannedAt);
 }
 
 /// The terminal states of a scan, plus [pending].

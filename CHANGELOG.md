@@ -3,6 +3,7 @@
 - Add `YustFile.scan`, a nullable `YustFileScan` carrying a virus scan verdict (`pending`, `clean`, `infected`, `skipped`, `error`), the detected signature, a skip reason (`tooLarge`, `encrypted`, `limitsExceeded`) and the scan time. Written by the backend scan trigger; clients write only `pending`, and only when creating a file map entry.
 - Add `YustFile.isScannedClean` and `YustFile.isInfected`. **A null `scan` means "not scanned", never "safe"** — a file uploaded before the feature, or in a workspace that has not enabled scanning, has no verdict. Use `isScannedClean` rather than testing `scan` yourself, so an absent verdict cannot be spelled into a safe one.
 - An unknown or missing scan status deserializes to `YustFileScanStatus.error`, not to anything reassuring.
+- `YustFile.modifiedAt`, `YustFile.createdAt` and `YustFileScan.scannedAt` read their dates through one shared `dateTimeFromJson`, instead of three copies of the same DateTime-or-ISO-string ternary.
 
 ## 3.35.0 - 2026-09-08
 

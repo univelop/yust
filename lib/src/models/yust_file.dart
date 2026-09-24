@@ -6,7 +6,6 @@ import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../../yust.dart';
-import 'yust_json_date.dart';
 
 part 'yust_file.g.dart';
 
@@ -178,10 +177,10 @@ class YustFile {
     // This is implemented as a custom function so that createdAt will not be set for deserialized files.
     return YustFile(
       name: json['name'] as String?,
-      modifiedAt: dateTimeFromJson(json['modifiedAt']),
+      modifiedAt: YustHelpers().dateTimeFromJson(json['modifiedAt']),
       url: json['url'] as String?,
       hash: json['hash'] as String? ?? '',
-      createdAt: dateTimeFromJson(json['createdAt']),
+      createdAt: YustHelpers().dateTimeFromJson(json['createdAt']),
       path: json['path'] as String?,
       thumbnails: (json['thumbnails'] as Map?)?.map(
         (key, value) =>

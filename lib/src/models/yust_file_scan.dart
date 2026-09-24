@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import 'yust_json_date.dart';
+import '../util/yust_helpers.dart';
 
 part 'yust_file_scan.g.dart';
 
@@ -25,7 +25,7 @@ class YustFileScan {
     status: YustFileScanStatus.fromJson(json['status'] as String?),
     signature: json['signature'] as String?,
     reason: YustFileScanReason.fromJson(json['reason'] as String?),
-    scannedAt: dateTimeFromJson(json['scannedAt']),
+    scannedAt: YustHelpers().dateTimeFromJson(json['scannedAt']),
   );
 
   /// A file that has been queued for scanning but has no verdict yet.

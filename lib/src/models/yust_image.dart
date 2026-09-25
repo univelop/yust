@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 import 'yust_file.dart';
+import 'yust_file_scan.dart';
 import 'yust_geo_location.dart';
 
 part 'yust_image.g.dart';

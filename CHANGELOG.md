@@ -1,3 +1,10 @@
+## 3.36.0 - 2026-09-15
+
+- Add `YustFile.virusScanResult`, a nullable `YustFileScan` carrying a virus scan verdict (`pending`, `clean`, `infected`, `skipped`, `error`), the detected signature, a skip reason (`tooLarge`, `encrypted`, `limitsExceeded`) and the scan time. Written by the backend scan trigger; clients write only `pending`, and only when creating a file map entry.
+- Add `YustFile.isScannedClean` and `YustFile.isScannedInfected`. **A null `virusScanResult` means "not scanned", never "safe"** — a file uploaded before the feature, or in a workspace that has not enabled scanning, has no verdict. Use `isScannedClean` rather than testing `virusScanResult` yourself, so an absent verdict cannot be spelled into a safe one.
+- An unknown or missing scan status deserializes to `YustFileScanStatus.error`, not to anything reassuring.
+- Add `YustHelpers.dateTimeFromJson`. `YustFile.modifiedAt`, `YustFile.createdAt` and `YustFileScan.scannedAt` now read their dates through it instead of repeating the same DateTime-or-ISO-string ternary.
+
 ## 3.35.0 - 2026-09-08
 
 - Raise the file size limit to 500 MB and enforce it in one place. `YustFile.maxSizeInBytes` is the new hard ceiling for every upload and download; `downloadFile`'s `maxSize` default rises from 20 MB to it, and `uploadFile`/`uploadStream` now reject anything larger via `Yust.helpers.validateFileSize`. Callers may still apply a stricter limit of their own.

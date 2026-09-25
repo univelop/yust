@@ -79,34 +79,37 @@ void main() {
     });
   });
 
-  group('YustFile scan integration', () {
+  group('YustFile virusScanResult integration', () {
     test('carries the verdict through fromJson and toJson', () {
       final file = YustFile.fromJson({
         'name': 'invoice.pdf',
         'hash': 'abc',
-        'scan': {
+        'virusScanResult': {
           'status': 'infected',
           'signature': 'Eicar-Signature',
           'scannedAt': '2026-09-11T10:00:00.000Z',
         },
       });
 
-      expect(file.scan?.status, YustFileScanStatus.infected);
+      expect(file.virusScanResult?.status, YustFileScanStatus.infected);
       expect(file.isScannedClean, isFalse);
-      expect((file.toJson()['scan'] as Map)['signature'], 'Eicar-Signature');
+      expect(
+        (file.toJson()['virusScanResult'] as Map)['signature'],
+        'Eicar-Signature',
+      );
     });
 
-    test('treats a file with no scan as not safe, not as safe', () {
-      // The whole point of isScannedClean: `scan?.isClean != false` and its
-      // relatives all quietly turn an absent verdict into a safe one.
+    test('treats a file with no verdict as not safe, not as safe', () {
+      // The whole point of isScannedClean: `virusScanResult?.isClean != false`
+      // and its relatives all quietly turn an absent verdict into a safe one.
       final file = YustFile.fromJson({'name': 'legacy.pdf', 'hash': 'abc'});
 
-      expect(file.scan, isNull);
+      expect(file.virusScanResult, isNull);
       expect(file.isScannedClean, isFalse);
     });
 
-    test('omits scan from JSON when there is none', () {
-      expect(YustFile(name: 'a.pdf').toJson()['scan'], isNull);
+    test('omits the verdict from JSON when there is none', () {
+      expect(YustFile(name: 'a.pdf').toJson()['virusScanResult'], isNull);
     });
 
     test('update() carries the verdict across', () {
@@ -115,7 +118,7 @@ void main() {
           YustFile(
             name: 'a.pdf',
             hash: 'h',
-            scan: YustFileScan(status: YustFileScanStatus.clean),
+            virusScanResult: YustFileScan(status: YustFileScanStatus.clean),
           ),
         );
 

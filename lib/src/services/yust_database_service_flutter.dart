@@ -35,35 +35,36 @@ class YustDatabaseService implements IYustDatabaseService {
   final Yust _yust;
 
   YustDatabaseService({required Yust yust, String? emulatorAddress})
-      : _yust = yust,
-        envCollectionName = yust.envCollectionName,
-        useSubcollections = yust.useSubcollections,
-        _fireStore = FirebaseFirestore.instance {
-    dbLogCallback = (
-      DatabaseLogAction action,
-      String documentPath,
-      int count, {
-      String? id,
-      List<String>? updateMask,
-      num? aggregationResult,
-    }) {
-      statistics.dbStatisticsCallback(
-        action,
-        documentPath,
-        count,
-        id: id,
-        updateMask: updateMask,
-        aggregationResult: aggregationResult,
-      );
-      yust.dbLogCallback?.call(
-        action,
-        documentPath,
-        count,
-        id: id,
-        updateMask: updateMask,
-        aggregationResult: aggregationResult,
-      );
-    };
+    : _yust = yust,
+      envCollectionName = yust.envCollectionName,
+      useSubcollections = yust.useSubcollections,
+      _fireStore = FirebaseFirestore.instance {
+    dbLogCallback =
+        (
+          DatabaseLogAction action,
+          String documentPath,
+          int count, {
+          String? id,
+          List<String>? updateMask,
+          num? aggregationResult,
+        }) {
+          statistics.dbStatisticsCallback(
+            action,
+            documentPath,
+            count,
+            id: id,
+            updateMask: updateMask,
+            aggregationResult: aggregationResult,
+          );
+          yust.dbLogCallback?.call(
+            action,
+            documentPath,
+            count,
+            id: id,
+            updateMask: updateMask,
+            aggregationResult: aggregationResult,
+          );
+        };
   }
 
   /// Represents the collection name for the tenants.
@@ -75,10 +76,10 @@ class YustDatabaseService implements IYustDatabaseService {
   final bool useSubcollections;
 
   YustDatabaseService.mocked({required Yust yust, String? emulatorAddress})
-      : _yust = yust,
-        envCollectionName = yust.envCollectionName,
-        useSubcollections = yust.useSubcollections,
-        dbLogCallback = yust.dbLogCallback {
+    : _yust = yust,
+      envCollectionName = yust.envCollectionName,
+      useSubcollections = yust.useSubcollections,
+      dbLogCallback = yust.dbLogCallback {
     throw UnsupportedError('Not supported in Flutter Environment');
   }
 
@@ -96,12 +97,12 @@ class YustDatabaseService implements IYustDatabaseService {
         .get(GetOptions(source: Source.serverAndCache))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot))
         .catchError((e) {
-      if (e is FirebaseException && e.code == 'permission-denied') {
-        print('Permission denied for doc: ${docSetup.collectionName}/$id');
-        return null;
-      }
-      throw e;
-    });
+          if (e is FirebaseException && e.code == 'permission-denied') {
+            print('Permission denied for doc: ${docSetup.collectionName}/$id');
+            return null;
+          }
+          throw e;
+        });
     dbLogCallback?.call(
       DatabaseLogAction.get,
       _getCollectionPath(docSetup),
@@ -166,13 +167,13 @@ class YustDatabaseService implements IYustDatabaseService {
         .doc(id)
         .snapshots()
         .map((docSnapshot) {
-      dbLogCallback?.call(
-        DatabaseLogActionExtension.fromSnapshot(docSnapshot),
-        docSnapshot.reference.parent.path,
-        docSnapshot.exists ? 1 : 0,
-      );
-      return _transformDoc(docSetup, docSnapshot);
-    });
+          dbLogCallback?.call(
+            DatabaseLogActionExtension.fromSnapshot(docSnapshot),
+            docSnapshot.reference.parent.path,
+            docSnapshot.exists ? 1 : 0,
+          );
+          return _transformDoc(docSetup, docSnapshot);
+        });
   }
 
   @override
@@ -418,8 +419,9 @@ class YustDatabaseService implements IYustDatabaseService {
     int? limit,
   }) async {
     var query = getQuery(docSetup, filters: filters);
-    final snapshot =
-        await query.aggregate(cf.average(fieldPath), cf.count()).get();
+    final snapshot = await query
+        .aggregate(cf.average(fieldPath), cf.count())
+        .get();
     return (count: snapshot.count ?? 0, result: snapshot.getAverage(fieldPath));
   }
 
@@ -709,8 +711,9 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    final docRef =
-        _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
+    final docRef = _fireStore
+        .collection(_getCollectionPath(docSetup))
+        .doc(doc.id);
     await docRef.delete();
     dbLogCallback?.call(
       DatabaseLogAction.delete,
@@ -725,8 +728,9 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     String docId,
   ) async {
-    final docRef =
-        _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
+    final docRef = _fireStore
+        .collection(_getCollectionPath(docSetup))
+        .doc(docId);
     await docRef.delete();
     dbLogCallback?.call(
       DatabaseLogAction.delete,
@@ -961,7 +965,8 @@ class YustDatabaseService implements IYustDatabaseService {
     if (data is Map<String, dynamic>) {
       if (data['id'] is! String || data['id'].isEmpty) {
         print(
-            '[[WARNING]] Error Transforming JSON. Document has no id: ${snapshot.reference.path}');
+          '[[WARNING]] Error Transforming JSON. Document has no id: ${snapshot.reference.path}',
+        );
         return null;
       }
       // Convert Timestamps to ISOStrings

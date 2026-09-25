@@ -73,7 +73,7 @@ class YustFile {
   ///
   /// Null means **not scanned**, not safe — the file predates the feature, or
   /// its workspace has not enabled scanning. See [isScannedClean].
-  YustFileScan? scan;
+  YustFileScan? virusScanResult;
 
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -130,11 +130,20 @@ class YustFile {
 
   /// True only when a scan examined this file and found it clean.
   ///
-  /// Exists so that "not scanned" cannot be spelled as `scan?.isClean != false`
-  /// or any of the other forms that quietly turn an absent verdict into a safe
-  /// one. A file with no [scan] is unknown, not safe.
+  /// Exists so that "not scanned" cannot be spelled as
+  /// `virusScanResult?.isClean != false` or any of the other forms that
+  /// quietly turn an absent verdict into a safe one. A file with no
+  /// [virusScanResult] is unknown, not safe.
   @JsonKey(includeFromJson: false, includeToJson: false)
-  bool get isScannedClean => scan?.status == YustFileScanStatus.clean;
+  bool get isScannedClean =>
+      virusScanResult?.status == YustFileScanStatus.clean;
+
+  /// True when a scan examined this file and found malware.
+  ///
+  /// The one state that warrants warning the user before they open the file.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isScannedInfected =>
+      virusScanResult?.status == YustFileScanStatus.infected;
 
   /// Creates a new file.
   ///
@@ -159,7 +168,7 @@ class YustFile {
     this.createdAt,
     this.path,
     this.thumbnails,
-    this.scan,
+    this.virusScanResult,
     this.favorite = false,
     bool setCreatedAtToNow = true,
   }) {
@@ -186,9 +195,11 @@ class YustFile {
         (key, value) =>
             MapEntry(YustFileThumbnailSize.fromJson(key), value as String),
       ),
-      scan: json['scan'] == null
+      virusScanResult: json['virusScanResult'] == null
           ? null
-          : YustFileScan.fromJson(json['scan'] as Map<String, dynamic>),
+          : YustFileScan.fromJson(
+              json['virusScanResult'] as Map<String, dynamic>,
+            ),
       favorite: json['favorite'] as bool? ?? false,
       setCreatedAtToNow: false,
     );
@@ -216,7 +227,7 @@ class YustFile {
     createdAt = file.createdAt;
     path = file.path;
     thumbnails = file.thumbnails;
-    scan = file.scan;
+    virusScanResult = file.virusScanResult;
     favorite = file.favorite;
   }
 

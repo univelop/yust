@@ -31,10 +31,10 @@ YustImage _$YustImageFromJson(Map json) =>
                 Map<String, dynamic>.from(json['location'] as Map),
               ),
       )
-      ..scan = json['scan'] == null
+      ..virusScanResult = json['virusScanResult'] == null
           ? null
           : YustFileScan.fromJson(
-              Map<String, dynamic>.from(json['scan'] as Map),
+              Map<String, dynamic>.from(json['virusScanResult'] as Map),
             );
 
 Map<String, dynamic> _$YustImageToJson(YustImage instance) => <String, dynamic>{
@@ -46,7 +46,7 @@ Map<String, dynamic> _$YustImageToJson(YustImage instance) => <String, dynamic>{
   'path': instance.path,
   'favorite': instance.favorite,
   'thumbnails': instance.thumbnails?.map((k, e) => MapEntry(k.toJson(), e)),
-  'scan': instance.scan?.toJson(),
+  'virusScanResult': instance.virusScanResult?.toJson(),
   'location': instance.location?.toJson(),
 };
 

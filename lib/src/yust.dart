@@ -190,6 +190,9 @@ class Yust {
       credentials: credentials,
       backendAuthId: backendAuthId,
     );
+    // On web, `useAuthEmulator` is async — sign-ins started before it
+    // resolves will hit production endpoints.
+    await Yust.authService.ready;
     Yust.fileService = YustFileService(
       authClient: authClient,
       emulatorAddress: emulatorAddress,

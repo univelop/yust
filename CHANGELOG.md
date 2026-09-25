@@ -1,3 +1,28 @@
+## 3.35.0 - 2026-09-08
+
+- Raise the file size limit to 500 MB and enforce it in one place. `YustFile.maxSizeInBytes` is the new hard ceiling for every upload and download; `downloadFile`'s `maxSize` default rises from 20 MB to it, and `uploadFile`/`uploadStream` now reject anything larger via `Yust.helpers.validateFileSize`. Callers may still apply a stricter limit of their own.
+- `downloadFile` throws `YustFileTooLargeException` instead of silently truncating. Previously a file larger than `maxSize` came back as a partial buffer that looked like a valid file, which corrupted anything that round-tripped it - renaming a file and duplicating a record both re-upload what they download.
+
+## 3.34.0 - 2026-09-07
+
+- Normalize user emails to trimmed lowercase everywhere: the `YustUser.email` setter and constructor, `createAccount`, `changeEmail`, `sendPasswordResetEmail`, `addUserNamePasswordToAccount`, and the email-based lookups when linking or provisioning a `YustUser` after an OAuth/OpenID sign-in. Firestore compares strings case-sensitively, so emails delivered in mixed case by identity providers previously created users that could not be found by email. Use `YustUser.normalizeEmail` for your own email lookups.
+- Add `completeSignInWithRedirect` to the auth service. On web, OAuth sign-in with `redirect: true` reloads the page on return from the provider, discarding the in-flight `signInWith...` call before it can provision a `YustUser` — leaving an authenticated Firebase user with no matching `YustUser`. Call `completeSignInWithRedirect` once at app startup to fetch the pending redirect result and create/link the `YustUser`. No-op when there is no pending redirect (safe to call on every startup) and on non-web platforms.
+
+## 3.33.5 - 2026-08-25
+
+- Force Firestore XHR long-polling on WebKit browsers (Safari on macOS, all iOS browsers) to work around severe read/listener stalls in Safari >= 26.4 (firebase/firebase-js-sdk#9789)
+- Drop update mask paths that are missing from the saved data, so partial updates no longer fail on stale field paths
+- Narrow the `googleapis_auth` import in `YustAuthService` (dart) to `ServiceAccountCredentials`, resolving the `RSAPrivateKey` ambiguity with `dart_jsonwebtoken` on `googleapis_auth` >= 2.1.0
+
+## 3.33.4 - 2026-07-28
+
+- Add `favorite` flag to `YustFile` and `YustImage`
+
+## 3.33.3 - 2026-07-23
+
+- Fix document ID ordering in the mocked database service
+- Fix OAuth sign-in on iOS and Android when using a custom auth domain
+
 ## 3.33.2 - 2026-05-18
 
 - Fix handling of empty maps in `YustDatabaseService` (dart-only)

@@ -4,7 +4,8 @@ import 'dart:convert';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:googleapis/iamcredentials/v1.dart';
 import 'package:googleapis/identitytoolkit/v1.dart';
-import 'package:googleapis_auth/googleapis_auth.dart';
+import 'package:googleapis_auth/googleapis_auth.dart'
+    show ServiceAccountCredentials;
 import 'package:http/http.dart';
 import 'package:uuid/uuid.dart';
 
@@ -94,6 +95,10 @@ class YustAuthService {
     throw UnsupportedError('Not supported. No UI available.');
   }
 
+  /// Completes an OAuth redirect sign-in. Web-only concept; on the server this
+  /// is a no-op so shared code can call it unconditionally.
+  Future<YustUser?> completeSignInWithRedirect() async => null;
+
   /// Sign out the current user.
   Future<void> signOut() async {
     throw UnsupportedError('Not supported. No UI available.');
@@ -128,6 +133,8 @@ class YustAuthService {
     YustGender? gender,
     bool useOAuth = false,
   }) async {
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     GoogleCloudIdentitytoolkitV1SignUpResponse? response;
     final uuid = Uuid().v4();
 
@@ -182,6 +189,8 @@ class YustAuthService {
     String password, {
     List<String> allowedProviderIds = const [],
   }) async {
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     final user = await _yust.dbService.getFirst<YustUser>(
       Yust.userSetup,
       filters: [

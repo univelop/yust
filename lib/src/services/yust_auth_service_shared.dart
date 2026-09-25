@@ -13,7 +13,7 @@ class YustAuthServiceShared {
         YustFilter(
           field: 'email',
           comparator: YustFilterComparator.equal,
-          value: email,
+          value: YustUser.normalizeEmail(email),
         ),
       ],
     );
@@ -39,14 +39,15 @@ class YustAuthServiceShared {
       );
     }
 
+    final normalizedEmail = YustUser.normalizeEmail(email);
     final user = Yust.userSetup.newDoc!()
-      ..email = email
+      ..email = normalizedEmail
       ..firstName = firstName
       ..lastName = lastName
       ..id = id
       ..authId = authId
       ..authenticationMethod = authenticationMethod
-      ..domain = domain ?? email.split('@').last
+      ..domain = domain ?? normalizedEmail.split('@').last
       ..gender = gender
       ..lastLogin = DateTime.now()
       ..lastLoginDomain = Uri.base.scheme.contains('http')

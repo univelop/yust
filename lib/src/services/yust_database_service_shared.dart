@@ -36,6 +36,44 @@ Future<void> prepareSaveDoc<T extends YustDoc>(
   if (!skipOnSave) await docSetup.onSave?.call(doc);
 }
 
+/// Cleans a Firestore update field [mask] so it never references a path that is
+/// missing from [data].
+List<String> cleanUpdateMask(Map<String, dynamic> data, Iterable<String> mask) {
+  final resolved = <String>{};
+  for (final path in mask) {
+    final existing = _nearestExistingPath(data, path);
+    if (existing != null) resolved.add(existing);
+  }
+
+  // Drop any path that has a strict ancestor also present in the mask.
+  return resolved
+      .where(
+        (path) => !resolved.any(
+          (other) => other != path && path.startsWith('$other.'),
+        ),
+      )
+      .toList();
+}
+
+/// Returns the longest prefix of [path] that resolves to an existing key in
+/// [data] (the resolved value may itself be `null`), or `null` if not even the
+/// first segment exists. Backtick-quoting of segments is tolerated.
+String? _nearestExistingPath(Map<String, dynamic> data, String path) {
+  final segments = path.split('.');
+  final kept = <String>[];
+  dynamic current = data;
+  for (final segment in segments) {
+    final key = segment.replaceAll('`', '');
+    if (current is Map<String, dynamic> && current.containsKey(key)) {
+      kept.add(segment);
+      current = current[key];
+    } else {
+      break;
+    }
+  }
+  return kept.isEmpty ? null : kept.join('.');
+}
+
 T doInitDoc<T extends YustDoc>(YustDocSetup<T> docSetup, String id, [T? doc]) {
   if (docSetup.newDoc == null) {
     throw YustException(

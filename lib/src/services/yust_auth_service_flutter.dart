@@ -55,7 +55,7 @@ class YustAuthService {
 
   Future<void> signIn(String email, String password) async {
     await _fireAuth.signInWithEmailAndPassword(
-      email: email,
+      email: YustUser.normalizeEmail(email),
       password: password,
     );
   }
@@ -119,6 +119,42 @@ class YustAuthService {
       provider,
       redirect: redirect,
     );
+    return _provisionYustUser(userCredential, method);
+  }
+
+  /// Completes an OAuth sign-in that was started with `redirect: true` on web.
+  ///
+  /// The redirect flow navigates the whole page away to the identity provider
+  /// and reloads the app on return, which discards the in-flight
+  /// `signInWith...` call before it can provision a [YustUser]. Firebase
+  /// restores the auth user from persistence on reload, but the [YustUser]
+  /// document would otherwise never be created — leaving an authenticated
+  /// Firebase user with no matching domain user.
+  ///
+  /// Call this once at app startup (web only). It fetches the pending redirect
+  /// result and, if a sign-in just completed, creates or links the matching
+  /// [YustUser]. It is a no-op when there is no pending redirect result, so it
+  /// is safe to call on every startup.
+  Future<YustUser?> completeSignInWithRedirect() async {
+    if (!kIsWeb) return null;
+    final userCredential = await _fireAuth.getRedirectResult();
+    if (userCredential.user == null) return null;
+    final method = _methodFromProviderId(
+      userCredential.additionalUserInfo?.providerId ??
+          userCredential.credential?.providerId,
+    );
+    return _provisionYustUser(userCredential, method);
+  }
+
+  /// Ensures a [YustUser] exists for the signed-in [userCredential], linking
+  /// an existing user (matched by email) or creating a new one. Returns the
+  /// created user, or `null` when the sign-in failed or a matching user
+  /// already existed / was linked. Idempotent — safe to call for a user that
+  /// is already provisioned.
+  Future<YustUser?> _provisionYustUser(
+    UserCredential userCredential,
+    YustAuthenticationMethod? method,
+  ) async {
     if (_signInFailed(userCredential)) return null;
     final connectedYustUser = await _maybeGetConnectedYustUser(userCredential);
     if (_yustUserWasLinked(connectedYustUser)) return null;
@@ -146,10 +182,27 @@ class YustAuthService {
     );
   }
 
+  YustAuthenticationMethod? _methodFromProviderId(String? providerId) {
+    switch (providerId) {
+      case 'microsoft.com':
+        return YustAuthenticationMethod.microsoft;
+      case 'google.com':
+        return YustAuthenticationMethod.google;
+      case 'apple.com':
+        return YustAuthenticationMethod.apple;
+      case null:
+      case 'password':
+      case 'firebase':
+        return null;
+      default:
+        return YustAuthenticationMethod.openId;
+    }
+  }
+
   String _getId(UserCredential userCredential) => userCredential.user!.uid;
 
   String _getEmail(UserCredential userCredential) =>
-      userCredential.user!.email ?? '';
+      YustUser.normalizeEmail(userCredential.user!.email ?? '');
 
   String _getFirstName(List<String> nameParts) =>
       nameParts.join(' ').replaceAll(r'+', ' ');
@@ -204,6 +257,8 @@ class YustAuthService {
     if (useOAuth == true) {
       throw YustException('OAuth not supported for createAccount.');
     }
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     final userCredential = await _fireAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
@@ -235,13 +290,17 @@ class YustAuthService {
 
   Future<void> sendPasswordResetEmail(String email) async {
     try {
-      await _fireAuth.sendPasswordResetEmail(email: email);
+      await _fireAuth.sendPasswordResetEmail(
+        email: YustUser.normalizeEmail(email),
+      );
     } catch (e) {
       throw YustException('Reset password not possible.');
     }
   }
 
   Future<void> changeEmail(String email, String password) async {
+    // ignore: parameter_assignments
+    email = YustUser.normalizeEmail(email);
     final user = await Yust.databaseService.getFromDB<YustUser>(
       Yust.userSetup,
       _fireAuth.currentUser!.uid,
@@ -339,7 +398,7 @@ class YustAuthService {
     // If the emails match, return the verified status.
     // Note: We do not rely solely on emailVerified because, during a pending email change,
     // Firebase still shows the old (already verified) email, which would always return true.
-    if (refreshedUser?.email == user.email) {
+    if (refreshedUser?.email?.toLowerCase() == user.email.toLowerCase()) {
       return refreshedUser?.emailVerified;
     }
 

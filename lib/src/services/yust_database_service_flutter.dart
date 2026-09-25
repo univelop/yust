@@ -450,6 +450,13 @@ class YustDatabaseService implements IYustDatabaseService {
 
     final jsonDoc = doc.toJson();
 
+    if (updateMask != null) {
+      final cleaned = cleanUpdateMask(jsonDoc, updateMask);
+      updateMask
+        ..clear()
+        ..addAll(cleaned);
+    }
+
     final modifiedDoc = _prepareJsonForFirebase(
       doNotCreate && updateMask != null
           ? _getValuesByUpdateMask(jsonDoc, updateMask)

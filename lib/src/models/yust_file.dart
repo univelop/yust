@@ -189,6 +189,13 @@ class YustFile {
   /// Used for local caching on mobile devices
   static String type = 'YustFile';
 
+  /// The hard upper limit for a single file yust uploads or downloads.
+  ///
+  /// Applies to every upload and download regardless of the caller. Callers
+  /// may enforce a stricter limit of their own, but never a larger one.
+  static const maxSizeInBytes = 500 * 1024 * 1024;
+
+
   /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 

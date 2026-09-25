@@ -74,3 +74,14 @@ class YustInvalidCoordinatesException extends YustException {
   final double? latitude;
   final double? longitude;
 }
+
+class YustFileTooLargeException extends YustException {
+  YustFileTooLargeException(
+    super.message,
+    this.sizeInBytes,
+    this.maxSizeInBytes,
+  );
+
+  final int? sizeInBytes;
+  final int maxSizeInBytes;
+}

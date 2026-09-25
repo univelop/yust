@@ -847,6 +847,14 @@ class YustDatabaseService implements IYustDatabaseService {
     if (updateMask != null) updateMask.addAll(yustUpdateMask);
 
     final jsonDoc = doc.toJson();
+
+    if (updateMask != null) {
+      final cleaned = cleanUpdateMask(jsonDoc, updateMask);
+      updateMask
+        ..clear()
+        ..addAll(cleaned);
+    }
+
     final dbDoc = Document(
       fields: jsonDoc.map(
         (key, value) => MapEntry(key, _valueToDbValue(value)),
@@ -1225,9 +1233,10 @@ class YustDatabaseService implements IYustDatabaseService {
     );
     if (useUpdateMask) {
       write.updateMask = DocumentMask(
-        fieldPaths: doc.updateMask
-            .map((e) => YustHelpers().toQuotedFieldPath(e)!)
-            .toList(),
+        fieldPaths: cleanUpdateMask(
+          jsonDoc,
+          doc.updateMask,
+        ).map((e) => YustHelpers().toQuotedFieldPath(e)!).toList(),
       );
     }
     final commitRequest = CommitRequest(

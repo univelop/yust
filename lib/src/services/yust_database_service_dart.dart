@@ -1616,8 +1616,7 @@ class YustDatabaseService implements IYustDatabaseService {
       // the `nullValue` branch below, not here.
       return map?.map(
             (key, childValue) => MapEntry(key, _dbValueToValue(childValue)),
-          ) ??
-          {};
+          ) ?? {};
     } else if (dbValue.booleanValue != null) {
       return dbValue.booleanValue;
     } else if (dbValue.integerValue != null) {

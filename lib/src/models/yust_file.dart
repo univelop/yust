@@ -101,14 +101,6 @@ class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool? createThumbnail;
 
-  /// True if the files should be stored as a Map of hash and file
-  /// inside the linked document.
-  ///
-  /// By default, files will be stored as a list (simple array)
-  /// or individual files sometimes directly as a map
-  @JsonKey(includeFromJson: false, includeToJson: false)
-  bool? linkedDocStoresFilesAsMap;
-
   /// Is true while uploading the file.
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool processing;
@@ -121,6 +113,15 @@ class YustFile {
   /// True if image is cached locally.
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool get cached => devicePath != null;
+
+  /// True if the file has a name. False for an unsigned signature placeholder.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get hasName => name?.isNotEmpty == true;
+
+  /// True if the file has somewhere in Storage to be read from or written to.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get hasStorageLocation =>
+      storageFolderPath?.isNotEmpty == true || path?.isNotEmpty == true;
 
   /// Creates a new file.
   ///
@@ -141,7 +142,6 @@ class YustFile {
     this.processing = false,
     this.lastError,
     this.createThumbnail,
-    this.linkedDocStoresFilesAsMap,
     this.createdAt,
     this.path,
     this.thumbnails,
@@ -210,19 +210,21 @@ class YustFile {
     favorite = file.favorite;
   }
 
-  /// Converts the file to JSON for local device. Only relevant attributes are converted.
+  /// Reads a file back from the device's own JSON, as [toLocalJson] writes it.
   ///
   /// This is used for offline file handling only (Caching on mobile devices)
+  ///
+  /// Every field but the name is optional.
   factory YustFile.fromLocalJson(Map<String, dynamic> json) {
     return YustFile(
       name: json['name'] as String,
-      storageFolderPath: json['storageFolderPath'] as String,
-      devicePath: json['devicePath'] as String,
-      linkedDocPath: json['linkedDocPath'] as String,
-      linkedDocAttribute: json['linkedDocAttribute'] as String,
+      hash: json['hash'] as String? ?? '',
+      storageFolderPath: json['storageFolderPath'] as String?,
+      devicePath: json['devicePath'] as String?,
+      linkedDocPath: json['linkedDocPath'] as String?,
+      linkedDocAttribute: json['linkedDocAttribute'] as String?,
       lastError: json['lastError'] as String?,
       createThumbnail: json['createThumbnail'] == 'true',
-      linkedDocStoresFilesAsMap: json['linkedDocStoresFilesAsMap'] == 'true',
       modifiedAt: json['modifiedAt'] != null
           ? DateTime.parse(json['modifiedAt'] as String)
           : null,
@@ -243,38 +245,28 @@ class YustFile {
     );
   }
 
-  /// Converts JSON from device to a file. Only relevant attributes are included.
+  /// Converts the file to JSON for the device. Only relevant attributes are
+  /// converted.
   ///
   /// This is used for offline file handling only (Caching on mobile devices)
+  ///
+  /// Carries the addressing fields [toJson] drops. Which of them a file needs
+  /// depends on the operation queued for it, so that is checked there.
   Map<String, String?> toLocalJson() {
     if (name == null) {
       throw YustException(
         'Error: Each cached file needs a name. Should be unique for each path!',
       );
     }
-    if (devicePath == null) {
-      throw YustException('Error: Device Path has to be a String.');
-    }
-    if (storageFolderPath == null) {
-      throw YustException(
-        'Error: StorageFolderPath has to be set for a successful upload.',
-      );
-    }
-    if (linkedDocPath == null || linkedDocAttribute == null) {
-      throw YustException(
-        'Error: linkedDocPath and linkedDocAttribute have to be set for a successful upload.',
-      );
-    }
     return {
       'name': name,
+      'hash': hash,
       'storageFolderPath': storageFolderPath,
       'linkedDocPath': linkedDocPath,
       'linkedDocAttribute': linkedDocAttribute,
       'devicePath': devicePath,
       'lastError': lastError,
       'createThumbnail': (createThumbnail ?? false).toString(),
-      'linkedDocStoresFilesAsMap': (linkedDocStoresFilesAsMap ?? false)
-          .toString(),
       'modifiedAt': modifiedAt?.toIso8601String(),
       'createdAt': createdAt?.toIso8601String(),
       'type': type,

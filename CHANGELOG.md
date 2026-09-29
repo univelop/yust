@@ -1,3 +1,9 @@
+## 3.35.1 - 2026-09-29
+
+- Add `YustFile.virusScanResult` (`YustFileScan`: `status`, `signature`, `reason`, `scannedAt`), written by the backend; clients only write `YustFileScan.pending()` on creation
+- Add `YustFile.isScannedClean` / `isScannedInfected`. No verdict means not scanned, not safe; unknown statuses read as `error`
+- Add `Yust.helpers.dateTimeFromJson` for dates arriving as `DateTime` or ISO 8601 string
+
 ## 3.35.0 - 2026-09-08
 
 - Raise the file size limit to 500 MB and enforce it in one place. `YustFile.maxSizeInBytes` is the new hard ceiling for every upload and download; `downloadFile`'s `maxSize` default rises from 20 MB to it, and `uploadFile`/`uploadStream` now reject anything larger via `Yust.helpers.validateFileSize`. Callers may still apply a stricter limit of their own.

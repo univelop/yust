@@ -44,6 +44,17 @@ class YustHelpers {
   /// Because the Firestore REST-Api (used in the background) can't handle
   /// attributes starting with numbers, e.g. 'foo.0bar', we need to escape the
   /// path-parts by using '´': '`foo`.`0bar`'.
+  /// Reads a date out of a JSON map, whichever form it arrived in.
+  ///
+  /// Firestore hands back a `DateTime`; the REST API, a cache or a test fixture
+  /// hand back an ISO 8601 string.
+  DateTime? dateTimeFromJson(dynamic value) => switch (value) {
+    null => null,
+    final DateTime dateTime => dateTime,
+    final String string => DateTime.parse(string),
+    _ => throw FormatException('Cannot read a date from $value'),
+  };
+
   String? toQuotedFieldPath(String? fieldPath) =>
       fieldPath?.split('.').map((f) => '`$f`').join('.');
 

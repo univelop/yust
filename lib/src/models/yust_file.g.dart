@@ -15,4 +15,5 @@ Map<String, dynamic> _$YustFileToJson(YustFile instance) => <String, dynamic>{
   'path': instance.path,
   'favorite': instance.favorite,
   'thumbnails': instance.thumbnails?.map((k, e) => MapEntry(k.toJson(), e)),
+  'virusScanResult': instance.virusScanResult?.toJson(),
 };

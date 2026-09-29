@@ -69,6 +69,12 @@ class YustFile {
   /// e.g. {[YustFileThumbnailSize.normal]: 'thumbnails/small/image.webp'}
   Map<YustFileThumbnailSize, String>? thumbnails;
 
+  /// The virus scan verdict for this file.
+  ///
+  /// Null means **not scanned**, not safe — the file predates the feature, or
+  /// its workspace has not enabled scanning. See [isScannedClean].
+  YustFileScan? virusScanResult;
+
   /// The binary file. This attribute is used for iOS and Android. For web [bytes] is used instead.
   @JsonKey(includeFromJson: false, includeToJson: false)
   File? file;
@@ -122,6 +128,23 @@ class YustFile {
   @JsonKey(includeFromJson: false, includeToJson: false)
   bool get cached => devicePath != null;
 
+  /// True only when a scan examined this file and found it clean.
+  ///
+  /// Exists so that "not scanned" cannot be spelled as
+  /// `virusScanResult?.isClean != false` or any of the other forms that
+  /// quietly turn an absent verdict into a safe one. A file with no
+  /// [virusScanResult] is unknown, not safe.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isScannedClean =>
+      virusScanResult?.status == YustFileScanStatus.clean;
+
+  /// True when a scan examined this file and found malware.
+  ///
+  /// The one state that warrants warning the user before they open the file.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  bool get isScannedInfected =>
+      virusScanResult?.status == YustFileScanStatus.infected;
+
   /// Creates a new file.
   ///
   /// Set [setCreatedAtToNow] to false, if it should not be set automatically.
@@ -145,6 +168,7 @@ class YustFile {
     this.createdAt,
     this.path,
     this.thumbnails,
+    this.virusScanResult,
     this.favorite = false,
     bool setCreatedAtToNow = true,
   }) {
@@ -162,23 +186,20 @@ class YustFile {
     // This is implemented as a custom function so that createdAt will not be set for deserialized files.
     return YustFile(
       name: json['name'] as String?,
-      modifiedAt: json['modifiedAt'] == null
-          ? null
-          : json['modifiedAt'] is DateTime
-          ? json['modifiedAt'] as DateTime
-          : DateTime.parse(json['modifiedAt'] as String),
+      modifiedAt: YustHelpers().dateTimeFromJson(json['modifiedAt']),
       url: json['url'] as String?,
       hash: json['hash'] as String? ?? '',
-      createdAt: json['createdAt'] == null
-          ? null
-          : json['createdAt'] is DateTime
-          ? json['createdAt'] as DateTime
-          : DateTime.parse(json['createdAt'] as String),
+      createdAt: YustHelpers().dateTimeFromJson(json['createdAt']),
       path: json['path'] as String?,
       thumbnails: (json['thumbnails'] as Map?)?.map(
         (key, value) =>
             MapEntry(YustFileThumbnailSize.fromJson(key), value as String),
       ),
+      virusScanResult: json['virusScanResult'] == null
+          ? null
+          : YustFileScan.fromJson(
+              json['virusScanResult'] as Map<String, dynamic>,
+            ),
       favorite: json['favorite'] as bool? ?? false,
       setCreatedAtToNow: false,
     );
@@ -195,7 +216,6 @@ class YustFile {
   /// may enforce a stricter limit of their own, but never a larger one.
   static const maxSizeInBytes = 500 * 1024 * 1024;
 
-
   /// Converts JSON from Firebase to a file. Only relevant attributes are included.
   Map<String, dynamic> toJson() => _$YustFileToJson(this);
 
@@ -207,6 +227,7 @@ class YustFile {
     createdAt = file.createdAt;
     path = file.path;
     thumbnails = file.thumbnails;
+    virusScanResult = file.virusScanResult;
     favorite = file.favorite;
   }
 

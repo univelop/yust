@@ -198,7 +198,7 @@ class YustFile {
       virusScanResult: json['virusScanResult'] == null
           ? null
           : YustFileScan.fromJson(
-              json['virusScanResult'] as Map<String, dynamic>,
+              Map<String, dynamic>.from(json['virusScanResult'] as Map),
             ),
       favorite: json['favorite'] as bool? ?? false,
       setCreatedAtToNow: false,

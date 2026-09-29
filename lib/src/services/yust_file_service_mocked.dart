@@ -148,6 +148,27 @@ class YustFileServiceMocked extends YustFileService {
     return file.data;
   }
 
+  /// Downloads the file at [path] and [name] and returns its bytes. Throws a
+  /// [YustNotFoundException] when the file does not exist.
+  @override
+  Future<Uint8List> downloadFileOrThrow({
+    required String path,
+    required String name,
+    int maxSize = YustFile.maxSizeInBytes,
+    String? bucketName,
+  }) async {
+    final file = _getStorageForBucket(bucketName)[path]?[name];
+    if (file == null) {
+      throw YustNotFoundException('The file $path/$name does not exist.');
+    }
+    return (await downloadFile(
+      path: path,
+      name: name,
+      maxSize: maxSize,
+      bucketName: bucketName,
+    ))!;
+  }
+
   /// Deletes an existing file at [path] and filename [name].
   @override
   Future<void> deleteFile({

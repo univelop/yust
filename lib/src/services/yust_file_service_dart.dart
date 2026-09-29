@@ -221,6 +221,59 @@ class YustFileService implements IYustFileService {
     throw YustException('Unknown response Object');
   }
 
+  @override
+  Future<Uint8List> downloadFileOrThrow({
+    required String path,
+    required String name,
+    int maxSize = YustFile.maxSizeInBytes,
+    String? bucketName,
+  }) async {
+    final Uint8List? bytes;
+    try {
+      bytes = await downloadFile(
+        path: path,
+        name: name,
+        maxSize: maxSize,
+        bucketName: bucketName,
+      );
+    } on DetailedApiRequestError catch (e) {
+      if (e.status == 404) {
+        throw YustNotFoundException('The file $path/$name does not exist.');
+      }
+      rethrow;
+    }
+    if (bytes == null) {
+      throw YustException('The download of $path/$name returned no data.');
+    }
+    return bytes;
+  }
+
+  @override
+  Future<String> copyFile({
+    required String path,
+    required String name,
+    required String newName,
+    String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
+  }) async {
+    final bytes = await downloadFileOrThrow(
+      path: path,
+      name: name,
+      bucketName: bucketName,
+    );
+    return uploadFile(
+      path: path,
+      name: newName,
+      bytes: bytes,
+      bucketName: bucketName,
+      createThumbnail: createThumbnail,
+      linkedDocPath: linkedDocPath,
+      linkedDocAttribute: linkedDocAttribute,
+    );
+  }
+
   /// Deletes a existing file at [path] and filename [name].
   @override
   Future<void> deleteFile({

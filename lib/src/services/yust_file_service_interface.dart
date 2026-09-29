@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import '../models/yust_file.dart';
+import '../util/yust_exception.dart';
 import 'yust_file_service_shared.dart';
 
 /// Handles file storage requests.
@@ -65,6 +66,32 @@ abstract interface class IYustFileService {
     required String name,
     int maxSize = YustFile.maxSizeInBytes,
     String? bucketName,
+  });
+
+  /// Downloads the file at [path] and [name] and returns its bytes.
+  /// Throws a [YustNotFoundException] when the file does not exist and rethrows
+  /// any other failure.
+  /// Optionally accepts [bucketName] to override the default bucket.
+  Future<Uint8List> downloadFileOrThrow({
+    required String path,
+    required String name,
+    int maxSize = YustFile.maxSizeInBytes,
+    String? bucketName,
+  });
+
+  /// Stores the bytes of the file at [path] and [name] under [newName] in the
+  /// same folder and returns the copy's download url. [createThumbnail],
+  /// [linkedDocPath] and [linkedDocAttribute] apply to the copy as in
+  /// [uploadFile]. Throws like [downloadFileOrThrow].
+  /// Optionally accepts [bucketName] to override the default bucket.
+  Future<String> copyFile({
+    required String path,
+    required String name,
+    required String newName,
+    String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
   });
 
   /// Deletes a existing file at [path] and filename [name].

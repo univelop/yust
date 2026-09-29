@@ -1,3 +1,7 @@
+## 3.35.2 - 2026-09-29
+
+- Fixes for file handling
+
 ## 3.35.1 - 2026-09-29
 
 - Add `YustFile.virusScanResult` (`YustFileScan`: `status`, `signature`, `reason`, `scannedAt`), written by the backend; clients only write `YustFileScan.pending()` on creation

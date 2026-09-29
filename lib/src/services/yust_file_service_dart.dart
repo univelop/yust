@@ -340,6 +340,7 @@ class YustFileService implements IYustFileService {
       size: int.parse(object.size ?? '0'),
       token: object.metadata?['firebaseStorageDownloadTokens'] ?? '',
       customMetadata: object.metadata,
+      md5Hash: YustFileMetadata.md5HexFromBase64(object.md5Hash),
     );
   }
 

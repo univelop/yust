@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:mime/mime.dart';
+import 'package:pointycastle/digests/md5.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/yust_file.dart';
@@ -238,6 +239,12 @@ class YustFileServiceMocked extends YustFileService {
       size: object?.data.length ?? 0,
       token: object?.metadata['firebaseStorageDownloadTokens'] ?? '',
       customMetadata: object?.metadata,
+      md5Hash: object == null
+          ? null
+          : MD5Digest()
+                .process(object.data)
+                .map((byte) => byte.toRadixString(16).padLeft(2, '0'))
+                .join(),
     );
   }
 

@@ -14,6 +14,7 @@ export 'src/models/yust_address.dart';
 export 'src/models/yust_doc.dart';
 export 'src/models/yust_doc_setup.dart';
 export 'src/models/yust_file.dart';
+export 'src/models/yust_file_scan.dart';
 export 'src/models/yust_filter.dart';
 export 'src/models/yust_geo_location.dart';
 export 'src/models/yust_image.dart';

@@ -168,6 +168,55 @@ class YustFileService implements IYustFileService {
   }
 
   @override
+  Future<Uint8List> downloadFileOrThrow({
+    required String path,
+    required String name,
+    int maxSize = YustFile.maxSizeInBytes,
+    String? bucketName,
+  }) async {
+    final Uint8List? bytes;
+    try {
+      final storage = _getStorageForBucket(bucketName);
+      bytes = await storage.ref().child(path).child(name).getData(maxSize);
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        throw YustNotFoundException('The file $path/$name does not exist.');
+      }
+      rethrow;
+    }
+    if (bytes == null) {
+      throw YustException('The download of $path/$name returned no data.');
+    }
+    return bytes;
+  }
+
+  @override
+  Future<String> copyFile({
+    required String path,
+    required String name,
+    required String newName,
+    String? bucketName,
+    bool? createThumbnail,
+    String? linkedDocPath,
+    String? linkedDocAttribute,
+  }) async {
+    final bytes = await downloadFileOrThrow(
+      path: path,
+      name: name,
+      bucketName: bucketName,
+    );
+    return uploadFile(
+      path: path,
+      name: newName,
+      bytes: bytes,
+      bucketName: bucketName,
+      createThumbnail: createThumbnail,
+      linkedDocPath: linkedDocPath,
+      linkedDocAttribute: linkedDocAttribute,
+    );
+  }
+
+  @override
   Future<void> deleteFile({
     required String path,
     String? name,

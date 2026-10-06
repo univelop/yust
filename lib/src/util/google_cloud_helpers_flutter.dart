@@ -71,6 +71,8 @@ class GoogleCloudHelpers {
     } else {
       FirebaseFirestore.instance.settings = const Settings(
         persistenceEnabled: true,
+        // Unlimited, so Firestore's LRU never evicts
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
       );
     }
     return null;

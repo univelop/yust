@@ -7,6 +7,9 @@ import 'yust_auth_service.dart';
 class YustAuthServiceMocked implements YustAuthService {
   final Yust _yust;
 
+  @override
+  final Future<void> ready = Future.value();
+
   YustAuthServiceMocked(Yust yust) : _yust = yust;
 
   @override

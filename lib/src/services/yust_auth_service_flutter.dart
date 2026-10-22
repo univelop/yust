@@ -167,9 +167,7 @@ class YustAuthService {
     );
     if (successfullyLinked) return null;
 
-    final nameParts = _extractNameParts(userCredential);
-    final lastName = _getLastName(nameParts);
-    final firstName = _getFirstName(nameParts);
+    final (firstName, lastName) = _extractName(userCredential);
 
     return await YustAuthServiceShared.createYustUser(
       yust: _yust,
@@ -203,6 +201,34 @@ class YustAuthService {
 
   String _getEmail(UserCredential userCredential) =>
       YustUser.normalizeEmail(userCredential.user!.email ?? '');
+
+  /// Prefers the provider's own given/family name claims (e.g. Microsoft
+  /// Graph's `givenName`/`surname`, or OIDC's `given_name`/`family_name`)
+  /// over splitting the combined `displayName`, since Firebase only exposes
+  /// `displayName` as a single string and a naive split mis-assigns
+  /// single-word names entirely to the last name.
+  (String, String) _extractName(UserCredential userCredential) {
+    final profile = userCredential.additionalUserInfo?.profile;
+    final givenName = _readProfileString(profile, ['givenName', 'given_name']);
+    final familyName = _readProfileString(profile, ['surname', 'family_name']);
+    if (givenName != null && familyName != null) {
+      return (givenName, familyName);
+    }
+
+    final nameParts = _extractNameParts(userCredential);
+    // _getLastName removes the last part, so it must run before _getFirstName.
+    final lastName = _getLastName(nameParts);
+    return (_getFirstName(nameParts), lastName);
+  }
+
+  String? _readProfileString(Map<String, dynamic>? profile, List<String> keys) {
+    if (profile == null) return null;
+    for (final key in keys) {
+      final value = profile[key];
+      if (value is String && value.trim().isNotEmpty) return value;
+    }
+    return null;
+  }
 
   String _getFirstName(List<String> nameParts) =>
       nameParts.join(' ').replaceAll(r'+', ' ');

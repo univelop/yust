@@ -1,3 +1,7 @@
+## 3.35.3 - 2026-10-23
+
+- Use the provider's given/family name claims (e.g. Microsoft `givenName`/`surname`, OIDC `given_name`/`family_name`) when creating a `YustUser` after an OAuth sign-in, instead of splitting `displayName`
+
 ## 3.35.2 - 2026-09-29
 
 - Fixes for file handling

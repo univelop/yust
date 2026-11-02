@@ -1,3 +1,16 @@
+## 3.36.0 - 2026-10-06
+
+- Add `downloadFileOrThrow` to the file service: returns the bytes or throws `YustNotFoundException` for a missing file, instead of `downloadFile`'s empty `Uint8List`
+- Add `copyFile` to the file service, copying a file to a new name in the same folder
+- Add `YustFile.hasName` and `YustFile.hasStorageLocation`
+- `YustFile.toLocalJson` now only requires `name`, so queued downloads and deletes can be cached too; `hash` is round-tripped
+- Set the Firestore cache size to unlimited on Flutter, so offline data is no longer evicted past 100 MB
+- Support `delete` and `removeFromArray` field transforms in the mocked database service
+
+Breaking changes:
+
+- Remove `YustFile.linkedDocStoresFilesAsMap`, obsolete since the map-based file structure migration completed
+
 ## 3.35.3 - 2026-10-23
 
 - Use the provider's given/family name claims (e.g. Microsoft `givenName`/`surname`, OIDC `given_name`/`family_name`) when creating a `YustUser` after an OAuth sign-in, instead of splitting `displayName`

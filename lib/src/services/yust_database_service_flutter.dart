@@ -92,7 +92,7 @@ class YustDatabaseService implements IYustDatabaseService {
   Future<T?> get<T extends YustDoc>(YustDocSetup<T> docSetup, String id) async {
     final result = await _fireStore
         .collection(_getCollectionPath(docSetup))
-        .doc(id)
+        .doc(_validDocId(id))
         .get(GetOptions(source: Source.serverAndCache))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot))
         .catchError((e) {
@@ -116,7 +116,9 @@ class YustDatabaseService implements IYustDatabaseService {
     YustDocSetup<T> docSetup,
     String id,
   ) async {
-    final doc = _fireStore.collection(_getCollectionPath(docSetup)).doc(id);
+    final doc = _fireStore
+        .collection(_getCollectionPath(docSetup))
+        .doc(_validDocId(id));
     DocumentSnapshot<Map<String, dynamic>>? docSnapshot;
 
     try {
@@ -147,7 +149,7 @@ class YustDatabaseService implements IYustDatabaseService {
   }) async {
     final result = await _fireStore
         .collection(_getCollectionPath(docSetup))
-        .doc(id)
+        .doc(_validDocId(id))
         .get(GetOptions(source: Source.server))
         .then((docSnapshot) => _transformDoc<T>(docSetup, docSnapshot));
     dbLogCallback?.call(
@@ -163,7 +165,7 @@ class YustDatabaseService implements IYustDatabaseService {
   Stream<T?> getStream<T extends YustDoc>(YustDocSetup<T> docSetup, String id) {
     return _fireStore
         .collection(_getCollectionPath(docSetup))
-        .doc(id)
+        .doc(_validDocId(id))
         .snapshots()
         .map((docSnapshot) {
       dbLogCallback?.call(
@@ -472,7 +474,7 @@ class YustDatabaseService implements IYustDatabaseService {
         );
       }
       try {
-        await collection.doc(doc.id).update(modifiedDoc);
+        await collection.doc(_validDocId(doc.id)).update(modifiedDoc);
       } on FirebaseException catch (e) {
         if (e.code == 'not-found') {
           print(
@@ -484,7 +486,7 @@ class YustDatabaseService implements IYustDatabaseService {
       }
     } else {
       await collection
-          .doc(doc.id)
+          .doc(_validDocId(doc.id))
           .set(modifiedDoc, SetOptions(merge: merge, mergeFields: updateMask));
     }
     if (!skipLog) {
@@ -525,7 +527,7 @@ class YustDatabaseService implements IYustDatabaseService {
 
     final update = _transformsToFieldValueMap(fieldTransforms);
 
-    await collection.doc(id).update(update);
+    await collection.doc(_validDocId(id)).update(update);
     dbLogCallback?.call(
       DatabaseLogAction.transform,
       _getCollectionPath(docSetup),
@@ -710,7 +712,9 @@ class YustDatabaseService implements IYustDatabaseService {
     T doc,
   ) async {
     final docRef =
-        _fireStore.collection(_getCollectionPath(docSetup)).doc(doc.id);
+        _fireStore
+            .collection(_getCollectionPath(docSetup))
+            .doc(_validDocId(doc.id));
     await docRef.delete();
     dbLogCallback?.call(
       DatabaseLogAction.delete,
@@ -726,7 +730,9 @@ class YustDatabaseService implements IYustDatabaseService {
     String docId,
   ) async {
     final docRef =
-        _fireStore.collection(_getCollectionPath(docSetup)).doc(docId);
+        _fireStore
+            .collection(_getCollectionPath(docSetup))
+            .doc(_validDocId(docId));
     await docRef.delete();
     dbLogCallback?.call(
       DatabaseLogAction.delete,
@@ -830,7 +836,18 @@ class YustDatabaseService implements IYustDatabaseService {
     return _transformDoc(docSetup, document as DocumentSnapshot);
   }
 
+  /// Returns [id] after making sure it can not escape its collection
+  /// (e.g. `a/b` would otherwise address a document in a subcollection).
+  String _validDocId(String id) {
+    assertValidPathSegment(id);
+    return id;
+  }
+
   String _getCollectionPath(YustDocSetup docSetup) {
+    assertValidDocSetupPath(
+      docSetup,
+      withEnvironment: useSubcollections && docSetup.forEnvironment,
+    );
     var collectionPath = '';
     if (useSubcollections && docSetup.forEnvironment) {
       collectionPath += '$envCollectionName/${docSetup.envId}/';

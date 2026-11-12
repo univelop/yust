@@ -126,6 +126,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     String id, {
     String? transaction,
   }) async {
+    _assertValidDocPath(docSetup, id);
     final docs = _getCollection<T>(docSetup);
     try {
       final doc = docs.firstWhereOrNull((doc) => doc.id == id);
@@ -446,6 +447,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       trackModification: trackModification,
       skipOnSave: skipOnSave,
     );
+    _assertValidDocPath(docSetup, doc.id);
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
@@ -505,6 +507,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
+    _assertValidDocPath(docSetup, id);
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
     final jsonDocClone = jsonDecode(jsonEncode(jsonDocs[index]));
@@ -540,6 +543,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
+    _assertValidDocPath(docSetup, doc.id);
     final jsonDocs = _getJSONCollection(docSetup.collectionName);
     jsonDocs.removeWhere((d) => d['id'] == doc.id);
     await onChange?.call(
@@ -698,6 +702,16 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       subDoc = subDoc[segment];
     }
     return subDoc[segments.last];
+  }
+
+  /// Mirrors the path validation of the real implementations, so tests notice
+  /// ids that would escape their collection (e.g. `../`).
+  void _assertValidDocPath(YustDocSetup docSetup, String id) {
+    assertValidDocSetupPath(
+      docSetup,
+      withEnvironment: useSubcollections && docSetup.forEnvironment,
+    );
+    assertValidPathSegment(id);
   }
 
   String _createDocumentId() {

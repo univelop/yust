@@ -1281,6 +1281,10 @@ class YustDatabaseService implements IYustDatabaseService {
   String _getDatabasePath() => 'projects/${Yust.projectId}/databases/(default)';
 
   String _getParentPath(YustDocSetup docSetup) {
+    assertValidDocSetupPath(
+      docSetup,
+      withEnvironment: useSubcollections && docSetup.forEnvironment,
+    );
     var parentPath = '${_getDatabasePath()}/documents';
     if (useSubcollections && docSetup.forEnvironment) {
       parentPath += '/$envCollectionName/${docSetup.envId}';
@@ -1301,8 +1305,14 @@ class YustDatabaseService implements IYustDatabaseService {
     }
   }
 
-  String _getDocumentPath(YustDocSetup docSetup, [String? id = '']) {
-    return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/$id';
+  /// Returns the path of the document with [id].
+  ///
+  /// Without [id] the collection path with a trailing `/` is returned, which
+  /// is only meant for logging. A given [id] is validated, so it can not
+  /// escape the collection (e.g. via `../`).
+  String _getDocumentPath(YustDocSetup docSetup, [String? id]) {
+    if (id != null) assertValidPathSegment(id);
+    return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/${id ?? ''}';
   }
 
   RunQueryRequest getQuery<T extends YustDoc>(

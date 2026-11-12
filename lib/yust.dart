@@ -25,7 +25,7 @@ export 'src/services/yust_auth_service_shared.dart';
 export 'src/services/yust_database_service.dart';
 export 'src/services/yust_database_service_mocked.dart';
 export 'src/services/yust_database_service_shared.dart'
-    show AggregationResult, AggregationType;
+    show AggregationResult, AggregationType, assertValidPathSegment;
 export 'src/services/yust_file_access_service.dart';
 export 'src/services/yust_file_access_service_mocked.dart';
 export 'src/services/yust_push_service.dart';

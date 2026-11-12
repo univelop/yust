@@ -68,6 +68,18 @@ class YustNotFoundException extends YustException {
   YustNotFoundException(super.message);
 }
 
+/// Thrown when a document id or a path segment (collection name, environment
+/// id) is not a valid single Firestore path segment.
+///
+/// Such values could otherwise escape the intended collection, e.g. via `/` or
+/// `..` (path traversal).
+class YustInvalidPathSegmentException extends YustException {
+  YustInvalidPathSegmentException(super.message, this.segment);
+
+  /// The rejected value.
+  final String? segment;
+}
+
 class YustInvalidCoordinatesException extends YustException {
   YustInvalidCoordinatesException(super.message, this.latitude, this.longitude);
 

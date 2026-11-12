@@ -18,14 +18,12 @@ final _controlCharacter = RegExp(r'[\x00-\x1F\x7F]');
 /// Throws a [YustInvalidPathSegmentException] if [segment] is not a valid
 /// single Firestore path segment (document id or collection id).
 ///
-/// Follows the Firestore naming rules, so no existing document can be
-/// rejected: a segment must not be empty, must not contain `/`, must not be
-/// `.` or `..`, must not match `__.*__` and must not exceed 1500 bytes.
-/// Additionally `\` and control characters are rejected.
-///
-/// Must be called for every user-influenced value before it is interpolated
-/// into a document path, otherwise ids like `../../<otherEnv>/...` can
-/// address documents outside of the intended collection.
+/// Follows the Firestore DocumentID naming rules:
+/// Must be valid UTF-8 characters
+/// Must be no longer than 1,500 bytes
+/// Cannot contain a forward slash (/)
+/// Cannot solely consist of a single period (.) or double periods (..)
+/// Cannot match the regular expression __.*__
 void assertValidPathSegment(String? segment, {String kind = 'document id'}) {
   String? reason;
   if (segment == null || segment.isEmpty) {

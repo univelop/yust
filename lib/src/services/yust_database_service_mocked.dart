@@ -94,11 +94,15 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   /// the snapshot from [_recoveryDb]; otherwise returns the live [_db]
   /// collection (auto-creating it). Writes always go through
   /// [_getJSONCollection] directly so they never touch the recovery db.
-  List<Map<String, dynamic>> _getReadCollection(String collectionName) {
+  ///
+  /// Validates the path parts of [docSetup] like the real implementations do.
+  List<Map<String, dynamic>> _getReadCollection(YustDocSetup docSetup) {
     if (readTime != null) {
-      return _recoveryDb[collectionName] ?? const <Map<String, dynamic>>[];
+      _assertValidDocSetupPath(docSetup);
+      return _recoveryDb[docSetup.collectionName] ??
+          const <Map<String, dynamic>>[];
     }
-    return _getJSONCollection(collectionName);
+    return _getJSONCollection(docSetup);
   }
 
   @override
@@ -126,7 +130,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     String id, {
     String? transaction,
   }) async {
-    _assertValidDocPath(docSetup, id);
+    _assertValidDocId(id);
     final docs = _getCollection<T>(docSetup);
     try {
       final doc = docs.firstWhereOrNull((doc) => doc.id == id);
@@ -170,7 +174,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     List<YustFilter>? filters,
     List<YustOrderBy>? orderBy,
   }) async {
-    var jsonDocs = _getReadCollection(docSetup.collectionName);
+    var jsonDocs = _getReadCollection(docSetup);
     jsonDocs = _filter(jsonDocs, filters);
     jsonDocs = _orderBy(jsonDocs, orderBy);
     final docs = _jsonListToDocList(jsonDocs, docSetup);
@@ -447,8 +451,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
       trackModification: trackModification,
       skipOnSave: skipOnSave,
     );
-    _assertValidDocPath(docSetup, doc.id);
-    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    _assertValidDocId(doc.id);
+    final jsonDocs = _getJSONCollection(docSetup);
     final index = jsonDocs.indexWhere((d) => d['id'] == doc.id);
     final docJsonClone = jsonDecode(jsonEncode(doc.toJson()));
     final docJsonPrepared = _prepareJsonForMockDb(docJsonClone);
@@ -507,8 +511,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     bool skipOnSave = false,
     bool? removeNullValues,
   }) async {
-    _assertValidDocPath(docSetup, id);
-    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    _assertValidDocId(id);
+    final jsonDocs = _getJSONCollection(docSetup);
     final index = jsonDocs.indexWhere((doc) => doc['id'] == id);
     final jsonDocClone = jsonDecode(jsonEncode(jsonDocs[index]));
     final oldDoc = jsonDecode(jsonEncode(jsonDocs[index]));
@@ -543,8 +547,8 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     YustDocSetup<T> docSetup,
     T doc,
   ) async {
-    _assertValidDocPath(docSetup, doc.id);
-    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    _assertValidDocId(doc.id);
+    final jsonDocs = _getJSONCollection(docSetup);
     jsonDocs.removeWhere((d) => d['id'] == doc.id);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
@@ -565,7 +569,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   ) async {
     final doc = await get(docSetup, id);
     if (doc == null) return;
-    final jsonDocs = _getJSONCollection(docSetup.collectionName);
+    final jsonDocs = _getJSONCollection(docSetup);
     jsonDocs.removeWhere((d) => d['id'] == id);
     await onChange?.call(
       _getParentPath(docSetup, doc: doc),
@@ -608,7 +612,12 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     return (true, doc);
   }
 
-  List<Map<String, dynamic>> _getJSONCollection(String collectionName) {
+  /// Returns the live collection of [docSetup] (auto-creating it).
+  ///
+  /// Validates the path parts of [docSetup] like the real implementations do.
+  List<Map<String, dynamic>> _getJSONCollection(YustDocSetup docSetup) {
+    _assertValidDocSetupPath(docSetup);
+    final collectionName = docSetup.collectionName;
     if (_db[collectionName] == null) {
       _db[collectionName] = [];
     }
@@ -616,10 +625,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
   }
 
   List<T> _getCollection<T extends YustDoc>(YustDocSetup<T> docSetup) {
-    return _jsonListToDocList(
-      _getReadCollection(docSetup.collectionName),
-      docSetup,
-    );
+    return _jsonListToDocList(_getReadCollection(docSetup), docSetup);
   }
 
   List<T> _jsonListToDocList<T extends YustDoc>(
@@ -704,15 +710,20 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     return subDoc[segments.last];
   }
 
-  /// Mirrors the path validation of the real implementations, so tests notice
-  /// ids that would escape their collection (e.g. `../`).
-  void _assertValidDocPath(YustDocSetup docSetup, String id) {
+  /// Mirrors the collection path validation of the real implementations
+  /// (environment id and collection name).
+  void _assertValidDocSetupPath(YustDocSetup docSetup) {
     assertValidDocSetupPath(
       docSetup,
       withEnvironment: useSubcollections && docSetup.forEnvironment,
     );
-    assertValidPathSegment(id);
   }
+
+  /// Mirrors the document id validation of the real implementations, so tests
+  /// notice ids that would escape their collection (e.g. `../`).
+  /// 
+  /// Must be called before the first collection access.
+  void _assertValidDocId(String id) => assertValidPathSegment(id);
 
   String _createDocumentId() {
     return Yust.helpers.randomString(length: 20);
@@ -761,7 +772,7 @@ class YustDatabaseServiceMocked extends YustDatabaseService
     String? startAfterDocumentId,
     bool forAllEnvironments = false,
   }) {
-    var jsonDocs = _getReadCollection(docSetup.collectionName);
+    var jsonDocs = _getReadCollection(docSetup);
 
     // Apply static filters (envId) only if not querying all environments
     if (!forAllEnvironments) {

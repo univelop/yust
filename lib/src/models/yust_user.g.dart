@@ -8,6 +8,20 @@ part of 'yust_user.dart';
 
 YustUser _$YustUserFromJson(Map json) =>
     YustUser(
+        id: json['id'] as String?,
+        createdAt: json['createdAt'] == null
+            ? null
+            : DateTime.parse(json['createdAt'] as String),
+        createdBy: json['createdBy'] as String?,
+        modifiedAt: json['modifiedAt'] == null
+            ? null
+            : DateTime.parse(json['modifiedAt'] as String),
+        modifiedBy: json['modifiedBy'] as String?,
+        userId: json['userId'] as String?,
+        envId: json['envId'] as String?,
+        expiresAt: json['expiresAt'] == null
+            ? null
+            : DateTime.parse(json['expiresAt'] as String),
         email: json['email'] as String,
         firstName: json['firstName'] as String,
         lastName: json['lastName'] as String,
@@ -19,20 +33,6 @@ YustUser _$YustUserFromJson(Map json) =>
         authId: json['authId'] as String?,
         locale: json['locale'] as String?,
       )
-      ..id = json['id'] as String
-      ..createdAt = json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String)
-      ..createdBy = json['createdBy'] as String?
-      ..modifiedAt = json['modifiedAt'] == null
-          ? null
-          : DateTime.parse(json['modifiedAt'] as String)
-      ..modifiedBy = json['modifiedBy'] as String?
-      ..userId = json['userId'] as String?
-      ..envId = json['envId'] as String?
-      ..expiresAt = json['expiresAt'] == null
-          ? null
-          : DateTime.parse(json['expiresAt'] as String)
       .._envIds =
           (json['envIds'] as Map?)?.map(
             (k, e) => MapEntry(k as String, e as bool?),

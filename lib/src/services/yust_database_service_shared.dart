@@ -24,12 +24,20 @@ final _controlCharacter = RegExp(r'[\x00-\x1F\x7F]');
 /// Cannot contain a forward slash (/)
 /// Cannot solely consist of a single period (.) or double periods (..)
 /// Cannot match the regular expression __.*__
-void assertValidPathSegment(String? segment, {String kind = 'document id'}) {
+///
+/// If [allowSlash] is true, "/" is accepted (used for nested collection names).
+void assertValidPathSegment(
+  String? segment, {
+  String kind = 'document id',
+  bool allowSlash = false,
+}) {
   String? reason;
   if (segment == null || segment.isEmpty) {
     reason = 'must not be empty';
-  } else if (segment.contains('/') || segment.contains(r'\')) {
-    reason = 'must not contain "/" or "\\"';
+  } else if (!allowSlash && segment.contains('/')) {
+    reason = 'must not contain "/"';
+  } else if (segment.contains(r'\')) {
+    reason = 'must not contain "\\"';
   } else if (segment == '.' || segment == '..') {
     reason = 'must not be "." or ".."';
   } else if (_reservedPathSegment.hasMatch(segment)) {
@@ -45,12 +53,14 @@ void assertValidPathSegment(String? segment, {String kind = 'document id'}) {
   }
 }
 
-/// Validates every segment of a (possibly nested) collection name like
-/// `recordSpecs/<specId>/records`.
+/// Validates a (possibly nested) collection name like
+/// `recordSpecs/<specId>/records` as a whole, allowing "/".
 void assertValidCollectionName(String collectionName) {
-  for (final segment in collectionName.split('/')) {
-    assertValidPathSegment(segment, kind: 'collection path segment');
-  }
+  assertValidPathSegment(
+    collectionName,
+    kind: 'collection name',
+    allowSlash: true,
+  );
 }
 
 /// Validates the parts of [docSetup] that end up in a document path:

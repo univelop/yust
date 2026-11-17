@@ -1,7 +1,3 @@
-## 3.36.1 - 2026-11-16
-
-- Require `cloud_firestore` ^6.10.2 and `firebase_core` ^4.15.2, the 6.x/4.x backports of the Firestore security fix for the compromised eMudhra intermediate certificates (Firebase iOS SDK 12.19.3, Firebase C++ SDK 13.13.1). Apps depending on yust can no longer resolve an unpatched Firestore SDK.
-
 ## 3.36.0 - 2026-10-06
 
 - Add `downloadFileOrThrow` to the file service: returns the bytes or throws `YustNotFoundException` for a missing file, instead of `downloadFile`'s empty `Uint8List`

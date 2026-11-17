@@ -1,3 +1,8 @@
+## 3.36.1 - 2026-11-17
+
+- Bump `cloud_firestore` to 6.10.2 and `firebase_core` to 4.15.2 (Firestore security patch for the compromised eMudhra certificates)
+- Reject invalid document ids and collection names with `YustInvalidPathSegmentException`
+
 ## 3.36.0 - 2026-10-06
 
 - Add `downloadFileOrThrow` to the file service: returns the bytes or throws `YustNotFoundException` for a missing file, instead of `downloadFile`'s empty `Uint8List`

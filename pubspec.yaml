@@ -9,11 +9,11 @@ environment:
 dependencies:
     flutter:
         sdk: flutter
-    cloud_firestore: ^6.0.0
+    cloud_firestore: ^6.10.2
     collection: ^1.19.1
     coordinate_converter: ^1.2.3
     firebase_auth: ^6.0.1
-    firebase_core: ^4.0.0
+    firebase_core: ^4.15.2
     firebase_storage: ^13.0.0
     googleapis_auth: ^2.0.0
     googleapis: ^14.0.0

@@ -54,7 +54,7 @@ void assertValidPathSegment(
 }
 
 /// Validates a (possibly nested) collection name like
-/// `recordSpecs/<specId>/records` as a whole, allowing "/".
+/// `documentSpec/<id>/documents` as a whole, allowing "/".
 void assertValidCollectionName(String collectionName) {
   assertValidPathSegment(
     collectionName,

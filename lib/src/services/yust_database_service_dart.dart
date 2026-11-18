@@ -1281,10 +1281,6 @@ class YustDatabaseService implements IYustDatabaseService {
   String _getDatabasePath() => 'projects/${Yust.projectId}/databases/(default)';
 
   String _getParentPath(YustDocSetup docSetup) {
-    assertValidDocSetupPath(
-      docSetup,
-      withEnvironment: useSubcollections && docSetup.forEnvironment,
-    );
     var parentPath = '${_getDatabasePath()}/documents';
     if (useSubcollections && docSetup.forEnvironment) {
       parentPath += '/$envCollectionName/${docSetup.envId}';
@@ -1312,6 +1308,10 @@ class YustDatabaseService implements IYustDatabaseService {
   /// escape the collection (e.g. via `../`).
   String _getDocumentPath(YustDocSetup docSetup, [String? id]) {
     if (id != null) assertValidPathSegment(id);
+    assertValidDocSetupPath(
+      docSetup,
+      withEnvironment: useSubcollections && docSetup.forEnvironment,
+    );
     return '${_getParentPath(docSetup)}/${_getCollection(docSetup)}/${id ?? ''}';
   }
 

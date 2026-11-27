@@ -102,6 +102,10 @@ class YustAuthServiceMocked implements YustAuthService {
   }) => throw UnimplementedError();
 
   @override
+  Future<List<String>> getAuthProviderIds(String email) =>
+      throw UnimplementedError();
+
+  @override
   Future<String> getAuthTokenForAuthId(
     String authId, {
     String? overrideEmail,

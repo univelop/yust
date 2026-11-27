@@ -393,6 +393,10 @@ class YustAuthService {
     throw UnimplementedError();
   }
 
+  Future<List<String>> getAuthProviderIds(String email) async {
+    throw UnimplementedError();
+  }
+
   Future<String> getAuthTokenForAuthId(
     String authId, {
     String? overrideEmail,

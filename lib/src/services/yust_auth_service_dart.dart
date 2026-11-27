@@ -276,6 +276,28 @@ class YustAuthService {
     return user;
   }
 
+  /// Returns the provider ids (e.g. `password`, `microsoft.com`) of the
+  /// Firebase Auth account with the given [email].
+  ///
+  /// Looks up the Firebase Auth account itself, not the [YustUser], because
+  /// [YustUser.authenticationMethod] can be outdated. Returns an empty list if
+  /// no account exists for the email.
+  Future<List<String>> getAuthProviderIds(String email) async {
+    final lookupResult = await _api.projects.accounts_1.lookup(
+      GoogleCloudIdentitytoolkitV1GetAccountInfoRequest(
+        email: [YustUser.normalizeEmail(email)],
+      ),
+      Yust.projectId,
+    );
+
+    return (lookupResult.users ?? [])
+        .expand((user) => user.providerUserInfo ?? [])
+        .map((info) => info.providerId)
+        .whereType<String>()
+        .toSet()
+        .toList();
+  }
+
   /// Create an unsigned JWT for a given authId.
   JWT _createUnsignedJWTForAuthId(
     String authId,
